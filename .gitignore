@@ -1,0 +1,44 @@
+
+.*
+!.gitkeep
+!.gitignore
+
+*~
+*.back
+
+# cash
+*~
+
+# tmporary
+/tmp
+/temp
+/gabage
+/work
+/object
+/binary
+
+# object files
+*.d
+*.o
+*.a
+*.exe
+*.app
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
