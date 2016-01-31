@@ -8,7 +8,6 @@
 #include "et_canvas.h"
 
 void __pvui_app_set_style();
-gboolean _buttonScroll(GtkWidget *widget, GdkEventScroll *event, gpointer data);
 
 GtkWidget *status_bar= NULL;
 static gboolean in_worker_func(gpointer data)
@@ -84,9 +83,6 @@ int main (int argc, char **argv){
 
 	// __pvui_app_set_style();
 
-	g_signal_connect(window, "scroll-event",
-			G_CALLBACK(_buttonScroll), NULL);
-
 	GThread* thread;
 	thread = g_thread_new ("", worker_func, NULL);
 	if(NULL == thread){
@@ -140,23 +136,3 @@ void __pvui_app_set_style(){
 			"", -1, NULL);
 	g_object_unref (provider);
 }
-
-
-gboolean _buttonScroll(GtkWidget *widget, GdkEventScroll *event, gpointer data)
-{
-	(void) data;
-
-	switch(event->direction){
-		case GDK_SCROLL_UP:
-			et_debug("BUTTON SCROLL   UP: %ld\n", (long)widget);
-			break;
-		case GDK_SCROLL_DOWN:
-			et_debug("BUTTON SCROLL DOWN: %ld\n", (long)widget);
-			break;
-		default:
-			break;
-	}
-
-	return false;
-}
-
