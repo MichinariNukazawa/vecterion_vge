@@ -2,12 +2,37 @@
 #include <gtk/gtk.h>
 
 #include <stdbool.h>
+#include <stdatomic.h>
 
 #include "et_error.h"
 #include "et_canvas.h"
 
 void __pvui_app_set_style();
 gboolean _buttonScroll(GtkWidget *widget, GdkEventScroll *event, gpointer data);
+
+GtkWidget *status_bar= NULL;
+static gboolean in_worker_func(gpointer data)
+{
+	static int count = 0;
+	count++;
+	// Gtk control.
+	printf("work:%d\n", count);
+	char s[64];
+	snprintf(s, sizeof(s), "%d", count);
+	gtk_statusbar_push(GTK_STATUSBAR(status_bar), 1, s);
+
+	return G_SOURCE_REMOVE;
+}
+static atomic_int isStop = ATOMIC_VAR_INIT(0);
+static gpointer worker_func(gpointer data)
+{
+	while( !isStop ){
+		g_usleep(500000);
+		gdk_threads_add_idle(in_worker_func, NULL);
+	}
+
+	return NULL;
+}
 
 int main (int argc, char **argv){
 	gtk_init(&argc, &argv);
@@ -18,9 +43,15 @@ int main (int argc, char **argv){
 	g_signal_connect(window, "delete-event",
 			G_CALLBACK(gtk_main_quit), NULL);
 
-	GtkWidget *box1;
-	box1 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3);
-	gtk_container_add(GTK_CONTAINER(window), box1);
+	GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+	gtk_container_add(GTK_CONTAINER(window), vbox);
+	GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3);
+	gtk_box_pack_start(GTK_BOX(vbox), box1, true, true, 1);
+
+	GtkWidget *statusbar = gtk_statusbar_new();
+	gtk_box_pack_start(GTK_BOX(vbox), statusbar, FALSE, TRUE, 0);
+	gtk_statusbar_push(GTK_STATUSBAR(statusbar), 1, "Hello World");
+	status_bar = statusbar;
 
 	const char *pathImageFile;
 	pathImageFile = "./library/23.svg";
@@ -56,8 +87,18 @@ int main (int argc, char **argv){
 	g_signal_connect(window, "scroll-event",
 			G_CALLBACK(_buttonScroll), NULL);
 
+	GThread* thread;
+	thread = g_thread_new ("", worker_func, NULL);
+	if(NULL == thread){
+		et_critical("");
+		return -1;
+	}
+
 	gtk_widget_show_all(window);
 	gtk_main();
+
+	isStop = 1;
+	g_thread_join(thread);
 
 	return 0;
 }
