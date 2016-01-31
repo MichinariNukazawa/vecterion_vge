@@ -6,6 +6,8 @@
 
 #include "et_error.h"
 #include "et_canvas.h"
+#include "et_doc.h"
+#include "et_renderer.h"
 
 void __pvui_app_set_style();
 
@@ -55,6 +57,7 @@ int main (int argc, char **argv){
 	const char *pathImageFile;
 	pathImageFile = "./library/23.svg";
 
+
 	GtkWidget *hpaned = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_box_pack_start(GTK_BOX(box1), hpaned, true, true, 3);
 	GtkWidget *frame1 = gtk_frame_new (NULL);
@@ -70,16 +73,45 @@ int main (int argc, char **argv){
 
 
 	EtCanvas *canvas1 = et_canvas_new();
+	/*
 	if(!et_canvas_set_image_from_file(canvas1, pathImageFile)){
 		et_critical("");
 	}
+	*/
 	gtk_container_add(GTK_CONTAINER(frame1), canvas1->widget);
 
 	EtCanvas *canvas2 = et_canvas_new();
+	/*
 	if(!et_canvas_set_image_from_file(canvas2, pathImageFile)){
 		et_critical("");
 	}
+	*/
 	gtk_container_add(GTK_CONTAINER(frame2), canvas2->widget);
+
+	EtDoc *doc1 = et_doc_new();
+	if(NULL == doc1){
+		et_error("");
+		return -1;
+	}
+
+	EtRenderer *renderer = et_renderer_new();
+	if(NULL == renderer){
+		et_error("");
+		return -1;
+	}
+	if(!et_renderer_set_connection(renderer, canvas1, doc1)){
+		et_error("");
+		return -1;
+	}
+	if(!et_renderer_set_connection(renderer, canvas2, doc1)){
+		et_error("");
+		return -1;
+	}
+
+	if(!et_doc_set_image_from_file(doc1, pathImageFile)){
+		et_error("");
+		return -1;
+	}
 
 	// __pvui_app_set_style();
 

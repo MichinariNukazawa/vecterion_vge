@@ -5,11 +5,13 @@
 #include <gdk/gdk.h>
 #include <stdbool.h>
 
+#include "et_doc.h"
+
 struct _EtCanvas;
 typedef struct _EtCanvas EtCanvas;
 
 struct _EtCanvas{
-	GdkPixbuf *pixbuf;
+	EtDoc *doc;
 
 	GtkWidget *widget;
 	GtkWidget *scroll;
@@ -18,7 +20,7 @@ struct _EtCanvas{
 };
 
 EtCanvas *et_canvas_new();
-bool et_canvas_set_image_from_file(EtCanvas *this, const char *filepath);
+void et_canvas_call_draw(EtCanvas *this);
 
 #ifdef __ET_TEST__
 #endif // __ET_TEST__

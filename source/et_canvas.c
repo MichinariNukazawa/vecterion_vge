@@ -60,11 +60,12 @@ EtCanvas *et_canvas_new()
 			G_CALLBACK (cb_expose_event), (gpointer)this);
 
 	this->widget = this->scroll;
-	this->pixbuf = NULL;
+	this->doc = NULL;
 
 	return this;
 }
 
+/*
 bool et_canvas_set_image_from_file(EtCanvas *this, const char *filepath)
 {
 	this->pixbuf = gdk_pixbuf_new_from_file(filepath, NULL);
@@ -83,6 +84,7 @@ bool et_canvas_set_image_from_file(EtCanvas *this, const char *filepath)
 
 	return true;
 }
+*/
 
 void _modifier_kind(int state)
 {
@@ -160,9 +162,16 @@ gboolean cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 
 	EtCanvas *etCanvas = (EtCanvas *)data;
 
-	if(NULL == etCanvas->pixbuf){
+	GdkPixbuf *pixbuf = et_doc_get_pixbuf(etCanvas->doc);
+
+	if(NULL == pixbuf){
 		et_warning("");
 	}else{
+
+		gtk_widget_set_size_request(
+			etCanvas->canvas,
+			gdk_pixbuf_get_width(pixbuf),
+			gdk_pixbuf_get_height(pixbuf));
 
 		// Draw pixbuf
 		/*
@@ -170,11 +179,27 @@ gboolean cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 		   cr = gdk_cairo_create (gtk_widget_get_window(widget));
 		 */
 		//    cr = gdk_cairo_create (da->window);
-		gdk_cairo_set_source_pixbuf(cr, etCanvas->pixbuf, 0, 0);
+		gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
 		cairo_paint(cr);
 		//    cairo_fill (cr);
 		//		cairo_destroy (cr);
 	}
 
 	return FALSE;
+}
+
+static gboolean _et_canvas_call_draw_in_idle(gpointer data)
+{
+	EtCanvas *this = (EtCanvas *)data;
+	gtk_widget_queue_draw(this->canvas);
+
+	return G_SOURCE_REMOVE;
+}
+void et_canvas_call_draw(EtCanvas *this)
+{
+	et_debug("%d\n", this);
+
+	// Todo: call draw of other thread.
+	// _et_canvas_call_draw_in_idle((gpointer)this);
+	 gdk_threads_add_idle(_et_canvas_call_draw_in_idle, (gpointer)this);
 }
