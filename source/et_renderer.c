@@ -41,6 +41,29 @@ void _cb_et_renderer_draw(EtDoc *doc, gpointer data)
 	}
 }
 
+void _et_renderer_cb_update_canvas(EtCanvas *canvas, gpointer data)
+{
+	et_debug("canvas:%ld, rend:%ld\n", canvas, data);
+
+	EtRenderer *this = (EtRenderer *)data;
+	int num = _et_renderer_get_num_canvas_and_docs(this->canvas_and_docs);
+	for(int i = 0; i < num; i++){
+		if(canvas == this->canvas_and_docs[i].canvas){
+			et_debug("DEBUGER\n");
+			GdkPixbuf *pixbuf = et_doc_get_pixbuf(this->canvas_and_docs[i].doc);
+			// et_canvas_draw_pixbuf(canvas, pixbuf);
+
+			// Todo: canvas->render_contextによる倍率変更
+			GdkPixbuf *pb = gdk_pixbuf_scale_simple(pixbuf, 
+				gdk_pixbuf_get_width(pixbuf) * canvas->render_context.scale,
+				gdk_pixbuf_get_height(pixbuf) * canvas->render_context.scale,
+				GDK_INTERP_HYPER);
+			et_canvas_draw_pixbuf(canvas, pb);
+			g_object_unref(G_OBJECT(pb));
+		}
+	}
+}
+
 bool et_renderer_set_connection(EtRenderer *this, EtCanvas *canvas, EtDoc *doc)
 {
 	int num = _et_renderer_get_num_canvas_and_docs(this->canvas_and_docs);
@@ -56,6 +79,13 @@ bool et_renderer_set_connection(EtRenderer *this, EtCanvas *canvas, EtDoc *doc)
 	new[num].id = et_doc_add_draw_callback(doc,
 			_cb_et_renderer_draw, (gpointer)this);
 	if(new[num].id < 0){
+		et_error("");
+		return false;
+	}
+
+	int id = et_canvas_set_update_render_context(canvas,
+		_et_renderer_cb_update_canvas, (gpointer)this);
+	if(id < 0){
 		et_error("");
 		return false;
 	}

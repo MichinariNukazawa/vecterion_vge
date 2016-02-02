@@ -56,8 +56,12 @@ EtCanvas *et_canvas_new()
 	g_signal_connect (G_OBJECT (this->canvas), "draw",
 			G_CALLBACK (cb_expose_event), (gpointer)this);
 
+	this->render_context.scale = 1.0;
+
 	this->widget = this->scroll;
 	this->pixbuf_buffer = NULL;
+	this->cb_update = NULL;
+	this->cb_update_data = NULL;
 
 	return this;
 }
@@ -117,18 +121,26 @@ gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer da
 
 gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer data)
 {
-	// EtCanvas *this = (EtCanvas *)data;
+	EtCanvas *this = (EtCanvas *)data;
 
 	switch(event->direction){
 		case GDK_SCROLL_UP:
 			et_debug("BUTTON SCROLL   UP\n");
+			this->render_context.scale += 0.1;
 			break;
 		case GDK_SCROLL_DOWN:
 			et_debug("BUTTON SCROLL DOWN\n");
+			this->render_context.scale -= 0.1;
 			break;
 		default:
 			break;
 	}
+
+	if(NULL != this->cb_update){
+		et_debug("CALL canvas:%ld\n", this);
+		this->cb_update(this, this->cb_update_data);
+	}
+
 	return false;
 }
 
@@ -166,8 +178,24 @@ gboolean cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 
 bool et_canvas_draw_pixbuf(EtCanvas *this, GdkPixbuf *pixbuf)
 {
-	this->pixbuf_buffer = pixbuf;
+	et_debug("\n");
+
+	GdkPixbuf *bp_old = this->pixbuf_buffer;
+	this->pixbuf_buffer = gdk_pixbuf_copy(pixbuf);
 	gtk_widget_queue_draw(this->canvas);
+	g_object_unref(G_OBJECT(bp_old));
 
 	return true;
+}
+
+int et_canvas_set_update_render_context(EtCanvas *this, EtCanvasUpdateCallback func, gpointer data)
+{
+	if(NULL != this->cb_update){
+		et_error("");
+		return -1;
+	}
+	this->cb_update = func;
+	this->cb_update_data = data;
+
+	return 1; // Todo: callback id
 }
