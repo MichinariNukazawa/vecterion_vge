@@ -2,6 +2,7 @@
 .*
 !.gitkeep
 !.gitignore
+tags
 
 *~
 *.back
