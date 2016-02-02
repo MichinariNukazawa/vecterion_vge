@@ -46,9 +46,6 @@ EtCanvas *et_canvas_new()
 			G_CALLBACK(_cb_button_scroll), (gpointer)this);
 	gtk_container_add(GTK_CONTAINER(this->scroll), this->event_box);
 
-
-	//   this->canvas = gtk_image_new();
-
 	this->canvas = gtk_drawing_area_new();
 	if(NULL == this->canvas){
 		et_error("");
@@ -60,31 +57,10 @@ EtCanvas *et_canvas_new()
 			G_CALLBACK (cb_expose_event), (gpointer)this);
 
 	this->widget = this->scroll;
-	this->doc = NULL;
+	this->pixbuf_buffer = NULL;
 
 	return this;
 }
-
-/*
-bool et_canvas_set_image_from_file(EtCanvas *this, const char *filepath)
-{
-	this->pixbuf = gdk_pixbuf_new_from_file(filepath, NULL);
-	if(NULL == this->pixbuf){
-		et_error("");
-		return false;
-	}
-
-	// gtk_image_set_from_pixbuf(GTK_IMAGE(this->canvas), this->pixbuf);
-	gtk_widget_queue_draw(this->canvas);
-
-	gtk_widget_set_size_request(
-			this->canvas,
-			gdk_pixbuf_get_width(this->pixbuf),
-			gdk_pixbuf_get_height(this->pixbuf));
-
-	return true;
-}
-*/
 
 void _modifier_kind(int state)
 {
@@ -162,7 +138,7 @@ gboolean cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 
 	EtCanvas *etCanvas = (EtCanvas *)data;
 
-	GdkPixbuf *pixbuf = et_doc_get_pixbuf(etCanvas->doc);
+	GdkPixbuf *pixbuf = etCanvas->pixbuf_buffer;
 
 	if(NULL == pixbuf){
 		et_warning("");
@@ -188,18 +164,10 @@ gboolean cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 	return FALSE;
 }
 
-static gboolean _et_canvas_call_draw_in_idle(gpointer data)
+bool et_canvas_draw_pixbuf(EtCanvas *this, GdkPixbuf *pixbuf)
 {
-	EtCanvas *this = (EtCanvas *)data;
+	this->pixbuf_buffer = pixbuf;
 	gtk_widget_queue_draw(this->canvas);
 
-	return G_SOURCE_REMOVE;
-}
-void et_canvas_call_draw(EtCanvas *this)
-{
-	et_debug("%d\n", this);
-
-	// Todo: call draw of other thread.
-	// _et_canvas_call_draw_in_idle((gpointer)this);
-	 gdk_threads_add_idle(_et_canvas_call_draw_in_idle, (gpointer)this);
+	return true;
 }

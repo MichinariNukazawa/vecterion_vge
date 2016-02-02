@@ -73,19 +73,9 @@ int main (int argc, char **argv){
 
 
 	EtCanvas *canvas1 = et_canvas_new();
-	/*
-	if(!et_canvas_set_image_from_file(canvas1, pathImageFile)){
-		et_critical("");
-	}
-	*/
 	gtk_container_add(GTK_CONTAINER(frame1), canvas1->widget);
 
 	EtCanvas *canvas2 = et_canvas_new();
-	/*
-	if(!et_canvas_set_image_from_file(canvas2, pathImageFile)){
-		et_critical("");
-	}
-	*/
 	gtk_container_add(GTK_CONTAINER(frame2), canvas2->widget);
 
 	EtDoc *doc1 = et_doc_new();

@@ -26,7 +26,6 @@ struct _EtDocCallback{
 	gpointer data;
 };
 
-
 struct _EtDoc{
 	GdkPixbuf *pixbuf;
 

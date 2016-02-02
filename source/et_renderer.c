@@ -35,7 +35,8 @@ void _cb_et_renderer_draw(EtDoc *doc, gpointer data)
 	int num = _et_renderer_get_num_canvas_and_docs(this->canvas_and_docs);
 	for(int i = 0; i < num; i++){
 		if(doc == this->canvas_and_docs[i].doc){
-			et_canvas_call_draw(this->canvas_and_docs[i].canvas);
+			GdkPixbuf *pixbuf = et_doc_get_pixbuf(doc);
+			et_canvas_draw_pixbuf(this->canvas_and_docs[i].canvas, pixbuf);
 		}
 	}
 }
@@ -58,7 +59,6 @@ bool et_renderer_set_connection(EtRenderer *this, EtCanvas *canvas, EtDoc *doc)
 		et_error("");
 		return false;
 	}
-	canvas->doc = doc;
 
 	this->canvas_and_docs = new;
 
