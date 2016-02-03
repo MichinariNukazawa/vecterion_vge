@@ -178,12 +178,17 @@ gboolean cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 
 bool et_canvas_draw_pixbuf(EtCanvas *this, GdkPixbuf *pixbuf)
 {
-	et_debug("\n");
+	if(NULL == pixbuf){
+		et_error("\n");
+		return false;
+	}
 
-	GdkPixbuf *bp_old = this->pixbuf_buffer;
+	GdkPixbuf *pb_old = this->pixbuf_buffer;
 	this->pixbuf_buffer = gdk_pixbuf_copy(pixbuf);
 	gtk_widget_queue_draw(this->canvas);
-	g_object_unref(G_OBJECT(bp_old));
+	if(NULL != pb_old){
+		g_object_unref(G_OBJECT(pb_old));
+	}
 
 	return true;
 }
