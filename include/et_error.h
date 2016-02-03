@@ -9,7 +9,7 @@
 #define et_error(fmt, ...)  \
 	fprintf(stderr, "error: %s()[%d]: "fmt"\n", __func__, __LINE__, ## __VA_ARGS__)
 #define et_warning(fmt, ...)  \
-	fprintf(stderr, "warinig: %s()[%d]: "fmt"\n", __func__, __LINE__, ## __VA_ARGS__)
+	fprintf(stderr, "warning: %s()[%d]: "fmt"\n", __func__, __LINE__, ## __VA_ARGS__)
 #define et_debug(fmt, ...)  \
 	fprintf(stdout, "debug: %s()[%d]: "fmt"", __func__, __LINE__, ## __VA_ARGS__)
 
