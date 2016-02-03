@@ -18,7 +18,10 @@ typedef struct _EtCanvas EtCanvas;
 typedef void (*EtCanvasUpdateCallback)(EtCanvas *canvas, gpointer data);
 
 struct _EtCanvas{
-	GtkWidget *widget;
+	GtkWidget *widget; // Top widget pointer.
+	GtkWidget *box;
+	GtkWidget *box_infobar;
+	GtkWidget *text_scale;
 	GtkWidget *scroll;
 	GtkWidget *event_box;
 	GtkWidget *canvas;

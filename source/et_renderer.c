@@ -54,9 +54,12 @@ void _et_renderer_cb_update_canvas(EtCanvas *canvas, gpointer data)
 			// et_canvas_draw_pixbuf(canvas, pixbuf);
 
 			// Todo: canvas->render_contextによる倍率変更
-			GdkPixbuf *pb = gdk_pixbuf_scale_simple(pixbuf, 
-				gdk_pixbuf_get_width(pixbuf) * canvas->render_context.scale,
-				gdk_pixbuf_get_height(pixbuf) * canvas->render_context.scale,
+			double w = (double)gdk_pixbuf_get_width(pixbuf)
+						* canvas->render_context.scale;
+			double h = (double)gdk_pixbuf_get_height(pixbuf)
+						* canvas->render_context.scale;
+			GdkPixbuf *pb = gdk_pixbuf_scale_simple(pixbuf,
+				(int)w, (int)h,
 				GDK_INTERP_HYPER);
 			et_canvas_draw_pixbuf(canvas, pb);
 			g_object_unref(G_OBJECT(pb));

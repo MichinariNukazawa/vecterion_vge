@@ -19,9 +19,20 @@ EtCanvas *et_canvas_new()
 		return NULL;
 	}
 
+	this->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+
+	this->box_infobar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+	gtk_container_add(GTK_CONTAINER(this->box), this->box_infobar);
+
 	this->scroll = gtk_scrolled_window_new(NULL, NULL);
 	gtk_widget_set_hexpand(GTK_WIDGET(this->scroll), TRUE);  
 	gtk_widget_set_vexpand(GTK_WIDGET(this->scroll), TRUE);
+	gtk_container_add(GTK_CONTAINER(this->box), this->scroll);
+
+	this->text_scale = gtk_text_view_new();
+	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (this->text_scale));
+	gtk_text_buffer_set_text (buffer, "default scale", -1);
+	gtk_container_add(GTK_CONTAINER(this->box_infobar), this->text_scale);
 
 	this->event_box = gtk_event_box_new();
 	if(NULL == this->event_box){
@@ -42,8 +53,6 @@ EtCanvas *et_canvas_new()
 	g_signal_connect(this->event_box, "motion-notify-event",
 			G_CALLBACK(_cb_motion_notify), (gpointer)this);
 
-	g_signal_connect(this->event_box, "scroll-event",
-			G_CALLBACK(_cb_button_scroll), (gpointer)this);
 	gtk_container_add(GTK_CONTAINER(this->scroll), this->event_box);
 
 	this->canvas = gtk_drawing_area_new();
@@ -58,7 +67,7 @@ EtCanvas *et_canvas_new()
 
 	this->render_context.scale = 1.0;
 
-	this->widget = this->scroll;
+	this->widget = this->box;
 	this->pixbuf_buffer = NULL;
 	this->cb_update = NULL;
 	this->cb_update_data = NULL;
@@ -114,7 +123,7 @@ gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer d
 
 gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
-//	et_debug("(%3d, %3d)\n", (int)event->x, (int)event->y);
+	//	et_debug("(%3d, %3d)\n", (int)event->x, (int)event->y);
 
 	return false;
 }
@@ -136,6 +145,17 @@ gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer da
 			break;
 	}
 
+	const int ET_RENDER_CONTEXT_SCALE_MIN = 0.01;
+	if(this->render_context.scale < ET_RENDER_CONTEXT_SCALE_MIN){
+		et_debug("under limit scale:%f", this->render_context.scale);
+		this->render_context.scale = ET_RENDER_CONTEXT_SCALE_MIN;
+	}
+
+	char buf[128];
+	snprintf(buf, sizeof(buf), "%.3f", this->render_context.scale);
+	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (this->text_scale));
+	gtk_text_buffer_set_text (buffer, buf, -1);
+
 	if(NULL != this->cb_update){
 		et_debug("CALL canvas:%ld\n", this);
 		this->cb_update(this, this->cb_update_data);
@@ -147,7 +167,6 @@ gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer da
 
 gboolean cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 {
-
 	EtCanvas *etCanvas = (EtCanvas *)data;
 
 	GdkPixbuf *pixbuf = etCanvas->pixbuf_buffer;
@@ -157,9 +176,9 @@ gboolean cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 	}else{
 
 		gtk_widget_set_size_request(
-			etCanvas->canvas,
-			gdk_pixbuf_get_width(pixbuf),
-			gdk_pixbuf_get_height(pixbuf));
+				etCanvas->canvas,
+				gdk_pixbuf_get_width(pixbuf),
+				gdk_pixbuf_get_height(pixbuf));
 
 		// Draw pixbuf
 		/*
@@ -199,6 +218,7 @@ int et_canvas_set_update_render_context(EtCanvas *this, EtCanvasUpdateCallback f
 		et_error("");
 		return -1;
 	}
+
 	this->cb_update = func;
 	this->cb_update_data = data;
 
