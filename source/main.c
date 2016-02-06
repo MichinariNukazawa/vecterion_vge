@@ -8,6 +8,8 @@
 #include "et_canvas.h"
 #include "et_doc.h"
 #include "et_renderer.h"
+#include "et_pointing_manager.h"
+#include "et_current_state.h"
 
 void __pvui_app_set_style();
 
@@ -94,6 +96,36 @@ int main (int argc, char **argv){
 		return -1;
 	}
 	if(!et_renderer_set_connection(renderer, canvas2, doc1)){
+		et_error("");
+		return -1;
+	}
+
+	EtPointingManager *pointing_manager = et_pointing_manager_init();
+	if(NULL == pointing_manager){
+		et_error("");
+		return -1;
+	}
+	if(0 > et_canvas_set_signal_mouse_action(canvas1,
+				et_pointing_manager_signal_mouse_action, NULL)){
+		et_error("");
+		return -1;
+	}
+	if(0 > et_canvas_set_signal_mouse_action(canvas2,
+				et_pointing_manager_signal_mouse_action, NULL)){
+		et_error("");
+		return -1;
+	}
+
+	EtCurrentState *current_state = et_current_state_init();
+	if(NULL == current_state){
+		et_error("");
+		return -1;
+	}
+	if(!et_current_state_add_doc(doc1)){
+		et_error("");
+		return -1;
+	}
+	if(!et_pointing_manager_set_slot_mouse_action(et_current_state_signal_mouse_action)){
 		et_error("");
 		return -1;
 	}

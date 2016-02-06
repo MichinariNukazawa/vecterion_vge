@@ -71,6 +71,9 @@ EtCanvas *et_canvas_new()
 	this->pixbuf_buffer = NULL;
 	this->cb_update = NULL;
 	this->cb_update_data = NULL;
+	this->signal_mouse_action = NULL;
+	this->signal_mouse_action_data = NULL;
+	this->doc_id = -1;
 
 	return this;
 }
@@ -107,10 +110,27 @@ void _mouse_button_kind(int button)
 
 gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
-	et_debug("BUTTON PRESS: (%3d, %3d)\n", (int)event->x, (int)event->y);
-	et_debug("%ld\n", (long)widget);
+	EtCanvas *this = (EtCanvas *)data;
+	et_debug("BUTTON PRESS: (%4d, %4d)\n", (int)event->x, (int)event->y);
 	_mouse_button_kind(event->button);
 	_modifier_kind(event->state);
+
+	if(NULL == this->signal_mouse_action){
+		et_error("");
+	}else{
+		EtPoint point = {
+			.x = event->x / this->render_context.scale,
+			.y = event->y / this->render_context.scale,
+		};
+		EtMouseAction mouse_action = {
+			.button = EtMouseButton_Right,
+			.action = EtMouseAction_Down,
+			.point = point,
+		};
+		if(!this->signal_mouse_action(this->doc_id, mouse_action)){
+			et_error("");
+		}
+	}
 
 	return false;
 }
@@ -197,8 +217,12 @@ gboolean cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 
 bool et_canvas_draw_pixbuf(EtCanvas *this, GdkPixbuf *pixbuf)
 {
+	if(NULL == this){
+		et_bug("\n");
+		return false;
+	}
 	if(NULL == pixbuf){
-		et_error("\n");
+		et_bug("\n");
 		return false;
 	}
 
@@ -221,6 +245,19 @@ int et_canvas_set_update_render_context(EtCanvas *this, EtCanvasUpdateCallback f
 
 	this->cb_update = func;
 	this->cb_update_data = data;
+
+	return 1; // Todo: callback id
+}
+
+int et_canvas_set_signal_mouse_action(EtCanvas *this, EtCanvasSignalMouseAction func, gpointer data)
+{
+	if(NULL != this->signal_mouse_action){
+		et_bug("");
+		return -1;
+	}
+
+	this->signal_mouse_action = func;
+	this->signal_mouse_action_data = data;
 
 	return 1; // Todo: callback id
 }

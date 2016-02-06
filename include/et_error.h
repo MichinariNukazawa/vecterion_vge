@@ -4,6 +4,11 @@
 #include <stdio.h>
 
 // Caution: depend gcc
+#define et_bug(fmt, ...)  \
+	fprintf(stderr, "BUG: %s()[%d]: "fmt"\n", __func__, __LINE__, ## __VA_ARGS__)
+#define et_fixme(fmt, ...)  \
+	fprintf(stderr, "FIXME: %s()[%d]: "fmt"\n", __func__, __LINE__, ## __VA_ARGS__)
+
 #define et_critical(fmt, ...)  \
 	fprintf(stderr, "critical: %s()[%d]: "fmt"\n", __func__, __LINE__, ## __VA_ARGS__)
 #define et_error(fmt, ...)  \
