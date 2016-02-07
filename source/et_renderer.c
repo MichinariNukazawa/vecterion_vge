@@ -45,7 +45,7 @@ GdkPixbuf *_et_renderer_draw_pixbuf_from_point(GdkPixbuf *pixbuf, double x, doub
 	surface = cairo_image_surface_create (format, width, height);
 	if(surface == NULL){
 		et_bug("");
-		return;
+		return NULL;
 	}
 	
 //	surface = gdk_cairo_surface_create_from_pixbuf (pixbuf, 1, NULL);
