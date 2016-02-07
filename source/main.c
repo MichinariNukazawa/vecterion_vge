@@ -37,12 +37,20 @@ static gpointer worker_func(gpointer data)
 	return NULL;
 }
 
+static gboolean cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer user_data)
+{
+	g_print("keyval=%d static=%d string=%s\n", event->keyval, event->state, event->string);
+	return FALSE;
+}
+
 int main (int argc, char **argv){
 	gtk_init(&argc, &argv);
 
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_set_size_request (window, 500,400);
 
+	g_signal_connect(G_OBJECT(window), "key-press-event",
+			G_CALLBACK(cb_key_press), NULL);
 	g_signal_connect(window, "delete-event",
 			G_CALLBACK(gtk_main_quit), NULL);
 
