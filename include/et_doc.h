@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include "et_doc_id.h"
 #include "et_point.h"
+#include "pv_vg.h"
 
 struct _EtDoc;
 typedef struct _EtDoc EtDoc;
@@ -23,18 +24,18 @@ struct _EtDocCallback{
 
 struct _EtDoc{
 	EtDocId id;
-	GdkPixbuf *pixbuf;
+	PvVg *vg;
 
 	EtDocCallback *callback_draws;
-	EtPoint points[10];
 };
+
+
 
 EtDoc *et_doc_new();
 bool et_doc_set_image_from_file(EtDoc *this, const char *filepath);
 EtCallbackId et_doc_add_draw_callback(EtDoc *this, EtDocDrawCallback func, gpointer data);
-GdkPixbuf *et_doc_get_pixbuf(EtDoc *this);
 
-void et_doc_add_point(EtDoc *this, double x, double y);
+bool et_doc_add_point(EtDoc *this, double x, double y);
 bool et_doc_draw_canvas(EtDoc *this);
 
 #ifdef __ET_TEST__

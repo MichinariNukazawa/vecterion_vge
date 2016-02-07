@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include "et_error.h"
+#include "pv_renderer.h"
 
 EtRenderer *et_renderer_new()
 {
@@ -78,14 +79,23 @@ GdkPixbuf *_et_renderer_draw_pixbuf_from_point(GdkPixbuf *pixbuf, double x, doub
 	return pb;
 }
 
-GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, EtRenderContext *render_context)
+GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext *render_context)
 {
 	if(NULL == render_context){
 		et_bug("");
 		return NULL;
 	}
 
+	PvRenderContext _render_context = *render_context;
+	GdkPixbuf *pb = pv_renderer_pixbuf_from_vg(doc->vg, _render_context);
+	if(NULL == pb){
+		et_error("");
+		return NULL;
+	}
+
+/*
 	GdkPixbuf *pixbuf = et_doc_get_pixbuf(doc);
+
 
 	double w = (double)gdk_pixbuf_get_width(pixbuf);
 	double h = (double)gdk_pixbuf_get_height(pixbuf);
@@ -111,6 +121,7 @@ GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, EtRenderContext *render
 			g_object_unref(G_OBJECT(pb_before));
 		}
 	}
+	*/
 
 	return pb;
 }

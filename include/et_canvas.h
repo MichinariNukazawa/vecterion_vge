@@ -6,13 +6,7 @@
 #include <stdbool.h>
 #include "et_doc_id.h"
 #include "et_mouse_action.h"
-
-struct _EtRenderContext;
-typedef struct _EtRenderContext EtRenderContext;
-
-struct _EtRenderContext{
-	double scale;
-};
+#include "pv_render_context.h"
 
 struct _EtCanvas;
 typedef struct _EtCanvas EtCanvas;
@@ -29,7 +23,7 @@ struct _EtCanvas{
 	GtkWidget *event_box;
 	GtkWidget *canvas;
 
-	EtRenderContext render_context;
+	PvRenderContext render_context;
 
 	EtDocId doc_id;
 	GdkPixbuf *pixbuf_buffer;

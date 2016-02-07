@@ -17,9 +17,10 @@ EtDoc *et_doc_new()
 		return NULL;
 	}
 
-	for(int i = 0; i < 10; i++){
-		this->points[i].x = -1.0;
-		this->points[i].y = -1.0;
+	this->vg = pv_vg_new();
+	if(NULL == this->vg){
+		et_error("");
+		return NULL;
 	}
 
 	this->callback_draws =
@@ -29,8 +30,6 @@ EtDoc *et_doc_new()
 		return NULL;
 	}
 	this->callback_draws[0].id = -1;
-
-	this->pixbuf = NULL;
 
 	return this;
 }
@@ -61,8 +60,19 @@ bool et_doc_draw_canvas(EtDoc *this)
 
 bool et_doc_set_image_from_file(EtDoc *this, const char *filepath)
 {
-	this->pixbuf = gdk_pixbuf_new_from_file(filepath, NULL);
-	if(NULL == this->pixbuf){
+	PvElement *element = pv_element_new(PvElementKind_Raster);
+	if(NULL == element){
+		et_error("");
+		return false;
+	}
+
+	if(!pv_element_raster_read_file(element, filepath)){
+		et_error("");
+		return false;
+	}
+
+	if(!pv_element_append_child(this->vg->element_root, 
+		NULL, element)){
 		et_error("");
 		return false;
 	}
@@ -94,33 +104,27 @@ EtCallbackId et_doc_add_draw_callback(EtDoc *this, EtDocDrawCallback func, gpoin
 	return new[num].id;
 }
 
-GdkPixbuf *et_doc_get_pixbuf(EtDoc *this){
-	return this->pixbuf;
-}
-
-void et_doc_add_point(EtDoc *this, double x, double y)
+bool et_doc_add_point(EtDoc *this, double x, double y)
 {
-	/*
-	   for(int i = 0; i < 10; i++){
-	   this->points[i].x = i * 10.0;
-	   this->points[i].y = i * 10;
-	   }
-	   for(int i = 0; i < 10; i++){
-	   et_debug("%d:%d,%d \n", i, (int)this->points[i].x, (int)this->points[i].y);
-	   }
-	 */
-	for(int i = 0; i < 10; i++){
-		if(this->points[i].x <= 0){
-			this->points[i].x = x;
-			this->points[i].y = y;
-			if(i < 9){
-				this->points[i + 1].x = -1.0;
-				this->points[i + 1].y = -1.0;
-			}else{
-				this->points[0].x = -1.0;
-				this->points[0].y = -1.0;
-			}
-			return;
-		}
+	PvElement *element = pv_element_new(PvElementKind_Bezier);
+	if(NULL == element){
+		et_error("");
+		return false;
 	}
+
+	PvAnchorPoint anchor_point = {
+		.points = {{0,0}, {x, y,}, {0,0}},
+	};
+	if(!pv_element_bezier_add_anchor_point(element, anchor_point)){
+		et_error("");
+		return false;
+	}
+
+	if(!pv_element_append_child(this->vg->element_root, 
+		NULL, element)){
+		et_error("");
+		return false;
+	}
+
+	return true;
 }
