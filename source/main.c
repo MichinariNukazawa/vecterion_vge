@@ -9,7 +9,7 @@
 #include "et_doc.h"
 #include "et_renderer.h"
 #include "et_pointing_manager.h"
-#include "et_current_state.h"
+#include "et_doc_manager.h"
 
 void __pvui_app_set_style();
 
@@ -124,16 +124,16 @@ int main (int argc, char **argv){
 		return -1;
 	}
 
-	EtCurrentState *current_state = et_current_state_init();
-	if(NULL == current_state){
+	EtDocManager *doc_manager = et_doc_manager_init();
+	if(NULL == doc_manager){
 		et_error("");
 		return -1;
 	}
-	if(!et_current_state_add_doc(doc1)){
+	if(!et_doc_manager_add_doc(doc1)){
 		et_error("");
 		return -1;
 	}
-	if(!et_pointing_manager_set_slot_mouse_action(et_current_state_signal_mouse_action)){
+	if(!et_pointing_manager_set_slot_mouse_action(et_doc_manager_signal_mouse_action)){
 		et_error("");
 		return -1;
 	}

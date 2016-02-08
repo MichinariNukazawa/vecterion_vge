@@ -1,14 +1,14 @@
-#include "et_current_state.h"
+#include "et_doc_manager.h"
 
 #include <stdlib.h>
 #include "et_error.h"
 
-EtCurrentState *current_state = NULL;
+EtDocManager *doc_manager = NULL;
 
-EtCurrentState *et_current_state_init()
+EtDocManager *et_doc_manager_init()
 {
-	EtCurrentState *this;
-	this = (EtCurrentState *)malloc(sizeof(EtCurrentState));
+	EtDocManager *this;
+	this = (EtDocManager *)malloc(sizeof(EtDocManager));
 	if(NULL == this){
 		et_critical("");
 		return NULL;
@@ -16,12 +16,12 @@ EtCurrentState *et_current_state_init()
 
 	this->doc_nodes[0].doc = NULL;
 
-	current_state = this;
+	doc_manager = this;
 
 	return this;
 }
 
-int _et_current_state_get_num_doc_node(EtDocNode *doc_nodes)
+int _et_doc_manager_get_num_doc_node(EtDocNode *doc_nodes)
 {
 	int i = 0;
 	while(NULL != doc_nodes[i].doc){
@@ -37,9 +37,9 @@ int _et_current_state_get_num_doc_node(EtDocNode *doc_nodes)
 	return i;
 }
 
-bool et_current_state_add_doc(EtDoc *doc)
+bool et_doc_manager_add_doc(EtDoc *doc)
 {
-	EtCurrentState *this = current_state;
+	EtDocManager *this = doc_manager;
 	if(NULL == this){
 		et_bug("");
 		return false;
@@ -50,15 +50,15 @@ bool et_current_state_add_doc(EtDoc *doc)
 		return false;
 	}
 
-	int num = _et_current_state_get_num_doc_node(this->doc_nodes);
+	int num = _et_doc_manager_get_num_doc_node(this->doc_nodes);
 	this->doc_nodes[num].doc = doc;
 
 	return true;
 }
 
-EtDoc *_et_current_state_get_doc_from_id(const EtDocId doc_id)
+EtDoc *_et_doc_manager_get_doc_from_id(const EtDocId doc_id)
 {
-	EtCurrentState *this = current_state;
+	EtDocManager *this = doc_manager;
 	if(NULL == this){
 		et_bug("");
 		return NULL;
@@ -76,10 +76,10 @@ EtDoc *_et_current_state_get_doc_from_id(const EtDocId doc_id)
 }
 
 
-bool et_current_state_signal_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
+bool et_doc_manager_signal_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 {
 	et_debug(" x:%d, y:%d,\n", (int)mouse_action.point.x, (int)mouse_action.point.y);
-	EtDoc *doc = _et_current_state_get_doc_from_id(id_doc);
+	EtDoc *doc = _et_doc_manager_get_doc_from_id(id_doc);
 	if(NULL == doc){
 		et_error("");
 		return false;
