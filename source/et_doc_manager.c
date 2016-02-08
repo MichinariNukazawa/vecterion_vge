@@ -76,7 +76,7 @@ EtDoc *_et_doc_manager_get_doc_from_id(const EtDocId doc_id)
 }
 
 
-bool et_doc_manager_signal_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
+bool et_doc_manager_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 {
 	et_debug(" x:%d, y:%d,\n", (int)mouse_action.point.x, (int)mouse_action.point.y);
 	EtDoc *doc = _et_doc_manager_get_doc_from_id(id_doc);

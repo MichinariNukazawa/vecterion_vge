@@ -114,12 +114,12 @@ int main (int argc, char **argv){
 		return -1;
 	}
 	if(0 > et_canvas_set_slot_mouse_action(canvas1,
-				et_pointing_manager_signal_mouse_action, NULL)){
+				et_pointing_manager_slot_mouse_action, NULL)){
 		et_error("");
 		return -1;
 	}
 	if(0 > et_canvas_set_slot_mouse_action(canvas2,
-				et_pointing_manager_signal_mouse_action, NULL)){
+				et_pointing_manager_slot_mouse_action, NULL)){
 		et_error("");
 		return -1;
 	}
@@ -133,7 +133,7 @@ int main (int argc, char **argv){
 		et_error("");
 		return -1;
 	}
-	if(!et_pointing_manager_set_slot_mouse_action(et_doc_manager_signal_mouse_action)){
+	if(!et_pointing_manager_set_slot_mouse_action(et_doc_manager_slot_mouse_action)){
 		et_error("");
 		return -1;
 	}

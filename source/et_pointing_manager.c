@@ -39,7 +39,7 @@ bool et_pointing_manager_set_slot_mouse_action(EtPointingManagerSlotMouseAction 
 	return true;
 }
 
-bool et_pointing_manager_signal_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
+bool et_pointing_manager_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 {
 	EtPointingManager *this = pointing_manager;
 	if(NULL == this){

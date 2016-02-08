@@ -23,7 +23,7 @@ struct _EtDocManager{
 
 EtDocManager *et_doc_manager_init();
 bool et_doc_manager_add_doc(EtDoc *doc);
-bool et_doc_manager_signal_mouse_action(EtDocId id_doc, EtMouseAction mouse_action);
+bool et_doc_manager_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action);
 
 #ifdef __ET_TEST__
 #endif // __ET_TEST__
