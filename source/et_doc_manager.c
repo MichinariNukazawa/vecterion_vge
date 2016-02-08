@@ -56,7 +56,7 @@ bool et_doc_manager_add_doc(EtDoc *doc)
 	return true;
 }
 
-EtDoc *_et_doc_manager_get_doc_from_id(const EtDocId doc_id)
+EtDoc *et_doc_manager_get_doc_from_id(const EtDocId doc_id)
 {
 	EtDocManager *this = doc_manager;
 	if(NULL == this){
@@ -74,20 +74,3 @@ EtDoc *_et_doc_manager_get_doc_from_id(const EtDocId doc_id)
 
 	return NULL;
 }
-
-
-bool et_doc_manager_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
-{
-	et_debug(" x:%d, y:%d,\n", (int)mouse_action.point.x, (int)mouse_action.point.y);
-	EtDoc *doc = _et_doc_manager_get_doc_from_id(id_doc);
-	if(NULL == doc){
-		et_error("");
-		return false;
-	}
-
-	et_doc_add_point(doc, mouse_action.point.x, mouse_action.point.y);
-	et_doc_draw_canvas(doc);
-
-	return true;
-}
-

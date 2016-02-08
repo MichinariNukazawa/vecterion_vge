@@ -10,6 +10,7 @@
 #include "et_renderer.h"
 #include "et_pointing_manager.h"
 #include "et_doc_manager.h"
+#include "et_current_state.h"
 
 void __pvui_app_set_style();
 
@@ -133,7 +134,8 @@ int main (int argc, char **argv){
 		et_error("");
 		return -1;
 	}
-	if(!et_pointing_manager_set_slot_mouse_action(et_doc_manager_slot_mouse_action)){
+	if(!et_pointing_manager_set_slot_mouse_action(
+				et_current_state_slot_mouse_action)){
 		et_error("");
 		return -1;
 	}
