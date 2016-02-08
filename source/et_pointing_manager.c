@@ -21,7 +21,7 @@ EtPointingManager *et_pointing_manager_init()
 	return this;
 }
 
-bool et_pointing_manager_set_slot_mouse_action(EtPointingManagerSlotMouseAction func)
+bool et_pointing_manager_set_slot_mouse_action(EtPointingManagerSlotMouseAction slot)
 {
 	EtPointingManager *this = pointing_manager;
 	if(NULL == this){
@@ -34,7 +34,7 @@ bool et_pointing_manager_set_slot_mouse_action(EtPointingManagerSlotMouseAction 
 		return false;
 	}
 
-	this->slot_mouse_action = func;
+	this->slot_mouse_action = slot;
 
 	return true;
 }
