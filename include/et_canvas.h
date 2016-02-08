@@ -14,27 +14,11 @@ typedef struct _EtCanvas EtCanvas;
 typedef void (*EtCanvasSlotChange)(EtCanvas *canvas, gpointer data);
 typedef bool (*EtCanvasSlotMouseAction)(EtDocId id_doc, EtMouseAction mouse_action);
 
-struct _EtCanvas{
-	GtkWidget *widget; // Top widget pointer.
-	GtkWidget *box;
-	GtkWidget *box_infobar;
-	GtkWidget *text_scale;
-	GtkWidget *scroll;
-	GtkWidget *event_box;
-	GtkWidget *canvas;
-
-	PvRenderContext render_context;
-
-	EtDocId doc_id;
-	GdkPixbuf *pixbuf_buffer;
-
-	EtCanvasSlotChange slot_change;
-	gpointer slot_change_data;
-	EtCanvasSlotMouseAction slot_mouse_action;
-	gpointer slot_mouse_action_data;
-};
 
 EtCanvas *et_canvas_new();
+PvRenderContext et_canvas_get_render_context(EtCanvas *this, bool *isError);
+EtDocId et_canvas_get_doc_id(EtCanvas *this);
+bool et_canvas_set_doc_id(EtCanvas *this, EtDocId doc_id);
 bool et_canvas_draw_pixbuf(EtCanvas *this, GdkPixbuf *pixbuf);
 int et_canvas_set_slot_change(EtCanvas *this,
 		EtCanvasSlotChange slot, gpointer data);

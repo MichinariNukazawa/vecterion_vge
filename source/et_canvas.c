@@ -3,6 +3,25 @@
 #include <stdlib.h>
 #include "et_error.h"
 
+struct _EtCanvas{
+	GtkWidget *widget; // Top widget pointer.
+	GtkWidget *box;
+	GtkWidget *box_infobar;
+	GtkWidget *text_scale;
+	GtkWidget *scroll;
+	GtkWidget *event_box;
+	GtkWidget *canvas;
+
+	PvRenderContext render_context;
+
+	EtDocId doc_id;
+	GdkPixbuf *pixbuf_buffer;
+
+	EtCanvasSlotChange slot_change;
+	gpointer slot_change_data;
+	EtCanvasSlotMouseAction slot_mouse_action;
+	gpointer slot_mouse_action_data;
+};
 
 gboolean cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data);
 
@@ -76,6 +95,42 @@ EtCanvas *et_canvas_new()
 	this->doc_id = -1;
 
 	return this;
+}
+
+PvRenderContext et_canvas_get_render_context(EtCanvas *this, bool *isError)
+{
+	PvRenderContext rc;
+	if(NULL == this){
+		et_bug("");
+		*isError = true;
+	}else{
+		*isError = false;
+		rc = this->render_context;
+	}
+
+	return rc;
+}
+
+EtDocId et_canvas_get_doc_id(EtCanvas *this)
+{
+	if(NULL == this){
+		et_bug("");
+		return -1;
+	}
+
+	return this->doc_id;
+}
+	
+bool et_canvas_set_doc_id(EtCanvas *this, EtDocId doc_id)
+{
+	if(NULL == this){
+		et_bug("");
+		return false;
+	}
+
+	this->doc_id = doc_id;
+
+	return true;
 }
 
 void _modifier_kind(int state)

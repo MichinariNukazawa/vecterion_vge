@@ -79,49 +79,13 @@ GdkPixbuf *_et_renderer_draw_pixbuf_from_point(GdkPixbuf *pixbuf, double x, doub
 	return pb;
 }
 
-GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext *render_context)
+GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext render_context)
 {
-	if(NULL == render_context){
-		et_bug("");
-		return NULL;
-	}
-
-	PvRenderContext _render_context = *render_context;
-	GdkPixbuf *pb = pv_renderer_pixbuf_from_vg(doc->vg, _render_context);
+	GdkPixbuf *pb = pv_renderer_pixbuf_from_vg(doc->vg, render_context);
 	if(NULL == pb){
 		et_error("");
 		return NULL;
 	}
-
-/*
-	GdkPixbuf *pixbuf = et_doc_get_pixbuf(doc);
-
-
-	double w = (double)gdk_pixbuf_get_width(pixbuf);
-	double h = (double)gdk_pixbuf_get_height(pixbuf);
-	w *= render_context->scale;
-	h *= render_context->scale;
-
-	// 編集用コピーをNew
-	GdkPixbuf *pb = NULL;
-	pb = gdk_pixbuf_scale_simple(pixbuf,
-			(int)w, (int)h,
-			GDK_INTERP_HYPER);
-
-	for(int i = 0; i < 10; i++){
-		GdkPixbuf *pb_before = pb;
-		GdkPixbuf *pb_after = _et_renderer_draw_pixbuf_from_point(pb,
-				doc->points[i].x * render_context->scale,
-				doc->points[i].y * render_context->scale);
-		if(NULL == pb_after){
-			et_error("");
-			return NULL;
-		}else{
-			pb = pb_after;
-			g_object_unref(G_OBJECT(pb_before));
-		}
-	}
-	*/
 
 	return pb;
 }
@@ -133,8 +97,15 @@ void _slot_et_render_from_doc_change(EtDoc *doc, gpointer data)
 	for(int i = 0; i < num; i++){
 		if(doc == this->canvas_and_docs[i].doc){
 			EtCanvas *canvas = this->canvas_and_docs[i].canvas;
+			bool isError = true;
+			PvRenderContext render_context
+				= et_canvas_get_render_context(canvas, &isError);
+			if(isError){
+				et_bug("");
+				return;
+			}
 			GdkPixbuf *pixbuf = _et_renderer_rendering_pixbuf_new(doc,
-					&(canvas->render_context));
+					render_context);
 			if(NULL == pixbuf){
 				et_error("");
 			}else{
@@ -152,8 +123,15 @@ void _slot_et_render_from_canvas_change(EtCanvas *canvas, gpointer data)
 	for(int i = 0; i < num; i++){
 		if(canvas == this->canvas_and_docs[i].canvas){
 			EtDoc *doc = this->canvas_and_docs[i].doc;
+			bool isError = true;
+			PvRenderContext render_context
+				= et_canvas_get_render_context(canvas, &isError);
+			if(isError){
+				et_bug("");
+				return;
+			}
 			GdkPixbuf *pixbuf = _et_renderer_rendering_pixbuf_new(doc,
-					&(canvas->render_context));
+					render_context);
 			if(NULL == pixbuf){
 				et_error("");
 			}else{
@@ -195,11 +173,15 @@ bool et_renderer_set_connection(EtRenderer *this, EtCanvas *canvas, EtDoc *doc)
 		et_bug("");
 		return false;
 	}
-	if(!(canvas->doc_id < 0)){
+	if(!(et_canvas_get_doc_id(canvas) < 0)){
 		et_bug("");
 		return false;
 	}
-	canvas->doc_id = doc->id;
+	if(!et_canvas_set_doc_id(canvas, doc->id)){
+		et_bug("");
+		return false;
+	}
+
 
 	this->canvas_and_docs = new;
 
