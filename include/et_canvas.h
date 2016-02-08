@@ -36,7 +36,7 @@ struct _EtCanvas{
 
 EtCanvas *et_canvas_new();
 bool et_canvas_draw_pixbuf(EtCanvas *this, GdkPixbuf *pixbuf);
-int et_canvas_set_change_render_context(EtCanvas *this,
+int et_canvas_set_slot_change(EtCanvas *this,
 		EtCanvasSlotChangeRenderContext slot, gpointer data);
 int et_canvas_set_signal_mouse_action(EtCanvas *this,
 		EtCanvasSignalMouseAction func, gpointer data);

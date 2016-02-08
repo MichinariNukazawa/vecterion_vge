@@ -236,7 +236,7 @@ bool et_canvas_draw_pixbuf(EtCanvas *this, GdkPixbuf *pixbuf)
 	return true;
 }
 
-int et_canvas_set_change_render_context(EtCanvas *this,
+int et_canvas_set_slot_change(EtCanvas *this,
 		EtCanvasSlotChangeRenderContext slot, gpointer data)
 {
 	if(NULL != this->slot_rc){
