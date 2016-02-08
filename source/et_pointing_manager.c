@@ -7,6 +7,11 @@ static EtPointingManager *pointing_manager = NULL;
 
 EtPointingManager *et_pointing_manager_init()
 {
+	if(NULL != pointing_manager){
+		et_bug("");
+		exit(-1);
+	}
+
 	EtPointingManager *this;
 	this = (EtPointingManager *)malloc(sizeof(EtPointingManager));
 	if(NULL == this){

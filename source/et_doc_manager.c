@@ -7,6 +7,11 @@ EtDocManager *doc_manager = NULL;
 
 EtDocManager *et_doc_manager_init()
 {
+	if(NULL != doc_manager){
+		et_bug("");
+		exit(-1);
+	}
+
 	EtDocManager *this;
 	this = (EtDocManager *)malloc(sizeof(EtDocManager));
 	if(NULL == this){
