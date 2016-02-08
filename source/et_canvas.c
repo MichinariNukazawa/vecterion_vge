@@ -69,8 +69,8 @@ EtCanvas *et_canvas_new()
 
 	this->widget = this->box;
 	this->pixbuf_buffer = NULL;
-	this->cb_update = NULL;
-	this->cb_update_data = NULL;
+	this->slot_rc = NULL;
+	this->slot_rc_data = NULL;
 	this->signal_mouse_action = NULL;
 	this->signal_mouse_action_data = NULL;
 	this->doc_id = -1;
@@ -176,9 +176,9 @@ gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer da
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (this->text_scale));
 	gtk_text_buffer_set_text (buffer, buf, -1);
 
-	if(NULL != this->cb_update){
+	if(NULL != this->slot_rc){
 		et_debug("CALL canvas:%ld\n", this);
-		this->cb_update(this, this->cb_update_data);
+		this->slot_rc(this, this->slot_rc_data);
 	}
 
 	return false;
@@ -236,15 +236,16 @@ bool et_canvas_draw_pixbuf(EtCanvas *this, GdkPixbuf *pixbuf)
 	return true;
 }
 
-int et_canvas_set_update_render_context(EtCanvas *this, EtCanvasUpdateCallback func, gpointer data)
+int et_canvas_set_change_render_context(EtCanvas *this,
+		EtCanvasSlotChangeRenderContext slot, gpointer data)
 {
-	if(NULL != this->cb_update){
+	if(NULL != this->slot_rc){
 		et_error("");
 		return -1;
 	}
 
-	this->cb_update = func;
-	this->cb_update_data = data;
+	this->slot_rc = slot;
+	this->slot_rc_data = data;
 
 	return 1; // Todo: callback id
 }

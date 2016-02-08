@@ -183,7 +183,7 @@ bool et_renderer_set_connection(EtRenderer *this, EtCanvas *canvas, EtDoc *doc)
 		return false;
 	}
 
-	int id = et_canvas_set_update_render_context(canvas,
+	int id = et_canvas_set_change_render_context(canvas,
 			_slot_et_render_from_canvas_change_render_context,
 			(gpointer)this);
 	if(id < 0){
