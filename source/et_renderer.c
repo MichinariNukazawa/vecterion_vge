@@ -81,7 +81,13 @@ GdkPixbuf *_et_renderer_draw_pixbuf_from_point(GdkPixbuf *pixbuf, double x, doub
 
 GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext render_context)
 {
-	GdkPixbuf *pb = pv_renderer_pixbuf_from_vg(doc->vg, render_context);
+	PvVg *vg = et_doc_get_vg_ref(doc);
+	if(NULL == vg){
+		et_bug("");
+		return NULL;
+	}
+
+	GdkPixbuf *pb = pv_renderer_pixbuf_from_vg(vg, render_context);
 	if(NULL == pb){
 		et_error("");
 		return NULL;
@@ -169,7 +175,7 @@ bool et_renderer_set_connection(EtRenderer *this, EtCanvas *canvas, EtDoc *doc)
 		return false;
 	}
 
-	if(doc->id < 0){
+	if(et_doc_get_id(doc) < 0){
 		et_bug("");
 		return false;
 	}
@@ -177,7 +183,7 @@ bool et_renderer_set_connection(EtRenderer *this, EtCanvas *canvas, EtDoc *doc)
 		et_bug("");
 		return false;
 	}
-	if(!et_canvas_set_doc_id(canvas, doc->id)){
+	if(!et_canvas_set_doc_id(canvas, et_doc_get_id(doc))){
 		et_bug("");
 		return false;
 	}

@@ -3,6 +3,14 @@
 #include <stdlib.h>
 #include "et_error.h"
 
+struct _EtDoc{
+	EtDocId id;
+	PvVg *vg;
+
+	EtDocSlotChangeInfo *slot_change_infos;
+};
+
+
 EtDoc *et_doc_new()
 {
 	EtDoc *this = (EtDoc *)malloc(sizeof(EtDoc));
@@ -32,6 +40,26 @@ EtDoc *et_doc_new()
 	this->slot_change_infos[0].id = -1;
 
 	return this;
+}
+
+EtDocId et_doc_get_id(EtDoc *this)
+{
+	if(NULL == this){
+		et_bug("");
+		return -1;
+	}
+
+	return this->id;
+}
+
+PvVg *et_doc_get_vg_ref(EtDoc *this)
+{
+	if(NULL == this){
+		et_bug("");
+		return NULL;
+	}
+
+	return this->vg;
 }
 
 int _et_doc_get_num_slot_change_infos(EtDocSlotChangeInfo *slot_change_infos){

@@ -22,16 +22,10 @@ struct _EtDocSlotChangeInfo{
 	gpointer data;
 };
 
-struct _EtDoc{
-	EtDocId id;
-	PvVg *vg;
-
-	EtDocSlotChangeInfo *slot_change_infos;
-};
-
-
 
 EtDoc *et_doc_new();
+EtDocId et_doc_get_id(EtDoc *this);
+PvVg *et_doc_get_vg_ref(EtDoc *this);
 bool et_doc_set_image_from_file(EtDoc *this, const char *filepath);
 EtCallbackId et_doc_add_slot_change(EtDoc *this, EtDocSlotChange slot, gpointer data);
 
