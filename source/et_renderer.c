@@ -126,7 +126,7 @@ GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext *render
 	return pb;
 }
 
-void _cb_et_renderer_draw(EtDoc *doc, gpointer data)
+void _slot_et_render_from_doc_change(EtDoc *doc, gpointer data)
 {
 	EtRenderer *this = (EtRenderer *)data;
 	int num = _et_renderer_get_num_canvas_and_docs(this->canvas_and_docs);
@@ -177,7 +177,7 @@ bool et_renderer_set_connection(EtRenderer *this, EtCanvas *canvas, EtDoc *doc)
 	new[num].canvas = canvas;
 	new[num].doc = doc;
 	new[num].id = et_doc_add_slot_change(doc,
-			_cb_et_renderer_draw, (gpointer)this);
+			_slot_et_render_from_doc_change, (gpointer)this);
 	if(new[num].id < 0){
 		et_error("");
 		return false;
