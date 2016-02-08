@@ -69,10 +69,10 @@ EtCanvas *et_canvas_new()
 
 	this->widget = this->box;
 	this->pixbuf_buffer = NULL;
-	this->slot_rc = NULL;
-	this->slot_rc_data = NULL;
-	this->signal_mouse_action = NULL;
-	this->signal_mouse_action_data = NULL;
+	this->slot_change = NULL;
+	this->slot_change_data = NULL;
+	this->slot_mouse_action = NULL;
+	this->slot_mouse_action_data = NULL;
 	this->doc_id = -1;
 
 	return this;
@@ -115,7 +115,7 @@ gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer dat
 	_mouse_button_kind(event->button);
 	_modifier_kind(event->state);
 
-	if(NULL == this->signal_mouse_action){
+	if(NULL == this->slot_mouse_action){
 		et_error("");
 	}else{
 		EtPoint point = {
@@ -127,7 +127,7 @@ gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer dat
 			.action = EtMouseAction_Down,
 			.point = point,
 		};
-		if(!this->signal_mouse_action(this->doc_id, mouse_action)){
+		if(!this->slot_mouse_action(this->doc_id, mouse_action)){
 			et_error("");
 		}
 	}
@@ -176,9 +176,9 @@ gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer da
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (this->text_scale));
 	gtk_text_buffer_set_text (buffer, buf, -1);
 
-	if(NULL != this->slot_rc){
+	if(NULL != this->slot_change){
 		et_debug("CALL canvas:%ld\n", this);
-		this->slot_rc(this, this->slot_rc_data);
+		this->slot_change(this, this->slot_change_data);
 	}
 
 	return false;
@@ -237,28 +237,29 @@ bool et_canvas_draw_pixbuf(EtCanvas *this, GdkPixbuf *pixbuf)
 }
 
 int et_canvas_set_slot_change(EtCanvas *this,
-		EtCanvasSlotChangeRenderContext slot, gpointer data)
+		EtCanvasSlotChange slot, gpointer data)
 {
-	if(NULL != this->slot_rc){
+	if(NULL != this->slot_change){
 		et_error("");
 		return -1;
 	}
 
-	this->slot_rc = slot;
-	this->slot_rc_data = data;
+	this->slot_change = slot;
+	this->slot_change_data = data;
 
 	return 1; // Todo: callback id
 }
 
-int et_canvas_set_signal_mouse_action(EtCanvas *this, EtCanvasSignalMouseAction func, gpointer data)
+int et_canvas_set_slot_mouse_action(EtCanvas *this,
+		EtCanvasSlotMouseAction slot, gpointer data)
 {
-	if(NULL != this->signal_mouse_action){
+	if(NULL != this->slot_mouse_action){
 		et_bug("");
 		return -1;
 	}
 
-	this->signal_mouse_action = func;
-	this->signal_mouse_action_data = data;
+	this->slot_mouse_action = slot;
+	this->slot_mouse_action_data = data;
 
 	return 1; // Todo: callback id
 }

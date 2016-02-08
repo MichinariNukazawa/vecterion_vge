@@ -11,8 +11,8 @@
 struct _EtCanvas;
 typedef struct _EtCanvas EtCanvas;
 
-typedef void (*EtCanvasSlotChangeRenderContext)(EtCanvas *canvas, gpointer data);
-typedef bool (*EtCanvasSignalMouseAction)(EtDocId id_doc, EtMouseAction mouse_action);
+typedef void (*EtCanvasSlotChange)(EtCanvas *canvas, gpointer data);
+typedef bool (*EtCanvasSlotMouseAction)(EtDocId id_doc, EtMouseAction mouse_action);
 
 struct _EtCanvas{
 	GtkWidget *widget; // Top widget pointer.
@@ -28,18 +28,18 @@ struct _EtCanvas{
 	EtDocId doc_id;
 	GdkPixbuf *pixbuf_buffer;
 
-	EtCanvasSlotChangeRenderContext slot_rc;
-	gpointer slot_rc_data;
-	EtCanvasSignalMouseAction signal_mouse_action;
-	gpointer signal_mouse_action_data;
+	EtCanvasSlotChange slot_change;
+	gpointer slot_change_data;
+	EtCanvasSlotMouseAction slot_mouse_action;
+	gpointer slot_mouse_action_data;
 };
 
 EtCanvas *et_canvas_new();
 bool et_canvas_draw_pixbuf(EtCanvas *this, GdkPixbuf *pixbuf);
 int et_canvas_set_slot_change(EtCanvas *this,
-		EtCanvasSlotChangeRenderContext slot, gpointer data);
-int et_canvas_set_signal_mouse_action(EtCanvas *this,
-		EtCanvasSignalMouseAction func, gpointer data);
+		EtCanvasSlotChange slot, gpointer data);
+int et_canvas_set_slot_mouse_action(EtCanvas *this,
+		EtCanvasSlotMouseAction slot, gpointer data);
 
 #ifdef __ET_TEST__
 #endif // __ET_TEST__
