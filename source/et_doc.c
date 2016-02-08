@@ -23,20 +23,20 @@ EtDoc *et_doc_new()
 		return NULL;
 	}
 
-	this->callback_draws =
-		(EtDocCallback *)malloc(sizeof(EtDocCallback) * 1);
-	if(NULL == this->callback_draws){
+	this->slot_change_infos =
+		(EtDocSlotChangeInfo *)malloc(sizeof(EtDocSlotChangeInfo) * 1);
+	if(NULL == this->slot_change_infos){
 		et_error("");
 		return NULL;
 	}
-	this->callback_draws[0].id = -1;
+	this->slot_change_infos[0].id = -1;
 
 	return this;
 }
 
-int _et_doc_get_num_callback_draws(EtDocCallback *callback_draws){
+int _et_doc_get_num_slot_change_infos(EtDocSlotChangeInfo *slot_change_infos){
 	int i = 0;
-	while(0 <= callback_draws[i].id){
+	while(0 <= slot_change_infos[i].id){
 		i++;
 	}
 
@@ -45,14 +45,14 @@ int _et_doc_get_num_callback_draws(EtDocCallback *callback_draws){
 
 bool et_doc_draw_canvas(EtDoc *this)
 {
-	int num = _et_doc_get_num_callback_draws(this->callback_draws);
+	int num = _et_doc_get_num_slot_change_infos(this->slot_change_infos);
 	if(0 == num){
 		et_error("");
 		return false;
 	}
 
 	for(int i = 0; i < num; i++){
-		this->callback_draws[i].func(this, this->callback_draws[i].data);
+		this->slot_change_infos[i].func(this, this->slot_change_infos[i].data);
 	}
 
 	return true;
@@ -85,11 +85,11 @@ bool et_doc_set_image_from_file(EtDoc *this, const char *filepath)
 	return true;
 }
 
-EtCallbackId et_doc_add_draw_callback(EtDoc *this, EtDocDrawCallback func, gpointer data)
+EtCallbackId et_doc_add_slot_change(EtDoc *this, EtDocSlotChange func, gpointer data)
 {
-	int num = _et_doc_get_num_callback_draws(this->callback_draws);
-	EtDocCallback *new = realloc(this->callback_draws,
-			sizeof(EtDocCallback) * (num + 2));
+	int num = _et_doc_get_num_slot_change_infos(this->slot_change_infos);
+	EtDocSlotChangeInfo *new = realloc(this->slot_change_infos,
+			sizeof(EtDocSlotChangeInfo) * (num + 2));
 	if(NULL == new){
 		return -1;
 	}
@@ -98,7 +98,7 @@ EtCallbackId et_doc_add_draw_callback(EtDoc *this, EtDocDrawCallback func, gpoin
 	new[num].func = func;
 	new[num].data = data;
 
-	this->callback_draws = new;
+	this->slot_change_infos = new;
 
 	// Todo: create EtCallbackId
 	return new[num].id;

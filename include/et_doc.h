@@ -12,13 +12,13 @@ struct _EtDoc;
 typedef struct _EtDoc EtDoc;
 
 typedef int EtCallbackId;
-typedef void (*EtDocDrawCallback)(EtDoc *doc, gpointer data);
+typedef void (*EtDocSlotChange)(EtDoc *doc, gpointer data);
 
-struct _EtDocCallback;
-typedef struct _EtDocCallback EtDocCallback;
-struct _EtDocCallback{
+struct _EtDocSlotChangeInfo;
+typedef struct _EtDocSlotChangeInfo EtDocSlotChangeInfo;
+struct _EtDocSlotChangeInfo{
 	int id;
-	EtDocDrawCallback func;
+	EtDocSlotChange func;
 	gpointer data;
 };
 
@@ -26,14 +26,14 @@ struct _EtDoc{
 	EtDocId id;
 	PvVg *vg;
 
-	EtDocCallback *callback_draws;
+	EtDocSlotChangeInfo *slot_change_infos;
 };
 
 
 
 EtDoc *et_doc_new();
 bool et_doc_set_image_from_file(EtDoc *this, const char *filepath);
-EtCallbackId et_doc_add_draw_callback(EtDoc *this, EtDocDrawCallback func, gpointer data);
+EtCallbackId et_doc_add_slot_change(EtDoc *this, EtDocSlotChange func, gpointer data);
 
 bool et_doc_add_point(EtDoc *this, double x, double y);
 bool et_doc_draw_canvas(EtDoc *this);
