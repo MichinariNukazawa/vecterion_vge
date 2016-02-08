@@ -145,7 +145,7 @@ void _slot_et_render_from_doc_change(EtDoc *doc, gpointer data)
 	}
 }
 
-void _et_renderer_cb_update_canvas(EtCanvas *canvas, gpointer data)
+void _slot_et_render_from_canvas_change_render_context(EtCanvas *canvas, gpointer data)
 {
 	EtRenderer *this = (EtRenderer *)data;
 	int num = _et_renderer_get_num_canvas_and_docs(this->canvas_and_docs);
@@ -184,7 +184,8 @@ bool et_renderer_set_connection(EtRenderer *this, EtCanvas *canvas, EtDoc *doc)
 	}
 
 	int id = et_canvas_set_update_render_context(canvas,
-			_et_renderer_cb_update_canvas, (gpointer)this);
+			_slot_et_render_from_canvas_change_render_context,
+			(gpointer)this);
 	if(id < 0){
 		et_error("");
 		return false;
