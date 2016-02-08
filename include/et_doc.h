@@ -18,7 +18,7 @@ struct _EtDocSlotChangeInfo;
 typedef struct _EtDocSlotChangeInfo EtDocSlotChangeInfo;
 struct _EtDocSlotChangeInfo{
 	int id;
-	EtDocSlotChange func;
+	EtDocSlotChange slot;
 	gpointer data;
 };
 
@@ -33,7 +33,7 @@ struct _EtDoc{
 
 EtDoc *et_doc_new();
 bool et_doc_set_image_from_file(EtDoc *this, const char *filepath);
-EtCallbackId et_doc_add_slot_change(EtDoc *this, EtDocSlotChange func, gpointer data);
+EtCallbackId et_doc_add_slot_change(EtDoc *this, EtDocSlotChange slot, gpointer data);
 
 bool et_doc_add_point(EtDoc *this, double x, double y);
 bool et_doc_draw_canvas(EtDoc *this);

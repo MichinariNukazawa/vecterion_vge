@@ -52,7 +52,7 @@ bool et_doc_draw_canvas(EtDoc *this)
 	}
 
 	for(int i = 0; i < num; i++){
-		this->slot_change_infos[i].func(this, this->slot_change_infos[i].data);
+		this->slot_change_infos[i].slot(this, this->slot_change_infos[i].data);
 	}
 
 	return true;
@@ -85,7 +85,7 @@ bool et_doc_set_image_from_file(EtDoc *this, const char *filepath)
 	return true;
 }
 
-EtCallbackId et_doc_add_slot_change(EtDoc *this, EtDocSlotChange func, gpointer data)
+EtCallbackId et_doc_add_slot_change(EtDoc *this, EtDocSlotChange slot, gpointer data)
 {
 	int num = _et_doc_get_num_slot_change_infos(this->slot_change_infos);
 	EtDocSlotChangeInfo *new = realloc(this->slot_change_infos,
@@ -95,7 +95,7 @@ EtCallbackId et_doc_add_slot_change(EtDoc *this, EtDocSlotChange func, gpointer 
 	}
 	new[num + 1].id = -1;
 	new[num].id = 1; // Todo: identific number.
-	new[num].func = func;
+	new[num].slot = slot;
 	new[num].data = data;
 
 	this->slot_change_infos = new;
