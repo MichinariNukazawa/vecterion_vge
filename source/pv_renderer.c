@@ -27,9 +27,19 @@ bool _pv_renderer_cairo_anchor_points(
 		x *= render_context.scale;
 		y *= render_context.scale;
 		cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
-		cairo_rectangle (cr, x, y, 2, 2);
-		cairo_fill (cr);
+		if(0 == i){
+			if(1 == anchor_points_num){
+				cairo_rectangle (cr, x, y, 2, 2);
+				cairo_fill (cr);
+			}else{
+				cairo_set_line_width(cr, 2.0);
+				cairo_move_to(cr, x, y);
+			}
+		}else{
+			cairo_line_to(cr, x, y);
+		}
 	}
+	cairo_stroke(cr);
 
 	return true;
 }

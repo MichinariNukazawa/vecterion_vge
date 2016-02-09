@@ -28,8 +28,8 @@ EtDocId et_doc_get_id(EtDoc *this);
 PvVg *et_doc_get_vg_ref(EtDoc *this);
 bool et_doc_set_image_from_file(EtDoc *this, const char *filepath);
 EtCallbackId et_doc_add_slot_change(EtDoc *this, EtDocSlotChange slot, gpointer data);
-
-bool et_doc_add_point(EtDoc *this, double x, double y);
+// _element: 
+bool et_doc_add_point(EtDoc *this, PvElement **_element, double x, double y);
 bool et_doc_draw_canvas(EtDoc *this);
 
 #ifdef __ET_TEST__

@@ -40,7 +40,15 @@ static gpointer worker_func(gpointer data)
 
 static gboolean cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer user_data)
 {
-	g_print("keyval=%d static=%d string=%s\n", event->keyval, event->state, event->string);
+	g_print("keyval=%d static=%d string=%s\n",
+			event->keyval, event->state, event->string);
+
+	EtKeyAction ka = {
+		.key = event->keyval,
+		.action = EtKeyAction_Down,
+	};
+	et_current_state_slot_key_action(ka);
+
 	return FALSE;
 }
 
@@ -49,6 +57,12 @@ int main (int argc, char **argv){
 
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_set_size_request (window, 500,400);
+
+	EtCurrentState *current_state = et_current_state_init();
+	if(NULL == current_state){
+		et_bug("");
+		return -1;
+	}
 
 	g_signal_connect(G_OBJECT(window), "key-press-event",
 			G_CALLBACK(cb_key_press), NULL);

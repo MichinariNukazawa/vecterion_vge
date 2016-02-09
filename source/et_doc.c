@@ -132,10 +132,18 @@ EtCallbackId et_doc_add_slot_change(EtDoc *this, EtDocSlotChange slot, gpointer 
 	return new[num].id;
 }
 
-bool et_doc_add_point(EtDoc *this, double x, double y)
+bool et_doc_add_point(EtDoc *this, PvElement **_element, double x, double y)
 {
-	PvElement *element = pv_element_new(PvElementKind_Bezier);
+	PvElement *element = *_element;
 	if(NULL == element){
+		element = pv_element_new(PvElementKind_Bezier);
+		if(NULL == element){
+			et_error("");
+			return false;
+		}
+	}
+
+	if(PvElementKind_Bezier != element->kind){
 		et_error("");
 		return false;
 	}
@@ -153,6 +161,8 @@ bool et_doc_add_point(EtDoc *this, double x, double y)
 		et_error("");
 		return false;
 	}
+
+	*_element = element;
 
 	return true;
 }
