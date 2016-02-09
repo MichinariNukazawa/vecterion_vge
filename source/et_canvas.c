@@ -244,7 +244,6 @@ gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer da
 	gtk_text_buffer_set_text (buffer, buf, -1);
 
 	if(NULL != this->slot_change){
-		et_debug("CALL canvas:%ld\n", this);
 		this->slot_change(this, this->slot_change_data);
 	}
 
