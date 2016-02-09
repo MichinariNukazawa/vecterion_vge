@@ -51,7 +51,7 @@ EtCanvas *et_canvas_new()
 	this->text_scale = gtk_text_view_new();
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (this->text_scale));
 	gtk_text_buffer_set_text (buffer, "default scale", -1);
-	gtk_text_view_set_editable (this->text_scale, false);
+	gtk_text_view_set_editable (GTK_TEXT_VIEW(this->text_scale), false);
 	gtk_container_add(GTK_CONTAINER(this->box_infobar), this->text_scale);
 
 	this->event_box = gtk_event_box_new();
