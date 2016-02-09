@@ -71,7 +71,7 @@ EtDoc *et_doc_manager_get_doc_from_id(const EtDocId doc_id)
 
 	int i = 0;
 	while(NULL != this->doc_nodes[i].doc){
-		if(doc_id == this->doc_nodes[i].doc->id){
+		if(doc_id == et_doc_get_id(this->doc_nodes[i].doc)){
 			return this->doc_nodes[i].doc;
 		}
 		i++;

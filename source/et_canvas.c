@@ -97,6 +97,17 @@ EtCanvas *et_canvas_new()
 	return this;
 }
 
+GtkWidget *et_canvas_get_widget_frame(EtCanvas *this)
+{
+	if(NULL == this){
+		et_bug("");
+		return NULL;
+	}
+
+	return this->widget;
+}
+
+
 PvRenderContext et_canvas_get_render_context(EtCanvas *this, bool *isError)
 {
 	PvRenderContext rc;

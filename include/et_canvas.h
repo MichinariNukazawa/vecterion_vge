@@ -16,6 +16,7 @@ typedef bool (*EtCanvasSlotMouseAction)(EtDocId id_doc, EtMouseAction mouse_acti
 
 
 EtCanvas *et_canvas_new();
+GtkWidget *et_canvas_get_widget_frame(EtCanvas *this);
 PvRenderContext et_canvas_get_render_context(EtCanvas *this, bool *isError);
 EtDocId et_canvas_get_doc_id(EtCanvas *this);
 bool et_canvas_set_doc_id(EtCanvas *this, EtDocId doc_id);

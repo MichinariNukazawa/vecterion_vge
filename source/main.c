@@ -84,10 +84,20 @@ int main (int argc, char **argv){
 
 
 	EtCanvas *canvas1 = et_canvas_new();
-	gtk_container_add(GTK_CONTAINER(frame1), canvas1->widget);
+	GtkWidget *canvas_frame1 = et_canvas_get_widget_frame(canvas1);
+	if(NULL == canvas_frame1){
+		et_bug("");
+		return -1;
+	}
+	gtk_container_add(GTK_CONTAINER(frame1), canvas_frame1);
 
 	EtCanvas *canvas2 = et_canvas_new();
-	gtk_container_add(GTK_CONTAINER(frame2), canvas2->widget);
+	GtkWidget *canvas_frame2 = et_canvas_get_widget_frame(canvas2);
+	if(NULL == canvas_frame2){
+		et_bug("");
+		return -1;
+	}
+	gtk_container_add(GTK_CONTAINER(frame2), canvas_frame2);
 
 	EtDoc *doc1 = et_doc_new();
 	if(NULL == doc1){
