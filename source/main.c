@@ -125,6 +125,9 @@ int main (int argc, char **argv){
 		et_bug("");
 		return -1;
 	}
+	gtk_box_pack_start(GTK_BOX(box1),
+			et_layer_view_get_widget_frame(layer_view),
+			true, true, 3);
 
 	EtDocManager *doc_manager = et_doc_manager_init();
 	if(NULL == doc_manager){

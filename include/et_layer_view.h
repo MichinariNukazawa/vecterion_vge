@@ -14,6 +14,7 @@ typedef void (*EtLayerViewSlotChange)(EtLayerView *layer_view, gpointer data);
 
 
 EtLayerView *et_layer_view_init();
+GtkWidget *et_layer_view_get_widget_frame(EtLayerView *this);
 bool et_layer_view_set_doc_id(EtLayerView *this, EtDocId doc_id);
 void et_layer_view_slot_from_doc_change(EtDoc *doc, gpointer data);
 

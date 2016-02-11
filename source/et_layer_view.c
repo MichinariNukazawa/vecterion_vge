@@ -8,6 +8,11 @@
 
 
 struct _EtLayerView{
+	GtkWidget *widget; // Top widget pointer.
+	GtkWidget *box;
+	GtkWidget *scroll;
+	GtkWidget *text;
+
 	EtDocId doc_id;
 };
 
@@ -38,11 +43,36 @@ EtLayerView *et_layer_view_init()
 		return NULL;
 	}
 
+	this->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+
+	this->scroll = gtk_scrolled_window_new(NULL, NULL);
+	gtk_widget_set_hexpand(GTK_WIDGET(this->scroll), TRUE);  
+	gtk_widget_set_vexpand(GTK_WIDGET(this->scroll), TRUE);
+	gtk_container_add(GTK_CONTAINER(this->box), this->scroll);
+
+	this->text = gtk_text_view_new();
+	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (this->text));
+	gtk_text_buffer_set_text (buffer, "default scale", -1);
+	gtk_text_view_set_editable (GTK_TEXT_VIEW(this->text), false);
+	gtk_container_add(GTK_CONTAINER(this->scroll), this->text);
+
+	this->widget = this->box;
+
 	this->doc_id = -1;
 
 	layer_view = this;
 
 	return this;
+}
+
+GtkWidget *et_layer_view_get_widget_frame(EtLayerView *this)
+{
+	if(NULL == this){
+		et_error("");
+		return NULL;
+	}
+
+	return this->widget;
 }
 
 bool _et_layer_view_read_layer_tree(PvElement *element, gpointer data, int level)
@@ -105,17 +135,24 @@ bool _et_layer_view_slot_update_doc()
 		return false;
 	}
 
-	// Todo: show window.
-	et_debug("\n");
+	char buf[10240];
+	buf[0] = '\0';
 	int num = pv_general_get_parray_num((void **)func_rlt_data_pack.datas);
 	for(int i = 0; i < num; i++){
 		EtLayerViewRltData *data = func_rlt_data_pack.datas[i];
-		printf("%03d:%03d:%08x '%s'\n",
+		char str_tmp[128];
+		snprintf(str_tmp, sizeof(str_tmp),
+				"%03d:%03d:%08lx '%s'\n",
 				data->level, data->kind,
 				data->debug_pointer_value,
 				((data->name)?"":data->name));
+		strncat(buf, str_tmp, sizeof(buf));
 		free(data);
 	}
+
+	GtkTextBuffer *buffer = gtk_text_view_get_buffer(
+					GTK_TEXT_VIEW (this->text));
+	gtk_text_buffer_set_text (buffer, buf, -1);
 
 	return true;
 }
