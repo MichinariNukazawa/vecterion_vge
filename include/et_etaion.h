@@ -8,14 +8,13 @@
 #include "et_mouse_action.h"
 #include "et_key_action.h"
 #include "pv_element.h"
+#include "et_state.h"
 
 struct _EtEtaion;
 typedef struct _EtEtaion EtEtaion;
 
 struct _EtEtaion{
-	EtDocId doc_id;
-	PvElement *elementGroup;
-	PvElement *element;
+	EtState state;
 };
 
 EtEtaion *et_etaion_init();

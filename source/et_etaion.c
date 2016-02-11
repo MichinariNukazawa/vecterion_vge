@@ -6,17 +6,6 @@
 
 EtEtaion *current_state = NULL;
 
-void _et_etaion_unfocus(EtEtaion *this)
-{
-	if(NULL == this){
-		et_bug("");
-		exit(-1);
-	}
-
-	this->doc_id = -1;
-	this->element = NULL;
-}
-
 EtEtaion *et_etaion_init()
 {
 	if(NULL != current_state){
@@ -30,8 +19,7 @@ EtEtaion *et_etaion_init()
 		return NULL;
 	}
 
-	this->elementGroup = NULL;
-	_et_etaion_unfocus(this);
+	et_state_unfocus(&(this->state));
 
 	current_state = this;
 
@@ -48,9 +36,9 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 		exit(-1);
 	}
 
-	if(id_doc != this->doc_id){
-		_et_etaion_unfocus(this);
-		this->doc_id = id_doc;
+	if(id_doc != (this->state).doc_id){
+		et_state_unfocus(&(this->state));
+		(this->state).doc_id = id_doc;
 	}
 
 	EtDoc *doc = et_doc_manager_get_doc_from_id(id_doc);
@@ -59,13 +47,13 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 		return false;
 	}
 
-	PvElement *_element = this->element; 
+	PvElement *_element = (this->state).element; 
 	if(!et_doc_add_point(doc, &_element,
-			mouse_action.point.x, mouse_action.point.y)){
+				mouse_action.point.x, mouse_action.point.y)){
 		et_error("");
 		return false;
 	}else{
-		this->element = _element;
+		(this->state).element = _element;
 	}
 
 	et_doc_draw_canvas(doc);
@@ -85,7 +73,7 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 
 	switch(key_action.key){
 		case EtKey_Enter:
-			_et_etaion_unfocus(this);
+			et_state_unfocus(&(this->state));
 			break;
 		default:
 			et_debug("no use:%d\n", key_action.key);
