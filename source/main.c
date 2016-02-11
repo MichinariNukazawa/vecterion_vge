@@ -11,6 +11,7 @@
 #include "et_pointing_manager.h"
 #include "et_doc_manager.h"
 #include "et_etaion.h"
+#include "et_layer_view.h"
 
 void __pvui_app_set_style();
 
@@ -113,8 +114,36 @@ int main (int argc, char **argv){
 	}
 	gtk_container_add(GTK_CONTAINER(frame2), canvas_frame2);
 
+	EtPointingManager *pointing_manager = et_pointing_manager_init();
+	if(NULL == pointing_manager){
+		et_error("");
+		return -1;
+	}
+
+	EtLayerView *layer_view = et_layer_view_init();
+	if(NULL == layer_view){
+		et_bug("");
+		return -1;
+	}
+
+	EtDocManager *doc_manager = et_doc_manager_init();
+	if(NULL == doc_manager){
+		et_error("");
+		return -1;
+	}
+	if(!et_pointing_manager_set_slot_mouse_action(
+				et_etaion_slot_mouse_action)){
+		et_error("");
+		return -1;
+	}
+
 	EtDoc *doc1 = et_doc_new();
 	if(NULL == doc1){
+		et_error("");
+		return -1;
+	}
+
+	if(!et_doc_manager_add_doc(doc1)){
 		et_error("");
 		return -1;
 	}
@@ -133,11 +162,16 @@ int main (int argc, char **argv){
 		return -1;
 	}
 
-	EtPointingManager *pointing_manager = et_pointing_manager_init();
-	if(NULL == pointing_manager){
+	if(!et_doc_add_slot_change(doc1, et_layer_view_slot_from_doc_change, NULL)){
 		et_error("");
 		return -1;
 	}
+
+	if(!et_layer_view_set_doc_id(layer_view, et_doc_get_id(doc1))){
+		et_error("");
+		return -1;
+	}
+
 	if(0 > et_canvas_set_slot_mouse_action(canvas1,
 				et_pointing_manager_slot_mouse_action, NULL)){
 		et_error("");
@@ -145,21 +179,6 @@ int main (int argc, char **argv){
 	}
 	if(0 > et_canvas_set_slot_mouse_action(canvas2,
 				et_pointing_manager_slot_mouse_action, NULL)){
-		et_error("");
-		return -1;
-	}
-
-	EtDocManager *doc_manager = et_doc_manager_init();
-	if(NULL == doc_manager){
-		et_error("");
-		return -1;
-	}
-	if(!et_doc_manager_add_doc(doc1)){
-		et_error("");
-		return -1;
-	}
-	if(!et_pointing_manager_set_slot_mouse_action(
-				et_etaion_slot_mouse_action)){
 		et_error("");
 		return -1;
 	}

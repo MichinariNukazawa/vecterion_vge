@@ -79,7 +79,28 @@ struct _PvElement{
 	gpointer data;
 };
 
+/**
+ * use pv_element_recursive();
+ * @return false: cancel recursive(search childs).
+ * false is not error.
+ * (this is no tracking "*error" is true.
+ *  please use your own "data" struct.)
+ */
+typedef bool (*PvElementRecursiveFunc)(PvElement *element, gpointer data, int level);
+typedef struct _PvElementRecursiveError{
+	bool is_error;
+	int level;
+	PvElement *element;
+}PvElementRecursiveError;
+
+
 PvElement *pv_element_new(const PvElementKind kind);
+/** @brief
+ * @return false: error from this function.
+ */
+bool pv_element_recursive(PvElement *element,
+		PvElementRecursiveFunc func, gpointer data,
+		PvElementRecursiveError *error);
 /** @brief 
  *
  * @param parent

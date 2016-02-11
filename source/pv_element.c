@@ -52,6 +52,76 @@ gpointer _pv_element_group_data_new()
 	return (gpointer)data;
 }
 
+bool _pv_element_recursive_inline(PvElement *element,
+		PvElementRecursiveFunc func, gpointer data,
+		int *level,
+		PvElementRecursiveError *error)
+{
+	if(!func(element, data, *level)){
+		// cancel function this childs
+		return true;
+	}
+
+	(*level)++;
+
+	bool ret = true;
+
+	int num = pv_general_get_parray_num((void **)element->childs);
+	for(int i = 0; i < num; i++){
+		if(!_pv_element_recursive_inline(element->childs[i],
+					func, data,
+					level,
+					error)){
+			if(!error->is_error){
+				// logging first error.
+				error->is_error = true;
+				error->level = *level;
+				error->element = element->childs[i];
+			}
+			ret = false;
+			goto end;
+		}
+	}
+
+end:
+	(*level)--;
+
+	return ret;
+}
+
+
+bool pv_element_recursive(PvElement *element,
+		PvElementRecursiveFunc func, gpointer data,
+		PvElementRecursiveError *error)
+{
+	if(NULL == element){
+		pv_error("");
+		return false;
+	}
+	if(NULL == func){
+		pv_error("");
+		return false;
+	}
+	if(NULL == error){
+		pv_error("");
+		return false;
+	}
+
+	// initialize.
+	error->is_error = false;
+	error->level = -1;
+	error->element = NULL;
+
+	int level = 0;
+	bool ret = _pv_element_recursive_inline(element,
+			func, data,
+			&level,
+			error);
+
+	return ret;
+}
+
+
 gpointer _pv_element_bezier_data_new()
 {
 	PvElementBezierData *data = (PvElementBezierData *)malloc(sizeof(PvElementBezierData));
