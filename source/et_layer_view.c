@@ -181,3 +181,10 @@ void et_layer_view_slot_from_doc_change(EtDoc *doc, gpointer data)
 	}
 }
 
+void et_layer_view_slot_from_etaion_change_state(EtState state, gpointer data)
+{
+	unsigned long debug_pointer = 0;
+	memcpy(&debug_pointer, &state.element, sizeof(unsigned long));
+
+	et_debug("doc:%d, elem:%ld,\n", state.doc_id, debug_pointer);
+}

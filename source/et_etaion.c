@@ -19,12 +19,24 @@ EtEtaion *et_etaion_init()
 		return NULL;
 	}
 
+	this->slot_change_state = NULL;
+	this->slot_change_state_data = NULL;
 	et_state_unfocus(&(this->state));
 
 	current_state = this;
 
 	return this;
 }
+
+void _et_etaion_signal_change_state(EtEtaion *this)
+{
+	if(NULL == this->slot_change_state){
+		return;
+	}
+
+	this->slot_change_state(this->state, this->slot_change_state_data);
+}
+
 
 bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 {
@@ -39,6 +51,7 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 	if(id_doc != (this->state).doc_id){
 		et_state_unfocus(&(this->state));
 		(this->state).doc_id = id_doc;
+		_et_etaion_signal_change_state(this);
 	}
 
 	EtDoc *doc = et_doc_manager_get_doc_from_id(id_doc);
@@ -74,10 +87,30 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 	switch(key_action.key){
 		case EtKey_Enter:
 			et_state_unfocus(&(this->state));
+			_et_etaion_signal_change_state(this);
 			break;
 		default:
 			et_debug("no use:%d\n", key_action.key);
 	}
 
 	return true;
+}
+
+int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data)
+{
+	EtEtaion *this = current_state;
+	if(NULL == this){
+		et_bug("");
+		exit(-1);
+	}
+
+	if(NULL != this->slot_change_state){
+		et_bug("");
+		return -1;
+	}
+
+	this->slot_change_state = slot;
+	this->slot_change_state_data = data;
+
+	return 1; // Todo: return callback id
 }

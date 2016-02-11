@@ -125,6 +125,11 @@ int main (int argc, char **argv){
 		et_bug("");
 		return -1;
 	}
+	if(0 > et_etaion_set_slot_change_state(
+				et_layer_view_slot_from_etaion_change_state, NULL)){
+		et_bug("");
+		return -1;
+	}
 	gtk_box_pack_start(GTK_BOX(box1),
 			et_layer_view_get_widget_frame(layer_view),
 			true, true, 3);
