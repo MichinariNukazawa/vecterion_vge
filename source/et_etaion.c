@@ -1,12 +1,12 @@
-#include "et_current_state.h"
+#include "et_etaion.h"
 
 #include <stdlib.h>
 #include "et_error.h"
 #include "et_doc_manager.h"
 
-EtCurrentState *current_state = NULL;
+EtEtaion *current_state = NULL;
 
-void _et_current_state_unfocus(EtCurrentState *this)
+void _et_etaion_unfocus(EtEtaion *this)
 {
 	if(NULL == this){
 		et_bug("");
@@ -17,39 +17,39 @@ void _et_current_state_unfocus(EtCurrentState *this)
 	this->element = NULL;
 }
 
-EtCurrentState *et_current_state_init()
+EtEtaion *et_etaion_init()
 {
 	if(NULL != current_state){
 		et_bug("");
 		exit(-1);
 	}
 
-	EtCurrentState *this = (EtCurrentState *)malloc(sizeof(EtCurrentState));
+	EtEtaion *this = (EtEtaion *)malloc(sizeof(EtEtaion));
 	if(NULL == this){
 		et_error("");
 		return NULL;
 	}
 
 	this->elementGroup = NULL;
-	_et_current_state_unfocus(this);
+	_et_etaion_unfocus(this);
 
 	current_state = this;
 
 	return this;
 }
 
-bool et_current_state_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
+bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 {
 	et_debug(" x:%d, y:%d,\n", (int)mouse_action.point.x, (int)mouse_action.point.y);
 
-	EtCurrentState *this = current_state;
+	EtEtaion *this = current_state;
 	if(NULL == this){
 		et_bug("");
 		exit(-1);
 	}
 
 	if(id_doc != this->doc_id){
-		_et_current_state_unfocus(this);
+		_et_etaion_unfocus(this);
 		this->doc_id = id_doc;
 	}
 
@@ -73,9 +73,9 @@ bool et_current_state_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_acti
 	return true;
 }
 
-bool et_current_state_slot_key_action(EtKeyAction key_action)
+bool et_etaion_slot_key_action(EtKeyAction key_action)
 {
-	EtCurrentState *this = current_state;
+	EtEtaion *this = current_state;
 	if(NULL == this){
 		et_bug("");
 		exit(-1);
@@ -85,7 +85,7 @@ bool et_current_state_slot_key_action(EtKeyAction key_action)
 
 	switch(key_action.key){
 		case EtKey_Enter:
-			_et_current_state_unfocus(this);
+			_et_etaion_unfocus(this);
 			break;
 		default:
 			et_debug("no use:%d\n", key_action.key);

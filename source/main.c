@@ -10,7 +10,7 @@
 #include "et_renderer.h"
 #include "et_pointing_manager.h"
 #include "et_doc_manager.h"
-#include "et_current_state.h"
+#include "et_etaion.h"
 
 void __pvui_app_set_style();
 
@@ -47,7 +47,7 @@ static gboolean cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer us
 		.key = event->keyval,
 		.action = EtKeyAction_Down,
 	};
-	et_current_state_slot_key_action(ka);
+	et_etaion_slot_key_action(ka);
 
 	return FALSE;
 }
@@ -58,7 +58,7 @@ int main (int argc, char **argv){
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_set_size_request (window, 500,400);
 
-	EtCurrentState *current_state = et_current_state_init();
+	EtEtaion *current_state = et_etaion_init();
 	if(NULL == current_state){
 		et_bug("");
 		return -1;
@@ -159,7 +159,7 @@ int main (int argc, char **argv){
 		return -1;
 	}
 	if(!et_pointing_manager_set_slot_mouse_action(
-				et_current_state_slot_mouse_action)){
+				et_etaion_slot_mouse_action)){
 		et_error("");
 		return -1;
 	}
