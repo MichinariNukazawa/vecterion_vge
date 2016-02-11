@@ -180,7 +180,7 @@ PvElement *pv_element_new(const PvElementKind kind)
 		pv_bug("");
 		return NULL;
 	}
-	
+
 	this->kind = kind;
 	this->data = data;
 
@@ -199,7 +199,7 @@ bool pv_element_append_child(PvElement * const parent,
 	}
 
 	PvElement **childs = (PvElement **)realloc(parent->childs,
-						sizeof(PvElement*) * (num + 2));
+			sizeof(PvElement*) * (num + 2));
 	if(NULL == childs){
 		pv_error("");
 		return false;
@@ -230,7 +230,7 @@ bool pv_element_append_child(PvElement * const parent,
 }
 
 bool pv_element_bezier_add_anchor_point(PvElement * const this,
-					const PvAnchorPoint anchor_point)
+		const PvAnchorPoint anchor_point)
 {
 	if(PvElementKind_Bezier != this->kind){
 		pv_bug("");
@@ -253,7 +253,7 @@ bool pv_element_bezier_add_anchor_point(PvElement * const this,
 }
 
 bool pv_element_raster_read_file(PvElement * const this,
-					const char * const path)
+		const char * const path)
 {
 	if(PvElementKind_Raster != this->kind){
 		pv_bug("");

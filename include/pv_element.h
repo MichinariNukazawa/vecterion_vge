@@ -118,9 +118,9 @@ bool pv_element_append_child(PvElement * const parent,
  *		Not Bezier: return Error.
  */
 bool pv_element_bezier_add_anchor_point(PvElement * const this,
-					const PvAnchorPoint anchor_point);
+		const PvAnchorPoint anchor_point);
 bool pv_element_raster_read_file(PvElement * const this,
-					const char * const path);
+		const char * const path);
 
 #ifdef __ET_TEST__
 #endif // __ET_TEST__

@@ -49,8 +49,8 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 	}
 
 	if(id_doc != (this->state).doc_id){
-		et_state_unfocus(&(this->state));
 		(this->state).doc_id = id_doc;
+		(this->state).element = NULL;
 		_et_etaion_signal_change_state(this);
 	}
 
@@ -86,7 +86,10 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 
 	switch(key_action.key){
 		case EtKey_Enter:
-			et_state_unfocus(&(this->state));
+			if(NULL != (this->state).element){
+				(this->state).element
+						= ((this->state).element)->parent;
+			}
 			_et_etaion_signal_change_state(this);
 			break;
 		default:

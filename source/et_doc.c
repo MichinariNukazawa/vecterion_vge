@@ -100,7 +100,7 @@ bool et_doc_set_image_from_file(EtDoc *this, const char *filepath)
 	}
 
 	if(!pv_element_append_child(this->vg->element_root, 
-		NULL, element)){
+				NULL, element)){
 		et_error("");
 		return false;
 	}
@@ -134,18 +134,36 @@ EtCallbackId et_doc_add_slot_change(EtDoc *this, EtDocSlotChange slot, gpointer 
 
 bool et_doc_add_point(EtDoc *this, PvElement **_element, double x, double y)
 {
+	bool is_new = true;
 	PvElement *element = *_element;
+	PvElement *parent = NULL;
 	if(NULL == element){
+		parent = NULL;
+		//element = NULL;
+	}else{
+		switch(element->kind){
+			case PvElementKind_Bezier:
+				parent = element->parent;
+				//element = element;
+				is_new = false;
+				break;
+			case PvElementKind_Layer:
+			case PvElementKind_Group:
+				parent = *_element;
+				element = NULL;
+				break;
+			default:
+				parent = element->parent;
+				element = NULL;
+		}
+	}
+
+	if(is_new){
 		element = pv_element_new(PvElementKind_Bezier);
 		if(NULL == element){
 			et_error("");
 			return false;
 		}
-	}
-
-	if(PvElementKind_Bezier != element->kind){
-		et_error("");
-		return false;
 	}
 
 	PvAnchorPoint anchor_point = {
@@ -156,10 +174,16 @@ bool et_doc_add_point(EtDoc *this, PvElement **_element, double x, double y)
 		return false;
 	}
 
-	if(!pv_element_append_child(this->vg->element_root, 
-		NULL, element)){
-		et_error("");
-		return false;
+	if(is_new){
+		if(NULL == parent){
+			parent = this->vg->element_root;
+		}
+
+		if(!pv_element_append_child(parent, 
+					NULL, element)){
+			et_error("");
+			return false;
+		}
 	}
 
 	*_element = element;
