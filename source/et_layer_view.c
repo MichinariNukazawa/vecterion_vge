@@ -5,6 +5,7 @@
 #include "et_error.h"
 #include "et_doc_manager.h"
 #include "pv_element.h"
+#include "et_mouse_util.h"
 
 
 typedef struct _EtLayerViewElementData{
@@ -18,6 +19,7 @@ struct _EtLayerView{
 	GtkWidget *widget; // Top widget pointer.
 	GtkWidget *box;
 	GtkWidget *scroll;
+	GtkWidget *event_box;
 	GtkWidget *text;
 
 	EtDocId doc_id;
@@ -31,6 +33,10 @@ typedef struct _EtLayerViewRltDataPack{
 
 
 static EtLayerView *layer_view = NULL;
+
+gboolean _et_layer_view_cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data);
+gboolean _et_layer_view_cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data);
+gboolean _et_layer_view_cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data);
 
 EtLayerView *et_layer_view_init()
 {
@@ -52,11 +58,30 @@ EtLayerView *et_layer_view_init()
 	gtk_widget_set_vexpand(GTK_WIDGET(this->scroll), TRUE);
 	gtk_container_add(GTK_CONTAINER(this->box), this->scroll);
 
+	this->event_box = gtk_event_box_new();
+	if(NULL == this->event_box){
+		et_error("");
+		return NULL;
+	}
+	gtk_widget_set_events(this->event_box,
+			GDK_BUTTON_PRESS_MASK |
+			GDK_BUTTON_RELEASE_MASK |
+			GDK_POINTER_MOTION_MASK
+			);
+	g_signal_connect(this->event_box, "button-press-event",
+			G_CALLBACK(_et_layer_view_cb_button_press), (gpointer)this);
+	g_signal_connect(this->event_box, "button-release-event",
+			G_CALLBACK(_et_layer_view_cb_button_release), (gpointer)this);
+	g_signal_connect(this->event_box, "motion-notify-event",
+			G_CALLBACK(_et_layer_view_cb_motion_notify), (gpointer)this);
+
+	gtk_container_add(GTK_CONTAINER(this->scroll), this->event_box);
+
 	this->text = gtk_text_view_new();
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (this->text));
 	gtk_text_buffer_set_text (buffer, "default scale", -1);
 	gtk_text_view_set_editable (GTK_TEXT_VIEW(this->text), false);
-	gtk_container_add(GTK_CONTAINER(this->scroll), this->text);
+	gtk_container_add(GTK_CONTAINER(this->event_box), this->text);
 
 	this->widget = this->box;
 
@@ -233,4 +258,71 @@ void et_layer_view_slot_from_etaion_change_state(EtState state, gpointer data)
 		et_error("");
 		return;
 	}
+}
+
+int _et_layer_view_index_data_from_position(EtLayerView *this, int x, int y)
+{
+	if(NULL == this){
+		et_bug("");
+		return -1;
+	}
+	int index = (y/16);
+
+	int num = pv_general_get_parray_num((void **)this->elementDatas);
+	if(!(index < num)){
+		return -1;
+	}
+
+	return index;
+}
+
+gboolean _et_layer_view_cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data)
+{
+	EtLayerView *this = (EtLayerView *)data;
+	et_debug("BUTTON PRESS: (%4d, %4d)\n", (int)event->x, (int)event->y);
+	et_mouse_util_button_kind(event->button);
+	et_mouse_util_modifier_kind(event->state);
+
+	int index = _et_layer_view_index_data_from_position(this, event->x, event->y);
+	et_debug("%d\n", index);
+	if(0 <= index){
+		bool is_error = true;
+		PvFocus focus = et_doc_get_focus_from_id(this->doc_id, &is_error);
+		if(is_error){
+			et_error("");
+			return false;
+		}
+
+		focus.element = this->elementDatas[index]->element;
+
+		if(!et_doc_set_focus_to_id(this->doc_id, focus)){
+			et_error("");
+			return false;
+		}
+
+		if(!_et_layer_view_draw(this)){
+			et_error("");
+			return false;
+		}
+
+		if(!et_doc_draw_canvas_from_id(this->doc_id)){
+			et_error("");
+			return false;
+		}
+	}
+
+	return false;
+}
+
+gboolean _et_layer_view_cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data)
+{
+	et_debug("BUTTON RELEASE\n");
+	return false;
+}
+
+gboolean _et_layer_view_cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data)
+{
+	// et_debug("(%3d, %3d)\n", (int)event->x, (int)event->y);
+
+	return false;
 }

@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include "et_error.h"
+#include "et_mouse_util.h"
 
 struct _EtCanvas{
 	GtkWidget *widget; // Top widget pointer.
@@ -145,42 +146,12 @@ bool et_canvas_set_doc_id(EtCanvas *this, EtDocId doc_id)
 	return true;
 }
 
-void _modifier_kind(int state)
-{
-	if(state & GDK_SHIFT_MASK){
-		printf("Shift\n");
-	}
-	if(state & GDK_CONTROL_MASK){
-		printf("CONTROL\n");
-	}
-	if(state & GDK_MOD1_MASK){
-		printf("Alt\n");
-	}
-}
-
-void _mouse_button_kind(int button)
-{
-	switch(button){
-		case 1:
-			et_debug("LEFT\n");
-			break;
-		case 2:
-			et_debug("CENTER\n");
-			break;
-		case 3:
-			et_debug("RIGHT\n");
-			break;
-		default:
-			et_debug("UNKNOWN:%d\n", button);
-	}
-}
-
 gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	EtCanvas *this = (EtCanvas *)data;
 	et_debug("BUTTON PRESS: (%4d, %4d)\n", (int)event->x, (int)event->y);
-	_mouse_button_kind(event->button);
-	_modifier_kind(event->state);
+	et_mouse_util_button_kind(event->button);
+	et_mouse_util_modifier_kind(event->state);
 
 	if(NULL == this->slot_mouse_action){
 		et_error("");
