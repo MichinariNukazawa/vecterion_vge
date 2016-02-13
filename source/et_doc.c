@@ -115,8 +115,13 @@ bool et_doc_set_image_from_file(EtDoc *this, const char *filepath)
 		return false;
 	}
 
-	if(!pv_element_append_child(this->vg->element_root, 
-				NULL, element)){
+	PvElement *layer_top = pv_vg_get_layer_top(this->vg);
+	if(NULL == layer_top){
+		et_error("");
+		return false;
+	}
+
+	if(!pv_element_append_child(layer_top, NULL, element)){
 		et_error("");
 		return false;
 	}
@@ -218,7 +223,11 @@ bool et_doc_add_point(EtDoc *this, PvElement **_element, double x, double y)
 
 	if(is_new){
 		if(NULL == parent){
-			parent = this->vg->element_root;
+			parent = pv_vg_get_layer_top(this->vg);
+			if(NULL == parent){
+				et_error("");
+				return false;
+			}
 		}
 
 		if(!pv_element_append_child(parent, 

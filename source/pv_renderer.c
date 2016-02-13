@@ -10,6 +10,7 @@ typedef struct _PvRenderOption{
 bool _pv_renderer_is_group_kind(PvElement * const element)
 {
 	switch(element->kind){
+		case PvElementKind_Root:
 		case PvElementKind_Layer:
 		case PvElementKind_Group:
 			return true;

@@ -20,6 +20,8 @@ struct _PvRect{
 
 typedef enum _PvElementKind{
 	PvElementKind_NotDefined,
+	/* special element document root */
+	PvElementKind_Root,
 	/* complex element kinds (group) */
 	PvElementKind_Layer,
 	PvElementKind_Group,

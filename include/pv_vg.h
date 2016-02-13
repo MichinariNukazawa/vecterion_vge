@@ -23,6 +23,10 @@ struct _PvVg{
 int pv_general_get_parray_num(void **pointers);
 
 PvVg *pv_vg_new();
+/** @brief 
+ * @return vg->element_root->childs[0];
+ */
+PvElement *pv_vg_get_layer_top(PvVg *vg);
 
 #ifdef __ET_TEST__
 #endif // __ET_TEST__

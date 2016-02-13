@@ -107,10 +107,12 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 	switch(key_action.key){
 		case EtKey_Enter:
 			if(NULL != focus.element){
-				focus.element = (focus.element)->parent;
-				if(!et_doc_set_focus_to_id((this->state).doc_id, focus)){
-					et_error("");
-					return false;
+				if(PvElementKind_Layer != focus.element->kind){
+					focus.element = (focus.element)->parent;
+					if(!et_doc_set_focus_to_id((this->state).doc_id, focus)){
+						et_error("");
+						return false;
+					}
 				}
 			}
 			_et_etaion_signal_change_state(this);

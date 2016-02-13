@@ -154,6 +154,20 @@ bool _et_layer_view_draw(EtLayerView *this)
 	int num = pv_general_get_parray_num((void **)elementDatas);
 	for(int i = 0; i < num; i++){
 		EtLayerViewElementData *data = elementDatas[i];
+
+		if(0 == i){
+			// skip root element.
+			if(PvElementKind_Root != data->element->kind){
+				et_bug("%d\n", data->element->kind);
+			}
+			continue;
+		}else{
+			if(PvElementKind_Root == data->element->kind){
+				et_bug("%d\n", i);
+				continue;
+			}
+		}
+
 		unsigned long debug_pointer = 0;
 		memcpy(&debug_pointer, &data->element, sizeof(unsigned long));
 

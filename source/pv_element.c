@@ -163,6 +163,7 @@ PvElement *pv_element_new(const PvElementKind kind)
 
 	gpointer data;
 	switch(kind){
+		case PvElementKind_Root:
 		case PvElementKind_Layer:
 		case PvElementKind_Group:
 			data = _pv_element_group_data_new();
