@@ -2,6 +2,11 @@
 
 #include "pv_error.h"
 
+typedef struct _PvRenderOption{
+	PvRenderContext render_context;
+	PvFocus focus;
+}PvRenderOption;
+
 bool _pv_renderer_is_group_kind(PvElement * const element)
 {
 	switch(element->kind){
@@ -15,10 +20,14 @@ bool _pv_renderer_is_group_kind(PvElement * const element)
 }
 
 bool _pv_renderer_cairo_anchor_points(
-		cairo_t *cr, const PvRenderContext render_context,
-		int anchor_points_num, PvAnchorPoint * const anchor_points
+		cairo_t *cr,
+		const PvRenderOption render_option,
+		int anchor_points_num,
+		PvAnchorPoint * const anchor_points
 		)
 {
+	const PvRenderContext render_context = render_option.render_context;
+
 	for(int i = 0; i < anchor_points_num; i++){
 		// Todo: ポイントを繋げていない
 		// Todo: ハンドルを見ていない
@@ -26,7 +35,7 @@ bool _pv_renderer_cairo_anchor_points(
 		double y = anchor_points[i].points[PvAnchorPointIndex_Point].y;
 		x *= render_context.scale;
 		y *= render_context.scale;
-		cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
+		// cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
 		if(0 == i){
 			if(1 == anchor_points_num){
 				cairo_rectangle (cr, x, y, 2, 2);
@@ -45,23 +54,34 @@ bool _pv_renderer_cairo_anchor_points(
 }
 
 bool _pv_renderer_cairo_recersive(
-		cairo_t *cr, const PvRenderContext render_context, 
-		PvElement * const element, int *level)
+		cairo_t *cr,
+		PvElement * const element,
+		const PvRenderOption render_option,
+		int *level)
 {
+	const PvRenderContext render_context = render_option.render_context;
+
 	bool ret = true;
 	(*level)++;
 
 	if(_pv_renderer_is_group_kind(element)){
 		int num = pv_general_get_parray_num((void **)element->childs);
 		for(int i = 0; i < num; i++){
-			if(!_pv_renderer_cairo_recersive(cr, render_context,
-						element->childs[i], level)){
+			if(!_pv_renderer_cairo_recersive(cr,
+						element->childs[i],
+						render_option,
+						level)){
 				pv_error("%d\n", i);
 				ret = false;
 				goto end;
 			}
 		}
 	}else{
+		if(render_option.focus.element == element){
+			cairo_set_source_rgb (cr, 0.2, 0.4, 0.9);
+		}else{
+			cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
+		}
 		switch(element->kind){
 			case PvElementKind_Raster:
 				{
@@ -91,7 +111,7 @@ bool _pv_renderer_cairo_recersive(
 					PvElementBezierData *data = element->data;
 					if(!_pv_renderer_cairo_anchor_points(
 								cr,
-								render_context,
+								render_option,
 								data->anchor_points_num,
 								data->anchor_points)){
 						pv_error("");
@@ -111,7 +131,8 @@ end:
 }
 
 GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
-		const PvRenderContext render_context)
+		const PvRenderContext render_context,
+		const PvFocus focus)
 {
 	int width = (int)vg->rect.w;
 	int height = (int)vg->rect.h;
@@ -126,8 +147,12 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 
 	cairo_t *cr = cairo_create (surface);
 
+	PvRenderOption render_option = {
+		.render_context = render_context,
+		.focus = focus,
+	};
 	int level = 0;
-	if(!_pv_renderer_cairo_recersive(cr, render_context, vg->element_root, &level)){
+	if(!_pv_renderer_cairo_recersive(cr, vg->element_root, render_option, &level)){
 		pv_error("");
 		return NULL;
 	}
@@ -143,4 +168,3 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 
 	return pb;
 }
-

@@ -50,7 +50,10 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 
 	if(id_doc != (this->state).doc_id){
 		(this->state).doc_id = id_doc;
-		(this->state).element = NULL;
+		if(!et_doc_set_focus_to_id(id_doc, pv_focus_get_nofocus())){
+			et_error("");
+			return false;
+		}
 		_et_etaion_signal_change_state(this);
 	}
 
@@ -60,13 +63,23 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 		return false;
 	}
 
-	PvElement *_element = (this->state).element; 
+	bool is_error = true;
+	PvFocus focus = et_doc_get_focus_from_id(id_doc, &is_error);
+	if(is_error){
+		et_error("");
+		return false;
+	}
+	PvElement *_element = focus.element;
 	if(!et_doc_add_point(doc, &_element,
 				mouse_action.point.x, mouse_action.point.y)){
 		et_error("");
 		return false;
 	}else{
-		(this->state).element = _element;
+		focus.element = _element;
+		if(!et_doc_set_focus_to_id(id_doc, focus)){
+			et_error("");
+			return false;
+		}
 	}
 
 	et_doc_draw_canvas(doc);
@@ -84,17 +97,30 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 
 	et_debug("key:%d\n", key_action.key);
 
+	bool is_error = true;
+	PvFocus focus = et_doc_get_focus_from_id((this->state).doc_id, &is_error);
+	if(is_error){
+		et_error("");
+		return false;
+	}
+
 	switch(key_action.key){
 		case EtKey_Enter:
-			if(NULL != (this->state).element){
-				(this->state).element
-						= ((this->state).element)->parent;
+			if(NULL != focus.element){
+				focus.element = (focus.element)->parent;
+				if(!et_doc_set_focus_to_id((this->state).doc_id, focus)){
+					et_error("");
+					return false;
+				}
 			}
 			_et_etaion_signal_change_state(this);
 			break;
 		default:
 			et_debug("no use:%d\n", key_action.key);
+			return true;
 	}
+
+	et_doc_draw_canvas_from_id((this->state).doc_id);
 
 	return true;
 }

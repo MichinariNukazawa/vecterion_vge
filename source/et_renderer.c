@@ -87,7 +87,14 @@ GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext render_
 		return NULL;
 	}
 
-	GdkPixbuf *pb = pv_renderer_pixbuf_from_vg(vg, render_context);
+	bool is_error = true;
+	PvFocus focus = et_doc_get_focus_from_id(et_doc_get_id(doc), &is_error);
+	if(is_error){
+		et_error("");
+		return NULL;
+	}
+
+	GdkPixbuf *pb = pv_renderer_pixbuf_from_vg(vg, render_context, focus);
 	if(NULL == pb){
 		et_error("");
 		return NULL;

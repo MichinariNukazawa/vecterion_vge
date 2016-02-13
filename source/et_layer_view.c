@@ -183,8 +183,15 @@ void et_layer_view_slot_from_doc_change(EtDoc *doc, gpointer data)
 
 void et_layer_view_slot_from_etaion_change_state(EtState state, gpointer data)
 {
+	bool is_error = true;
+	PvFocus focus = et_doc_get_focus_from_id(state.doc_id, &is_error);
+	if(is_error){
+		et_error("");
+		return;
+	}
+
 	unsigned long debug_pointer = 0;
-	memcpy(&debug_pointer, &state.element, sizeof(unsigned long));
+	memcpy(&debug_pointer, &focus.element, sizeof(unsigned long));
 
 	et_debug("doc:%d, elem:%ld,\n", state.doc_id, debug_pointer);
 }

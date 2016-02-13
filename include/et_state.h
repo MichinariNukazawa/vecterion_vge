@@ -9,7 +9,6 @@ struct _EtState;
 typedef struct _EtState EtState;
 struct _EtState{
 	EtDocId doc_id;
-	PvElement *element;
 };
 
 void et_state_unfocus(EtState *this);

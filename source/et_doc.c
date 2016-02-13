@@ -2,10 +2,12 @@
 
 #include <stdlib.h>
 #include "et_error.h"
+#include "et_doc_manager.h"
 
 struct _EtDoc{
 	EtDocId id;
 	PvVg *vg;
+	PvFocus focus;
 
 	EtDocSlotChangeInfo *slot_change_infos;
 };
@@ -38,6 +40,8 @@ EtDoc *et_doc_new()
 		return NULL;
 	}
 	this->slot_change_infos[0].id = -1;
+
+	this->focus = pv_focus_get_nofocus();
 
 	return this;
 }
@@ -86,6 +90,18 @@ bool et_doc_draw_canvas(EtDoc *this)
 	return true;
 }
 
+bool et_doc_draw_canvas_from_id(EtDocId id)
+{
+	EtDoc *this = et_doc_manager_get_doc_from_id(id);
+	if(NULL == this){
+		et_error("");
+		return false;
+	}
+
+	return et_doc_draw_canvas(this);
+}
+
+
 bool et_doc_set_image_from_file(EtDoc *this, const char *filepath)
 {
 	PvElement *element = pv_element_new(PvElementKind_Raster);
@@ -130,6 +146,32 @@ EtCallbackId et_doc_add_slot_change(EtDoc *this, EtDocSlotChange slot, gpointer 
 
 	// Todo: create EtCallbackId
 	return new[num].id;
+}
+
+PvFocus et_doc_get_focus_from_id(EtDocId id, bool *is_error)
+{
+	EtDoc *this = et_doc_manager_get_doc_from_id(id);
+	if(NULL == this){
+		et_error("");
+		*is_error = true;
+		return pv_focus_get_nofocus();
+	}
+
+	*is_error = false;
+	return this->focus;
+}
+
+bool et_doc_set_focus_to_id(EtDocId id, PvFocus focus)
+{
+	EtDoc *this = et_doc_manager_get_doc_from_id(id);
+	if(NULL == this){
+		et_error("");
+		return false;
+	}
+
+	this->focus = focus;
+
+	return true;
 }
 
 bool et_doc_add_point(EtDoc *this, PvElement **_element, double x, double y)

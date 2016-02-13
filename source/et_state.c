@@ -11,5 +11,4 @@ void et_state_unfocus(EtState *this)
 	}
 
 	this->doc_id = -1;
-	this->element = NULL;
 }
