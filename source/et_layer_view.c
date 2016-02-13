@@ -81,6 +81,7 @@ EtLayerView *et_layer_view_init()
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (this->text));
 	gtk_text_buffer_set_text (buffer, "default scale", -1);
 	gtk_text_view_set_editable (GTK_TEXT_VIEW(this->text), false);
+	gtk_text_view_set_monospace (GTK_TEXT_VIEW(this->text), TRUE);
 	gtk_container_add(GTK_CONTAINER(this->event_box), this->text);
 
 	this->widget = this->box;
@@ -156,10 +157,20 @@ bool _et_layer_view_draw(EtLayerView *this)
 		unsigned long debug_pointer = 0;
 		memcpy(&debug_pointer, &data->element, sizeof(unsigned long));
 
+		char str_head[128];
+		str_head[0] = '\0';
+		for(int i = 0; i < data->level; i++){
+			str_head[i] = '_';
+			str_head[i + 1] = '\0';
+			if(!(i < ((int)sizeof(str_head) - 2))){
+				break;
+			}
+		}
 		char str_tmp[128];
 		snprintf(str_tmp, sizeof(str_tmp),
-				"%c%03d:%03d:%08lx '%s'\n",
-				((focus.element == data->element)? '>':' '),
+				"%s%c%03d:%03d:%08lx '%s'\n",
+				str_head,
+				((focus.element == data->element)? '>':'_'),
 				data->level, data->kind,
 				debug_pointer,
 				((data->name)?"":data->name));
