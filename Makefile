@@ -19,7 +19,7 @@ TARGET		= $(BUILD_DIR)/$(TARGET_NAME).exe
 
 SOURCES		= $(shell ls $(SOURCE_DIR)/*.c) 
 OBJECTS		= $(subst $(SOURCE_DIR),$(OBJECT_DIR), $(SOURCES:.c=.o))
-DEPENDS		= $(OBJS:.o=.d)
+DEPENDS		= $(OBJECTS:.o=.d)
 
 
 
