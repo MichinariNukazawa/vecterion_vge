@@ -7,6 +7,13 @@
 #include "pv_element.h"
 
 
+typedef struct _EtLayerViewElementData{
+	int level;
+	char *name;
+	PvElementKind kind;
+	PvElement *element;
+}EtLayerViewElementData;
+
 struct _EtLayerView{
 	GtkWidget *widget; // Top widget pointer.
 	GtkWidget *box;
@@ -14,17 +21,12 @@ struct _EtLayerView{
 	GtkWidget *text;
 
 	EtDocId doc_id;
+	// buffer
+	EtLayerViewElementData **elementDatas;
 };
 
-typedef struct _EtLayerViewRltData{
-	int level;
-	char *name;
-	PvElementKind kind;
-	unsigned long debug_pointer_value;
-}EtLayerViewRltData;
-
 typedef struct _EtLayerViewRltDataPack{
-	EtLayerViewRltData **datas;
+	EtLayerViewElementData **datas;
 }EtLayerViewRltDataPack;
 
 
@@ -59,6 +61,7 @@ EtLayerView *et_layer_view_init()
 	this->widget = this->box;
 
 	this->doc_id = -1;
+	this->elementDatas = NULL;
 
 	layer_view = this;
 
@@ -78,9 +81,9 @@ GtkWidget *et_layer_view_get_widget_frame(EtLayerView *this)
 bool _et_layer_view_read_layer_tree(PvElement *element, gpointer data, int level)
 {
 	EtLayerViewRltDataPack *func_rlt_data_pack = data;
-	EtLayerViewRltData ***datas = &(func_rlt_data_pack->datas);
+	EtLayerViewElementData ***datas = &(func_rlt_data_pack->datas);
 
-	EtLayerViewRltData *rlt = malloc(sizeof(EtLayerViewRltData));
+	EtLayerViewElementData *rlt = malloc(sizeof(EtLayerViewElementData));
 	if(NULL == rlt){
 		et_error("");
 		exit(-1);
@@ -88,11 +91,11 @@ bool _et_layer_view_read_layer_tree(PvElement *element, gpointer data, int level
 	rlt->level = level;
 	rlt->name = "";
 	rlt->kind = element->kind;
-	memcpy(&(rlt->debug_pointer_value), &element, sizeof(unsigned long));
+	rlt->element = element;
 
 	int num = pv_general_get_parray_num((void **)*datas);
-	*datas = (EtLayerViewRltData **)
-			realloc(*datas, sizeof(EtLayerViewRltData *) * (num + 2));
+	*datas = (EtLayerViewElementData **)
+			realloc(*datas, sizeof(EtLayerViewElementData *) * (num + 2));
 	if(NULL == *datas){
 		et_critical("");
 		exit(-1);
@@ -101,6 +104,52 @@ bool _et_layer_view_read_layer_tree(PvElement *element, gpointer data, int level
 	(*datas)[num] = rlt;
 	(*datas)[num + 1] = NULL;
 	
+	return true;
+}
+
+bool _et_layer_view_draw(EtLayerView *this)
+{
+	if(NULL == this){
+		et_bug("");
+		return false;
+	}
+
+	bool is_error = true;
+	PvFocus focus = et_doc_get_focus_from_id(this->doc_id, &is_error);
+	if(is_error){
+		et_error("");
+		return false;
+	}
+
+	EtLayerViewElementData **elementDatas = this->elementDatas;
+
+	char buf[10240];
+	buf[0] = '\0';
+	int num = pv_general_get_parray_num((void **)elementDatas);
+	for(int i = 0; i < num; i++){
+		EtLayerViewElementData *data = elementDatas[i];
+		unsigned long debug_pointer = 0;
+		memcpy(&debug_pointer, &data->element, sizeof(unsigned long));
+
+		char str_tmp[128];
+		snprintf(str_tmp, sizeof(str_tmp),
+				"%c%03d:%03d:%08lx '%s'\n",
+				((focus.element == data->element)? '>':' '),
+				data->level, data->kind,
+				debug_pointer,
+				((data->name)?"":data->name));
+
+		strncat(buf, str_tmp, (sizeof(buf) - 1));
+		buf[sizeof(buf)-1] = '\0';
+		if(!(strlen(buf) < (sizeof(buf) - 2))){
+			et_warning("%lu/%lu\n", strlen(buf), sizeof(buf));
+		}
+	}
+
+	GtkTextBuffer *buffer = gtk_text_view_get_buffer(
+					GTK_TEXT_VIEW (this->text));
+	gtk_text_buffer_set_text (buffer, buf, -1);
+
 	return true;
 }
 
@@ -135,26 +184,17 @@ bool _et_layer_view_slot_update_doc()
 		return false;
 	}
 
-	char buf[10240];
-	buf[0] = '\0';
-	int num = pv_general_get_parray_num((void **)func_rlt_data_pack.datas);
-	for(int i = 0; i < num; i++){
-		EtLayerViewRltData *data = func_rlt_data_pack.datas[i];
-		char str_tmp[128];
-		snprintf(str_tmp, sizeof(str_tmp),
-				"%03d:%03d:%08lx '%s'\n",
-				data->level, data->kind,
-				data->debug_pointer_value,
-				((data->name)?"":data->name));
-		strncat(buf, str_tmp, sizeof(buf));
-		free(data);
+	EtLayerViewElementData **before = this->elementDatas;
+	this->elementDatas = func_rlt_data_pack.datas;
+	if(NULL != before){
+		int num = pv_general_get_parray_num((void **)before);
+		for(int i = 0; i < num; i++){
+			EtLayerViewElementData *data = before[i];
+			free(data);
+		}
 	}
 
-	GtkTextBuffer *buffer = gtk_text_view_get_buffer(
-					GTK_TEXT_VIEW (this->text));
-	gtk_text_buffer_set_text (buffer, buf, -1);
-
-	return true;
+	return _et_layer_view_draw(this);
 }
 
 bool et_layer_view_set_doc_id(EtLayerView *this, EtDocId doc_id)
@@ -183,15 +223,14 @@ void et_layer_view_slot_from_doc_change(EtDoc *doc, gpointer data)
 
 void et_layer_view_slot_from_etaion_change_state(EtState state, gpointer data)
 {
-	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id(state.doc_id, &is_error);
-	if(is_error){
+	EtLayerView *this = layer_view;
+	if(NULL == this){
+		et_bug("");
+		exit(-1);
+	}
+
+	if(!_et_layer_view_draw(this)){
 		et_error("");
 		return;
 	}
-
-	unsigned long debug_pointer = 0;
-	memcpy(&debug_pointer, &focus.element, sizeof(unsigned long));
-
-	et_debug("doc:%d, elem:%ld,\n", state.doc_id, debug_pointer);
 }
