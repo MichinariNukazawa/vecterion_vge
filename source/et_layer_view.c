@@ -93,7 +93,7 @@ bool _et_layer_view_set_layer_ctrl(EtLayerView *this, int index)
 			G_CALLBACK(_et_layer_view_cb_layer_ctrl), (gpointer)this);
 
 	// Todo: いずれ有効化
-	if(1 <= index){
+	if(2 <= index){
 		gtk_widget_set_sensitive(this->button_layer_ctrls[index], false);
 	}
 
@@ -465,7 +465,10 @@ gboolean _et_layer_view_cb_layer_ctrl(GtkWidget *widget, gpointer data)
 			}
 			break;
 		case 1:
-			et_debug("");
+			if(!et_etaion_add_new_layer_child(this->doc_id)){
+				et_error("");
+				return false;
+			}
 			break;
 		case 2:
 			et_debug("");

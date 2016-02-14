@@ -219,3 +219,55 @@ bool et_etaion_add_new_layer(EtDocId doc_id)
 
 	return true;
 }
+
+bool et_etaion_add_new_layer_child(EtDocId doc_id)
+{
+	EtEtaion *this = current_state;
+	if(NULL == this){
+		et_bug("");
+		exit(-1);
+	}
+
+	(this->state).doc_id = doc_id;
+
+	bool is_error = true;
+	PvFocus focus = et_doc_get_focus_from_id((this->state).doc_id, &is_error);
+	if(is_error){
+		et_error("");
+		return false;
+	}
+
+	PvElement *parent = focus.element;
+
+	// **レイヤの追加位置を決める
+	// FocusされたElementに近いLayerをparentにする
+	parent = _et_etaion_get_parent_layer_from_element(focus.element);
+	// 親がNULLなら、仕方がないので親をroot直下に指定する
+	if(NULL == parent){
+		EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
+		PvVg *vg = et_doc_get_vg_ref(doc);
+		parent = vg->element_root;
+	}
+
+	PvElement *layer = pv_element_new(PvElementKind_Layer);
+	if(NULL == layer){
+		et_error("");
+		return false;
+	}
+
+	if(!pv_element_append_child(parent, NULL, layer)){
+		et_error("");
+		return false;
+	}
+
+	focus.element = layer;
+	if(!et_doc_set_focus_to_id((this->state).doc_id, focus)){
+		et_error("");
+		return false;
+	}
+
+	_et_etaion_signal_change_state(this);
+	et_doc_signal_update_from_id((this->state).doc_id);
+
+	return true;
+}
