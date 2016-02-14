@@ -145,3 +145,77 @@ int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data)
 
 	return 1; // Todo: return callback id
 }
+
+// @brief 自分を含めて、親方向へLayerを探す
+PvElement *_et_etaion_get_parent_layer_from_element(PvElement *element)
+{
+	if(NULL == element){
+		return NULL;
+	}
+
+	if(PvElementKind_Layer != element->kind){
+		// parent方向へLayerを探しに行く
+		return _et_etaion_get_parent_layer_from_element(element->parent);
+	}else{
+		// 自分がLayerであれば自分を返す
+		return element;
+	}
+}
+
+bool et_etaion_add_new_layer(EtDocId doc_id)
+{
+	EtEtaion *this = current_state;
+	if(NULL == this){
+		et_bug("");
+		exit(-1);
+	}
+
+	(this->state).doc_id = doc_id;
+
+	bool is_error = true;
+	PvFocus focus = et_doc_get_focus_from_id((this->state).doc_id, &is_error);
+	if(is_error){
+		et_error("");
+		return false;
+	}
+
+	PvElement *parent = NULL;
+	PvElement *prev = focus.element;
+
+	// **レイヤの追加位置を決める
+	// FocusされたElementに近い親Layerを位置指定にする
+	prev = _et_etaion_get_parent_layer_from_element(focus.element);
+	// 位置指定から親を取る
+	if(NULL != prev){
+		parent = prev->parent;
+	}
+	// 親がNULLなら、親をroot直下に指定し、位置指定を解除
+	if(NULL == parent){
+		EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
+		PvVg *vg = et_doc_get_vg_ref(doc);
+		parent = vg->element_root;
+		prev = NULL;
+	}
+
+	PvElement *layer = pv_element_new(PvElementKind_Layer);
+	if(NULL == layer){
+		et_error("");
+		return false;
+	}
+
+	if(!pv_element_append_child(parent, prev, layer)){
+		et_error("");
+		return false;
+	}
+
+	focus.element = layer;
+	if(!et_doc_set_focus_to_id((this->state).doc_id, focus)){
+		et_error("");
+		return false;
+	}
+
+	_et_etaion_signal_change_state(this);
+	et_doc_signal_update_from_id((this->state).doc_id);
+
+	return true;
+}

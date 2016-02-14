@@ -56,6 +56,7 @@ bool et_doc_manager_add_doc(EtDoc *doc)
 	}
 
 	int num = _et_doc_manager_get_num_doc_node(this->doc_nodes);
+	this->doc_nodes[num + 1].doc = NULL;
 	this->doc_nodes[num].doc = doc;
 
 	return true;

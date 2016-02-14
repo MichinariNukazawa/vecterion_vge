@@ -6,7 +6,22 @@
 #include "et_doc_manager.h"
 #include "pv_element.h"
 #include "et_mouse_util.h"
+#include "et_etaion.h"
 
+static char *DIRECTORY_RESOURCE = "./resource";
+
+typedef struct _EtLayerViewLayerCtrl{
+	const char * const name;
+	const char * const filename_image;
+}EtLayerViewLayerCtrl;
+
+
+const EtLayerViewLayerCtrl _et_layer_view_layer_ctrls[] = {
+	{"New", "layer_new_64x64.svg",},
+	{"Child", "layer_new_child_64x64.svg",},
+	{"Clone", "layer_clone_64x64.svg",},
+	{"Delete", "layer_del_64x64.svg",},
+};
 
 typedef struct _EtLayerViewElementData{
 	int level;
@@ -21,6 +36,8 @@ struct _EtLayerView{
 	GtkWidget *scroll;
 	GtkWidget *event_box;
 	GtkWidget *text;
+	GtkWidget *box_button_layer_ctrl;
+	GtkWidget *button_layer_ctrls[4];
 
 	EtDocId doc_id;
 	// buffer
@@ -37,6 +54,51 @@ static EtLayerView *layer_view = NULL;
 gboolean _et_layer_view_cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data);
 gboolean _et_layer_view_cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data);
 gboolean _et_layer_view_cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data);
+
+gboolean _et_layer_view_cb_layer_ctrl(GtkWidget *widget, gpointer data);
+
+bool _et_layer_view_set_layer_ctrl(EtLayerView *this, int index)
+{
+	GError *error = NULL;
+	GdkPixbuf *pixbuf = NULL;
+	char tmp[1024];
+	snprintf(tmp, sizeof(tmp), "%s/%s",
+			DIRECTORY_RESOURCE, _et_layer_view_layer_ctrls[index].filename_image);
+	pixbuf = gdk_pixbuf_new_from_file(tmp, &error);
+	if(NULL == pixbuf){
+		et_error("%d, '%s'\n", index, tmp);
+		return false;
+	}
+	GtkWidget *image = gtk_image_new_from_pixbuf(pixbuf);
+	if(NULL == image){
+		et_error("");
+		return false;
+	}
+
+	this->button_layer_ctrls[index] = gtk_button_new();
+	if(NULL == this->button_layer_ctrls[index]){
+		et_error("");
+		return false;
+	}
+	// フォーカス状態でEnterKey押下した際に、誤作動する問題への対処
+	gtk_button_set_focus_on_click(GTK_BUTTON(this->button_layer_ctrls[index]), false);
+	// gtk_widget_set_can_focus(this->button_layer_ctrls[index], false);
+	gtk_container_add(GTK_CONTAINER(this->button_layer_ctrls[index]),
+			image);
+
+	gtk_container_add(GTK_CONTAINER(this->box_button_layer_ctrl),
+			this->button_layer_ctrls[index]);
+
+	g_signal_connect(this->button_layer_ctrls[index], "clicked",
+			G_CALLBACK(_et_layer_view_cb_layer_ctrl), (gpointer)this);
+
+	// Todo: いずれ有効化
+	if(1 <= index){
+		gtk_widget_set_sensitive(this->button_layer_ctrls[index], false);
+	}
+
+	return true;
+}
 
 EtLayerView *et_layer_view_init()
 {
@@ -84,6 +146,26 @@ EtLayerView *et_layer_view_init()
 	gtk_text_view_set_monospace (GTK_TEXT_VIEW(this->text), TRUE);
 	gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW(this->text), false);
 	gtk_container_add(GTK_CONTAINER(this->event_box), this->text);
+
+	this->box_button_layer_ctrl = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+	gtk_container_add(GTK_CONTAINER(this->box), this->box_button_layer_ctrl);
+
+	if(!_et_layer_view_set_layer_ctrl(this, 0)){
+		et_error("");
+		return NULL;
+	}
+	if(!_et_layer_view_set_layer_ctrl(this, 1)){
+		et_error("");
+		return NULL;
+	}
+	if(!_et_layer_view_set_layer_ctrl(this, 2)){
+		et_error("");
+		return NULL;
+	}
+	if(!_et_layer_view_set_layer_ctrl(this, 3)){
+		et_error("");
+		return NULL;
+	}
 
 	this->widget = this->box;
 
@@ -354,6 +436,47 @@ gboolean _et_layer_view_cb_button_release(GtkWidget *widget, GdkEventButton *eve
 gboolean _et_layer_view_cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
 	// et_debug("(%3d, %3d)\n", (int)event->x, (int)event->y);
+
+	return false;
+}
+
+gboolean _et_layer_view_cb_layer_ctrl(GtkWidget *widget, gpointer data)
+{
+	EtLayerView *this = (EtLayerView *)data;
+	if(NULL == this){
+		et_bug("");
+		return false;
+	}
+
+	int index = -1;
+	for(int i = 0; i < 4; i++){
+		if(widget == this->button_layer_ctrls[i]){
+			index = i;
+			break;
+		}
+	}
+
+	switch(index){
+		case 0:
+			et_debug("");
+			if(!et_etaion_add_new_layer(this->doc_id)){
+				et_error("");
+				return false;
+			}
+			break;
+		case 1:
+			et_debug("");
+			break;
+		case 2:
+			et_debug("");
+			break;
+		case 3:
+			et_debug("");
+			break;
+		default:
+			et_error("");
+			return false;
+	}
 
 	return false;
 }

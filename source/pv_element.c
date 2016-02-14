@@ -208,6 +208,15 @@ PvElement *pv_element_new(const PvElementKind kind)
 bool pv_element_append_child(PvElement * const parent,
 		PvElement * const prev, PvElement * const element)
 {
+	if(NULL == parent){
+		pv_bug("");
+		return false;
+	}
+	if(NULL == element){
+		pv_bug("");
+		return false;
+	}
+
 	int num = pv_general_get_parray_num((void **)parent->childs);
 	if(0 > num){
 		pv_bug("");
@@ -227,7 +236,7 @@ bool pv_element_append_child(PvElement * const parent,
 		for(int i = 0; i < num; i++){
 			if(prev == childs[i]){
 				isExist = true;
-				memmove(&childs[i + 1], &childs[i], num - i);
+				memmove(&childs[i + 1], &childs[i], sizeof(PvElement*) * (num - i));
 				childs[i] = element;
 				break;
 			}

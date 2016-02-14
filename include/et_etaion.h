@@ -27,6 +27,7 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action);
 bool et_etaion_slot_key_action(EtKeyAction key_action);
 int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data);
 
+bool et_etaion_add_new_layer(EtDocId doc_id);
 #ifdef __ET_TEST__
 #endif // __ET_TEST__
 

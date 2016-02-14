@@ -152,7 +152,7 @@ PvFocus et_doc_get_focus_from_id(EtDocId id, bool *is_error)
 {
 	EtDoc *this = et_doc_manager_get_doc_from_id(id);
 	if(NULL == this){
-		et_error("");
+		et_error("%d\n", id);
 		*is_error = true;
 		return pv_focus_get_nofocus();
 	}
