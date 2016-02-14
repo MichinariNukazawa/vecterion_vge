@@ -82,7 +82,7 @@ bool _pv_element_recursive_inline(PvElement *element,
 	bool ret = true;
 
 	int num = pv_general_get_parray_num((void **)element->childs);
-	for(int i = 0; i < num; i++){
+	for(int i = num - 1; 0 <= i; i--){
 		if(!_pv_element_recursive_inline(element->childs[i],
 					func, data,
 					level,
