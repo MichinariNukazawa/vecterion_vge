@@ -3,20 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pv_error.h"
-
-typedef struct _PvElementInfo{
-	PvElementKind kind;
-	const char *name;
-}PvElementInfo;
-
-const PvElementInfo _pv_element_infos[] = {
-	{PvElementKind_NotDefined, "NotDefined",},
-	{PvElementKind_Root, "Root",},
-	{PvElementKind_Layer, "Layer",},
-	{PvElementKind_Group, "Group",},
-	{PvElementKind_Bezier, "Bezier",},
-	{PvElementKind_Raster, "Raster",},
-};
+#include "pv_element_infos.h"
 
 
 /** @brief pointer arrayの内容数を返す
@@ -54,18 +41,6 @@ char *pv_general_str_new(const char * const src)
 	return dst;
 }
 
-gpointer _pv_element_group_data_new()
-{
-	PvElementGroupData *data = (PvElementGroupData *)malloc(sizeof(PvElementGroupData));
-	if(NULL == data){
-		pv_critical("");
-		exit(-1);
-	}
-
-	data->name = NULL;
-
-	return (gpointer)data;
-}
 
 bool _pv_element_recursive_inline(PvElement *element,
 		PvElementRecursiveFunc func, gpointer data,
@@ -137,6 +112,20 @@ bool pv_element_recursive(PvElement *element,
 }
 
 
+
+gpointer _pv_element_group_data_new()
+{
+	PvElementGroupData *data = (PvElementGroupData *)malloc(sizeof(PvElementGroupData));
+	if(NULL == data){
+		pv_critical("");
+		exit(-1);
+	}
+
+	data->name = NULL;
+
+	return (gpointer)data;
+}
+
 gpointer _pv_element_bezier_data_new()
 {
 	PvElementBezierData *data = (PvElementBezierData *)malloc(sizeof(PvElementBezierData));
@@ -164,6 +153,7 @@ gpointer _pv_element_raster_data_new()
 
 	return (gpointer)data;
 }
+
 
 PvElement *pv_element_new(const PvElementKind kind)
 {
@@ -311,13 +301,11 @@ bool pv_element_raster_read_file(PvElement * const this,
 
 const char *pv_element_get_name_from_kind(PvElementKind kind)
 {
-	int num = sizeof(_pv_element_infos) / sizeof(PvElementInfo);
-	for(int i = 0; i < num; i++){
-		if(kind == _pv_element_infos[i].kind){
-			return _pv_element_infos[i].name;
-		}
+	const PvElementInfo *info = pv_element_get_info_from_kind(kind);
+	if(NULL == info){
+		pv_error("");
+		return NULL;
 	}
-
-	pv_bug("");
-	return NULL;
+	
+	return info->name;
 }
