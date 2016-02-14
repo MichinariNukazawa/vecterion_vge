@@ -296,7 +296,7 @@ int _et_layer_view_index_data_from_position(EtLayerView *this, int x, int y)
 		et_bug("");
 		return -1;
 	}
-	int index = (y/16);
+	int index = (y/16) + 1; // +1 = hidden root layer
 
 	int num = pv_general_get_parray_num((void **)this->elementDatas);
 	if(!(index < num)){
