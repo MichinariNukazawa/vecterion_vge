@@ -57,7 +57,7 @@ int main (int argc, char **argv){
 	gtk_init(&argc, &argv);
 
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_widget_set_size_request (window, 500,400);
+	gtk_widget_set_size_request (window, 900,700);
 
 	EtEtaion *current_state = et_etaion_init();
 	if(NULL == current_state){
