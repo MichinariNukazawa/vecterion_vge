@@ -126,11 +126,6 @@ bool et_doc_set_image_from_file(EtDoc *this, const char *filepath)
 		return false;
 	}
 
-	if(!et_doc_draw_canvas(this)){
-		et_error("");
-		return false;
-	}
-
 	return true;
 }
 
