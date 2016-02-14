@@ -75,7 +75,7 @@ int _et_doc_get_num_slot_change_infos(EtDocSlotChangeInfo *slot_change_infos){
 	return i;
 }
 
-bool et_doc_draw_canvas(EtDoc *this)
+bool et_doc_signal_update(EtDoc *this)
 {
 	int num = _et_doc_get_num_slot_change_infos(this->slot_change_infos);
 	if(0 == num){
@@ -90,7 +90,7 @@ bool et_doc_draw_canvas(EtDoc *this)
 	return true;
 }
 
-bool et_doc_draw_canvas_from_id(EtDocId id)
+bool et_doc_signal_update_from_id(EtDocId id)
 {
 	EtDoc *this = et_doc_manager_get_doc_from_id(id);
 	if(NULL == this){
@@ -98,7 +98,7 @@ bool et_doc_draw_canvas_from_id(EtDocId id)
 		return false;
 	}
 
-	return et_doc_draw_canvas(this);
+	return et_doc_signal_update(this);
 }
 
 

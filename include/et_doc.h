@@ -36,8 +36,8 @@ bool et_doc_set_focus_to_id(EtDocId id, PvFocus focus);
 // void et_doc_set_focus(EtDoc *this, PvFocus focus);
 // _element: 
 bool et_doc_add_point(EtDoc *this, PvElement **_element, double x, double y);
-bool et_doc_draw_canvas(EtDoc *this);
-bool et_doc_draw_canvas_from_id(EtDocId id);
+bool et_doc_signal_update(EtDoc *this);
+bool et_doc_signal_update_from_id(EtDocId id);
 
 #ifdef __ET_TEST__
 #endif // __ET_TEST__

@@ -196,7 +196,7 @@ int main (int argc, char **argv){
 		return -1;
 	}
 
-	if(!et_doc_draw_canvas(doc1)){
+	if(!et_doc_signal_update(doc1)){
 		et_error("");
 		return -1;
 	}

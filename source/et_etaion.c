@@ -82,7 +82,7 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 		}
 	}
 
-	et_doc_draw_canvas(doc);
+	et_doc_signal_update(doc);
 
 	return true;
 }
@@ -122,7 +122,7 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 			return true;
 	}
 
-	et_doc_draw_canvas_from_id((this->state).doc_id);
+	et_doc_signal_update_from_id((this->state).doc_id);
 
 	return true;
 }

@@ -330,7 +330,7 @@ gboolean _et_layer_view_cb_button_press(GtkWidget *widget, GdkEventButton *event
 			return false;
 		}
 
-		if(!et_doc_draw_canvas_from_id(this->doc_id)){
+		if(!et_doc_signal_update_from_id(this->doc_id)){
 			et_error("");
 			return false;
 		}
