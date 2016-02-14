@@ -124,6 +124,8 @@ bool pv_element_bezier_add_anchor_point(PvElement * const this,
 bool pv_element_raster_read_file(PvElement * const this,
 		const char * const path);
 
+const char *pv_element_get_name_from_kind(PvElementKind kind);
+
 #ifdef __ET_TEST__
 #endif // __ET_TEST__
 

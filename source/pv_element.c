@@ -4,6 +4,21 @@
 #include <string.h>
 #include "pv_error.h"
 
+typedef struct _PvElementInfo{
+	PvElementKind kind;
+	const char *name;
+}PvElementInfo;
+
+const PvElementInfo _pv_element_infos[] = {
+	{PvElementKind_NotDefined, "NotDefined",},
+	{PvElementKind_Root, "Root",},
+	{PvElementKind_Layer, "Layer",},
+	{PvElementKind_Group, "Group",},
+	{PvElementKind_Bezier, "Bezier",},
+	{PvElementKind_Raster, "Raster",},
+};
+
+
 /** @brief pointer arrayの内容数を返す
  * (実長さは番兵のNULL終端があるため、return+1)
  */
@@ -283,4 +298,17 @@ bool pv_element_raster_read_file(PvElement * const this,
 	}
 
 	return true;
+}
+
+const char *pv_element_get_name_from_kind(PvElementKind kind)
+{
+	int num = sizeof(_pv_element_infos) / sizeof(PvElementInfo);
+	for(int i = 0; i < num; i++){
+		if(kind == _pv_element_infos[i].kind){
+			return _pv_element_infos[i].name;
+		}
+	}
+
+	pv_bug("");
+	return NULL;
 }

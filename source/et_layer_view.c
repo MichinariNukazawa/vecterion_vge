@@ -180,12 +180,17 @@ bool _et_layer_view_draw(EtLayerView *this)
 				break;
 			}
 		}
+		const char *kind_name = pv_element_get_name_from_kind(data->kind);
+		if(NULL == kind_name){
+			kind_name = "";
+		}
 		char str_tmp[128];
 		snprintf(str_tmp, sizeof(str_tmp),
-				"%s%c%03d:%03d:%08lx '%s'\n",
+				"%s%c:%s\t:%08lx '%s'\n",
 				str_head,
 				((focus.element == data->element)? '>':'_'),
-				data->level, data->kind,
+				//data->level,
+				kind_name,
 				debug_pointer,
 				((data->name)?"":data->name));
 
