@@ -82,6 +82,7 @@ EtLayerView *et_layer_view_init()
 	gtk_text_buffer_set_text (buffer, "default scale", -1);
 	gtk_text_view_set_editable (GTK_TEXT_VIEW(this->text), false);
 	gtk_text_view_set_monospace (GTK_TEXT_VIEW(this->text), TRUE);
+	gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW(this->text), false);
 	gtk_container_add(GTK_CONTAINER(this->event_box), this->text);
 
 	this->widget = this->box;
