@@ -192,6 +192,11 @@ bool pv_element_append_child(PvElement * const parent,
 bool pv_element_bezier_add_anchor_point(PvElement * const this,
 		const PvAnchorPoint anchor_point)
 {
+	if(NULL == this){
+		pv_error("");
+		return false;
+	}
+
 	if(PvElementKind_Bezier != this->kind){
 		pv_bug("");
 		return false;
