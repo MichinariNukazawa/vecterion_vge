@@ -291,7 +291,7 @@ bool _et_layer_view_draw(EtLayerView *this)
 	return true;
 }
 
-bool _et_layer_view_slot_update_doc()
+bool _et_layer_view_update_doc_tree()
 {
 	EtLayerView *this = layer_view;
 	if(NULL == this){
@@ -344,7 +344,7 @@ bool et_layer_view_set_doc_id(EtLayerView *this, EtDocId doc_id)
 
 	this->doc_id = doc_id;
 
-	if(!_et_layer_view_slot_update_doc()){
+	if(!_et_layer_view_update_doc_tree()){
 		et_error("");
 		return false;
 	}
@@ -354,7 +354,7 @@ bool et_layer_view_set_doc_id(EtLayerView *this, EtDocId doc_id)
 
 void et_layer_view_slot_from_doc_change(EtDoc *doc, gpointer data)
 {
-	if(!_et_layer_view_slot_update_doc()){
+	if(!_et_layer_view_update_doc_tree()){
 		et_error("");
 	}
 }
