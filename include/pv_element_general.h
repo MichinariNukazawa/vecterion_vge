@@ -68,6 +68,9 @@ typedef enum _PvElementKind{
 	/* simple element kinds */
 	PvElementKind_Bezier,
 	PvElementKind_Raster, /* Raster image */
+
+	/* 番兵 */
+	PvElementKind_EndOfKind,
 }PvElementKind;
 
 #ifdef __ET_TEST__

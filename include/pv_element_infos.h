@@ -6,9 +6,12 @@
 #include <stdbool.h>
 #include "pv_element_general.h"
 
+typedef gpointer (*PvElementFuncNewData)(void);
+
 typedef struct _PvElementInfo{
 	PvElementKind kind;
 	const char *name;
+	PvElementFuncNewData func_new_data;
 }PvElementInfo;
 
 extern const PvElementInfo _pv_element_infos[];

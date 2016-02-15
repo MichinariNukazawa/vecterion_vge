@@ -111,50 +111,6 @@ bool pv_element_recursive(PvElement *element,
 	return ret;
 }
 
-
-
-gpointer _pv_element_group_data_new()
-{
-	PvElementGroupData *data = (PvElementGroupData *)malloc(sizeof(PvElementGroupData));
-	if(NULL == data){
-		pv_critical("");
-		exit(-1);
-	}
-
-	data->name = NULL;
-
-	return (gpointer)data;
-}
-
-gpointer _pv_element_bezier_data_new()
-{
-	PvElementBezierData *data = (PvElementBezierData *)malloc(sizeof(PvElementBezierData));
-	if(NULL == data){
-		pv_critical("");
-		exit(-1);
-	}
-
-	data->anchor_points_num = 0;
-	data->anchor_points = NULL;
-
-	return (gpointer)data;
-}
-
-gpointer _pv_element_raster_data_new()
-{
-	PvElementRasterData *data = (PvElementRasterData *)malloc(sizeof(PvElementRasterData));
-	if(NULL == data){
-		pv_critical("");
-		exit(-1);
-	}
-
-	data->path = NULL;
-	data->pixbuf = NULL;
-
-	return (gpointer)data;
-}
-
-
 PvElement *pv_element_new(const PvElementKind kind)
 {
 	PvElement *this = (PvElement *)malloc(sizeof(PvElement));
@@ -166,22 +122,13 @@ PvElement *pv_element_new(const PvElementKind kind)
 	this->parent = NULL;
 	this->childs = NULL;
 
-	gpointer data;
-	switch(kind){
-		case PvElementKind_Root:
-		case PvElementKind_Layer:
-		case PvElementKind_Group:
-			data = _pv_element_group_data_new();
-			break;
-		case PvElementKind_Bezier:
-			data = _pv_element_bezier_data_new();
-			break;
-		case PvElementKind_Raster:
-			data = _pv_element_raster_data_new();
-			break;
-		default:
-			pv_bug("%d\n", kind);
+	const PvElementInfo *info = pv_element_get_info_from_kind(kind);
+	if(NULL == info || NULL == info->func_new_data){
+		pv_error("");
+		return NULL;
 	}
+
+	gpointer data = info->func_new_data();
 	if(NULL == data){
 		pv_bug("");
 		return NULL;
@@ -192,8 +139,6 @@ PvElement *pv_element_new(const PvElementKind kind)
 
 	return this;
 }
-
-
 
 bool pv_element_append_child(PvElement * const parent,
 		PvElement * const prev, PvElement * const element)
