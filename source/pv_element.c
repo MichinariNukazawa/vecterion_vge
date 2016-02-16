@@ -189,6 +189,136 @@ bool pv_element_append_child(PvElement * const parent,
 	return true;
 }
 
+bool _pv_element_delete_single(PvElement *this)
+{
+	if(NULL == this){
+		pv_bug("");
+		return false;
+	}
+
+	const PvElementInfo *info = pv_element_get_info_from_kind(this->kind);
+	if(NULL == info){
+		pv_bug("");
+		return false;
+	}
+
+	if(!info->func_delete_data(this->data)){
+		pv_bug("");
+		return false;
+	}
+
+	free(this);
+
+	return true;
+}
+
+bool _pv_element_remove_delete_recursive_inline(PvElement *this,
+		int *level, PvElementRecursiveError *error)
+{
+	int num = pv_general_get_parray_num((void **)this->childs);
+	if(0 > num){
+		pv_bug("");
+		return false;
+	}
+
+	(*level)++;
+
+	for(int i = (num - 1); 0 <= i; i--){
+		if(!_pv_element_remove_delete_recursive_inline(
+				this->childs[i],
+				level,
+				error)){
+			if(!error->is_error){
+				error->is_error =true;
+				error->level = *level;
+				error->element = this->childs[i];
+				break;
+			}
+		}
+	}
+
+	(*level)--;
+
+	if(!_pv_element_delete_single(this)){
+		error->is_error =true;
+		error->level = *level;
+		error->element = this;
+		return false;
+	}
+
+	return true;
+}
+
+bool _pv_element_detouch_parent(PvElement * const this)
+{
+	if(NULL == this){
+		pv_error("");
+		return false;
+	}
+
+	if(NULL == this->parent){
+		pv_error("");
+		return false;
+	}
+
+	PvElement **childs = this->parent->childs;
+	int num = pv_general_get_parray_num((void **)childs);
+	bool is_exist = false;
+	for(int i = 0; i < num; i++){
+		if(this == childs[i]){
+			is_exist = true;
+			memmove(&childs[i], &childs[i + 1], sizeof(PvElement*) * (num - i));
+			break;
+		}
+	}
+	if(!is_exist){
+		pv_error("");
+		return false;
+	}
+
+	if(0 == num){
+		free(childs);
+		childs = NULL;
+	}else{
+		childs = (PvElement **)realloc(childs,
+				sizeof(PvElement*) * (num));
+		childs[num - 1] = NULL;
+	}
+
+	this->parent->childs = childs;
+	this->parent = NULL;
+
+	return true;
+}
+
+bool pv_element_remove_delete_recursive(PvElement * const this)
+{
+	if(NULL == this){
+		pv_error("");
+		return false;
+	}
+
+	if(NULL != this->parent){
+		if(!_pv_element_detouch_parent(this)){
+			pv_error("");
+			return false;
+		}
+	}
+
+	PvElementRecursiveError error = {
+		.is_error = false,
+		.level = -1,
+		.element = NULL,
+	};
+	int level = 0;
+	if(!_pv_element_remove_delete_recursive_inline(this, &level, &error)){
+		pv_error("%d\n", error.level);
+		return false;
+	}
+
+	return true;
+}
+
 bool pv_element_bezier_add_anchor_point(PvElement * const this,
 		const PvAnchorPoint anchor_point)
 {

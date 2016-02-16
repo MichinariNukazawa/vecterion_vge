@@ -55,6 +55,11 @@ bool pv_element_recursive(PvElement *element,
  */
 bool pv_element_append_child(PvElement * const parent,
 		PvElement * const prev, PvElement * const element);
+/** @brief
+ * element remove in parent->childs
+ * delete element and childs recursive.
+ */
+bool pv_element_remove_delete_recursive(PvElement * const this);
 
 const char *pv_element_get_name_from_kind(PvElementKind kind);
 

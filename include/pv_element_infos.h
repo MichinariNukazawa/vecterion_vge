@@ -7,11 +7,13 @@
 #include "pv_element_general.h"
 
 typedef gpointer (*PvElementFuncNewData)(void);
+typedef bool (*PvElementFuncDeleteData)(void *data);
 
 typedef struct _PvElementInfo{
 	PvElementKind kind;
 	const char *name;
-	PvElementFuncNewData func_new_data;
+	PvElementFuncNewData		func_new_data;
+	PvElementFuncDeleteData		func_delete_data;
 }PvElementInfo;
 
 extern const PvElementInfo _pv_element_infos[];

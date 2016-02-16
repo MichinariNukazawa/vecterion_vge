@@ -92,8 +92,8 @@ bool _et_layer_view_set_layer_ctrl(EtLayerView *this, int index)
 	g_signal_connect(this->button_layer_ctrls[index], "clicked",
 			G_CALLBACK(_et_layer_view_cb_layer_ctrl), (gpointer)this);
 
-	// Todo: いずれ有効化
-	if(2 <= index){
+	// Todo: いずれデフォルト無効からスタート
+	if(2 == index){
 		gtk_widget_set_sensitive(this->button_layer_ctrls[index], false);
 	}
 
@@ -458,7 +458,6 @@ gboolean _et_layer_view_cb_layer_ctrl(GtkWidget *widget, gpointer data)
 
 	switch(index){
 		case 0:
-			et_debug("");
 			if(!et_etaion_add_new_layer(this->doc_id)){
 				et_error("");
 				return false;
@@ -474,7 +473,10 @@ gboolean _et_layer_view_cb_layer_ctrl(GtkWidget *widget, gpointer data)
 			et_debug("");
 			break;
 		case 3:
-			et_debug("");
+			if(!et_etaion_remove_delete_layer(this->doc_id)){
+				et_error("");
+				return false;
+			}
 			break;
 		default:
 			et_error("");

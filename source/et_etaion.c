@@ -271,3 +271,56 @@ bool et_etaion_add_new_layer_child(EtDocId doc_id)
 
 	return true;
 }
+
+bool et_etaion_remove_delete_layer(EtDocId doc_id)
+{
+	EtEtaion *this = current_state;
+	if(NULL == this){
+		et_bug("");
+		exit(-1);
+	}
+
+	(this->state).doc_id = doc_id;
+
+	bool is_error = true;
+	PvFocus focus = et_doc_get_focus_from_id((this->state).doc_id, &is_error);
+	if(is_error){
+		et_error("");
+		return false;
+	}
+
+	PvElement *element = _et_etaion_get_parent_layer_from_element(focus.element);
+	if(NULL == element){
+		et_error("");
+		return false;
+	}
+
+	PvElement *parent = element->parent;
+	// 親がNULLなら、仕方がないので親をroot直下に指定する
+	if(NULL == parent){
+		EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
+		PvVg *vg = et_doc_get_vg_ref(doc);
+		parent = vg->element_root;
+	}
+
+	// 削除前にfocusを変更しておく
+	focus.element = parent; 
+	if(!et_doc_set_focus_to_id((this->state).doc_id, focus)){
+		et_error("");
+		return false;
+	}
+
+	bool ret = true;
+	if(!pv_element_remove_delete_recursive(element)){
+		et_error("");
+		ret = false;
+	}
+
+	_et_etaion_signal_change_state(this);
+	et_doc_signal_update_from_id((this->state).doc_id);
+
+	return ret;
+}
+
+
+
