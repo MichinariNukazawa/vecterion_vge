@@ -242,11 +242,10 @@ bool et_etaion_add_new_layer_child(EtDocId doc_id)
 	// **レイヤの追加位置を決める
 	// FocusされたElementに近いLayerをparentにする
 	parent = _et_etaion_get_parent_layer_from_element(focus.element);
-	// 親がNULLなら、仕方がないので親をroot直下に指定する
+	// 親がNULLはありえない
 	if(NULL == parent){
-		EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
-		PvVg *vg = et_doc_get_vg_ref(doc);
-		parent = vg->element_root;
+		et_bug("");
+		return false;
 	}
 
 	PvElement *layer = pv_element_new(PvElementKind_Layer);
@@ -356,25 +355,33 @@ bool et_etaion_remove_delete_layer(EtDocId doc_id)
 		return false;
 	}
 
+	// 削除実行前にfocus用に親を取得しておく
 	PvElement *parent = element->parent;
-	// 親がNULLなら、仕方がないので親をroot直下に指定する
-	if(NULL == parent){
-		EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
-		PvVg *vg = et_doc_get_vg_ref(doc);
-		parent = vg->element_root;
-	}
-
-	// 削除前にfocusを変更しておく
-	focus.element = parent; 
-	if(!et_doc_set_focus_to_id((this->state).doc_id, focus)){
-		et_error("");
-		return false;
-	}
 
 	bool ret = true;
 	if(!pv_element_remove_delete_recursive(element)){
 		et_error("");
 		ret = false;
+		goto error;
+	}
+
+error:
+
+	// ** focusを変更
+	// 親がNULL or rootなら、root直下をfocus指定する
+	if(NULL == parent || PvElementKind_Root == parent->kind){
+		EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
+		PvVg *vg = et_doc_get_vg_ref(doc);
+		parent = pv_vg_get_layer_top(vg);
+		if(NULL == parent){
+			et_error("");
+			// TODO: エラー処理へ飛ばす
+		}
+	}
+
+	focus.element = parent; 
+	if(!et_doc_set_focus_to_id((this->state).doc_id, focus)){
+		et_error("");
 	}
 
 	_et_etaion_signal_change_state(this);
