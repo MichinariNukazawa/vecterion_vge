@@ -15,7 +15,6 @@ typedef struct _EtLayerViewLayerCtrl{
 	const char * const filename_image;
 }EtLayerViewLayerCtrl;
 
-
 const EtLayerViewLayerCtrl _et_layer_view_layer_ctrls[] = {
 	{"New", "layer_new_64x64.svg",},
 	{"Child", "layer_new_child_64x64.svg",},
@@ -92,8 +91,8 @@ bool _et_layer_view_set_layer_ctrl(EtLayerView *this, int index)
 	g_signal_connect(this->button_layer_ctrls[index], "clicked",
 			G_CALLBACK(_et_layer_view_cb_layer_ctrl), (gpointer)this);
 
-	// Todo: いずれデフォルト無効からスタート
-	//gtk_widget_set_sensitive(this->button_layer_ctrls[index], false);
+	// デフォルト無効からスタート
+	gtk_widget_set_sensitive(this->button_layer_ctrls[index], false);
 
 	return true;
 }
@@ -285,6 +284,12 @@ bool _et_layer_view_draw(EtLayerView *this)
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer(
 					GTK_TEXT_VIEW (this->text));
 	gtk_text_buffer_set_text (buffer, buf, -1);
+
+	// ターゲット状態でlayer_ctrlsのbutton状態を変更する
+	gtk_widget_set_sensitive(this->button_layer_ctrls[0], (0 <= this->doc_id));
+	gtk_widget_set_sensitive(this->button_layer_ctrls[1], (NULL != focus.element));
+	gtk_widget_set_sensitive(this->button_layer_ctrls[2], (NULL != focus.element));
+	gtk_widget_set_sensitive(this->button_layer_ctrls[3], (NULL != focus.element));
 
 	return true;
 }
