@@ -33,11 +33,15 @@ typedef bool (*PvElementRecursiveFunc)(PvElement *element, gpointer data, int le
 typedef struct _PvElementRecursiveError{
 	bool is_error;
 	int level;
-	PvElement *element;
+	const PvElement *element;
 }PvElementRecursiveError;
 
 
 PvElement *pv_element_new(const PvElementKind kind);
+/** @brief 
+ * copy element_tree parent is NULL.
+ */
+PvElement *pv_element_copy_recursive(const PvElement *this);
 /** @brief
  * @return false: error from this function.
  */

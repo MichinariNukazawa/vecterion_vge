@@ -8,12 +8,14 @@
 
 typedef gpointer (*PvElementFuncNewData)(void);
 typedef bool (*PvElementFuncDeleteData)(void *data);
+typedef gpointer (*PvElementFuncCopyNewData)(void *data);
 
 typedef struct _PvElementInfo{
 	PvElementKind kind;
 	const char *name;
 	PvElementFuncNewData		func_new_data;
 	PvElementFuncDeleteData		func_delete_data;
+	PvElementFuncCopyNewData	func_copy_new_data;
 }PvElementInfo;
 
 extern const PvElementInfo _pv_element_infos[];

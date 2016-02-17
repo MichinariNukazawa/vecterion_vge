@@ -5,6 +5,7 @@
 #include "pv_error.h"
 #include "pv_element_infos.h"
 
+bool _pv_element_delete_single(PvElement *this);
 
 /** @brief pointer arrayの内容数を返す
  * (実長さは番兵のNULL終端があるため、return+1)
@@ -18,6 +19,10 @@ int pv_general_get_parray_num(void **pointers)
 	int i = 0;
 	while(NULL != pointers[i]){
 		i++;
+	}
+
+	if(15 < i){
+		pv_debug("num:%d\n", i);
 	}
 
 	return i;
@@ -140,6 +145,146 @@ PvElement *pv_element_new(const PvElementKind kind)
 	return this;
 }
 
+PvElement *_pv_element_copy_single(const PvElement *this)
+{
+	if(NULL == this){
+		pv_error("");
+		return NULL;
+	}
+
+	PvElement *new_element = (PvElement *)malloc(sizeof(PvElement));
+	if(NULL == new_element){
+		pv_error("");
+		return NULL;
+		}
+
+	new_element->kind = this->kind;
+	new_element->parent = NULL;
+	new_element->childs = NULL;
+	new_element->data = NULL;
+
+	const PvElementInfo *info = pv_element_get_info_from_kind(this->kind);
+	if(NULL == info || NULL == info->func_copy_new_data){
+		pv_error("");
+		return NULL;
+	}
+	void *new_data = info->func_copy_new_data(this->data);
+	if(NULL == new_data){
+		pv_error("");
+		goto error1;
+	}
+	new_element->data = new_data;
+
+	return new_element;
+
+error1:
+	free(new_element);
+
+	return NULL;
+}
+
+PvElement *_pv_element_copy_recursive_inline(const PvElement *this,
+		int *level, PvElementRecursiveError *error)
+{
+	if(NULL == this){
+		error->is_error =true;
+		error->level = *level;
+		error->element = this;
+		return NULL;
+	}
+
+	// copy this
+	PvElement *new_element = _pv_element_copy_single(this);
+	if(NULL == new_element){
+		error->is_error =true;
+		error->level = *level;
+		error->element = this;
+		return NULL;
+	}
+
+	// ** copy childs
+	(*level)++;
+
+	int num = pv_general_get_parray_num((void **)this->childs);
+	if(0 > num){
+		error->is_error = true;
+		error->level = *level;
+		error->element = this;
+		goto error1;
+	}
+
+	pv_debug("copy childs:%3d:%d\n", *level, num);
+
+	PvElement **childs = NULL;
+	if(0 < num){
+ 		childs = malloc((num + 1) * sizeof(PvElement *));
+		if(NULL == childs){
+			error->is_error = true;
+			error->level = *level;
+			error->element = this;
+			goto error1;
+		}
+
+		for(int i = 0; i < num; i++){
+			PvElement *child = _pv_element_copy_recursive_inline(
+					this->childs[i],
+					level,
+					error);
+			if(NULL == child){
+				if(!error->is_error){
+					error->is_error =true;
+					error->level = *level;
+					error->element = this;
+					goto error2;
+				}
+			}
+			child->parent = new_element;
+			childs[i] = child;
+			childs[i + 1] = NULL;
+		}
+
+	}
+	new_element->childs = childs;
+
+	(*level)--;
+
+	return new_element;
+
+error2:
+	pv_element_remove_delete_recursive(new_element);
+
+	return NULL;
+
+error1:
+	_pv_element_delete_single(new_element);
+
+	return NULL;
+}
+
+PvElement *pv_element_copy_recursive(const PvElement *this)
+{
+	if(NULL == this){
+		pv_error("");
+		return NULL;
+	}
+
+	PvElementRecursiveError error = {
+		.is_error = false,
+		.level = -1,
+		.element = NULL,
+	};
+	int level = 0;
+	PvElement *new_element_tree = _pv_element_copy_recursive_inline( this, &level, &error);
+	if(NULL == new_element_tree){
+		pv_error("");
+		return NULL;
+	}
+
+	return new_element_tree;
+}
+
+
+
 bool pv_element_append_child(PvElement * const parent,
 		PvElement * const prev, PvElement * const element)
 {
@@ -223,11 +368,13 @@ bool _pv_element_remove_delete_recursive_inline(PvElement *this,
 
 	(*level)++;
 
+	pv_debug("delete childs:%3d:%d\n", *level, num);
+
 	for(int i = (num - 1); 0 <= i; i--){
 		if(!_pv_element_remove_delete_recursive_inline(
-				this->childs[i],
-				level,
-				error)){
+					this->childs[i],
+					level,
+					error)){
 			if(!error->is_error){
 				error->is_error =true;
 				error->level = *level;
@@ -298,6 +445,7 @@ bool pv_element_remove_delete_recursive(PvElement * const this)
 		return false;
 	}
 
+	// 親がいるなら連結を外す
 	if(NULL != this->parent){
 		if(!_pv_element_detouch_parent(this)){
 			pv_error("");
@@ -386,6 +534,6 @@ const char *pv_element_get_name_from_kind(PvElementKind kind)
 		pv_error("");
 		return NULL;
 	}
-	
+
 	return info->name;
 }

@@ -272,6 +272,67 @@ bool et_etaion_add_new_layer_child(EtDocId doc_id)
 	return true;
 }
 
+#include <string.h>
+/** @brief focus(Layer)および子Elementを複製して親レイヤーに追加 */
+bool et_etaion_copy_layer(EtDocId doc_id)
+{
+	EtEtaion *this = current_state;
+	if(NULL == this){
+		et_bug("");
+		exit(-1);
+	}
+
+	(this->state).doc_id = doc_id;
+
+	bool is_error = true;
+	PvFocus focus = et_doc_get_focus_from_id((this->state).doc_id, &is_error);
+	if(is_error){
+		et_error("");
+		return false;
+	}
+
+	// 対象Layerを取得
+	PvElement *element = _et_etaion_get_parent_layer_from_element(focus.element);
+	if(NULL == element){
+		unsigned long tmp = 0;
+		memcpy(&tmp, &(focus.element), sizeof(tmp));
+		et_error("%lx\n", tmp);
+		return false;
+	}
+
+	// 親がNULLはありえない
+	if(NULL == element->parent){
+		unsigned long tmp = 0;
+		memcpy(&tmp, &element, sizeof(tmp));
+		et_bug("%lx", tmp);
+		return false;
+	}
+
+	// LayerTreeを複製
+	PvElement *new_element_tree = pv_element_copy_recursive(element);
+	if(NULL == new_element_tree){
+		et_error("");
+		return false;
+	}
+
+	if(!pv_element_append_child(element->parent, 
+			element, new_element_tree)){
+		et_error("");
+		return false;
+	}
+
+	focus.element = new_element_tree;
+	if(!et_doc_set_focus_to_id((this->state).doc_id, focus)){
+		et_error("");
+		return false;
+	}
+
+	_et_etaion_signal_change_state(this);
+	et_doc_signal_update_from_id((this->state).doc_id);
+
+	return true;
+}
+
 bool et_etaion_remove_delete_layer(EtDocId doc_id)
 {
 	EtEtaion *this = current_state;

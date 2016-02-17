@@ -31,6 +31,8 @@ int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data)
 bool et_etaion_add_new_layer(EtDocId doc_id);
 // @brief focus(Layer)の子Layerを追加
 bool et_etaion_add_new_layer_child(EtDocId doc_id);
+/** @brief focus(Layer)および子Elementを複製して親レイヤーに追加 */
+bool et_etaion_copy_layer(EtDocId doc_id);
 /** @brief focus(Layer)および子Elementを削除 */
 bool et_etaion_remove_delete_layer(EtDocId doc_id);
 
