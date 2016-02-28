@@ -23,7 +23,7 @@ struct _PvElement{
 };
 
 /**
- * use pv_element_recursive();
+ * use pv_element_recursive_before();
  * @return false: cancel recursive(search childs).
  * false is not error.
  * (this is no tracking "*error" is true.
@@ -45,7 +45,7 @@ PvElement *pv_element_copy_recursive(const PvElement *this);
 /** @brief
  * @return false: error from this function.
  */
-bool pv_element_recursive(PvElement *element,
+bool pv_element_recursive_before(PvElement *element,
 		PvElementRecursiveFunc func, gpointer data,
 		PvElementRecursiveError *error);
 /** @brief 

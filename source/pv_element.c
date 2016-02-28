@@ -47,7 +47,7 @@ char *pv_general_str_new(const char * const src)
 }
 
 
-bool _pv_element_recursive_inline(PvElement *element,
+bool _pv_element_recursive_before_inline(PvElement *element,
 		PvElementRecursiveFunc func, gpointer data,
 		int *level,
 		PvElementRecursiveError *error)
@@ -63,7 +63,7 @@ bool _pv_element_recursive_inline(PvElement *element,
 
 	int num = pv_general_get_parray_num((void **)element->childs);
 	for(int i = num - 1; 0 <= i; i--){
-		if(!_pv_element_recursive_inline(element->childs[i],
+		if(!_pv_element_recursive_before_inline(element->childs[i],
 					func, data,
 					level,
 					error)){
@@ -85,7 +85,7 @@ end:
 }
 
 
-bool pv_element_recursive(PvElement *element,
+bool pv_element_recursive_before(PvElement *element,
 		PvElementRecursiveFunc func, gpointer data,
 		PvElementRecursiveError *error)
 {
@@ -108,7 +108,7 @@ bool pv_element_recursive(PvElement *element,
 	error->element = NULL;
 
 	int level = 0;
-	bool ret = _pv_element_recursive_inline(element,
+	bool ret = _pv_element_recursive_before_inline(element,
 			func, data,
 			&level,
 			error);

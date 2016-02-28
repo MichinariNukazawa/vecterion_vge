@@ -318,7 +318,7 @@ bool _et_layer_view_update_doc_tree()
 		.datas = NULL
 	};
 	PvElementRecursiveError error;
-	if(!pv_element_recursive(vg->element_root,
+	if(!pv_element_recursive_before(vg->element_root,
 				_et_layer_view_read_layer_tree, &func_rlt_data_pack,
 				&error)){
 		et_error("level:%d", error.level);
