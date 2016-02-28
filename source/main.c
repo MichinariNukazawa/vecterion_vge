@@ -86,39 +86,12 @@ int main (int argc, char **argv){
 
 	GtkWidget *hpaned = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_box_pack_start(GTK_BOX(box1), hpaned, true, true, 3);
-	GtkWidget *frame1 = gtk_frame_new (NULL);
-	GtkWidget *frame2 = gtk_frame_new (NULL);
-	gtk_frame_set_label(GTK_FRAME (frame1), "test1");
-	gtk_frame_set_label(GTK_FRAME (frame2), "test2");
-	gtk_frame_set_shadow_type (GTK_FRAME (frame1), GTK_SHADOW_IN);
-	gtk_frame_set_shadow_type (GTK_FRAME (frame2), GTK_SHADOW_IN);
 
+	GtkWidget *notebook = gtk_notebook_new();
+	gtk_paned_pack1 (GTK_PANED (hpaned), notebook, TRUE, FALSE);
 
-	gtk_paned_pack1 (GTK_PANED (hpaned), frame1, TRUE, FALSE);
-	gtk_paned_pack2 (GTK_PANED (hpaned), frame2, TRUE, FALSE);
-
-
-	EtCanvas *canvas1 = et_canvas_new();
-	GtkWidget *canvas_frame1 = et_canvas_get_widget_frame(canvas1);
-	if(NULL == canvas_frame1){
-		et_bug("");
-		return -1;
-	}
-	gtk_container_add(GTK_CONTAINER(frame1), canvas_frame1);
-
-	EtCanvas *canvas2 = et_canvas_new();
-	GtkWidget *canvas_frame2 = et_canvas_get_widget_frame(canvas2);
-	if(NULL == canvas_frame2){
-		et_bug("");
-		return -1;
-	}
-	gtk_container_add(GTK_CONTAINER(frame2), canvas_frame2);
-
-	EtPointingManager *pointing_manager = et_pointing_manager_init();
-	if(NULL == pointing_manager){
-		et_error("");
-		return -1;
-	}
+	GtkWidget *box_dock_work = gtk_box_new (GTK_ORIENTATION_VERTICAL, 3);
+	gtk_paned_pack2 (GTK_PANED (hpaned), box_dock_work, FALSE, FALSE);
 
 	EtLayerView *layer_view = et_layer_view_init();
 	if(NULL == layer_view){
@@ -130,9 +103,37 @@ int main (int argc, char **argv){
 		et_bug("");
 		return -1;
 	}
-	gtk_box_pack_start(GTK_BOX(box1),
+	gtk_box_pack_start(GTK_BOX(box_dock_work),
 			et_layer_view_get_widget_frame(layer_view),
 			true, true, 3);
+
+	EtCanvas *canvas1 = et_canvas_new();
+	GtkWidget *canvas_frame1 = et_canvas_get_widget_frame(canvas1);
+	if(NULL == canvas_frame1){
+		et_bug("");
+		return -1;
+	}
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), canvas_frame1, NULL);
+
+	GtkWidget *frame_thumb_canvas = gtk_frame_new (NULL);
+	gtk_frame_set_label(GTK_FRAME (frame_thumb_canvas), "Thumbnail");
+	gtk_frame_set_shadow_type (GTK_FRAME (frame_thumb_canvas), GTK_SHADOW_IN);
+	gtk_box_pack_start(GTK_BOX(box_dock_work), frame_thumb_canvas,
+					false, true, 3);
+
+	EtCanvas *canvas_thumbnail = et_canvas_new();
+	GtkWidget *canvas_thumbnail_widget = et_canvas_get_widget_frame(canvas_thumbnail);
+	if(NULL == canvas_thumbnail_widget){
+		et_bug("");
+		return -1;
+	}
+	gtk_container_add(GTK_CONTAINER(frame_thumb_canvas), canvas_thumbnail_widget);
+
+	EtPointingManager *pointing_manager = et_pointing_manager_init();
+	if(NULL == pointing_manager){
+		et_error("");
+		return -1;
+	}
 
 	EtDocManager *doc_manager = et_doc_manager_init();
 	if(NULL == doc_manager){
@@ -165,7 +166,7 @@ int main (int argc, char **argv){
 		et_error("");
 		return -1;
 	}
-	if(!et_renderer_set_connection(renderer, canvas2, doc1)){
+	if(!et_renderer_set_connection(renderer, canvas_thumbnail, doc1)){
 		et_error("");
 		return -1;
 	}
@@ -185,7 +186,7 @@ int main (int argc, char **argv){
 		et_error("");
 		return -1;
 	}
-	if(0 > et_canvas_set_slot_mouse_action(canvas2,
+	if(0 > et_canvas_set_slot_mouse_action(canvas_thumbnail,
 				et_pointing_manager_slot_mouse_action, NULL)){
 		et_error("");
 		return -1;
