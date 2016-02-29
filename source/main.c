@@ -14,6 +14,7 @@
 #include "et_layer_view.h"
 
 void __pvui_app_set_style();
+bool __init_menu(GtkWidget *window, GtkWidget *box_root);
 
 GtkWidget *status_bar= NULL;
 static gboolean in_worker_func(gpointer data)
@@ -111,11 +112,11 @@ EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail,
 		return -1;
 	}
 
-return et_doc_get_id(doc1);
+	return et_doc_get_id(doc1);
 }
 
 
-	// __pvui_app_set_style();
+// __pvui_app_set_style();
 
 int main (int argc, char **argv){
 	gtk_init(&argc, &argv);
@@ -123,8 +124,10 @@ int main (int argc, char **argv){
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_set_size_request (window, 900,700);
 
-	EtEtaion *current_state = et_etaion_init();
-	if(NULL == current_state){
+	GtkWidget *box_root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+	gtk_container_add(GTK_CONTAINER(window), box_root);
+
+	if(! __init_menu(window, box_root)){
 		et_bug("");
 		return -1;
 	}
@@ -135,7 +138,7 @@ int main (int argc, char **argv){
 			G_CALLBACK(gtk_main_quit), NULL);
 
 	GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
-	gtk_container_add(GTK_CONTAINER(window), vbox);
+	gtk_container_add(GTK_CONTAINER(box_root), vbox);
 	GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3);
 	gtk_box_pack_start(GTK_BOX(vbox), box1, true, true, 1);
 
@@ -143,7 +146,6 @@ int main (int argc, char **argv){
 	gtk_box_pack_start(GTK_BOX(vbox), statusbar, FALSE, TRUE, 0);
 	gtk_statusbar_push(GTK_STATUSBAR(statusbar), 1, "Hello World");
 	status_bar = statusbar;
-
 
 	GtkWidget *hpaned = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_box_pack_start(GTK_BOX(box1), hpaned, true, true, 3);
@@ -153,6 +155,12 @@ int main (int argc, char **argv){
 
 	GtkWidget *box_dock_work = gtk_box_new (GTK_ORIENTATION_VERTICAL, 3);
 	gtk_paned_pack2 (GTK_PANED (hpaned), box_dock_work, FALSE, FALSE);
+
+	EtEtaion *current_state = et_etaion_init();
+	if(NULL == current_state){
+		et_bug("");
+		return -1;
+	}
 
 	EtLayerView *layer_view = et_layer_view_init();
 	if(NULL == layer_view){
@@ -172,7 +180,7 @@ int main (int argc, char **argv){
 	gtk_frame_set_label(GTK_FRAME (frame_thumb_canvas), "Thumbnail");
 	gtk_frame_set_shadow_type (GTK_FRAME (frame_thumb_canvas), GTK_SHADOW_IN);
 	gtk_box_pack_start(GTK_BOX(box_dock_work), frame_thumb_canvas,
-					false, true, 3);
+			false, true, 3);
 
 	EtCanvas *canvas_thumbnail = et_canvas_new();
 	GtkWidget *canvas_thumbnail_widget = et_canvas_get_widget_frame(canvas_thumbnail);
@@ -278,3 +286,107 @@ void __pvui_app_set_style(){
 			"", -1, NULL);
 	g_object_unref (provider);
 }
+
+static gboolean __cb_menu_file_new(gpointer data)
+{
+	et_debug("");
+
+	return false;
+}
+
+void __cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
+{   
+	const char *appname = "Etaion Vector Graphic Editor";
+	GtkWindow *parent_window = NULL;
+	GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+	GtkWidget *dialog = gtk_message_dialog_new (parent_window,
+			flags,
+			GTK_MESSAGE_QUESTION,
+			GTK_BUTTONS_CLOSE,
+			"This is :'%s'",
+			appname);
+	gtk_dialog_run (GTK_DIALOG (dialog));
+	gtk_widget_destroy (dialog);
+}
+
+
+GtkWidget *pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
+	GtkWidget *menuitem_root;
+	GtkWidget *menuitem;
+	GtkWidget *menu;
+
+	menuitem_root = gtk_menu_item_new_with_label ("_File");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
+
+	menu = gtk_menu_new ();
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
+
+	menuitem = gtk_menu_item_new_with_label ("_New");
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(__cb_menu_file_new), NULL);
+	// ** Accel to "/_File/_New (Ctrl+N)"
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_n, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+	/*
+	   menuitem = gtk_menu_item_new_with_label ("Open");
+	   gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	   menuitem = gtk_menu_item_new_with_label ("Save");
+	   gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	   g_signal_connect(menuitem, "activate",
+	   G_CALLBACK(__cb_save), NULL);
+	   menuitem = gtk_menu_item_new_with_label ("Save As");
+	   gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	   menuitem = pv_get_menuitem_new_tree_of_export();
+	   gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	 */
+	menuitem = gtk_menu_item_new_with_label ("_Quit");
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(gtk_main_quit), NULL);
+
+	return menuitem_root;
+}
+
+GtkWidget *__new_tree_of_help(GtkAccelGroup *accel_group){
+	GtkWidget *menuitem_root;
+	GtkWidget *menuitem;
+	GtkWidget *menu;
+
+	menuitem_root = gtk_menu_item_new_with_mnemonic ("_Help");
+	// gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
+
+	menu = gtk_menu_new ();
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
+
+	// ** Issue: Mnemonic not works on submenu in Ubuntu15.10(cause Unity/Ubuntu?).
+	menuitem = gtk_menu_item_new_with_mnemonic ("_About");
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate",
+			G_CALLBACK(__cb_menu_help_about), NULL);
+	// ** Accel to "Help > About (Ctrl+A)"
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_a, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+
+	return menuitem_root;
+}
+
+bool __init_menu(GtkWidget *window, GtkWidget *box_root)
+{
+	GtkWidget *menubar;
+	GtkWidget *menuitem;
+
+	GtkAccelGroup *accel_group;
+	accel_group = gtk_accel_group_new ();
+	gtk_window_add_accel_group (GTK_WINDOW (window), accel_group);
+
+	menubar = gtk_menu_bar_new ();
+	gtk_box_pack_start (GTK_BOX (box_root), menubar, FALSE, TRUE, 0);
+
+	menuitem = pv_get_menuitem_new_tree_of_file(accel_group);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
+
+	menuitem = __new_tree_of_help(accel_group);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
+
+	return true;
+}
+
