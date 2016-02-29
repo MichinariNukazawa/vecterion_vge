@@ -53,6 +53,70 @@ static gboolean cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer us
 	return FALSE;
 }
 
+EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail,
+		EtLayerView *layer_view)
+{
+	EtCanvas *canvas1 = et_canvas_new();
+	GtkWidget *canvas_frame1 = et_canvas_get_widget_frame(canvas1);
+	if(NULL == canvas_frame1){
+		et_bug("");
+		return -1;
+	}
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), canvas_frame1, NULL);
+
+	EtDoc *doc1 = et_doc_new();
+	if(NULL == doc1){
+		et_error("");
+		return -1;
+	}
+
+	if(!et_doc_manager_add_doc(doc1)){
+		et_error("");
+		return -1;
+	}
+
+	EtRenderer *renderer = et_renderer_new();
+	if(NULL == renderer){
+		et_error("");
+		return -1;
+	}
+
+	if(!et_renderer_set_connection(renderer, canvas1, doc1)){
+		et_error("");
+		return -1;
+	}
+	if(!et_renderer_set_connection(renderer, canvas_thumbnail, doc1)){
+		et_error("");
+		return -1;
+	}
+
+	if(!et_doc_add_slot_change(doc1, et_layer_view_slot_from_doc_change, NULL)){
+		et_error("");
+		return -1;
+	}
+
+	if(!et_layer_view_set_doc_id(layer_view, et_doc_get_id(doc1))){
+		et_error("");
+		return -1;
+	}
+
+	if(0 > et_canvas_set_slot_mouse_action(canvas1,
+				et_pointing_manager_slot_mouse_action, NULL)){
+		et_error("");
+		return -1;
+	}
+
+	if(!et_doc_signal_update(doc1)){
+		et_error("");
+		return -1;
+	}
+
+return et_doc_get_id(doc1);
+}
+
+
+	// __pvui_app_set_style();
+
 int main (int argc, char **argv){
 	gtk_init(&argc, &argv);
 
@@ -80,9 +144,6 @@ int main (int argc, char **argv){
 	gtk_statusbar_push(GTK_STATUSBAR(statusbar), 1, "Hello World");
 	status_bar = statusbar;
 
-	const char *pathImageFile;
-	pathImageFile = "./library/23.svg";
-
 
 	GtkWidget *hpaned = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_box_pack_start(GTK_BOX(box1), hpaned, true, true, 3);
@@ -106,14 +167,6 @@ int main (int argc, char **argv){
 	gtk_box_pack_start(GTK_BOX(box_dock_work),
 			et_layer_view_get_widget_frame(layer_view),
 			true, true, 3);
-
-	EtCanvas *canvas1 = et_canvas_new();
-	GtkWidget *canvas_frame1 = et_canvas_get_widget_frame(canvas1);
-	if(NULL == canvas_frame1){
-		et_bug("");
-		return -1;
-	}
-	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), canvas_frame1, NULL);
 
 	GtkWidget *frame_thumb_canvas = gtk_frame_new (NULL);
 	gtk_frame_set_label(GTK_FRAME (frame_thumb_canvas), "Thumbnail");
@@ -146,64 +199,31 @@ int main (int argc, char **argv){
 		return -1;
 	}
 
-	EtDoc *doc1 = et_doc_new();
-	if(NULL == doc1){
-		et_error("");
-		return -1;
-	}
-
-	if(!et_doc_manager_add_doc(doc1)){
-		et_error("");
-		return -1;
-	}
-
-	EtRenderer *renderer = et_renderer_new();
-	if(NULL == renderer){
-		et_error("");
-		return -1;
-	}
-	if(!et_renderer_set_connection(renderer, canvas1, doc1)){
-		et_error("");
-		return -1;
-	}
-	if(!et_renderer_set_connection(renderer, canvas_thumbnail, doc1)){
-		et_error("");
-		return -1;
-	}
-
-	if(!et_doc_add_slot_change(doc1, et_layer_view_slot_from_doc_change, NULL)){
-		et_error("");
-		return -1;
-	}
-
-	if(!et_layer_view_set_doc_id(layer_view, et_doc_get_id(doc1))){
-		et_error("");
-		return -1;
-	}
-
-	if(0 > et_canvas_set_slot_mouse_action(canvas1,
-				et_pointing_manager_slot_mouse_action, NULL)){
-		et_error("");
-		return -1;
-	}
 	if(0 > et_canvas_set_slot_mouse_action(canvas_thumbnail,
 				et_pointing_manager_slot_mouse_action, NULL)){
 		et_error("");
 		return -1;
 	}
 
-	if(!et_doc_set_image_from_file(doc1, pathImageFile)){
+	EtDocId doc_id = _open_doc_new(notebook, canvas_thumbnail, layer_view);
+	if(0 > doc_id){
 		et_error("");
 		return -1;
 	}
 
-	if(!et_doc_signal_update(doc1)){
+	// ** (開発デバッグ用)ドキュメントにsvgを貼り付ける
+	const char *pathImageFile = NULL;
+	pathImageFile = "./library/23.svg";
+	if(!et_doc_set_image_from_file(et_doc_manager_get_doc_from_id(doc_id), pathImageFile)){
 		et_error("");
-		return -1;
+		return false;
 	}
 
+	if(!et_doc_signal_update_from_id(doc_id)){
+		et_error("");
+		return false;
+	}
 
-	// __pvui_app_set_style();
 
 	GThread* thread;
 	thread = g_thread_new ("", worker_func, NULL);
