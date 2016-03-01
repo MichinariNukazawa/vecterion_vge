@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 #include "et_canvas.h"
-#include "et_doc.h"
+#include "et_doc_id.h"
 
 
 struct _EtRenderer;
@@ -14,7 +14,7 @@ typedef struct _EtRenderer EtRenderer;
 
 
 EtRenderer *et_renderer_init();
-bool et_renderer_set_connection(EtCanvas *canvas, EtDoc *doc);
+bool et_renderer_set_connection(EtCanvas *canvas, EtDocId doc_id);
 
 #ifdef __ET_TEST__
 #endif // __ET_TEST__

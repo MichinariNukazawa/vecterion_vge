@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "et_error.h"
 #include "pv_renderer.h"
+#include "et_doc_manager.h"
 
 struct _EtCanvasAndDoc;
 typedef struct _EtCanvasAndDoc EtCanvasAndDoc;
@@ -176,10 +177,16 @@ void _slot_et_render_from_canvas_change(EtCanvas *canvas, gpointer data)
 	}
 }
 
-bool et_renderer_set_connection(EtCanvas *canvas, EtDoc *doc)
+bool et_renderer_set_connection(EtCanvas *canvas, EtDocId doc_id)
 {
 	EtRenderer *this = __renderer;
 	if(NULL == this){
+		et_bug("");
+		return false;
+	}
+
+	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
+	if(NULL == doc){
 		et_bug("");
 		return false;
 	}
@@ -209,15 +216,11 @@ bool et_renderer_set_connection(EtCanvas *canvas, EtDoc *doc)
 		return false;
 	}
 
-	if(et_doc_get_id(doc) < 0){
-		et_bug("");
-		return false;
-	}
 	if(!(et_canvas_get_doc_id(canvas) < 0)){
 		et_bug("");
 		return false;
 	}
-	if(!et_canvas_set_doc_id(canvas, et_doc_get_id(doc))){
+	if(!et_canvas_set_doc_id(canvas, doc_id)){
 		et_bug("");
 		return false;
 	}

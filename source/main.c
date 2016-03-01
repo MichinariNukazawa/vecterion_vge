@@ -241,11 +241,11 @@ EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail)
 	}
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), canvas_frame1, NULL);
 
-	if(!et_renderer_set_connection(canvas1, doc1)){
+	if(!et_renderer_set_connection(canvas1, et_doc_get_id(doc1))){
 		et_error("");
 		return -1;
 	}
-	if(!et_renderer_set_connection(canvas_thumbnail, doc1)){
+	if(!et_renderer_set_connection(canvas_thumbnail, et_doc_get_id(doc1))){
 		et_error("");
 		return -1;
 	}
