@@ -15,9 +15,10 @@
 
 void __pvui_app_set_style();
 bool __init_menu(GtkWidget *window, GtkWidget *box_root);
-bool __debug_init(GtkWidget *notebook, EtCanvas *canvas_thumbnail, EtLayerView *layer_view);
+bool __debug_init(GtkWidget *notebook, EtCanvas *canvas_thumbnail,
+		EtRenderer *renderer);
 EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail,
-		EtLayerView *layer_view);
+		EtRenderer *renderer);
 
 
 
@@ -75,6 +76,12 @@ int main (int argc, char **argv){
 
 	EtDocManager *doc_manager = et_doc_manager_init();
 	if(NULL == doc_manager){
+		et_error("");
+		return -1;
+	}
+
+	EtRenderer *renderer = et_renderer_new();
+	if(NULL == renderer){
 		et_error("");
 		return -1;
 	}
@@ -167,7 +174,7 @@ int main (int argc, char **argv){
 
 
 
-	if(!__debug_init(notebook, canvas_thumbnail, layer_view)){
+	if(!__debug_init(notebook, canvas_thumbnail, renderer)){
 		et_error("");
 		return -1;
 	}
@@ -190,9 +197,10 @@ int main (int argc, char **argv){
 	return 0;
 }
 
-bool __debug_init(GtkWidget *notebook, EtCanvas *canvas_thumbnail, EtLayerView *layer_view)
+bool __debug_init(GtkWidget *notebook, EtCanvas *canvas_thumbnail,
+		EtRenderer *renderer)
 {
-	EtDocId doc_id = _open_doc_new(notebook, canvas_thumbnail, layer_view);
+	EtDocId doc_id = _open_doc_new(notebook, canvas_thumbnail, renderer);
 	if(0 > doc_id){
 		et_error("");
 		return -1;
@@ -215,16 +223,8 @@ return true;
 }
 
 EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail,
-		EtLayerView *layer_view)
+		EtRenderer *renderer)
 {
-	EtCanvas *canvas1 = et_canvas_new();
-	GtkWidget *canvas_frame1 = et_canvas_get_widget_frame(canvas1);
-	if(NULL == canvas_frame1){
-		et_bug("");
-		return -1;
-	}
-	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), canvas_frame1, NULL);
-
 	EtDoc *doc1 = et_doc_new();
 	if(NULL == doc1){
 		et_error("");
@@ -236,11 +236,14 @@ EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail,
 		return -1;
 	}
 
-	EtRenderer *renderer = et_renderer_new();
-	if(NULL == renderer){
-		et_error("");
+	// ** gui
+	EtCanvas *canvas1 = et_canvas_new();
+	GtkWidget *canvas_frame1 = et_canvas_get_widget_frame(canvas1);
+	if(NULL == canvas_frame1){
+		et_bug("");
 		return -1;
 	}
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), canvas_frame1, NULL);
 
 	if(!et_renderer_set_connection(renderer, canvas1, doc1)){
 		et_error("");
