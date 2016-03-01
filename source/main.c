@@ -15,10 +15,8 @@
 
 void __pvui_app_set_style();
 bool __init_menu(GtkWidget *window, GtkWidget *box_root);
-bool __debug_init(GtkWidget *notebook, EtCanvas *canvas_thumbnail,
-		EtRenderer *renderer);
-EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail,
-		EtRenderer *renderer);
+bool __debug_init(GtkWidget *notebook, EtCanvas *canvas_thumbnail);
+EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail);
 
 
 
@@ -80,7 +78,7 @@ int main (int argc, char **argv){
 		return -1;
 	}
 
-	EtRenderer *renderer = et_renderer_new();
+	EtRenderer *renderer = et_renderer_init();
 	if(NULL == renderer){
 		et_error("");
 		return -1;
@@ -174,7 +172,7 @@ int main (int argc, char **argv){
 
 
 
-	if(!__debug_init(notebook, canvas_thumbnail, renderer)){
+	if(!__debug_init(notebook, canvas_thumbnail)){
 		et_error("");
 		return -1;
 	}
@@ -197,10 +195,9 @@ int main (int argc, char **argv){
 	return 0;
 }
 
-bool __debug_init(GtkWidget *notebook, EtCanvas *canvas_thumbnail,
-		EtRenderer *renderer)
+bool __debug_init(GtkWidget *notebook, EtCanvas *canvas_thumbnail)
 {
-	EtDocId doc_id = _open_doc_new(notebook, canvas_thumbnail, renderer);
+	EtDocId doc_id = _open_doc_new(notebook, canvas_thumbnail);
 	if(0 > doc_id){
 		et_error("");
 		return -1;
@@ -222,8 +219,7 @@ bool __debug_init(GtkWidget *notebook, EtCanvas *canvas_thumbnail,
 return true;
 }
 
-EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail,
-		EtRenderer *renderer)
+EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail)
 {
 	EtDoc *doc1 = et_doc_new();
 	if(NULL == doc1){
@@ -245,11 +241,11 @@ EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail,
 	}
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), canvas_frame1, NULL);
 
-	if(!et_renderer_set_connection(renderer, canvas1, doc1)){
+	if(!et_renderer_set_connection(canvas1, doc1)){
 		et_error("");
 		return -1;
 	}
-	if(!et_renderer_set_connection(renderer, canvas_thumbnail, doc1)){
+	if(!et_renderer_set_connection(canvas_thumbnail, doc1)){
 		et_error("");
 		return -1;
 	}

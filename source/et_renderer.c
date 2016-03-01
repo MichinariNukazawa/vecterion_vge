@@ -4,8 +4,27 @@
 #include "et_error.h"
 #include "pv_renderer.h"
 
-EtRenderer *et_renderer_new()
+struct _EtCanvasAndDoc;
+typedef struct _EtCanvasAndDoc EtCanvasAndDoc;
+struct _EtCanvasAndDoc{
+	EtCallbackId	id;
+	EtCanvas	*canvas;
+	EtDoc		*doc;
+};
+
+struct _EtRenderer{
+	EtCanvasAndDoc *canvas_and_docs;
+};
+
+static EtRenderer *__renderer = NULL;
+
+EtRenderer *et_renderer_init()
 {
+	if(NULL != __renderer){
+		et_bug("");
+		return NULL;
+	}
+
 	EtRenderer *this = (EtRenderer *)malloc(sizeof(EtRenderer));
 	if(NULL == this){
 		et_error("");
@@ -18,6 +37,8 @@ EtRenderer *et_renderer_new()
 		return NULL;
 	}
 	this->canvas_and_docs[0].id = -1;
+
+	__renderer = this;
 
 	return this;
 }
@@ -155,8 +176,14 @@ void _slot_et_render_from_canvas_change(EtCanvas *canvas, gpointer data)
 	}
 }
 
-bool et_renderer_set_connection(EtRenderer *this, EtCanvas *canvas, EtDoc *doc)
+bool et_renderer_set_connection(EtCanvas *canvas, EtDoc *doc)
 {
+	EtRenderer *this = __renderer;
+	if(NULL == this){
+		et_bug("");
+		return false;
+	}
+
 	int num = _et_renderer_get_num_canvas_and_docs(this->canvas_and_docs);
 	EtCanvasAndDoc *new = realloc(this->canvas_and_docs,
 			sizeof(EtCanvasAndDoc) * (num + 2));
