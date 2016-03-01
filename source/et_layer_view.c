@@ -174,8 +174,9 @@ EtLayerView *et_layer_view_init()
 	return this;
 }
 
-GtkWidget *et_layer_view_get_widget_frame(EtLayerView *this)
+GtkWidget *et_layer_view_get_widget_frame()
 {
+	EtLayerView *this = layer_view;
 	if(NULL == this){
 		et_error("");
 		return NULL;
@@ -338,8 +339,9 @@ bool _et_layer_view_update_doc_tree()
 	return _et_layer_view_draw(this);
 }
 
-bool et_layer_view_set_doc_id(EtLayerView *this, EtDocId doc_id)
+bool et_layer_view_set_doc_id(EtDocId doc_id)
 {
+	EtLayerView *this = layer_view;
 	if(NULL == this){
 		et_bug("");
 		exit(-1);

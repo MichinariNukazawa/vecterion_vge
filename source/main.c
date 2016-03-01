@@ -129,7 +129,7 @@ int main (int argc, char **argv){
 		return -1;
 	}
 	gtk_box_pack_start(GTK_BOX(box_dock_work),
-			et_layer_view_get_widget_frame(layer_view),
+			et_layer_view_get_widget_frame(),
 			true, true, 3);
 
 	EtPointingManager *pointing_manager = et_pointing_manager_init();
@@ -256,7 +256,7 @@ EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail,
 		return -1;
 	}
 
-	if(!et_layer_view_set_doc_id(layer_view, et_doc_get_id(doc1))){
+	if(!et_layer_view_set_doc_id(et_doc_get_id(doc1))){
 		et_error("");
 		return -1;
 	}
