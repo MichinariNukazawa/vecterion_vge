@@ -129,12 +129,20 @@ bool et_doc_set_image_from_file(EtDoc *this, const char *filepath)
 	return true;
 }
 
-EtCallbackId et_doc_add_slot_change(EtDoc *this, EtDocSlotChange slot, gpointer data)
+EtCallbackId et_doc_add_slot_change(EtDocId doc_id, EtDocSlotChange slot, gpointer data)
 {
+
+	EtDoc *this = et_doc_manager_get_doc_from_id(doc_id);
+	if(NULL == this){
+		et_bug("");
+		return -1;
+	}
+
 	int num = _et_doc_get_num_slot_change_infos(this->slot_change_infos);
 	EtDocSlotChangeInfo *new = realloc(this->slot_change_infos,
 			sizeof(EtDocSlotChangeInfo) * (num + 2));
 	if(NULL == new){
+		et_critical("");
 		return -1;
 	}
 	new[num + 1].id = -1;

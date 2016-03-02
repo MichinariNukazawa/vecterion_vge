@@ -28,7 +28,7 @@ EtDoc *et_doc_new();
 EtDocId et_doc_get_id(EtDoc *this);
 PvVg *et_doc_get_vg_ref(EtDoc *this);
 bool et_doc_set_image_from_file(EtDoc *this, const char *filepath);
-EtCallbackId et_doc_add_slot_change(EtDoc *this, EtDocSlotChange slot, gpointer data);
+EtCallbackId et_doc_add_slot_change(EtDocId doc_id, EtDocSlotChange slot, gpointer data);
 // Notice: they methods change signale not notify.
 PvFocus et_doc_get_focus_from_id(EtDocId id, bool *is_error);
 bool et_doc_set_focus_to_id(EtDocId id, PvFocus focus);

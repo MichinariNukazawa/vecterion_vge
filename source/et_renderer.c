@@ -201,7 +201,7 @@ bool et_renderer_set_connection(EtCanvas *canvas, EtDocId doc_id)
 	new[num + 1].id = -1;
 	new[num].canvas = canvas;
 	new[num].doc = doc;
-	new[num].id = et_doc_add_slot_change(doc,
+	new[num].id = et_doc_add_slot_change(doc_id,
 			_slot_et_render_from_doc_change, (gpointer)this);
 	if(new[num].id < 0){
 		et_error("");

@@ -250,7 +250,7 @@ EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail)
 		return -1;
 	}
 
-	if(!et_doc_add_slot_change(doc1, et_layer_view_slot_from_doc_change, NULL)){
+	if(!et_doc_add_slot_change(et_doc_get_id(doc1), et_layer_view_slot_from_doc_change, NULL)){
 		et_error("");
 		return -1;
 	}
@@ -266,7 +266,7 @@ EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail)
 		return -1;
 	}
 
-	if(!et_doc_signal_update(doc1)){
+	if(!et_doc_signal_update_from_id(et_doc_get_id(doc1))){
 		et_error("");
 		return -1;
 	}
