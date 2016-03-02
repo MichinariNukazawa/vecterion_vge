@@ -221,13 +221,9 @@ return true;
 
 EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail)
 {
-	EtDoc *doc1 = et_doc_new();
-	if(NULL == doc1){
-		et_error("");
-		return -1;
-	}
 
-	if(!et_doc_manager_add_doc(doc1)){
+	EtDocId doc_id = et_doc_manager_new_doc();
+	if(0 > doc_id){
 		et_error("");
 		return -1;
 	}
@@ -241,21 +237,21 @@ EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail)
 	}
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), canvas_frame1, NULL);
 
-	if(!et_renderer_set_connection(canvas1, et_doc_get_id(doc1))){
+	if(!et_renderer_set_connection(canvas1, doc_id)){
 		et_error("");
 		return -1;
 	}
-	if(!et_renderer_set_connection(canvas_thumbnail, et_doc_get_id(doc1))){
-		et_error("");
-		return -1;
-	}
-
-	if(!et_doc_add_slot_change(et_doc_get_id(doc1), et_layer_view_slot_from_doc_change, NULL)){
+	if(!et_renderer_set_connection(canvas_thumbnail, doc_id)){
 		et_error("");
 		return -1;
 	}
 
-	if(!et_layer_view_set_doc_id(et_doc_get_id(doc1))){
+	if(!et_doc_add_slot_change(doc_id, et_layer_view_slot_from_doc_change, NULL)){
+		et_error("");
+		return -1;
+	}
+
+	if(!et_layer_view_set_doc_id(doc_id)){
 		et_error("");
 		return -1;
 	}
@@ -266,12 +262,12 @@ EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail)
 		return -1;
 	}
 
-	if(!et_doc_signal_update_from_id(et_doc_get_id(doc1))){
+	if(!et_doc_signal_update_from_id(doc_id)){
 		et_error("");
 		return -1;
 	}
 
-	return et_doc_get_id(doc1);
+	return doc_id;
 }
 
 void __pvui_app_set_style(){

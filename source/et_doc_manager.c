@@ -5,6 +5,8 @@
 
 EtDocManager *doc_manager = NULL;
 
+bool _et_doc_manager_add_doc(EtDoc *doc);
+
 EtDocManager *et_doc_manager_init()
 {
 	if(NULL != doc_manager){
@@ -26,6 +28,22 @@ EtDocManager *et_doc_manager_init()
 	return this;
 }
 
+EtDocId et_doc_manager_new_doc()
+{
+	EtDoc *doc = et_doc_new();
+	if(NULL == doc){
+		et_error("");
+		return -1;
+	}
+
+	if(!_et_doc_manager_add_doc(doc)){
+		et_error("");
+		return -1;
+	}
+
+	return et_doc_get_id(doc);
+}
+
 int _et_doc_manager_get_num_doc_node(EtDocNode *doc_nodes)
 {
 	int i = 0;
@@ -42,7 +60,7 @@ int _et_doc_manager_get_num_doc_node(EtDocNode *doc_nodes)
 	return i;
 }
 
-bool et_doc_manager_add_doc(EtDoc *doc)
+bool _et_doc_manager_add_doc(EtDoc *doc)
 {
 	EtDocManager *this = doc_manager;
 	if(NULL == this){

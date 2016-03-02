@@ -22,7 +22,7 @@ struct _EtDocManager{
 };
 
 EtDocManager *et_doc_manager_init();
-bool et_doc_manager_add_doc(EtDoc *doc);
+EtDocId et_doc_manager_new_doc();
 EtDoc *et_doc_manager_get_doc_from_id(const EtDocId doc_id);
 
 #ifdef __ET_TEST__
