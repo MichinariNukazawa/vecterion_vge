@@ -6,6 +6,8 @@
 
 #include "et_error.h"
 #include "et_canvas.h"
+#include "et_canvas_collection.h"
+#include "et_thumbnail.h"
 #include "et_doc.h"
 #include "et_renderer.h"
 #include "et_pointing_manager.h"
@@ -15,8 +17,8 @@
 
 void __pvui_app_set_style();
 bool __init_menu(GtkWidget *window, GtkWidget *box_root);
-bool __debug_init(GtkWidget *notebook, EtCanvas *canvas_thumbnail);
-EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail);
+bool __debug_init();
+EtDocId _open_doc_new();
 
 
 
@@ -115,14 +117,20 @@ int main (int argc, char **argv){
 	GtkWidget *hpaned = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_box_pack_start(GTK_BOX(box1), hpaned, true, true, 3);
 
-	GtkWidget *notebook = gtk_notebook_new();
-	gtk_paned_pack1 (GTK_PANED (hpaned), notebook, TRUE, FALSE);
-
 	GtkWidget *box_dock_work = gtk_box_new (GTK_ORIENTATION_VERTICAL, 3);
 	gtk_paned_pack2 (GTK_PANED (hpaned), box_dock_work, FALSE, FALSE);
 
 
 	// ** The etaion gui modules initialize.
+	EtCanvasCollection *canvas_collection = et_canvas_collection_init();
+	if(NULL == canvas_collection){
+		et_bug("");
+		return -1;
+	}
+	GtkWidget *cancol_widget = et_canvas_collection_get_widget_frame();
+	gtk_paned_pack1 (GTK_PANED (hpaned), cancol_widget, TRUE, FALSE);
+
+
 	EtLayerView *layer_view = et_layer_view_init();
 	if(NULL == layer_view){
 		et_bug("");
@@ -155,7 +163,8 @@ int main (int argc, char **argv){
 	gtk_box_pack_start(GTK_BOX(box_dock_work), frame_thumb_canvas,
 			false, true, 3);
 
-	EtCanvas *canvas_thumbnail = et_canvas_new();
+	EtThumbnail *thumbnail = et_canvas_collection_get_thumbnail();
+	EtCanvas *canvas_thumbnail = et_thumbnail_get_canvas(thumbnail);
 	GtkWidget *canvas_thumbnail_widget = et_canvas_get_widget_frame(canvas_thumbnail);
 	if(NULL == canvas_thumbnail_widget){
 		et_bug("");
@@ -172,7 +181,7 @@ int main (int argc, char **argv){
 
 
 
-	if(!__debug_init(notebook, canvas_thumbnail)){
+	if(!__debug_init()){
 		et_error("");
 		return -1;
 	}
@@ -195,9 +204,9 @@ int main (int argc, char **argv){
 	return 0;
 }
 
-bool __debug_init(GtkWidget *notebook, EtCanvas *canvas_thumbnail)
+bool __debug_init()
 {
-	EtDocId doc_id = _open_doc_new(notebook, canvas_thumbnail);
+	EtDocId doc_id = _open_doc_new();
 	if(0 > doc_id){
 		et_error("");
 		return -1;
@@ -219,7 +228,7 @@ bool __debug_init(GtkWidget *notebook, EtCanvas *canvas_thumbnail)
 return true;
 }
 
-EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail)
+EtDocId _open_doc_new()
 {
 
 	EtDocId doc_id = et_doc_manager_new_doc();
@@ -229,19 +238,8 @@ EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail)
 	}
 
 	// ** gui
-	EtCanvas *canvas1 = et_canvas_new();
-	GtkWidget *canvas_frame1 = et_canvas_get_widget_frame(canvas1);
-	if(NULL == canvas_frame1){
-		et_bug("");
-		return -1;
-	}
-	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), canvas_frame1, NULL);
-
-	if(!et_renderer_set_connection(canvas1, doc_id)){
-		et_error("");
-		return -1;
-	}
-	if(!et_renderer_set_connection(canvas_thumbnail, doc_id)){
+	EtCanvas *canvas = et_canvas_collection_new_canvas(doc_id);
+	if(NULL == canvas){
 		et_error("");
 		return -1;
 	}
@@ -252,17 +250,6 @@ EtDocId _open_doc_new(GtkWidget *notebook, EtCanvas *canvas_thumbnail)
 	}
 
 	if(!et_layer_view_set_doc_id(doc_id)){
-		et_error("");
-		return -1;
-	}
-
-	if(0 > et_canvas_set_slot_mouse_action(canvas1,
-				et_pointing_manager_slot_mouse_action, NULL)){
-		et_error("");
-		return -1;
-	}
-
-	if(!et_doc_signal_update_from_id(doc_id)){
 		et_error("");
 		return -1;
 	}
