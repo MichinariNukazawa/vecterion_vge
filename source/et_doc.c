@@ -4,13 +4,22 @@
 #include "et_error.h"
 #include "et_doc_manager.h"
 
-struct _EtDoc{
+struct _EtDocSlotChangeInfo;
+typedef struct _EtDocSlotChangeInfo EtDocSlotChangeInfo;
+struct _EtDocSlotChangeInfo{
+	int id;
+	EtDocSlotChange slot;
+	gpointer data;
+};
+
+typedef struct _EtDoc{
 	EtDocId id;
 	PvVg *vg;
 	PvFocus focus;
 
 	EtDocSlotChangeInfo *slot_change_infos;
-};
+}EtDoc;
+
 
 
 EtDoc *et_doc_new()

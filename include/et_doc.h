@@ -15,13 +15,6 @@ typedef struct _EtDoc EtDoc;
 typedef int EtCallbackId;
 typedef void (*EtDocSlotChange)(EtDoc *doc, gpointer data);
 
-struct _EtDocSlotChangeInfo;
-typedef struct _EtDocSlotChangeInfo EtDocSlotChangeInfo;
-struct _EtDocSlotChangeInfo{
-	int id;
-	EtDocSlotChange slot;
-	gpointer data;
-};
 
 
 EtDoc *et_doc_new();
