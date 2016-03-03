@@ -125,9 +125,14 @@ GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext render_
 	return pb;
 }
 
-void _slot_et_render_from_doc_change(EtDoc *doc, gpointer data)
+void _slot_et_renderer_from_doc_change(EtDoc *doc, gpointer data)
 {
-	EtRenderer *this = (EtRenderer *)data;
+	EtRenderer *this = __renderer;
+	if(NULL == this){
+		et_bug("");
+		return;
+	}
+
 	int num = _et_renderer_get_num_canvas_and_docs(this->canvas_and_docs);
 	for(int i = 0; i < num; i++){
 		if(doc == this->canvas_and_docs[i].doc){
@@ -151,9 +156,14 @@ void _slot_et_render_from_doc_change(EtDoc *doc, gpointer data)
 	}
 }
 
-void _slot_et_render_from_canvas_change(EtCanvas *canvas, gpointer data)
+void _slot_et_renderer_from_canvas_change(EtCanvas *canvas, gpointer data)
 {
-	EtRenderer *this = (EtRenderer *)data;
+	EtRenderer *this = __renderer;
+	if(NULL == this){
+		et_bug("");
+		return;
+	}
+
 	int num = _et_renderer_get_num_canvas_and_docs(this->canvas_and_docs);
 	for(int i = 0; i < num; i++){
 		if(canvas == this->canvas_and_docs[i].canvas){
@@ -202,15 +212,14 @@ bool et_renderer_set_connection(EtCanvas *canvas, EtDocId doc_id)
 	new[num].canvas = canvas;
 	new[num].doc = doc;
 	new[num].id = et_doc_add_slot_change(doc_id,
-			_slot_et_render_from_doc_change, (gpointer)this);
+			_slot_et_renderer_from_doc_change, NULL);
 	if(new[num].id < 0){
 		et_error("");
 		return false;
 	}
 
 	int id = et_canvas_set_slot_change(canvas,
-			_slot_et_render_from_canvas_change,
-			(gpointer)this);
+			_slot_et_renderer_from_canvas_change, NULL);
 	if(id < 0){
 		et_error("");
 		return false;
