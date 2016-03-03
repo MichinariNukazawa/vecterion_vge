@@ -17,6 +17,7 @@ tags
 /work
 /object
 /binary
+/build
 
 # object files
 *.d
