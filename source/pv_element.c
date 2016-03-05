@@ -7,27 +7,6 @@
 
 bool _pv_element_delete_single(PvElement *this);
 
-/** @brief pointer arrayの内容数を返す
- * (実長さは番兵のNULL終端があるため、return+1)
- */
-int pv_general_get_parray_num(void **pointers)
-{
-	if(NULL == pointers){
-		return 0;
-	}
-
-	int i = 0;
-	while(NULL != pointers[i]){
-		i++;
-	}
-
-	if(15 < i){
-		pv_debug("num:%d\n", i);
-	}
-
-	return i;
-}
-
 char *pv_general_str_new(const char * const src)
 {
 	if(NULL == src){
@@ -47,14 +26,18 @@ char *pv_general_str_new(const char * const src)
 }
 
 
-bool _pv_element_recursive_before_inline(PvElement *element,
-		PvElementRecursiveFunc func, gpointer data,
+bool _pv_element_recursive_inline(PvElement *element,
+		PvElementRecursiveFunc func_before,
+		PvElementRecursiveFunc func_after,
+		gpointer data,
 		int *level,
 		PvElementRecursiveError *error)
 {
-	if(!func(element, data, *level)){
-		// cancel function this childs
-		return true;
+	if(NULL != func_before){
+		if(!func_before(element, data, *level)){
+			// cancel function this childs
+			return true;
+		}
 	}
 
 	(*level)++;
@@ -63,8 +46,10 @@ bool _pv_element_recursive_before_inline(PvElement *element,
 
 	int num = pv_general_get_parray_num((void **)element->childs);
 	for(int i = num - 1; 0 <= i; i--){
-		if(!_pv_element_recursive_before_inline(element->childs[i],
-					func, data,
+		if(!_pv_element_recursive_inline(element->childs[i],
+					func_before,
+					func_after,
+					data,
 					level,
 					error)){
 			if(!error->is_error){
@@ -81,19 +66,45 @@ bool _pv_element_recursive_before_inline(PvElement *element,
 end:
 	(*level)--;
 
+	if(NULL != func_after){
+		if(!func_after(element, data, *level)){
+			// this point "return false" is not mean.
+			return true;
+		}
+	}
+
 	return ret;
 }
 
 
 bool pv_element_recursive_before(PvElement *element,
-		PvElementRecursiveFunc func, gpointer data,
+		PvElementRecursiveFunc func_before,
+		gpointer data,
+		PvElementRecursiveError *error)
+{
+	if(NULL == func_before){
+		pv_error("");
+		return false;
+	}
+
+	return pv_element_recursive(element,
+		func_before,
+		NULL,
+		data,
+		error);
+}
+
+bool pv_element_recursive(PvElement *element,
+		PvElementRecursiveFunc func_before,
+		PvElementRecursiveFunc func_after,
+		gpointer data,
 		PvElementRecursiveError *error)
 {
 	if(NULL == element){
 		pv_error("");
 		return false;
 	}
-	if(NULL == func){
+	if(NULL == func_before && NULL == func_after){
 		pv_error("");
 		return false;
 	}
@@ -108,8 +119,10 @@ bool pv_element_recursive_before(PvElement *element,
 	error->element = NULL;
 
 	int level = 0;
-	bool ret = _pv_element_recursive_before_inline(element,
-			func, data,
+	bool ret = _pv_element_recursive_inline(element,
+			func_before,
+			func_after,
+			data,
 			&level,
 			error);
 

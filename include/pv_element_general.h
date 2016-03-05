@@ -73,7 +73,15 @@ typedef enum _PvElementKind{
 	PvElementKind_EndOfKind,
 }PvElementKind;
 
+/** @brief pointer arrayの内容数を返す
+ * (実長さは番兵のNULL終端があるため、return+1)
+ */
+int pv_general_get_parray_num(void **pointers);
+
+
+
 #ifdef include_ET_TEST
 #endif // include_ET_TEST
 
 #endif // include_PV_ELEMENT_GLOBAL_H
+

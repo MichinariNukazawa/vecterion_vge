@@ -19,6 +19,8 @@ typedef void (*EtDocSlotChange)(EtDoc *doc, gpointer data);
 
 EtDoc *et_doc_new();
 EtDocId et_doc_get_id(EtDoc *this);
+bool et_doc_get_filepath(char **filepath, EtDocId doc_id);
+bool et_doc_set_filepath(EtDocId doc_id, const char *filepath);
 PvVg *et_doc_get_vg_ref(EtDoc *this);
 PvVg *et_doc_get_vg_ref_from_id(EtDocId doc_id);
 bool et_doc_set_image_from_file(EtDoc *this, const char *filepath);

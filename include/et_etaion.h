@@ -29,6 +29,8 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action);
 bool et_etaion_slot_key_action(EtKeyAction key_action);
 int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data);
 
+EtDocId et_etaion_get_current_doc_id();
+
 // @brief focus(Layer)の兄弟Layerを追加
 bool et_etaion_add_new_layer(EtDocId doc_id);
 // @brief focus(Layer)の子Layerを追加

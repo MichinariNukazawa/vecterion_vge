@@ -48,6 +48,11 @@ PvElement *pv_element_copy_recursive(const PvElement *this);
 bool pv_element_recursive_before(PvElement *element,
 		PvElementRecursiveFunc func, gpointer data,
 		PvElementRecursiveError *error);
+bool pv_element_recursive(PvElement *element,
+		PvElementRecursiveFunc func_before,
+		PvElementRecursiveFunc func_after,
+		gpointer data,
+		PvElementRecursiveError *error);
 /** @brief 
  *
  * @param parent

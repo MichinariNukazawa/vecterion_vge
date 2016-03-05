@@ -14,6 +14,7 @@ struct EtDocSlotChangeInfo{
 
 typedef struct EtDoc{
 	EtDocId id;
+	const char *filepath;
 	PvVg *vg;
 	PvFocus focus;
 
@@ -35,6 +36,8 @@ EtDoc *et_doc_new()
 		et_error("");
 		return NULL;
 	}
+
+	this->filepath = NULL;
 
 	this->vg = pv_vg_new();
 	if(NULL == this->vg){
@@ -63,6 +66,30 @@ EtDocId et_doc_get_id(EtDoc *this)
 	}
 
 	return this->id;
+}
+
+bool et_doc_get_filepath(char **filepath, EtDocId doc_id)
+{
+	EtDoc *this = et_doc_manager_get_doc_from_id(doc_id);
+	if(NULL == this){
+		et_error("");
+		return false;
+	}
+
+	*filepath = g_strdup(this->filepath);
+	return true;
+}
+
+bool et_doc_set_filepath(EtDocId doc_id, const char *filepath)
+{
+	EtDoc *this = et_doc_manager_get_doc_from_id(doc_id);
+	if(NULL == this){
+		et_error("");
+		return false;
+	}
+
+	this->filepath = g_strdup(filepath);
+	return true;
 }
 
 PvVg *et_doc_get_vg_ref_from_id(EtDocId doc_id)

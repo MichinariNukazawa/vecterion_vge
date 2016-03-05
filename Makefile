@@ -13,6 +13,7 @@ CFLAGS		= -W -Wall -MMD -MP -g -std=c11
 CFLAGS		+= -lm # need nanosvg(use acosf())
 CFLAGS		+= -Wno-unused-parameter # please check!
 CFLAGS		+= $(shell $(PKG_CONFIG) --libs --cflags gtk+-3.0)
+CFLAGS		+= $(shell xml2-config --cflags --libs)
 INCLUDE		= -I./ -I./include
 INCLUDE		+= -I./library/nanosvg/src/
 TARGET		= $(BUILD_DIR)/$(TARGET_NAME).exe

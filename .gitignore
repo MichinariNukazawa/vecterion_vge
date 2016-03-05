@@ -44,3 +44,6 @@ tags
 *.so.*
 *.dylib
 
+# tested save file
+/*.svg
+

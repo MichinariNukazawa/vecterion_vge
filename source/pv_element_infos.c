@@ -24,6 +24,47 @@ gpointer _pv_element_error_return_null_copy_new(void *_data)
 	return NULL;
 }
 
+/** @brief write_svg未実装箇所に挿入する */
+int _pv_element_write_svg_notimplement(
+		InfoTargetSvg *target,
+		const PvElement *element, const ConfWriteSvg *conf)
+{
+	if(NULL == target){
+		pv_bug("");
+		return -1;
+	}
+
+	if(NULL == target->xml_parent_node){
+		pv_bug("");
+		return -1;
+	}
+
+	if(NULL == element){
+		pv_bug("");
+		return -1;
+	}
+
+	if(NULL == conf){
+		pv_bug("");
+		return -1;
+	}
+
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	if(NULL == info){
+		pv_bug("%d\n", element->kind);
+		return -1;
+	}
+
+	xmlNodePtr node = NULL;
+	// node = xmlNewNode(NULL, BAD_CAST info->name);
+	node = xmlNewComment(BAD_CAST info->name);
+
+	xmlAddChild(target->xml_parent_node, node);
+	target->xml_new_node = node;
+
+	return 0;
+}
+
 /** @brief 
  * arg1 NULL -> return NULL and not error(is_error == false)
  */
@@ -110,6 +151,56 @@ gpointer _pv_element_group_data_copy_new(void *_data)
 	return (gpointer)new_data;
 }
 
+int _pv_element_group_write_svg(
+		InfoTargetSvg *target,
+		const PvElement *element, const ConfWriteSvg *conf)
+{
+	if(NULL == target){
+		pv_bug("");
+		return -1;
+	}
+
+	if(NULL == target->xml_parent_node){
+		pv_bug("");
+		return -1;
+	}
+
+	if(NULL == element){
+		pv_bug("");
+		return -1;
+	}
+
+	if(NULL == conf){
+		pv_bug("");
+		return -1;
+	}
+
+	if(PvElementKind_Root == element->kind){
+		return true;
+	}
+
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	if(NULL == info){
+		pv_bug("%d\n", element->kind);
+		return -1;
+	}
+
+	xmlNodePtr node = NULL;
+	node = xmlNewNode(NULL, BAD_CAST "g");
+
+	// ** To Inkscape
+	if(PvElementKind_Layer == element->kind){
+		xmlNewProp(node, BAD_CAST "inkscape:groupmode", BAD_CAST "layer");
+	}
+	xmlNewProp(node, BAD_CAST "inkscape:label", BAD_CAST info->name);
+
+	xmlAddChild(target->xml_parent_node, node);
+	target->xml_parent_node = node;
+	target->xml_new_node = node;
+
+	return 0;
+}
+
 gpointer _pv_element_bezier_data_new()
 {
 	PvElementBezierData *data = (PvElementBezierData *)malloc(sizeof(PvElementBezierData));
@@ -171,6 +262,75 @@ gpointer _pv_element_bezier_data_copy_new(void *_data)
 	}
 
 	return (gpointer)new_data;
+}
+
+int _pv_element_bezier_write_svg(
+		InfoTargetSvg *target,
+		const PvElement *element, const ConfWriteSvg *conf)
+{
+	if(NULL == target){
+		pv_bug("");
+		return -1;
+	}
+
+	if(NULL == target->xml_parent_node){
+		pv_bug("");
+		return -1;
+	}
+
+	if(NULL == element){
+		pv_bug("");
+		return -1;
+	}
+
+	if(NULL == conf){
+		pv_bug("");
+		return -1;
+	}
+
+	PvElementBezierData *data = (PvElementBezierData *)element->data;
+
+	char *str_current = NULL;
+	for(int i = 0; i < data->anchor_points_num; i++){
+		PvAnchorPoint ap = data->anchor_points[i];
+		
+		char *str_point = g_strdup_printf("%c %f %f",
+				(0 == i)? 'M':'L',
+				ap.points[PvAnchorPointIndex_Point].x, 
+				ap.points[PvAnchorPointIndex_Point].y
+				);
+		if(NULL == str_point){
+			pv_critical("");
+			return -1;
+		}
+
+		char *str_prev = str_current;
+		str_current = g_strdup_printf("%s %s",
+				((NULL == str_prev)? "":str_prev),
+				str_point
+				);
+		if(NULL == str_current){
+			pv_critical("");
+			return -1;
+		}
+
+		g_free(str_point);
+		g_free(str_prev);
+	}
+
+	xmlNodePtr node = xmlNewNode(NULL, BAD_CAST "path");
+	xmlNewProp(node, BAD_CAST "fill", BAD_CAST "none");
+	xmlNewProp(node, BAD_CAST "stroke", BAD_CAST "black");
+	xmlNewProp(node, BAD_CAST "stroke-width", BAD_CAST "1");
+	xmlNewProp(node, BAD_CAST "d", BAD_CAST str_current);
+
+	g_free(str_current);
+
+	xmlAddChild(target->xml_parent_node, node);
+	//target->xml_parent_node = node;
+	target->xml_new_node = node;
+
+	return 0;
 }
 
 gpointer _pv_element_raster_data_new()
@@ -251,37 +411,44 @@ const PvElementInfo _pv_element_infos[] = {
 			_pv_element_error_return_null_new,
 			_pv_element_error_return_null_delete,
 			_pv_element_error_return_null_copy_new,
+			_pv_element_write_svg_notimplement,
 	},
 	{PvElementKind_Root, "Root",
 			_pv_element_group_data_new,
 			_pv_element_group_data_delete,
 			_pv_element_group_data_copy_new,
+			_pv_element_group_write_svg,
 	},
 	{PvElementKind_Layer, "Layer",
 			_pv_element_group_data_new,
 			_pv_element_group_data_delete,
 			_pv_element_group_data_copy_new,
+			_pv_element_group_write_svg,
 	},
 	{PvElementKind_Group, "Group",
 			_pv_element_group_data_new,
 			_pv_element_group_data_delete,
 			_pv_element_group_data_copy_new,
+			_pv_element_group_write_svg,
 	},
 	{PvElementKind_Bezier, "Bezier",
 			_pv_element_bezier_data_new,
 			_pv_element_bezier_data_delete,
 			_pv_element_bezier_data_copy_new,
+			_pv_element_bezier_write_svg,
 	},
 	{PvElementKind_Raster, "Raster",
 			_pv_element_raster_data_new,
 			_pv_element_raster_data_delete,
 			_pv_element_raster_data_copy_new,
+			_pv_element_write_svg_notimplement,
 	},
 	/* 番兵 */
 	{PvElementKind_EndOfKind, "EndOfKind",
 			_pv_element_error_return_null_new,
 			_pv_element_error_return_null_delete,
 			_pv_element_error_return_null_copy_new,
+			_pv_element_write_svg_notimplement,
 	},
 };
 

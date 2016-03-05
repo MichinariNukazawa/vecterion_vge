@@ -1,5 +1,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
+#include <glib.h>
+#include <glib/gi18n.h>
 
 #include <stdbool.h>
 #include <stdatomic.h>
@@ -14,6 +16,9 @@
 #include "et_doc_manager.h"
 #include "et_etaion.h"
 #include "et_layer_view.h"
+#include "pv_io.h"
+
+GtkWindow *_main_window = NULL;
 
 void _pvui_app_set_style();
 bool _init_menu(GtkWidget *window, GtkWidget *box_root);
@@ -60,9 +65,6 @@ static gboolean cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer us
 	return FALSE;
 }
 
-
-// _pvui_app_set_style();
-
 int main (int argc, char **argv){
 	gtk_init(&argc, &argv);
 
@@ -90,6 +92,7 @@ int main (int argc, char **argv){
 	// ** window and container(box)s application base.
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_set_size_request (window, 900,700);
+	_main_window = GTK_WINDOW(window);
 
 	GtkWidget *box_root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
 	gtk_container_add(GTK_CONTAINER(window), box_root);
@@ -225,7 +228,7 @@ bool _debug_init()
 		return false;
 	}
 
-return true;
+	return true;
 }
 
 EtDocId _open_doc_new(PvVg *vg_src)
@@ -307,8 +310,6 @@ void _pvui_app_set_style(){
 	g_object_unref (provider);
 }
 
-
-
 static gboolean _cb_menu_file_new(gpointer data)
 {
 	et_debug("");
@@ -355,7 +356,7 @@ static gboolean _cb_menu_file_new(gpointer data)
 				vg->rect.w = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_w));
 				vg->rect.h = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_h));
 				et_debug("size:%f,%f,%f,%f\n",
-					vg->rect.x, vg->rect.y, vg->rect.w, vg->rect.h);
+						vg->rect.x, vg->rect.y, vg->rect.w, vg->rect.h);
 				_open_doc_new(vg);
 			}
 			break;
@@ -365,6 +366,101 @@ static gboolean _cb_menu_file_new(gpointer data)
 	}
 	gtk_widget_destroy (dialog);
 
+	return false;
+}
+
+bool _save_file_from_doc_id(const char *filepath, EtDocId doc_id)
+{
+	if(NULL == filepath){
+		et_bug("");
+		goto error;
+	}
+
+
+	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
+	if(NULL == doc){
+		et_debug("%d\n", doc_id);
+		goto error;
+	}
+
+	PvVg *vg = et_doc_get_vg_ref(doc);
+	if(NULL == vg){
+		et_debug("%d\n", doc_id);
+		goto error;
+	}
+
+	if(!pv_io_write_file_svg_from_vg(vg, filepath)){
+		et_debug("%d\n", doc_id);
+		goto error;
+	}
+
+	return true;
+
+error:
+	return false;
+}
+
+static gboolean _cb_menu_file_save(gpointer data)
+{
+
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// Todo: Nothing document.
+		et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	char *filepath = NULL;
+	if(!et_doc_get_filepath(&filepath, doc_id)){
+		et_error("");
+		goto error;
+	}
+
+	if(NULL == filepath){
+		GtkWidget *dialog;
+		GtkFileChooser *chooser;
+		GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
+		gint res;
+
+		dialog = gtk_file_chooser_dialog_new ("Save File",
+				_main_window,
+				action,
+				_("_Cancel"),
+				GTK_RESPONSE_CANCEL,
+				_("_Save"),
+				GTK_RESPONSE_ACCEPT,
+				NULL);
+		chooser = GTK_FILE_CHOOSER (dialog);
+
+		gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
+
+		gtk_file_chooser_set_current_name (chooser,
+				_("Untitled_document.svg"));
+
+		res = gtk_dialog_run (GTK_DIALOG (dialog));
+		if (res == GTK_RESPONSE_ACCEPT)
+		{
+			filepath = gtk_file_chooser_get_filename (chooser);
+		}
+
+		gtk_widget_destroy (dialog);
+	}
+
+	if(NULL != filepath){
+		if(!et_doc_set_filepath(doc_id, filepath)){
+			// TODO: error dialog.
+			et_error("");
+			goto error;
+		}
+		if(!_save_file_from_doc_id(filepath, doc_id)){
+			// TODO: error dialog.
+			et_error("");
+			goto error;
+		}
+	}
+
+error:
+	g_free (filepath);
 	return false;
 }
 
@@ -382,7 +478,6 @@ void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
 	gtk_dialog_run (GTK_DIALOG (dialog));
 	gtk_widget_destroy (dialog);
 }
-
 
 GtkWidget *pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	GtkWidget *menuitem_root;
@@ -404,10 +499,17 @@ GtkWidget *pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	/*
 	   menuitem = gtk_menu_item_new_with_label ("Open");
 	   gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	   menuitem = gtk_menu_item_new_with_label ("Save");
-	   gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	   g_signal_connect(menuitem, "activate",
-	   G_CALLBACK(_cb_save), NULL);
+	 */
+
+	// ** "/_File/_Save (Ctrl+S)"
+	menuitem = gtk_menu_item_new_with_label ("_Save");
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate",
+			G_CALLBACK(_cb_menu_file_save), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_s, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+
+	/*
 	   menuitem = gtk_menu_item_new_with_label ("Save As");
 	   gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 	   menuitem = pv_get_menuitem_new_tree_of_export();
