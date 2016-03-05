@@ -18,7 +18,7 @@
 void __pvui_app_set_style();
 bool __init_menu(GtkWidget *window, GtkWidget *box_root);
 bool __debug_init();
-EtDocId _open_doc_new();
+EtDocId _open_doc_new(PvVg *pv_src);
 
 
 
@@ -206,7 +206,7 @@ int main (int argc, char **argv){
 
 bool __debug_init()
 {
-	EtDocId doc_id = _open_doc_new();
+	EtDocId doc_id = _open_doc_new(NULL);
 	if(0 > doc_id){
 		et_error("");
 		return -1;
@@ -228,13 +228,26 @@ bool __debug_init()
 return true;
 }
 
-EtDocId _open_doc_new()
+EtDocId _open_doc_new(PvVg *vg_src)
 {
 
 	EtDocId doc_id = et_doc_manager_new_doc();
 	if(0 > doc_id){
 		et_error("");
 		return -1;
+	}
+
+	// ** setting doc
+	if(NULL != vg_src){
+		PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
+		if(NULL == vg){
+			et_error("");
+			return -1;
+		}
+		(vg->rect).x = (vg_src->rect).x;
+		(vg->rect).y = (vg_src->rect).y;
+		(vg->rect).w = (vg_src->rect).w;
+		(vg->rect).h = (vg_src->rect).h;
 	}
 
 	// ** gui
@@ -343,7 +356,7 @@ static gboolean __cb_menu_file_new(gpointer data)
 				vg->rect.h = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_h));
 				et_debug("size:%f,%f,%f,%f\n",
 					vg->rect.x, vg->rect.y, vg->rect.w, vg->rect.h);
-				_open_doc_new();
+				_open_doc_new(vg);
 			}
 			break;
 		default:

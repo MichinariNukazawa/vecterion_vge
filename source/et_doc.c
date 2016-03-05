@@ -65,6 +65,17 @@ EtDocId et_doc_get_id(EtDoc *this)
 	return this->id;
 }
 
+PvVg *et_doc_get_vg_ref_from_id(EtDocId doc_id)
+{
+	EtDoc *this = et_doc_manager_get_doc_from_id(doc_id);
+	if(NULL == this){
+		et_error("%d\n", doc_id);
+		return NULL;
+	}
+
+return et_doc_get_vg_ref(this);
+}
+
 PvVg *et_doc_get_vg_ref(EtDoc *this)
 {
 	if(NULL == this){

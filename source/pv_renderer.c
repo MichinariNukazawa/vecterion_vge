@@ -131,6 +131,24 @@ end:
 	return ret;
 }
 
+bool _pv_renderer_cairo_background(cairo_t *cr,
+		const PvVg * const vg,
+		const PvRenderContext render_context)
+{
+	pv_debug("%f, %f, %f, %f, \n", (vg->rect).x, (vg->rect).y, (vg->rect).w, (vg->rect).h);
+	cairo_set_source_rgb (cr, 0.6, 0.6, 0.6);
+
+	int unit = 16;
+	for(int y = 0; y < (vg->rect).h; y += unit){
+		for(int x = 0 + (((y/unit) % 2) * unit); x < (vg->rect).w; x += (unit * 2)){
+			cairo_rectangle (cr, x, y, unit, unit);
+		}
+	}
+	cairo_fill (cr);
+
+	return true;
+}
+
 GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		const PvRenderContext render_context,
 		const PvFocus focus)
@@ -147,6 +165,11 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 	}
 
 	cairo_t *cr = cairo_create (surface);
+
+	if(!_pv_renderer_cairo_background(cr, vg, render_context)){
+		pv_error("");
+		return NULL;
+	}
 
 	PvRenderOption render_option = {
 		.render_context = render_context,
