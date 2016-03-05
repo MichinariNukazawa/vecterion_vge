@@ -7,7 +7,7 @@
 #include "et_renderer.h"
 #include "et_pointing_manager.h"
 
-static EtCanvasCollection *__canvas_collection = NULL;
+static EtCanvasCollection *_canvas_collection = NULL;
 
 struct _EtCanvasCollectionCollect;
 typedef struct _EtCanvasCollectionCollect EtCanvasCollectionCollect;
@@ -46,7 +46,7 @@ int et_general_get_parray_num(void **pointers)
 }
 EtDocId _et_canvas_collection_get_doc_id_from_canvas_frame(GtkWidget *canvas_frame)
 {
-	EtCanvasCollection *this = __canvas_collection;
+	EtCanvasCollection *this = _canvas_collection;
 	if(NULL == this){
 		et_bug("");
 		return -1;
@@ -94,7 +94,7 @@ gboolean _cb_notebook_change_current_page(GtkNotebook *notebook,
 	}
 
 	// ** change Thumbnail doc_id
-	EtCanvasCollection *this = __canvas_collection;
+	EtCanvasCollection *this = _canvas_collection;
 	if(NULL == this){
 		et_bug("");
 		return false;
@@ -133,7 +133,7 @@ void _cb_notebook_page_added(GtkNotebook *notebook,
 
 EtCanvasCollection *et_canvas_collection_init()
 {
-	if(NULL != __canvas_collection){
+	if(NULL != _canvas_collection){
 		et_bug("");
 		return NULL;
 	}
@@ -177,14 +177,14 @@ EtCanvasCollection *et_canvas_collection_init()
 	this->num_collects = 0;
 	this->collects = NULL;
 
-	__canvas_collection = this;
+	_canvas_collection = this;
 
 	return this;
 }
 
 GtkWidget *et_canvas_collection_get_widget_frame()
 {
-	EtCanvasCollection *this = __canvas_collection;
+	EtCanvasCollection *this = _canvas_collection;
 	if(NULL == this){
 		et_bug("");
 		return NULL;
@@ -195,7 +195,7 @@ GtkWidget *et_canvas_collection_get_widget_frame()
 
 EtThumbnail *et_canvas_collection_get_thumbnail()
 {
-	EtCanvasCollection *this = __canvas_collection;
+	EtCanvasCollection *this = _canvas_collection;
 	if(NULL == this){
 		et_bug("");
 		return NULL;
@@ -206,7 +206,7 @@ EtThumbnail *et_canvas_collection_get_thumbnail()
 
 GtkWidget *et_canvas_collection_get_thumbnail_frame()
 {
-	EtCanvasCollection *this = __canvas_collection;
+	EtCanvasCollection *this = _canvas_collection;
 	if(NULL == this){
 		et_bug("");
 		return NULL;
@@ -223,7 +223,7 @@ GtkWidget *et_canvas_collection_get_thumbnail_frame()
 
 EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 {
-	EtCanvasCollection *this = __canvas_collection;
+	EtCanvasCollection *this = _canvas_collection;
 	if(NULL == this){
 		et_bug("");
 		return NULL;

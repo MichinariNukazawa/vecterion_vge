@@ -9,11 +9,11 @@ struct _EtRenderer{
 	int dummy;
 };
 
-static EtRenderer *__renderer = NULL;
+static EtRenderer *_renderer = NULL;
 
 EtRenderer *et_renderer_init()
 {
-	if(NULL != __renderer){
+	if(NULL != _renderer){
 		et_bug("");
 		return NULL;
 	}
@@ -24,7 +24,7 @@ EtRenderer *et_renderer_init()
 		return NULL;
 	}
 
-	__renderer = this;
+	_renderer = this;
 
 	return this;
 }
@@ -105,7 +105,7 @@ void slot_et_renderer_from_canvas_change(EtCanvas *canvas, gpointer data)
 {
 	et_debug("\n");
 
-	EtRenderer *this = __renderer;
+	EtRenderer *this = _renderer;
 	if(NULL == this){
 		et_bug("");
 		return;

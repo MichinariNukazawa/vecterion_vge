@@ -15,9 +15,9 @@
 #include "et_etaion.h"
 #include "et_layer_view.h"
 
-void __pvui_app_set_style();
-bool __init_menu(GtkWidget *window, GtkWidget *box_root);
-bool __debug_init();
+void _pvui_app_set_style();
+bool _init_menu(GtkWidget *window, GtkWidget *box_root);
+bool _debug_init();
 EtDocId _open_doc_new(PvVg *pv_src);
 
 
@@ -61,7 +61,7 @@ static gboolean cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer us
 }
 
 
-// __pvui_app_set_style();
+// _pvui_app_set_style();
 
 int main (int argc, char **argv){
 	gtk_init(&argc, &argv);
@@ -94,7 +94,7 @@ int main (int argc, char **argv){
 	GtkWidget *box_root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
 	gtk_container_add(GTK_CONTAINER(window), box_root);
 
-	if(! __init_menu(window, box_root)){
+	if(! _init_menu(window, box_root)){
 		et_bug("");
 		return -1;
 	}
@@ -181,7 +181,7 @@ int main (int argc, char **argv){
 
 
 
-	if(!__debug_init()){
+	if(!_debug_init()){
 		et_error("");
 		return -1;
 	}
@@ -204,7 +204,7 @@ int main (int argc, char **argv){
 	return 0;
 }
 
-bool __debug_init()
+bool _debug_init()
 {
 	EtDocId doc_id = _open_doc_new(NULL);
 	if(0 > doc_id){
@@ -270,7 +270,7 @@ EtDocId _open_doc_new(PvVg *vg_src)
 	return doc_id;
 }
 
-void __pvui_app_set_style(){
+void _pvui_app_set_style(){
 	GtkCssProvider *provider;
 	provider = gtk_css_provider_new ();
 
@@ -309,7 +309,7 @@ void __pvui_app_set_style(){
 
 
 
-static gboolean __cb_menu_file_new(gpointer data)
+static gboolean _cb_menu_file_new(gpointer data)
 {
 	et_debug("");
 
@@ -368,7 +368,7 @@ static gboolean __cb_menu_file_new(gpointer data)
 	return false;
 }
 
-void __cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
+void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
 {   
 	const char *appname = "Etaion Vector Graphic Editor";
 	GtkWindow *parent_window = NULL;
@@ -397,7 +397,7 @@ GtkWidget *pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 
 	menuitem = gtk_menu_item_new_with_label ("_New");
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(__cb_menu_file_new), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_new), NULL);
 	// ** Accel to "/_File/_New (Ctrl+N)"
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_n, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
@@ -407,7 +407,7 @@ GtkWidget *pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	   menuitem = gtk_menu_item_new_with_label ("Save");
 	   gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 	   g_signal_connect(menuitem, "activate",
-	   G_CALLBACK(__cb_save), NULL);
+	   G_CALLBACK(_cb_save), NULL);
 	   menuitem = gtk_menu_item_new_with_label ("Save As");
 	   gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 	   menuitem = pv_get_menuitem_new_tree_of_export();
@@ -420,7 +420,7 @@ GtkWidget *pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	return menuitem_root;
 }
 
-GtkWidget *__new_tree_of_help(GtkAccelGroup *accel_group){
+GtkWidget *_new_tree_of_help(GtkAccelGroup *accel_group){
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
 	GtkWidget *menu;
@@ -435,7 +435,7 @@ GtkWidget *__new_tree_of_help(GtkAccelGroup *accel_group){
 	menuitem = gtk_menu_item_new_with_mnemonic ("_About");
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 	g_signal_connect(menuitem, "activate",
-			G_CALLBACK(__cb_menu_help_about), NULL);
+			G_CALLBACK(_cb_menu_help_about), NULL);
 	// ** Accel to "Help > About (Ctrl+A)"
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_a, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
@@ -443,7 +443,7 @@ GtkWidget *__new_tree_of_help(GtkAccelGroup *accel_group){
 	return menuitem_root;
 }
 
-bool __init_menu(GtkWidget *window, GtkWidget *box_root)
+bool _init_menu(GtkWidget *window, GtkWidget *box_root)
 {
 	GtkWidget *menubar;
 	GtkWidget *menuitem;
@@ -458,7 +458,7 @@ bool __init_menu(GtkWidget *window, GtkWidget *box_root)
 	menuitem = pv_get_menuitem_new_tree_of_file(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
-	menuitem = __new_tree_of_help(accel_group);
+	menuitem = _new_tree_of_help(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	return true;
