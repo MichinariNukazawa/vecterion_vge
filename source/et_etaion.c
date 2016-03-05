@@ -107,7 +107,7 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 		}
 	}
 
-	et_doc_signal_update(doc);
+	et_doc_signal_update_from_id(id_doc);
 
 	return true;
 }

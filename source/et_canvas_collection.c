@@ -93,10 +93,25 @@ gboolean _cb_notebook_change_current_page(GtkNotebook *notebook,
 		goto error;
 	}
 
+	// ** change Thumbnail doc_id
+	EtCanvasCollection *this = __canvas_collection;
+	if(NULL == this){
+		et_bug("");
+		return false;
+	}
+	EtCanvas *canvas_thumbnail = et_thumbnail_get_canvas(this->thumbnail);
+	if(!et_canvas_set_doc_id(canvas_thumbnail, doc_id)){
+		et_bug("");
+		return false;
+	}
+
 	if(!et_etaion_set_current_doc_id(doc_id)){
 		et_bug("");
 		goto error;
 	}
+
+	// ** update thumbnail (キャンバスが再描画されるのは記述時点で副作用)
+	et_doc_signal_update_from_id(doc_id);
 
 	et_debug("%d\n", doc_id);
 
