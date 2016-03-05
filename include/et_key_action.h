@@ -19,9 +19,9 @@ typedef enum _EtKeyActionType{
 	EtKeyAction_Up,
 }EtKeyActionType;
 
-struct _EtKeyAction;
-typedef struct _EtKeyAction EtKeyAction;
-struct _EtKeyAction{
+struct EtKeyAction;
+typedef struct EtKeyAction EtKeyAction;
+struct EtKeyAction{
 	EtKeyType	key;
 	EtKeyActionType	action;
 };

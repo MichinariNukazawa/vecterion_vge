@@ -7,13 +7,13 @@
 #include "et_doc_id.h"
 #include "et_mouse_action.h"
 
-struct _EtPointingManager;
-typedef struct _EtPointingManager EtPointingManager;
+struct EtPointingManager;
+typedef struct EtPointingManager EtPointingManager;
 
 typedef bool (*EtPointingManagerSignalMouseAction)(EtDocId id_doc, EtMouseAction mouse_action);
 typedef bool (*EtPointingManagerSlotMouseAction)(EtDocId id_doc, EtMouseAction mouse_action);
 
-struct _EtPointingManager{
+struct EtPointingManager{
 	EtPointingManagerSlotMouseAction slot_mouse_action;
 };
 

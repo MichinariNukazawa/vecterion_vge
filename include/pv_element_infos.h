@@ -10,7 +10,7 @@ typedef gpointer (*PvElementFuncNewData)(void);
 typedef bool (*PvElementFuncDeleteData)(void *data);
 typedef gpointer (*PvElementFuncCopyNewData)(void *data);
 
-typedef struct _PvElementInfo{
+typedef struct PvElementInfo{
 	PvElementKind kind;
 	const char *name;
 	PvElementFuncNewData		func_new_data;

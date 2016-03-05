@@ -5,18 +5,18 @@
 #include <gdk/gdk.h>
 #include <stdbool.h>
 
-struct _PvRect;
-typedef struct _PvRect PvRect;
-struct _PvRect{
+struct PvRect;
+typedef struct PvRect PvRect;
+struct PvRect{
 	double x;
 	double y;
 	double w;
 	double h;
 };
 
-struct _PvPoint;
-typedef struct _PvPoint PvPoint;
-struct _PvPoint{
+struct PvPoint;
+typedef struct PvPoint PvPoint;
+struct PvPoint{
 	double x;
 	double y;
 };
@@ -24,15 +24,15 @@ struct _PvPoint{
 // ** 各 ElementKindのdata構造
 
 // 兼ねるLayer
-struct _PvElementGroupData;
-typedef struct _PvElementGroupData PvElementGroupData;
-struct _PvElementGroupData{
+struct PvElementGroupData;
+typedef struct PvElementGroupData PvElementGroupData;
+struct PvElementGroupData{
 	char *name;
 };
 
-struct _PvElementRasterData;
-typedef struct _PvElementRasterData PvElementRasterData;
-struct _PvElementRasterData{
+struct PvElementRasterData;
+typedef struct PvElementRasterData PvElementRasterData;
+struct PvElementRasterData{
 	char *path;
 	GdkPixbuf *pixbuf;
 };
@@ -43,15 +43,15 @@ typedef enum _PvAnchorPointIndex{
 	PvAnchorPointIndex_HandleNext = 2,
 }PvAnchorPointIndex;
 
-struct _PvAnchorPoint;
-typedef struct _PvAnchorPoint PvAnchorPoint;
-struct _PvAnchorPoint{
+struct PvAnchorPoint;
+typedef struct PvAnchorPoint PvAnchorPoint;
+struct PvAnchorPoint{
 	PvPoint points[3];
 };
 
-struct _PvElementBezierData;
-typedef struct _PvElementBezierData PvElementBezierData;
-struct _PvElementBezierData{
+struct PvElementBezierData;
+typedef struct PvElementBezierData PvElementBezierData;
+struct PvElementBezierData{
 	int anchor_points_num;
 	PvAnchorPoint *anchor_points;
 };

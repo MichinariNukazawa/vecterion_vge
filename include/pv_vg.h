@@ -10,9 +10,9 @@
 #include <stdbool.h>
 #include "pv_element.h"
 
-struct _PvVg;
-typedef struct _PvVg PvVg;
-struct _PvVg{
+struct PvVg;
+typedef struct PvVg PvVg;
+struct PvVg{
 	PvRect rect;
 	PvElement *element_root;
 };

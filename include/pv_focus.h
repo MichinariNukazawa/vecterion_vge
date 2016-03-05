@@ -3,9 +3,9 @@
 
 #include "pv_element.h"
 
-struct _PvFocus;
-typedef struct _PvFocus PvFocus;
-struct _PvFocus{
+struct PvFocus;
+typedef struct PvFocus PvFocus;
+struct PvFocus{
 	PvElement *element;
 };
 

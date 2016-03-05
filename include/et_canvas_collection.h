@@ -10,8 +10,8 @@
 #include "et_thumbnail.h"
 
 
-struct _EtCanvasCollection;
-typedef struct _EtCanvasCollection EtCanvasCollection;
+struct EtCanvasCollection;
+typedef struct EtCanvasCollection EtCanvasCollection;
 
 
 EtCanvasCollection *et_canvas_collection_init();

@@ -4,7 +4,7 @@
 #include "et_error.h"
 #include "et_mouse_util.h"
 
-struct _EtCanvas{
+struct EtCanvas{
 	GtkWidget *widget; // Top widget pointer.
 	GtkWidget *box;
 	GtkWidget *box_infobar;

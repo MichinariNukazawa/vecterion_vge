@@ -20,9 +20,9 @@ typedef enum _EtMouseActionType{
 	EtMouseAction_Up,
 }EtMouseActionType;
 
-struct _EtMouseAction;
-typedef struct _EtMouseAction EtMouseAction;
-struct _EtMouseAction{
+struct EtMouseAction;
+typedef struct EtMouseAction EtMouseAction;
+struct EtMouseAction{
 	EtMouseButtonType	button;
 	EtMouseActionType	action;
 	EtPoint			point;

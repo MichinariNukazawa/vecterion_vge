@@ -9,14 +9,14 @@
 
 static EtCanvasCollection *_canvas_collection = NULL;
 
-struct _EtCanvasCollectionCollect;
-typedef struct _EtCanvasCollectionCollect EtCanvasCollectionCollect;
-struct _EtCanvasCollectionCollect{
+struct EtCanvasCollectionCollect;
+typedef struct EtCanvasCollectionCollect EtCanvasCollectionCollect;
+struct EtCanvasCollectionCollect{
 	EtDocId doc_id;
 	EtCanvas **canvases;
 };
 
-struct _EtCanvasCollection{
+struct EtCanvasCollection{
 	GtkWidget *widget;
 	GtkWidget *widget_tab;
 	EtThumbnail *thumbnail;

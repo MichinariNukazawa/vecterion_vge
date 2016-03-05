@@ -11,9 +11,9 @@
 #include "pv_element_general.h"
 
 
-struct _PvElement;
-typedef struct _PvElement PvElement;
-struct _PvElement{
+struct PvElement;
+typedef struct PvElement PvElement;
+struct PvElement{
 	PvElement *parent;
 	PvElement **childs; // I know "children".
 
@@ -30,7 +30,7 @@ struct _PvElement{
  *  please use your own "data" struct.)
  */
 typedef bool (*PvElementRecursiveFunc)(PvElement *element, gpointer data, int level);
-typedef struct _PvElementRecursiveError{
+typedef struct PvElementRecursiveError{
 	bool is_error;
 	int level;
 	const PvElement *element;

@@ -2,7 +2,7 @@
 
 #include "pv_error.h"
 
-typedef struct _PvRenderOption{
+typedef struct PvRenderOption{
 	PvRenderContext render_context;
 	PvFocus focus;
 }PvRenderOption;

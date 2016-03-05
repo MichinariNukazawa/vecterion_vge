@@ -9,8 +9,8 @@
 #include "pv_vg.h"
 #include "pv_focus.h"
 
-struct _EtDoc;
-typedef struct _EtDoc EtDoc;
+struct EtDoc;
+typedef struct EtDoc EtDoc;
 
 typedef int EtCallbackId;
 typedef void (*EtDocSlotChange)(EtDoc *doc, gpointer data);

@@ -10,12 +10,12 @@
 #include "pv_element.h"
 #include "et_state.h"
 
-struct _EtEtaion;
-typedef struct _EtEtaion EtEtaion;
+struct EtEtaion;
+typedef struct EtEtaion EtEtaion;
 
 typedef void (*EtEtaionSlotChangeState)(EtState state, gpointer data);
 
-struct _EtEtaion{
+struct EtEtaion{
 	EtState state;
 
 	EtEtaionSlotChangeState slot_change_state;

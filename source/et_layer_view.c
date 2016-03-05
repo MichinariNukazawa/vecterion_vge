@@ -10,7 +10,7 @@
 
 static char *DIRECTORY_RESOURCE = "./resource";
 
-typedef struct _EtLayerViewLayerCtrl{
+typedef struct EtLayerViewLayerCtrl{
 	const char * const name;
 	const char * const filename_image;
 }EtLayerViewLayerCtrl;
@@ -22,14 +22,14 @@ const EtLayerViewLayerCtrl _et_layer_view_layer_ctrls[] = {
 	{"Delete", "layer_del_64x64.svg",},
 };
 
-typedef struct _EtLayerViewElementData{
+typedef struct EtLayerViewElementData{
 	int level;
 	char *name;
 	PvElementKind kind;
 	PvElement *element;
 }EtLayerViewElementData;
 
-struct _EtLayerView{
+struct EtLayerView{
 	GtkWidget *widget; // Top widget pointer.
 	GtkWidget *box;
 	GtkWidget *scroll;
@@ -43,7 +43,7 @@ struct _EtLayerView{
 	EtLayerViewElementData **elementDatas;
 };
 
-typedef struct _EtLayerViewRltDataPack{
+typedef struct EtLayerViewRltDataPack{
 	EtLayerViewElementData **datas;
 }EtLayerViewRltDataPack;
 

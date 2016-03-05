@@ -8,8 +8,8 @@
 #include "pv_render_context.h"
 #include "et_state.h"
 
-struct _EtLayerView;
-typedef struct _EtLayerView EtLayerView;
+struct EtLayerView;
+typedef struct EtLayerView EtLayerView;
 
 typedef void (*EtLayerViewSlotChange)(EtLayerView *layer_view, gpointer data);
 

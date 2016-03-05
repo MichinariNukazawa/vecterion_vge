@@ -9,8 +9,8 @@
 #include "et_mouse_action.h"
 #include "pv_render_context.h"
 
-struct _EtCanvas;
-typedef struct _EtCanvas EtCanvas;
+struct EtCanvas;
+typedef struct EtCanvas EtCanvas;
 
 typedef void (*EtCanvasSlotChange)(EtCanvas *canvas, gpointer data);
 typedef bool (*EtCanvasSlotMouseAction)(EtDocId id_doc, EtMouseAction mouse_action);

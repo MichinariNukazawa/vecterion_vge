@@ -5,7 +5,7 @@
 #include "pv_renderer.h"
 #include "et_doc_manager.h"
 
-struct _EtRenderer{
+struct EtRenderer{
 	int dummy;
 };
 

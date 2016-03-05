@@ -9,8 +9,8 @@
 #include "et_doc_id.h"
 
 
-struct _EtRenderer;
-typedef struct _EtRenderer EtRenderer;
+struct EtRenderer;
+typedef struct EtRenderer EtRenderer;
 
 
 EtRenderer *et_renderer_init();

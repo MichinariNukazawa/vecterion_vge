@@ -7,17 +7,17 @@
 #include "et_doc.h"
 #include "et_mouse_action.h"
 
-struct _EtDocNode;
-typedef struct _EtDocNode EtDocNode;
+struct EtDocNode;
+typedef struct EtDocNode EtDocNode;
 
-struct _EtDocNode{
+struct EtDocNode{
 	EtDoc *doc;
 };
 
-struct _EtDocManager;
-typedef struct _EtDocManager EtDocManager;
+struct EtDocManager;
+typedef struct EtDocManager EtDocManager;
 
-struct _EtDocManager{
+struct EtDocManager{
 	EtDocNode doc_nodes[16];
 };
 

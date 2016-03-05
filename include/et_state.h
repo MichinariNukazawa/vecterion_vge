@@ -5,9 +5,9 @@
 #include "et_doc_id.h"
 #include "pv_element.h"
 
-struct _EtState;
-typedef struct _EtState EtState;
-struct _EtState{
+struct EtState;
+typedef struct EtState EtState;
+struct EtState{
 	EtDocId doc_id;
 };
 

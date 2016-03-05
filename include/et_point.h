@@ -1,9 +1,9 @@
 #ifndef include_ET_POINT_H
 #define include_ET_POINT_H
 
-struct _EtPoint;
-typedef struct _EtPoint EtPoint;
-struct _EtPoint{
+struct EtPoint;
+typedef struct EtPoint EtPoint;
+struct EtPoint{
 	double x;
 	double y;
 };
