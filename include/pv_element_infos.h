@@ -1,5 +1,5 @@
-#ifndef __PV_ELEMENT_DATAS_H__
-#define __PV_ELEMENT_DATAS_H__
+#ifndef include_PV_ELEMENT_DATAS_H
+#define include_PV_ELEMENT_DATAS_H
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -22,7 +22,7 @@ extern const PvElementInfo _pv_element_infos[];
 
 const PvElementInfo *pv_element_get_info_from_kind(PvElementKind kind);
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __PV_ELEMENT_DATAS_H__
+#endif // include_PV_ELEMENT_DATAS_H

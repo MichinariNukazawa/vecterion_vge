@@ -1,5 +1,5 @@
-#ifndef __ET_POINT_H__
-#define __ET_POINT_H__
+#ifndef include_ET_POINT_H
+#define include_ET_POINT_H
 
 struct _EtPoint;
 typedef struct _EtPoint EtPoint;
@@ -8,7 +8,7 @@ struct _EtPoint{
 	double y;
 };
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __ET_POINT_H__
+#endif // include_ET_POINT_H

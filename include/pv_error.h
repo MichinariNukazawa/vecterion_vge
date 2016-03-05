@@ -1,5 +1,5 @@
-#ifndef __PV_ERROR_H__
-#define __PV_ERROR_H__
+#ifndef include_PV_ERROR_H
+#define include_PV_ERROR_H
 
 #include <stdio.h>
 
@@ -18,8 +18,8 @@
 #define pv_debug(fmt, ...)  \
 	fprintf(stdout, "debug: %s()[%d]: "fmt"", __func__, __LINE__, ## __VA_ARGS__)
 
-#ifdef __PV_TEST__
-#endif // __PV_TEST__
+#ifdef include_PV_TEST
+#endif // include_PV_TEST
 
-#endif // __PV_ERROR_H__
+#endif // include_PV_ERROR_H
 

@@ -1,5 +1,5 @@
-#ifndef __ET_MOUSE_ACTION_H__
-#define __ET_MOUSE_ACTION_H__
+#ifndef include_ET_MOUSE_ACTION_H
+#define include_ET_MOUSE_ACTION_H
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -28,7 +28,7 @@ struct _EtMouseAction{
 	EtPoint			point;
 };
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __ET_MOUSE_ACTION_H__
+#endif // include_ET_MOUSE_ACTION_H

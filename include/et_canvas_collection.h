@@ -1,5 +1,5 @@
-#ifndef __ET_CANVAS_COLLECTION_H__
-#define __ET_CANVAS_COLLECTION_H__
+#ifndef include_ET_CANVAS_COLLECTION_H
+#define include_ET_CANVAS_COLLECTION_H
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -20,7 +20,7 @@ EtThumbnail *et_canvas_collection_get_thumbnail();
 // GtkWidget *et_canvas_collection_get_thumbnail_frame();
 EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id);
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __ET_CANVAS_COLLECTION_H__
+#endif // include_ET_CANVAS_COLLECTION_H

@@ -1,5 +1,5 @@
-#ifndef __PV_ELEMENT_H__
-#define __PV_ELEMENT_H__
+#ifndef include_PV_ELEMENT_H
+#define include_PV_ELEMENT_H
 /** ******************************
  * @brief PhotonVector Vector Graphics Format.
  *
@@ -79,7 +79,7 @@ bool pv_element_bezier_add_anchor_point(PvElement * const this,
 		const PvAnchorPoint anchor_point);
 
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __PV_ELEMENT_H__
+#endif // include_PV_ELEMENT_H

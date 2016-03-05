@@ -1,5 +1,5 @@
-#ifndef __ET_DOC_MANAGER_H__
-#define __ET_DOC_MANAGER_H__
+#ifndef include_ET_DOC_MANAGER_H
+#define include_ET_DOC_MANAGER_H
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -25,7 +25,7 @@ EtDocManager *et_doc_manager_init();
 EtDocId et_doc_manager_new_doc();
 EtDoc *et_doc_manager_get_doc_from_id(const EtDocId doc_id);
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __ET_DOC_MANAGER_H__
+#endif // include_ET_DOC_MANAGER_H

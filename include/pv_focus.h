@@ -1,5 +1,5 @@
-#ifndef __PV_FOCUS_H__
-#define __PV_FOCUS_H__
+#ifndef include_PV_FOCUS_H
+#define include_PV_FOCUS_H
 
 #include "pv_element.h"
 
@@ -11,7 +11,7 @@ struct _PvFocus{
 
 PvFocus pv_focus_get_nofocus();
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __PV_FOCUS_H__
+#endif // include_PV_FOCUS_H

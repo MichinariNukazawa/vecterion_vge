@@ -1,11 +1,11 @@
-#ifndef __ET_DOC_ID_H__
-#define __ET_DOC_ID_H__
+#ifndef include_ET_DOC_ID_H
+#define include_ET_DOC_ID_H
 
 typedef int EtDocId;
 
 EtDocId et_doc_id_new();
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __ET_DOC_ID_H__
+#endif // include_ET_DOC_ID_H

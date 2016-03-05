@@ -1,10 +1,10 @@
-#ifndef __ET_MOUSE_UTIL_H__
-#define __ET_MOUSE_UTIL_H__
+#ifndef include_ET_MOUSE_UTIL_H
+#define include_ET_MOUSE_UTIL_H
 
 void et_mouse_util_modifier_kind(int state);
 void et_mouse_util_button_kind(int button);
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __ET_MOUSE_UTIL_H__
+#endif // include_ET_MOUSE_UTIL_H

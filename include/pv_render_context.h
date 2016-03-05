@@ -1,5 +1,5 @@
-#ifndef __PV_RENDER_CONTEXT_H__
-#define __PV_RENDER_CONTEXT_H__
+#ifndef include_PV_RENDER_CONTEXT_H
+#define include_PV_RENDER_CONTEXT_H
 
 struct _PvRenderContext;
 typedef struct _PvRenderContext PvRenderContext;
@@ -7,7 +7,7 @@ struct _PvRenderContext{
 	double scale;
 };
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __PV_RENDER_CONTEXT_H__
+#endif // include_PV_RENDER_CONTEXT_H

@@ -1,5 +1,5 @@
-#ifndef __ET_STATE_H__
-#define __ET_STATE_H__
+#ifndef include_ET_STATE_H
+#define include_ET_STATE_H
 
 #include <stdbool.h>
 #include "et_doc_id.h"
@@ -13,7 +13,7 @@ struct _EtState{
 
 void et_state_unfocus(EtState *this);
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __ET_STATE_H__
+#endif // include_ET_STATE_H

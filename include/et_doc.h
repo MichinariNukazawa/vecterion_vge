@@ -1,5 +1,5 @@
-#ifndef __ET_DOC_H__
-#define __ET_DOC_H__
+#ifndef include_ET_DOC_H
+#define include_ET_DOC_H
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -33,7 +33,7 @@ bool et_doc_add_point(EtDoc *this, PvElement **_element, double x, double y);
 bool et_doc_signal_update(EtDoc *this);
 bool et_doc_signal_update_from_id(EtDocId id);
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __ET_DOC_H__
+#endif // include_ET_DOC_H

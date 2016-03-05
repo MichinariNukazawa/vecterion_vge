@@ -1,5 +1,5 @@
-#ifndef __ET_ETAION_H__
-#define __ET_ETAION_H__
+#ifndef include_ET_ETAION_H
+#define include_ET_ETAION_H
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -38,7 +38,7 @@ bool et_etaion_copy_layer(EtDocId doc_id);
 /** @brief focus(Layer)および子Elementを削除 */
 bool et_etaion_remove_delete_layer(EtDocId doc_id);
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __ET_ETAION_H__
+#endif // include_ET_ETAION_H

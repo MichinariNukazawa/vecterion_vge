@@ -1,5 +1,5 @@
-#ifndef __ET_RENDERER_H__
-#define __ET_RENDERER_H__
+#ifndef include_ET_RENDERER_H
+#define include_ET_RENDERER_H
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -16,7 +16,7 @@ typedef struct _EtRenderer EtRenderer;
 EtRenderer *et_renderer_init();
 void slot_et_renderer_from_canvas_change(EtCanvas *canvas, gpointer data);
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __ET_RENDERER_H__
+#endif // include_ET_RENDERER_H

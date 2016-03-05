@@ -1,5 +1,5 @@
-#ifndef __PV_ELEMENT_GLOBAL_H__
-#define __PV_ELEMENT_GLOBAL_H__
+#ifndef include_PV_ELEMENT_GLOBAL_H
+#define include_PV_ELEMENT_GLOBAL_H
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -73,7 +73,7 @@ typedef enum _PvElementKind{
 	PvElementKind_EndOfKind,
 }PvElementKind;
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __PV_ELEMENT_GLOBAL_H__
+#endif // include_PV_ELEMENT_GLOBAL_H

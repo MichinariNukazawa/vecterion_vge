@@ -1,5 +1,5 @@
-#ifndef __PV_VG_H__
-#define __PV_VG_H__
+#ifndef include_PV_VG_H
+#define include_PV_VG_H
 /** ******************************
  * @brief PhotonVector Vector Graphics Format.
  *
@@ -28,7 +28,7 @@ PvVg *pv_vg_new();
  */
 PvElement *pv_vg_get_layer_top(PvVg *vg);
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __PV_VG_H__
+#endif // include_PV_VG_H

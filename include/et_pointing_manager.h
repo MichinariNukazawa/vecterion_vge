@@ -1,5 +1,5 @@
-#ifndef __ET_POINTING_MANAGER_H__
-#define __ET_POINTING_MANAGER_H__
+#ifndef include_ET_POINTING_MANAGER_H
+#define include_ET_POINTING_MANAGER_H
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -21,7 +21,7 @@ EtPointingManager *et_pointing_manager_init();
 bool et_pointing_manager_set_slot_mouse_action(EtPointingManagerSlotMouseAction slot);
 bool et_pointing_manager_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action);
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __ET_POINTING_MANAGER_H__
+#endif // include_ET_POINTING_MANAGER_H

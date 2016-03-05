@@ -1,5 +1,5 @@
-#ifndef __ET_CANVAS_H__
-#define __ET_CANVAS_H__
+#ifndef include_ET_CANVAS_H
+#define include_ET_CANVAS_H
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -28,7 +28,7 @@ int et_canvas_set_slot_mouse_action(EtCanvas *this,
 		EtCanvasSlotMouseAction slot, gpointer data);
 void slot_et_canvas_from_doc_change(EtDoc *doc, gpointer data);
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __ET_CANVAS_H__
+#endif // include_ET_CANVAS_H

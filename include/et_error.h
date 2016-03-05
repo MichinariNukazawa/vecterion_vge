@@ -1,5 +1,5 @@
-#ifndef __ET_ERROR_H__
-#define __ET_ERROR_H__
+#ifndef include_ET_ERROR_H
+#define include_ET_ERROR_H
 
 #include <stdio.h>
 
@@ -18,8 +18,8 @@
 #define et_debug(fmt, ...)  \
 	fprintf(stdout, "debug: %s()[%d]: "fmt"", __func__, __LINE__, ## __VA_ARGS__)
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __ET_ERROR_H__
+#endif // include_ET_ERROR_H
 

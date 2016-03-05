@@ -1,5 +1,5 @@
-#ifndef __ET_LAYER_VIEW_H__
-#define __ET_LAYER_VIEW_H__
+#ifndef include_ET_LAYER_VIEW_H
+#define include_ET_LAYER_VIEW_H
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -20,7 +20,7 @@ bool et_layer_view_set_doc_id(EtDocId doc_id);
 void et_layer_view_slot_from_doc_change(EtDoc *doc, gpointer data);
 void et_layer_view_slot_from_etaion_change_state(EtState state, gpointer data);
 
-#ifdef __ET_TEST__
-#endif // __ET_TEST__
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
 
-#endif // __ET_LAYER_VIEW_H__
+#endif // include_ET_LAYER_VIEW_H
