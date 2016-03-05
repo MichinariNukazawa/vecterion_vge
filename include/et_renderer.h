@@ -14,7 +14,7 @@ typedef struct _EtRenderer EtRenderer;
 
 
 EtRenderer *et_renderer_init();
-bool et_renderer_set_connection(EtCanvas *canvas, EtDocId doc_id);
+void slot_et_renderer_from_canvas_change(EtCanvas *canvas, gpointer data);
 
 #ifdef __ET_TEST__
 #endif // __ET_TEST__

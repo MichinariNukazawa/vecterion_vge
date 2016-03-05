@@ -128,7 +128,18 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 
 	// ** canvas new and setup.
 	EtCanvas *canvas = et_canvas_new();
-	if(!et_renderer_set_connection(canvas, doc_id)){
+	if(!(et_canvas_get_doc_id(canvas) < 0)){
+		et_bug("");
+		return false;
+	}
+	if(!et_canvas_set_doc_id(canvas, doc_id)){
+		et_bug("");
+		return false;
+	}
+
+	int id = et_canvas_set_slot_change(canvas,
+			slot_et_renderer_from_canvas_change, NULL);
+	if(id < 0){
 		et_error("");
 		return NULL;
 	}
@@ -151,7 +162,13 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 	}
 
 	EtCanvas *canvas_thumbnail = et_thumbnail_get_canvas(this->thumbnail);
-	if(!et_renderer_set_connection(canvas_thumbnail, doc_id)){
+	if(!et_canvas_set_doc_id(canvas_thumbnail, doc_id)){
+		et_bug("");
+		return false;
+	}
+	int id2 = et_canvas_set_slot_change(canvas_thumbnail,
+			slot_et_renderer_from_canvas_change, NULL);
+	if(id2 < 0){
 		et_error("");
 		return NULL;
 	}

@@ -5,16 +5,8 @@
 #include "pv_renderer.h"
 #include "et_doc_manager.h"
 
-struct _EtCanvasAndDoc;
-typedef struct _EtCanvasAndDoc EtCanvasAndDoc;
-struct _EtCanvasAndDoc{
-	EtCallbackId	id;
-	EtCanvas	*canvas;
-	EtDoc		*doc;
-};
-
 struct _EtRenderer{
-	EtCanvasAndDoc *canvas_and_docs;
+	int dummy;
 };
 
 static EtRenderer *__renderer = NULL;
@@ -32,25 +24,9 @@ EtRenderer *et_renderer_init()
 		return NULL;
 	}
 
-	this->canvas_and_docs = (EtCanvasAndDoc *)malloc(sizeof(EtCanvasAndDoc) * 1);
-	if(NULL == this->canvas_and_docs){
-		et_error("");
-		return NULL;
-	}
-	this->canvas_and_docs[0].id = -1;
-
 	__renderer = this;
 
 	return this;
-}
-
-int _et_renderer_get_num_canvas_and_docs(EtCanvasAndDoc *canvas_and_docs){
-	int i = 0;
-	while(0 <= canvas_and_docs[i].id){
-		i++;
-	}
-
-	return i;
 }
 
 GdkPixbuf *_et_renderer_draw_pixbuf_from_point(GdkPixbuf *pixbuf, double x, double y)
@@ -125,117 +101,45 @@ GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext render_
 	return pb;
 }
 
-void _slot_et_renderer_from_doc_change(EtDoc *doc, gpointer data)
+void slot_et_renderer_from_canvas_change(EtCanvas *canvas, gpointer data)
 {
+	et_debug("\n");
+
 	EtRenderer *this = __renderer;
 	if(NULL == this){
 		et_bug("");
 		return;
 	}
 
-	int num = _et_renderer_get_num_canvas_and_docs(this->canvas_and_docs);
-	for(int i = 0; i < num; i++){
-		if(doc == this->canvas_and_docs[i].doc){
-			EtCanvas *canvas = this->canvas_and_docs[i].canvas;
-			bool isError = true;
-			PvRenderContext render_context
-				= et_canvas_get_render_context(canvas, &isError);
-			if(isError){
-				et_bug("");
-				return;
-			}
-			GdkPixbuf *pixbuf = _et_renderer_rendering_pixbuf_new(doc,
-					render_context);
-			if(NULL == pixbuf){
-				et_error("");
-			}else{
-				et_canvas_draw_pixbuf(this->canvas_and_docs[i].canvas, pixbuf);
-				g_object_unref(G_OBJECT(pixbuf));
-			}
-		}
-	}
-}
-
-void _slot_et_renderer_from_canvas_change(EtCanvas *canvas, gpointer data)
-{
-	EtRenderer *this = __renderer;
-	if(NULL == this){
+	if(NULL == canvas){
 		et_bug("");
 		return;
 	}
 
-	int num = _et_renderer_get_num_canvas_and_docs(this->canvas_and_docs);
-	for(int i = 0; i < num; i++){
-		if(canvas == this->canvas_and_docs[i].canvas){
-			EtDoc *doc = this->canvas_and_docs[i].doc;
-			bool isError = true;
-			PvRenderContext render_context
-				= et_canvas_get_render_context(canvas, &isError);
-			if(isError){
-				et_bug("");
-				return;
-			}
-			GdkPixbuf *pixbuf = _et_renderer_rendering_pixbuf_new(doc,
-					render_context);
-			if(NULL == pixbuf){
-				et_error("");
-			}else{
-				et_canvas_draw_pixbuf(this->canvas_and_docs[i].canvas, pixbuf);
-				g_object_unref(G_OBJECT(pixbuf));
-			}
-		}
-	}
-}
-
-bool et_renderer_set_connection(EtCanvas *canvas, EtDocId doc_id)
-{
-	EtRenderer *this = __renderer;
-	if(NULL == this){
+	EtDocId doc_id = et_canvas_get_doc_id(canvas);
+	if(0 > doc_id){
 		et_bug("");
-		return false;
+		return;
 	}
-
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
 	if(NULL == doc){
 		et_bug("");
-		return false;
+		return;
 	}
-
-	int num = _et_renderer_get_num_canvas_and_docs(this->canvas_and_docs);
-	EtCanvasAndDoc *new = realloc(this->canvas_and_docs,
-			sizeof(EtCanvasAndDoc) * (num + 2));
-	if(NULL == new){
-		et_error("");
-		return false;
-	}
-	new[num + 1].id = -1;
-	new[num].canvas = canvas;
-	new[num].doc = doc;
-	new[num].id = et_doc_add_slot_change(doc_id,
-			_slot_et_renderer_from_doc_change, NULL);
-	if(new[num].id < 0){
-		et_error("");
-		return false;
-	}
-
-	int id = et_canvas_set_slot_change(canvas,
-			_slot_et_renderer_from_canvas_change, NULL);
-	if(id < 0){
-		et_error("");
-		return false;
-	}
-
-	if(!(et_canvas_get_doc_id(canvas) < 0)){
+	bool isError = true;
+	PvRenderContext render_context
+		= et_canvas_get_render_context(canvas, &isError);
+	if(isError){
 		et_bug("");
-		return false;
+		return;
 	}
-	if(!et_canvas_set_doc_id(canvas, doc_id)){
-		et_bug("");
-		return false;
+	GdkPixbuf *pixbuf = _et_renderer_rendering_pixbuf_new(doc,
+			render_context);
+	if(NULL == pixbuf){
+		et_error("");
+	}else{
+		et_canvas_draw_pixbuf(canvas, pixbuf);
+		g_object_unref(G_OBJECT(pixbuf));
 	}
-
-
-	this->canvas_and_docs = new;
-
-	return true;
 }
+
