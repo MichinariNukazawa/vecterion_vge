@@ -134,8 +134,7 @@ EtDocId et_canvas_get_doc_id(EtCanvas *this)
 	return this->doc_id;
 }
 
-#include "et_doc.h"
-void _slot_et_canvas_from_doc_change(EtDoc *doc, gpointer data)
+void slot_et_canvas_from_doc_change(EtDoc *doc, gpointer data)
 {
 	EtCanvas *this = (EtCanvas *)data;
 	if(NULL == this){
@@ -154,13 +153,6 @@ bool et_canvas_set_doc_id(EtCanvas *this, EtDocId doc_id)
 {
 	if(NULL == this){
 		et_bug("");
-		return false;
-	}
-
-	int id = et_doc_add_slot_change(doc_id,
-			_slot_et_canvas_from_doc_change, (gpointer)this);
-	if(id < 0){
-		et_error("");
 		return false;
 	}
 

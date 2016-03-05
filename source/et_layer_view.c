@@ -202,7 +202,7 @@ bool _et_layer_view_read_layer_tree(PvElement *element, gpointer data, int level
 
 	int num = pv_general_get_parray_num((void **)*datas);
 	*datas = (EtLayerViewElementData **)
-			realloc(*datas, sizeof(EtLayerViewElementData *) * (num + 2));
+		realloc(*datas, sizeof(EtLayerViewElementData *) * (num + 2));
 	if(NULL == *datas){
 		et_critical("");
 		exit(-1);
@@ -210,7 +210,7 @@ bool _et_layer_view_read_layer_tree(PvElement *element, gpointer data, int level
 
 	(*datas)[num] = rlt;
 	(*datas)[num + 1] = NULL;
-	
+
 	return true;
 }
 
@@ -283,7 +283,7 @@ bool _et_layer_view_draw(EtLayerView *this)
 	}
 
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer(
-					GTK_TEXT_VIEW (this->text));
+			GTK_TEXT_VIEW (this->text));
 	gtk_text_buffer_set_text (buffer, buf, -1);
 
 	// ターゲット状態でlayer_ctrlsのbutton状態を変更する
@@ -372,7 +372,9 @@ void et_layer_view_slot_from_etaion_change_state(EtState state, gpointer data)
 		exit(-1);
 	}
 
-	if(!_et_layer_view_draw(this)){
+	this->doc_id = state.doc_id;
+
+	if(!et_layer_view_set_doc_id(this->doc_id)){
 		et_error("");
 		return;
 	}

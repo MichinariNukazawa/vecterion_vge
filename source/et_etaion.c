@@ -28,7 +28,7 @@ EtEtaion *et_etaion_init()
 	return this;
 }
 
-void _et_etaion_signal_change_state(EtEtaion *this)
+void _signal_et_etaion_change_state(EtEtaion *this)
 {
 	if(NULL == this->slot_change_state){
 		return;
@@ -37,6 +37,31 @@ void _et_etaion_signal_change_state(EtEtaion *this)
 	this->slot_change_state(this->state, this->slot_change_state_data);
 }
 
+bool et_etaion_set_current_doc_id(EtDocId doc_id)
+{
+	EtEtaion *this = current_state;
+	if(NULL == this){
+		et_bug("");
+		exit(-1);
+	}
+
+	(this->state).doc_id = doc_id;
+
+	_signal_et_etaion_change_state(this);
+
+return true;
+}
+
+EtDocId et_etaion_get_current_doc_id()
+{
+	EtEtaion *this = current_state;
+	if(NULL == this){
+		et_bug("");
+		exit(-1);
+	}
+
+return (this->state).doc_id;
+}
 
 bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 {
@@ -54,7 +79,7 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 			et_error("");
 			return false;
 		}
-		_et_etaion_signal_change_state(this);
+		_signal_et_etaion_change_state(this);
 	}
 
 	EtDoc *doc = et_doc_manager_get_doc_from_id(id_doc);
@@ -115,7 +140,7 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 					}
 				}
 			}
-			_et_etaion_signal_change_state(this);
+			_signal_et_etaion_change_state(this);
 			break;
 		default:
 			et_debug("no use:%d\n", key_action.key);
@@ -214,7 +239,7 @@ bool et_etaion_add_new_layer(EtDocId doc_id)
 		return false;
 	}
 
-	_et_etaion_signal_change_state(this);
+	_signal_et_etaion_change_state(this);
 	et_doc_signal_update_from_id((this->state).doc_id);
 
 	return true;
@@ -265,7 +290,7 @@ bool et_etaion_add_new_layer_child(EtDocId doc_id)
 		return false;
 	}
 
-	_et_etaion_signal_change_state(this);
+	_signal_et_etaion_change_state(this);
 	et_doc_signal_update_from_id((this->state).doc_id);
 
 	return true;
@@ -326,7 +351,7 @@ bool et_etaion_copy_layer(EtDocId doc_id)
 		return false;
 	}
 
-	_et_etaion_signal_change_state(this);
+	_signal_et_etaion_change_state(this);
 	et_doc_signal_update_from_id((this->state).doc_id);
 
 	return true;
@@ -384,7 +409,7 @@ error:
 		et_error("");
 	}
 
-	_et_etaion_signal_change_state(this);
+	_signal_et_etaion_change_state(this);
 	et_doc_signal_update_from_id((this->state).doc_id);
 
 	return ret;

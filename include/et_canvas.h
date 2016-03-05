@@ -5,6 +5,7 @@
 #include <gdk/gdk.h>
 #include <stdbool.h>
 #include "et_doc_id.h"
+#include "et_doc.h"
 #include "et_mouse_action.h"
 #include "pv_render_context.h"
 
@@ -25,6 +26,7 @@ int et_canvas_set_slot_change(EtCanvas *this,
 		EtCanvasSlotChange slot, gpointer data);
 int et_canvas_set_slot_mouse_action(EtCanvas *this,
 		EtCanvasSlotMouseAction slot, gpointer data);
+void slot_et_canvas_from_doc_change(EtDoc *doc, gpointer data);
 
 #ifdef __ET_TEST__
 #endif // __ET_TEST__

@@ -23,6 +23,8 @@ struct _EtEtaion{
 };
 
 EtEtaion *et_etaion_init();
+bool et_etaion_set_current_doc_id(EtDocId doc_id);
+EtDocId et_etaion_get_current_doc_id();
 bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action);
 bool et_etaion_slot_key_action(EtKeyAction key_action);
 int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data);

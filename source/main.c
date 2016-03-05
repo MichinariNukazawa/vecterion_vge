@@ -343,6 +343,7 @@ static gboolean __cb_menu_file_new(gpointer data)
 				vg->rect.h = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_h));
 				et_debug("size:%f,%f,%f,%f\n",
 					vg->rect.x, vg->rect.y, vg->rect.w, vg->rect.h);
+				_open_doc_new();
 			}
 			break;
 		default:
