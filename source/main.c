@@ -24,6 +24,7 @@ void _pvui_app_set_style();
 bool _init_menu(GtkWidget *window, GtkWidget *box_root);
 bool _debug_init();
 EtDocId _open_doc_new(PvVg *pv_src);
+EtDocId _open_doc_new_from_file(const char* filepath);
 
 
 
@@ -215,6 +216,14 @@ bool _debug_init()
 		return -1;
 	}
 
+	PvVg *vg = et_doc_get_vg_ref(et_doc_manager_get_doc_from_id(doc_id));
+	if(NULL == vg){
+		et_error("");
+		return -1;
+	}
+	vg->rect.w = 600;
+	vg->rect.h = 500;
+
 	// ** (開発デバッグ用)ドキュメントにsvgを貼り付ける
 	const char *pathImageFile = NULL;
 	pathImageFile = "./library/23.svg";
@@ -229,6 +238,34 @@ bool _debug_init()
 	}
 
 	return true;
+}
+
+EtDocId _open_doc_new_from_file(const char* filepath)
+{
+	et_debug("filepath:'%s'\n", (NULL == filepath)? "NULL":filepath);
+
+	if(NULL == filepath){
+		et_error("");
+		return -1;
+	}
+
+	PvVg *vg_src = pv_io_new_from_file(filepath);
+	if(NULL == vg_src){
+		et_error("");
+		return -1;
+	}
+
+	EtDocId doc_id = _open_doc_new(vg_src);
+	if(0 > doc_id){
+		et_error("");
+		return -1;
+	}
+
+	pv_vg_free(vg_src);
+
+	et_doc_signal_update_from_id(doc_id);
+
+	return doc_id;
 }
 
 EtDocId _open_doc_new(PvVg *vg_src)
@@ -247,10 +284,10 @@ EtDocId _open_doc_new(PvVg *vg_src)
 			et_error("");
 			return -1;
 		}
-		(vg->rect).x = (vg_src->rect).x;
-		(vg->rect).y = (vg_src->rect).y;
-		(vg->rect).w = (vg_src->rect).w;
-		(vg->rect).h = (vg_src->rect).h;
+		if(!pv_vg_copy_overwrite(vg, vg_src)){
+			et_error("");
+			return -1;
+		}
 	}
 
 	// ** gui
@@ -315,8 +352,11 @@ static gboolean _cb_menu_file_new(gpointer data)
 	et_debug("");
 
 	// 作成ドキュメント情報
-	PvVg vg_obj;
-	PvVg *vg = &vg_obj;
+	PvVg *vg = pv_vg_new();
+	if(NULL == vg){
+		et_error("");
+		return false;
+	}
 	vg->rect.x = 0;
 	vg->rect.y = 0;
 
@@ -365,6 +405,8 @@ static gboolean _cb_menu_file_new(gpointer data)
 			break;
 	}
 	gtk_widget_destroy (dialog);
+
+	pv_vg_free(vg);
 
 	return false;
 }
@@ -464,6 +506,40 @@ error:
 	return false;
 }
 
+static gboolean _cb_menu_file_open(gpointer data)
+{
+	et_debug("");
+
+	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
+	GtkWidget *dialog = gtk_file_chooser_dialog_new ("Open File",
+			NULL,
+			action,
+			_("_Cancel"),
+			GTK_RESPONSE_CANCEL,
+			_("_Open"),
+			GTK_RESPONSE_ACCEPT,
+			NULL);
+
+	gint res = gtk_dialog_run (GTK_DIALOG (dialog));
+	if (res == GTK_RESPONSE_ACCEPT)
+	{
+		char *filename;
+		GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
+		filename = gtk_file_chooser_get_filename (chooser);
+		if(!_open_doc_new_from_file(filename)){
+			// TODO: warning dialog.
+			et_debug("file not open:%s\n", filename);
+		}
+		g_free (filename);
+	}
+
+	gtk_widget_destroy (dialog);
+
+
+
+	return false;
+}
+
 void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
 {   
 	const char *appname = "Etaion Vector Graphic Editor";
@@ -496,10 +572,13 @@ GtkWidget *pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	// ** Accel to "/_File/_New (Ctrl+N)"
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_n, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
-	/*
-	   menuitem = gtk_menu_item_new_with_label ("Open");
-	   gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	 */
+
+	// ** "/_File/_Open (Ctrl+O)"
+	menuitem = gtk_menu_item_new_with_label ("_Open");
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_open), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_o, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
 	// ** "/_File/_Save (Ctrl+S)"
 	menuitem = gtk_menu_item_new_with_label ("_Save");

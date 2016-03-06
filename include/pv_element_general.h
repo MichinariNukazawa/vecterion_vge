@@ -5,6 +5,9 @@
 #include <gdk/gdk.h>
 #include <stdbool.h>
 
+#include <errno.h>
+#include <string.h>
+
 struct PvRect;
 typedef struct PvRect PvRect;
 struct PvRect{
@@ -48,6 +51,9 @@ typedef struct PvAnchorPoint PvAnchorPoint;
 struct PvAnchorPoint{
 	PvPoint points[3];
 };
+static const PvAnchorPoint PvAnchorPoint_default = {
+	.points = {{0,0}, {0,0}, {0,0}, },
+};
 
 struct PvElementBezierData;
 typedef struct PvElementBezierData PvElementBezierData;
@@ -79,6 +85,8 @@ typedef enum _PvElementKind{
 int pv_general_get_parray_num(void **pointers);
 
 
+bool pv_general_strtod(double *value, const char *str,
+		char **endptr, const char **str_error);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

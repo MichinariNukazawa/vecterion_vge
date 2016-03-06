@@ -5,11 +5,13 @@
 #include "pv_error.h"
 #include "pv_element_general.h"
 #include "pv_element_infos.h"
+#include "pv_svg_info.h"
 
 typedef struct{
 	InfoTargetSvg *target;
 	const ConfWriteSvg *conf;
 }PvIoSvgRecursiveData;
+
 
 bool _pv_io_svg_from_element_in_recursive_before(PvElement *element, gpointer data, int level)
 {
@@ -139,9 +141,12 @@ bool pv_io_write_file_svg_from_vg(PvVg *vg, const char *path)
 
 	xmlNewProp(root_node, BAD_CAST "version", BAD_CAST "1.1");
 
-	p = g_strdup_printf("%f %f %f %f",
-			(vg->rect).x, (vg->rect).y, (vg->rect).w, (vg->rect).h);
-	xmlNewProp(root_node, BAD_CAST "viewBox", BAD_CAST p);
+	p = g_strdup_printf("%f", (vg->rect).x);
+	xmlNewProp(root_node, BAD_CAST "x", BAD_CAST p);
+	g_free(p);
+
+	p = g_strdup_printf("%f", (vg->rect).y);
+	xmlNewProp(root_node, BAD_CAST "y", BAD_CAST p);
 	g_free(p);
 
 	p = g_strdup_printf("%f", (vg->rect).w);
@@ -150,6 +155,11 @@ bool pv_io_write_file_svg_from_vg(PvVg *vg, const char *path)
 
 	p = g_strdup_printf("%f", (vg->rect).h);
 	xmlNewProp(root_node, BAD_CAST "height", BAD_CAST p);
+	g_free(p);
+
+	p = g_strdup_printf("%f %f %f %f",
+			(vg->rect).x, (vg->rect).y, (vg->rect).w, (vg->rect).h);
+	xmlNewProp(root_node, BAD_CAST "viewBox", BAD_CAST p);
 	g_free(p);
 
 	//		vg->element_root;
@@ -166,5 +176,255 @@ bool pv_io_write_file_svg_from_vg(PvVg *vg, const char *path)
 	return true;
 }
 
-// PvVg *pv_io_new_vg_from_file(const char *path);
+	static void
+print_element_names(xmlNode * a_node)
+{
+	xmlNode *cur_node = NULL;
+
+	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+		if (cur_node->type == XML_ELEMENT_NODE) {
+			printf("node type: Element, name: %s\n", cur_node->name);
+		}
+
+		print_element_names(cur_node->children);
+	}
+}
+
+bool _pv_io_get_svg_from_xml(xmlNode **xmlnode_svg, xmlNode *xmlnode)
+{
+	*xmlnode_svg = NULL;
+
+	for (xmlNode *cur_node = xmlnode; cur_node; cur_node = cur_node->next) {
+		if (cur_node->type == XML_ELEMENT_NODE) {
+			if(0 == strcmp("svg", (char*)cur_node->name)){
+				*xmlnode_svg = cur_node;
+				return true;
+			}
+		}
+		if(_pv_io_get_svg_from_xml(xmlnode_svg, cur_node->children)){
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool _pv_io_get_px_from_str(double *value, const char *str, const char **str_error)
+{
+	char *endptr = NULL;
+	if(!pv_general_strtod(value, str, &endptr, str_error)){
+		return false;
+	}
+
+	// convert to px
+	double dpi = 90.0;
+	if(NULL == endptr){
+		*str_error = "Internal error.";
+		return false;
+	}
+
+	if(0 == strcmp("", endptr)){
+		// return true;
+	}else if(0 == strcmp("px", endptr)){
+		// return true;
+	}else if(0 == strcmp("pt", endptr)){
+		*value *= 1.25 * (dpi / 90.0);
+	}else if(0 == strcmp("pc", endptr)){
+		*value *= 15 * (dpi / 90.0);
+	}else if(0 == strcmp("mm", endptr)){
+		*value *= 3.543307 * (dpi / 90.0);
+	}else if(0 == strcmp("cm", endptr)){
+		*value *= 35.43307 * (dpi / 90.0);
+	}else if(0 == strcmp("in", endptr)){
+		*value *= 90.0 * (dpi / 90.0);
+	}else{
+		*str_error = "Unit undefined.";
+		pv_error("%s'%s'", *str_error, endptr);
+		return false;
+	}
+
+	return true;
+}
+
+bool _pv_io_set_vg_from_xmlnode_svg(PvVg *vg, xmlNode *xmlnode_svg)
+{
+	pv_debug("\n");
+	PvRect rect = {0, 0, -1, -1};
+	xmlAttr* attribute = xmlnode_svg->properties;
+	while(attribute)
+	{
+		bool isOk = false;
+		xmlChar* xmlValue = xmlNodeListGetString(xmlnode_svg->doc,
+				attribute->children, 1);
+		const char *strValue = (char*)xmlValue;
+		const char *name = (char*)attribute->name;
+		const char *str_error = "Not process.";
+		if(0 == strcmp("x", name)){
+			double value = 0.0;
+			if(_pv_io_get_px_from_str(&value, strValue, &str_error)){
+				rect.x = value;
+				isOk = true;
+			}
+		}else if(0 == strcmp("y", name)){
+			double value = 0.0;
+			if(_pv_io_get_px_from_str(&value, strValue, &str_error)){
+				rect.y = value;
+				isOk = true;
+			}
+		}else if(0 == strcmp("width", name)){
+			double value = 0.0;
+			if(_pv_io_get_px_from_str(&value, strValue, &str_error)){
+				rect.w = value;
+				isOk = true;
+			}
+		}else if(0 == strcmp("height", name)){
+			double value = 0.0;
+			if(_pv_io_get_px_from_str(&value, strValue, &str_error)){
+				rect.h = value;
+				isOk = true;
+			}
+		}
+
+		if(!isOk){
+			pv_debug("Can not use:'%s':'%s' %s\n",
+					name, strValue, str_error);
+		}
+
+		xmlFree(xmlValue); 
+		attribute = attribute->next;
+	}
+
+	if(rect.w <= 0 && rect.h <= 0){
+		rect.w = rect.h = 1;
+	}else if(rect.w <= 0){
+		rect.w = rect.h; // TODO: svg spec is "100%"
+	}else if(rect.h <= 0){
+		rect.h = rect.w; // TODO: svg spec is "100%"
+	}
+
+	vg->rect = rect;
+
+	return true;
+}
+
+bool _pv_io_element_from_svg_in_recursive_inline(PvElement *element_parent,
+		xmlNode *xmlnode,
+		gpointer data,
+		const ConfReadSvg *conf)
+{
+	const PvSvgInfo *svg_info = pv_svg_get_svg_info_from_tagname((char *)xmlnode->name);
+	if(NULL == svg_info){
+		pv_error("");
+		goto error;
+	}
+	if(NULL == svg_info->func_new_element_from_svg){
+		pv_error("");
+		goto error;
+	}
+
+	bool isDoChild = true;
+	PvElement *element_current = svg_info->func_new_element_from_svg(
+					element_parent, xmlnode, &isDoChild, data, conf);
+	if(NULL == element_current){
+		pv_error("");
+		goto error;
+	}
+
+	if(isDoChild){
+	for (xmlNode *cur_node = xmlnode->children; cur_node; cur_node = cur_node->next) {
+		if(!_pv_io_element_from_svg_in_recursive_inline(element_current,
+						cur_node,
+						data,
+						conf))
+		{
+			pv_error("");
+			return false;
+		}
+	}
+	}
+
+	return true;
+error:
+	return false;
+}
+
+bool _pv_io_pvvg_from_svg_element_recurseve(PvVg *vg,
+		xmlNodePtr xml_svg, 
+		const ConfReadSvg *conf)
+{
+	if(NULL == vg){
+		pv_bug("");
+		return true;
+	}
+	if(NULL == xml_svg){
+		pv_bug("");
+		return false;
+	}
+	if(NULL == conf){
+		pv_bug("");
+		return false;
+	}
+
+	if(!_pv_io_element_from_svg_in_recursive_inline(
+				vg->element_root,
+				xml_svg,
+				NULL,
+				conf))
+	{
+		pv_error("");
+		return false;
+	}
+
+	return true;
+}
+
+PvVg *pv_io_new_from_file(const char *filepath)
+{
+	if(NULL == filepath){
+		pv_error("");
+		return NULL;
+	}
+
+	PvVg *vg = pv_vg_new();
+	if(NULL == vg){
+		pv_error("");
+		return NULL;
+	}
+
+	LIBXML_TEST_VERSION
+
+		xmlDoc *xml_doc = xmlReadFile(filepath, NULL, 0);
+	if(NULL == xml_doc){
+		pv_error("");
+		goto error;
+	}
+	xmlNode *xml_root_element = xmlDocGetRootElement(xml_doc);
+	xmlNode *xmlnode_svg = NULL;
+	if(!_pv_io_get_svg_from_xml(&xmlnode_svg, xml_root_element)){
+		pv_error("");
+		goto error;
+	}
+	if(!_pv_io_set_vg_from_xmlnode_svg(vg, xmlnode_svg)){
+		pv_error("");
+		goto error;
+	}
+	ConfReadSvg conf;
+	if(!_pv_io_pvvg_from_svg_element_recurseve(vg, xmlnode_svg, &conf)){
+		pv_error("");
+		return false;
+	}
+	print_element_names(xmlnode_svg);
+
+
+	xmlFreeDoc(xml_doc);
+	xmlCleanupParser();
+	return vg;
+
+error:
+	xmlFreeDoc(xml_doc);
+	xmlCleanupParser();
+	pv_vg_free(vg);
+
+	return NULL;
+}
 

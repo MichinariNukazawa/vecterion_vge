@@ -29,18 +29,18 @@ PvVg *pv_vg_new()
 		return NULL;
 	}
 
-	PvRect _rect = {0,0,0,0};
+	PvRect _rect = {0,0,1,1};
 	this->rect = _rect;
-
-	// Todo:ドキュメントサイズは読み込みor新規作成時に決まるので、これは仮コード
-	this->rect.w = 500;
-	this->rect.h = 500;
-	
 
 	return this;
 }
 
-PvElement *pv_vg_get_layer_top(PvVg *vg)
+void pv_vg_free(PvVg *vg)
+{
+	// TODO: not implement.
+}
+
+PvElement *pv_vg_get_layer_top(const PvVg *vg)
 {
 	if(NULL == vg){
 		pv_error("");
@@ -59,3 +59,36 @@ PvElement *pv_vg_get_layer_top(PvVg *vg)
 
 	return vg->element_root->childs[0];
 }
+
+bool pv_vg_copy_overwrite(PvVg *dst, const PvVg *src)
+{
+	if(NULL == dst){
+		pv_error("");
+		return false;
+	}
+	if(NULL == src){
+		pv_error("");
+		return false;
+	}
+
+	if(!pv_element_remove_delete_recursive(dst->element_root)){
+		pv_error("");
+		return false;
+	}
+	dst->element_root = NULL;
+
+	pv_debug("%f\n", src->rect.x);
+	PvRect rect = src->rect;
+	dst->rect = rect;
+//	dst->rect = src->rect;
+
+	PvElement *new_element_root = pv_element_copy_recursive(src->element_root);
+	if(NULL == new_element_root){
+		pv_error("");
+		return false;
+	}
+	dst->element_root = new_element_root;
+
+return true;
+}
+

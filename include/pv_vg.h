@@ -23,10 +23,12 @@ struct PvVg{
 int pv_general_get_parray_num(void **pointers);
 
 PvVg *pv_vg_new();
+void pv_vg_free(PvVg *vg);
 /** @brief 
  * @return vg->element_root->childs[0];
  */
-PvElement *pv_vg_get_layer_top(PvVg *vg);
+PvElement *pv_vg_get_layer_top(const PvVg *vg);
+bool pv_vg_copy_overwrite(PvVg *dst, const PvVg *src);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

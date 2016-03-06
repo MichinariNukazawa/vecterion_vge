@@ -11,7 +11,7 @@
 #include "pv_vg.h"
 
 bool pv_io_write_file_svg_from_vg(PvVg *vg, const char *path);
-// PvVg *pv_io_new_vg_from_file(const char *path);
+PvVg *pv_io_new_from_file(const char *filepath);
 
 #ifdef __ET_TEST__
 #endif // __ET_TEST__
