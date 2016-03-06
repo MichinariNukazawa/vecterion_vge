@@ -51,7 +51,7 @@ bool _pv_io_svg_from_element_in_recursive_after(PvElement *element, gpointer dat
 {
 	PvIoSvgRecursiveData *_data = data;
 	InfoTargetSvg *target = _data->target;
-	const ConfWriteSvg *conf = _data->conf;
+	// const ConfWriteSvg *conf = _data->conf;
 
 	// pop parent node stack
 	int num = pv_general_get_parray_num((void **)target->xml_parent_nodes);
@@ -118,10 +118,13 @@ bool pv_io_write_file_svg_from_vg(PvVg *vg, const char *path)
 	}
 
 	char *p = NULL;
-	xmlDocPtr doc = NULL;	   /* document pointer */
-	xmlNodePtr root_node = NULL, node = NULL, node1 = NULL;/* node pointers */
-	doc = xmlNewDoc(BAD_CAST "1.0");
-	root_node = xmlNewNode(NULL, BAD_CAST "svg");
+
+	xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
+	xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "svg");
+	if(NULL == doc || NULL == root_node){
+		pv_error("");
+		return false;
+	}
 	xmlNewProp(root_node, BAD_CAST "xmlns",
 			BAD_CAST "http://www.w3.org/2000/svg");
 	xmlNewProp(root_node, BAD_CAST "xmlns:svg",
@@ -135,7 +138,6 @@ bool pv_io_write_file_svg_from_vg(PvVg *vg, const char *path)
 			(vg->rect).x, (vg->rect).y, (vg->rect).w, (vg->rect).h);
 
 	xmlNewProp(root_node, BAD_CAST "version", BAD_CAST "1.1");
-	g_free(p);
 
 	p = g_strdup_printf("%f %f %f %f",
 			(vg->rect).x, (vg->rect).y, (vg->rect).w, (vg->rect).h);
