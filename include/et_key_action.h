@@ -4,7 +4,6 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <stdbool.h>
-#include "et_point.h"
 
 typedef enum _EtKeyType{
 	EtKey_Unknown,

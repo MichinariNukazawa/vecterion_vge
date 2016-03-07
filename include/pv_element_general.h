@@ -7,6 +7,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include "pv_type.h"
 
 struct PvRect;
 typedef struct PvRect PvRect;
@@ -15,13 +16,6 @@ struct PvRect{
 	double y;
 	double w;
 	double h;
-};
-
-struct PvPoint;
-typedef struct PvPoint PvPoint;
-struct PvPoint{
-	double x;
-	double y;
 };
 
 // ** 各 ElementKindのdata構造

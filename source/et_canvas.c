@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "et_error.h"
 #include "et_mouse_util.h"
+#include "pv_type.h"
 
 struct EtCanvas{
 	GtkWidget *widget; // Top widget pointer.
@@ -171,7 +172,7 @@ bool _signal_et_canvas_mouse_action(
 		return false;
 	}
 
-	EtPoint point = {
+	PvPoint point = {
 		.x = x,
 		.y = y,
 	};

@@ -5,7 +5,6 @@
 #include <gdk/gdk.h>
 #include <stdbool.h>
 #include "et_doc_id.h"
-#include "et_point.h"
 #include "pv_vg.h"
 #include "pv_focus.h"
 

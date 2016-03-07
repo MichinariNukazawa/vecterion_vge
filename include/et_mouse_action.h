@@ -4,7 +4,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <stdbool.h>
-#include "et_point.h"
+#include "pv_type.h"
 
 typedef enum _EtMouseButtonType{
 	EtMouseButton_Unknown,
@@ -25,7 +25,7 @@ typedef struct EtMouseAction EtMouseAction;
 struct EtMouseAction{
 	EtMouseButtonType	button;
 	EtMouseActionType	action;
-	EtPoint			point;
+	PvPoint			point;
 };
 
 #ifdef include_ET_TEST
