@@ -75,6 +75,7 @@ const char *pv_element_get_name_from_kind(PvElementKind kind);
 
 bool pv_element_raster_read_file(PvElement * const this,
 		const char * const path);
+
 /** @brief 
  *
  * @param this
@@ -82,6 +83,12 @@ bool pv_element_raster_read_file(PvElement * const this,
  */
 bool pv_element_bezier_add_anchor_point(PvElement * const this,
 		const PvAnchorPoint anchor_point);
+
+/** @brief set handle from graphic point.
+ * @param ap_index PvAnchorPointIndex_Point is next and mirror reverse handle prev.
+ */
+void pv_element_bezier_anchor_point_set_handle(PvAnchorPoint *ap,
+		PvAnchorPointIndex ap_index, PvPoint gpoint);
 
 void pv_element_debug_print(const PvElement *element);
 

@@ -551,6 +551,43 @@ const char *pv_element_get_name_from_kind(PvElementKind kind)
 	return info->name;
 }
 
+void pv_element_bezier_anchor_point_set_handle(PvAnchorPoint *ap,
+		PvAnchorPointIndex ap_index, PvPoint gpoint)
+{
+	if(NULL == ap){
+		pv_error("");
+		return;
+	}
+
+	switch(ap_index){
+		case PvAnchorPointIndex_Point:
+			ap->points[PvAnchorPointIndex_HandleNext].x
+				= gpoint.x - ap->points[PvAnchorPointIndex_Point].x;
+			ap->points[PvAnchorPointIndex_HandleNext].y
+				= gpoint.y - ap->points[PvAnchorPointIndex_Point].y;
+			ap->points[PvAnchorPointIndex_HandlePrev].x
+				= -1.0 * ap->points[PvAnchorPointIndex_HandleNext].x;
+			ap->points[PvAnchorPointIndex_HandlePrev].y
+				= -1.0 * ap->points[PvAnchorPointIndex_HandleNext].y;
+		break;
+		case PvAnchorPointIndex_HandlePrev:
+			ap->points[PvAnchorPointIndex_HandlePrev].x
+				= gpoint.x - ap->points[PvAnchorPointIndex_Point].x;
+			ap->points[PvAnchorPointIndex_HandlePrev].y
+				= gpoint.y - ap->points[PvAnchorPointIndex_Point].y;
+			break;
+		case PvAnchorPointIndex_HandleNext:
+			ap->points[PvAnchorPointIndex_HandleNext].x
+				= gpoint.x - ap->points[PvAnchorPointIndex_Point].x;
+			ap->points[PvAnchorPointIndex_HandleNext].y
+				= gpoint.y - ap->points[PvAnchorPointIndex_Point].y;
+			break;
+		default:
+			pv_bug("%d", ap_index);
+			return;
+	}
+}
+
 void pv_element_debug_print(const PvElement *element)
 {
 	if(NULL == element){

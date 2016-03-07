@@ -63,35 +63,6 @@ EtDocId et_etaion_get_current_doc_id()
 	return (this->state).doc_id;
 }
 
-void pv_anchor_point_move_handle(PvAnchorPoint *ap,
-		PvAnchorPointIndex ap_index, double x, double y)
-{
-	if(NULL == ap){
-		et_error("");
-		return;
-	}
-
-	ap->points[PvAnchorPointIndex_HandleNext].x
-		= x - ap->points[PvAnchorPointIndex_Point].x;
-	ap->points[PvAnchorPointIndex_HandleNext].y
-		= y - ap->points[PvAnchorPointIndex_Point].y;
-	ap->points[PvAnchorPointIndex_HandlePrev].x
-		= -1.0 * ap->points[PvAnchorPointIndex_HandleNext].x;
-	ap->points[PvAnchorPointIndex_HandlePrev].y
-		= -1.0 * ap->points[PvAnchorPointIndex_HandleNext].y;
-/*
-	ap->points[PvAnchorPointIndex_HandlePrev].x
-		= ap->points[PvAnchorPointIndex_Point].x
-		+ (-1.0 * (x - ap->points[PvAnchorPointIndex_Point].x));
-	ap->points[PvAnchorPointIndex_HandlePrev].y
-		= ap->points[PvAnchorPointIndex_Point].y
-		+ (-1.0 * (y - ap->points[PvAnchorPointIndex_Point].y));
-
-	ap->points[PvAnchorPointIndex_HandleNext].x = x;
-	ap->points[PvAnchorPointIndex_HandleNext].y = y;
-*/
-}
-
 bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
 {
 	if(
@@ -220,8 +191,8 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 				}else{
 					ap = &_data->anchor_points[_data->anchor_points_num - 1];
 				}
-				pv_anchor_point_move_handle(ap, PvAnchorPointIndex_Point,
-						mouse_action.point.x, mouse_action.point.y);
+				pv_element_bezier_anchor_point_set_handle(ap, PvAnchorPointIndex_Point,
+						mouse_action.point);
 
 				et_doc_signal_update_from_id(id_doc);
 			}
