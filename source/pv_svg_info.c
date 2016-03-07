@@ -117,8 +117,6 @@ bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const char *str
 	}
 	PvElementBezierData *data = element->data;
 
-	double x_next_0 = 0, y_next_0 = 0;
-
 	const char *p = str;
 	while('\0' != *p){
 		bool is_append = false;
@@ -142,11 +140,12 @@ bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const char *str
 				ap.points[PvAnchorPointIndex_HandleNext].y = 0;
 				if(0 < data->anchor_points_num){
 					PvAnchorPoint *ap_prev = &data->anchor_points[data->anchor_points_num - 1];
-					ap_prev->points[PvAnchorPointIndex_HandleNext].x = args[0];
-					ap_prev->points[PvAnchorPointIndex_HandleNext].y = args[1];
+					PvPoint gpoint_next = {args[0], args[1]};
+					pv_element_bezier_anchor_point_set_handle(ap_prev,
+							PvAnchorPointIndex_HandleNext, gpoint_next);
 				}else{
-					x_next_0 = args[0];
-					y_next_0 = args[1];
+					// 'C' command on top?
+					pv_warning("");
 				}
 				is_append = true;
 				break;
@@ -165,13 +164,6 @@ bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const char *str
 			case 'z':
 				p++;
 				data->is_close = true;
-				if(data->anchor_points_num < 1){
-					break;
-				}
-				ap = data->anchor_points[0];
-				ap.points[PvAnchorPointIndex_HandlePrev].x = x_next_0;
-				ap.points[PvAnchorPointIndex_HandlePrev].y = y_next_0;
-				is_append = true;
 				break;
 			case ' ':
 			case ',':
