@@ -39,15 +39,14 @@ bool _pv_renderer_draw_element_beziers(
 {
 	pv_element_debug_print(element);
 
-	PvElementBezierData *data = element->data;
+	const PvElementBezierData *data = element->data;
 	if(NULL == data){
 		pv_error("");
 		return false;
 	}
-	int anchor_points_num = data->anchor_points_num;
 	PvAnchorPoint * const anchor_points = data->anchor_points;
 
-	if(anchor_points_num <= 0){
+	if((data->anchor_points_num) <= 0){
 		return true;
 	}
 
@@ -55,7 +54,7 @@ bool _pv_renderer_draw_element_beziers(
 
 	// ** stroke
 	double first_ap_x = 0, first_ap_y = 0, second_ap_x = 0, second_ap_y = 0;
-	for(int i = 0; i < anchor_points_num; i++){
+	for(int i = 0; i < data->anchor_points_num; i++){
 		double x = anchor_points[i].points[PvAnchorPointIndex_Point].x;
 		double y = anchor_points[i].points[PvAnchorPointIndex_Point].y;
 
@@ -64,7 +63,7 @@ bool _pv_renderer_draw_element_beziers(
 			x *= render_context.scale;
 			y *= render_context.scale;
 
-			if(1 == anchor_points_num){
+			if(1 == data->anchor_points_num){
 				cairo_rectangle (cr, x, y, 2, 2);
 				cairo_fill (cr);
 			}else{
@@ -90,10 +89,6 @@ bool _pv_renderer_draw_element_beziers(
 			second_ap_x *= render_context.scale;
 			second_ap_y *= render_context.scale;
 			cairo_curve_to(cr, first_ap_x, first_ap_y, second_ap_x, second_ap_y, x, y);
-		/*
-			cairo_curve_to(cr, first_ap_x, first_ap_y,
-					second_ap_x, second_ap_y, x, y);
-			*/
 		}
 
 	}
@@ -101,7 +96,7 @@ bool _pv_renderer_draw_element_beziers(
 		double x = anchor_points[0].points[PvAnchorPointIndex_Point].x;
 		double y = anchor_points[0].points[PvAnchorPointIndex_Point].y;
 
-		const PvAnchorPoint *ap_last = &anchor_points[anchor_points_num - 1];
+		const PvAnchorPoint *ap_last = &anchor_points[data->anchor_points_num - 1];
 		first_ap_x = ap_last->points[PvAnchorPointIndex_HandleNext].x
 			+ ap_last->points[PvAnchorPointIndex_Point].x;
 		first_ap_y = ap_last->points[PvAnchorPointIndex_HandleNext].y
@@ -125,42 +120,47 @@ bool _pv_renderer_draw_element_beziers(
 	cairo_stroke(cr);
 
 	// ** anchor point
-	int ix = ((data->is_close)? 0 : anchor_points_num - 1);
-	double x = anchor_points[ix].points[PvAnchorPointIndex_Point].x;
-	double y = anchor_points[ix].points[PvAnchorPointIndex_Point].y;
-	double prev_ap_x = anchor_points[ix]
-				.points[PvAnchorPointIndex_HandlePrev].x;
-	double prev_ap_y = anchor_points[ix]
-				.points[PvAnchorPointIndex_HandlePrev].y;
-	double next_ap_x = anchor_points[ix]
-				.points[PvAnchorPointIndex_HandleNext].x;
-	double next_ap_y = anchor_points[ix]
-				.points[PvAnchorPointIndex_HandleNext].y;
-	prev_ap_x += x;
-	prev_ap_y += y;
-	next_ap_x += x;
-	next_ap_y += y;
-	x *= render_context.scale;
-	y *= render_context.scale;
-	prev_ap_x *= render_context.scale;
-	prev_ap_y *= render_context.scale;
-	next_ap_x *= render_context.scale;
-	next_ap_y *= render_context.scale;
-
 	cairo_set_line_width(cr, 1.0);
 	_pv_render_workingcolor_cairo_set_source_rgb(cr);
-	cairo_move_to(cr, x, y);
-	cairo_line_to(cr, prev_ap_x, prev_ap_y);
+	// ** prev anchor_point
+	if(0 < (data->anchor_points_num)){
+		int ix =  data->anchor_points_num - ((data->is_close) ? 1:2);
+		const PvAnchorPoint ap = data->anchor_points[ix];
+		PvPoint gp_point = ap.points[PvAnchorPointIndex_Point];
+		PvPoint gp_next = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandleNext);
+		gp_point.x *= render_context.scale;
+		gp_point.y *= render_context.scale;
+		gp_next.x *= render_context.scale;
+		gp_next.y *= render_context.scale;
+		cairo_move_to(cr, gp_point.x, gp_point.y);
+		cairo_line_to(cr, gp_next.x, gp_next.y);
+		cairo_stroke(cr);
+		cairo_arc (cr, gp_next.x, gp_next.y, 2.0, 0., 2 * M_PI);
+		cairo_fill (cr);
+	}
+	// ** current anchor_point
+	int ix = ((data->is_close)? 0 : data->anchor_points_num - 1);
+	PvPoint gp_current = anchor_points[ix].points[PvAnchorPointIndex_Point];
+	PvPoint gp_prev = pv_anchor_point_get_handle(anchor_points[ix], PvAnchorPointIndex_HandlePrev);
+	PvPoint gp_next = pv_anchor_point_get_handle(anchor_points[ix], PvAnchorPointIndex_HandleNext);
+	gp_current.x *= render_context.scale;
+	gp_current.y *= render_context.scale;
+	gp_prev.x *= render_context.scale;
+	gp_prev.y *= render_context.scale;
+	gp_next.x *= render_context.scale;
+	gp_next.y *= render_context.scale;
+	cairo_set_line_width(cr, 1.0);
+	_pv_render_workingcolor_cairo_set_source_rgb(cr);
+	cairo_move_to(cr, gp_current.x, gp_current.y);
+	cairo_line_to(cr, gp_prev.x, gp_prev.y);
 	cairo_stroke(cr);
-	cairo_move_to(cr, x, y);
-	cairo_line_to(cr, next_ap_x, next_ap_y);
+	cairo_move_to(cr, gp_current.x, gp_current.y);
+	cairo_line_to(cr, gp_next.x, gp_next.y);
 	cairo_stroke(cr);
 
 	_pv_render_workingcolor_cairo_set_source_rgb(cr);
-	cairo_arc (cr, prev_ap_x, prev_ap_y, 2.0, 0., 2 * M_PI);
-	cairo_arc (cr, next_ap_x, next_ap_y, 2.0, 0., 2 * M_PI);
-	//cairo_rectangle (cr, prev_ap_x, prev_ap_y, 4, 4);
-	//cairo_rectangle (cr, next_ap_x, next_ap_y, 4, 4);
+	cairo_arc (cr, gp_prev.x, gp_prev.y, 2.0, 0., 2 * M_PI);
+	cairo_arc (cr, gp_next.x, gp_next.y, 2.0, 0., 2 * M_PI);
 	cairo_fill (cr);
 
 	return true;

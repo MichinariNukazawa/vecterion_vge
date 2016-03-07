@@ -90,6 +90,13 @@ bool pv_element_bezier_add_anchor_point(PvElement * const this,
 void pv_element_bezier_anchor_point_set_handle(PvAnchorPoint *ap,
 		PvAnchorPointIndex ap_index, PvPoint gpoint);
 
+/** @brief
+ *
+ * @return PvPoint to graphic point.
+ *		if rise error return value is not specitication.(ex. {0,0})
+ */
+PvPoint pv_anchor_point_get_handle(const PvAnchorPoint ap, PvAnchorPointIndex ap_index);
+
 void pv_element_debug_print(const PvElement *element);
 
 #ifdef include_ET_TEST

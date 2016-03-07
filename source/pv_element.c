@@ -88,10 +88,10 @@ bool pv_element_recursive_before(PvElement *element,
 	}
 
 	return pv_element_recursive(element,
-		func_before,
-		NULL,
-		data,
-		error);
+			func_before,
+			NULL,
+			data,
+			error);
 }
 
 bool pv_element_recursive(PvElement *element,
@@ -169,7 +169,7 @@ PvElement *_pv_element_copy_single(const PvElement *this)
 	if(NULL == new_element){
 		pv_error("");
 		return NULL;
-		}
+	}
 
 	new_element->kind = this->kind;
 	new_element->parent = NULL;
@@ -230,7 +230,7 @@ PvElement *_pv_element_copy_recursive_inline(const PvElement *this,
 
 	PvElement **childs = NULL;
 	if(0 < num){
- 		childs = malloc((num + 1) * sizeof(PvElement *));
+		childs = malloc((num + 1) * sizeof(PvElement *));
 		if(NULL == childs){
 			error->is_error = true;
 			error->level = *level;
@@ -569,7 +569,7 @@ void pv_element_bezier_anchor_point_set_handle(PvAnchorPoint *ap,
 				= -1.0 * ap->points[PvAnchorPointIndex_HandleNext].x;
 			ap->points[PvAnchorPointIndex_HandlePrev].y
 				= -1.0 * ap->points[PvAnchorPointIndex_HandleNext].y;
-		break;
+			break;
 		case PvAnchorPointIndex_HandlePrev:
 			ap->points[PvAnchorPointIndex_HandlePrev].x
 				= gpoint.x - ap->points[PvAnchorPointIndex_Point].x;
@@ -585,6 +585,41 @@ void pv_element_bezier_anchor_point_set_handle(PvAnchorPoint *ap,
 		default:
 			pv_bug("%d", ap_index);
 			return;
+	}
+}
+
+PvPoint pv_anchor_point_get_handle(const PvAnchorPoint ap, PvAnchorPointIndex ap_index)
+{
+	switch(ap_index){
+		case PvAnchorPointIndex_HandlePrev:
+			{
+				PvPoint gp = {
+					ap.points[PvAnchorPointIndex_HandlePrev].x
+						+ ap.points[PvAnchorPointIndex_Point].x,
+					ap.points[PvAnchorPointIndex_HandlePrev].y
+						+ ap.points[PvAnchorPointIndex_Point].y};
+				return gp;
+			}
+			break;
+		case PvAnchorPointIndex_HandleNext:
+			{
+				PvPoint gp = {
+					ap.points[PvAnchorPointIndex_HandleNext].x
+						+ ap.points[PvAnchorPointIndex_Point].x,
+					ap.points[PvAnchorPointIndex_HandleNext].y
+						+ ap.points[PvAnchorPointIndex_Point].y};
+				return gp;
+			}
+			break;
+		case PvAnchorPointIndex_Point:
+			return ap.points[PvAnchorPointIndex_Point];
+			break;
+		default:
+			{
+				pv_bug("%d", ap_index);
+				PvPoint gp = {0,0};
+				return gp;
+			}
 	}
 }
 
