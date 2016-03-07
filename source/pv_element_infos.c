@@ -266,6 +266,24 @@ gpointer _pv_element_bezier_data_copy_new(void *_data)
 	return (gpointer)new_data;
 }
 
+char *_pv_element_bezier_new_str_from_anchor(const PvAnchorPoint ap_current, const PvAnchorPoint ap_prev)
+{
+	char *str = g_strdup_printf("%c %f %f %f %f %f %f",
+				'C',
+				ap_prev.points[PvAnchorPointIndex_Point].x
+					+ ap_prev.points[PvAnchorPointIndex_HandleNext].x,
+				ap_prev.points[PvAnchorPointIndex_Point].y
+					+ ap_prev.points[PvAnchorPointIndex_HandleNext].y,
+				ap_current.points[PvAnchorPointIndex_Point].x
+					+ ap_current.points[PvAnchorPointIndex_HandlePrev].x,
+				ap_current.points[PvAnchorPointIndex_Point].y
+					+ ap_current.points[PvAnchorPointIndex_HandlePrev].y,
+				ap_current.points[PvAnchorPointIndex_Point].x,
+				ap_current.points[PvAnchorPointIndex_Point].y);
+
+	return str;
+}
+
 int _pv_element_bezier_write_svg(
 		InfoTargetSvg *target,
 		const PvElement *element, const ConfWriteSvg *conf)
@@ -294,13 +312,22 @@ int _pv_element_bezier_write_svg(
 
 	char *str_current = NULL;
 	for(int i = 0; i < data->anchor_points_num; i++){
-		PvAnchorPoint ap = data->anchor_points[i];
+		const PvAnchorPoint ap = data->anchor_points[i];
 		
-		char *str_point = g_strdup_printf("%c %f %f",
-				(0 == i)? 'M':'L',
-				ap.points[PvAnchorPointIndex_Point].x, 
-				ap.points[PvAnchorPointIndex_Point].y
-				);
+		char *str_point = NULL;
+		if(0 == i){
+			// first anchor_point
+			str_point= g_strdup_printf("%c %f %f",
+					(0 == i)? 'M':'L',
+					ap.points[PvAnchorPointIndex_Point].x, 
+					ap.points[PvAnchorPointIndex_Point].y
+					);
+		}else{
+			// other (not first)(true last)
+			const PvAnchorPoint ap_prev = data->anchor_points[i - 1];
+			str_point = _pv_element_bezier_new_str_from_anchor(ap, ap_prev);
+		}
+
 		if(NULL == str_point){
 			pv_critical("");
 			return -1;
@@ -318,6 +345,19 @@ int _pv_element_bezier_write_svg(
 
 		g_free(str_point);
 		g_free(str_prev);
+	}
+
+	if(data->is_close && 0 < data->anchor_points_num){
+		const PvAnchorPoint ap_first = data->anchor_points[0];
+		const PvAnchorPoint ap_last = data->anchor_points[data->anchor_points_num - 1];
+		char *str_end = _pv_element_bezier_new_str_from_anchor(ap_first, ap_last);
+		char *str_prev = str_current;
+		str_current = g_strjoin(" ", str_current, str_end, "Z", NULL);
+		g_free(str_prev);
+		if(NULL == str_current){
+			pv_critical("");
+			return -1;
+		}
 	}
 
 	xmlNodePtr node = xmlNewNode(NULL, BAD_CAST "path");
