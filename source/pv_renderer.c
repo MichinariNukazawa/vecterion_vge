@@ -1,5 +1,11 @@
 #include "pv_renderer.h"
 
+// http://stackoverflow.com/questions/7356523/linking-math-library-to-a-c90-code-using-gcc
+// http://www.sbin.org/doc/glibc/libc_19.html
+#ifndef M_PI
+#define M_PI 3.14159265358979323846264338327
+#endif
+
 #include "pv_error.h"
 
 typedef struct PvRenderOption{
@@ -20,6 +26,11 @@ bool _pv_renderer_is_group_kind(PvElement * const element)
 	}
 }
 
+void _pv_render_workingcolor_cairo_set_source_rgb(cairo_t *cr)
+{
+	cairo_set_source_rgb (cr, 0.2, 0.4, 0.9);
+}
+
 bool _pv_renderer_cairo_anchor_points(
 		cairo_t *cr,
 		const PvRenderOption render_option,
@@ -27,8 +38,14 @@ bool _pv_renderer_cairo_anchor_points(
 		PvAnchorPoint * const anchor_points
 		)
 {
+	if(anchor_points_num <= 0){
+		return true;
+	}
+
 	const PvRenderContext render_context = render_option.render_context;
 
+	// ** stroke
+	double first_ap_x = 0, first_ap_y = 0, second_ap_x = 0, second_ap_y = 0;
 	for(int i = 0; i < anchor_points_num; i++){
 		// Todo: ポイントを繋げていない
 		// Todo: ハンドルを見ていない
@@ -36,6 +53,22 @@ bool _pv_renderer_cairo_anchor_points(
 		double y = anchor_points[i].points[PvAnchorPointIndex_Point].y;
 		x *= render_context.scale;
 		y *= render_context.scale;
+	
+		if((i - 1) < 0){
+			first_ap_x = anchor_points[i].points[PvAnchorPointIndex_Point].x;
+			first_ap_y = anchor_points[i].points[PvAnchorPointIndex_Point].y;
+		}else{
+			first_ap_x = anchor_points[i - 1].points[PvAnchorPointIndex_HandleNext].x;
+			first_ap_y = anchor_points[i - 1].points[PvAnchorPointIndex_HandleNext].y;
+		}
+		first_ap_x *= render_context.scale;
+		first_ap_y *= render_context.scale;
+
+		second_ap_x = anchor_points[i].points[PvAnchorPointIndex_HandlePrev].x;
+		second_ap_y = anchor_points[i].points[PvAnchorPointIndex_HandlePrev].y;
+		second_ap_x *= render_context.scale;
+		second_ap_y *= render_context.scale;
+
 		// cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
 		if(0 == i){
 			if(1 == anchor_points_num){
@@ -46,10 +79,48 @@ bool _pv_renderer_cairo_anchor_points(
 				cairo_move_to(cr, x, y);
 			}
 		}else{
-			cairo_line_to(cr, x, y);
+			// cairo_line_to(cr, x, y);
+			cairo_curve_to(cr, first_ap_x, first_ap_y,
+					second_ap_x, second_ap_y, x, y);
 		}
+
 	}
 	cairo_stroke(cr);
+
+	// ** anchor point
+	double x = anchor_points[anchor_points_num - 1].points[PvAnchorPointIndex_Point].x;
+	double y = anchor_points[anchor_points_num - 1].points[PvAnchorPointIndex_Point].y;
+	x *= render_context.scale;
+	y *= render_context.scale;
+	double prev_ap_x = anchor_points[anchor_points_num - 1]
+				.points[PvAnchorPointIndex_HandlePrev].x;
+	double prev_ap_y = anchor_points[anchor_points_num - 1]
+				.points[PvAnchorPointIndex_HandlePrev].y;
+	double next_ap_x = anchor_points[anchor_points_num - 1]
+				.points[PvAnchorPointIndex_HandleNext].x;
+	double next_ap_y = anchor_points[anchor_points_num - 1]
+				.points[PvAnchorPointIndex_HandleNext].y;
+	prev_ap_x *= render_context.scale;
+	prev_ap_y *= render_context.scale;
+	next_ap_x *= render_context.scale;
+	next_ap_y *= render_context.scale;
+
+
+	cairo_set_line_width(cr, 1.0);
+	_pv_render_workingcolor_cairo_set_source_rgb(cr);
+	cairo_move_to(cr, x, y);
+	cairo_line_to(cr, prev_ap_x, prev_ap_y);
+	cairo_stroke(cr);
+	cairo_move_to(cr, x, y);
+	cairo_line_to(cr, next_ap_x, next_ap_y);
+	cairo_stroke(cr);
+
+	_pv_render_workingcolor_cairo_set_source_rgb(cr);
+	cairo_arc (cr, prev_ap_x, prev_ap_y, 2.0, 0., 2 * M_PI);
+	cairo_arc (cr, next_ap_x, next_ap_y, 2.0, 0., 2 * M_PI);
+	//cairo_rectangle (cr, prev_ap_x, prev_ap_y, 4, 4);
+	//cairo_rectangle (cr, next_ap_x, next_ap_y, 4, 4);
+	cairo_fill (cr);
 
 	return true;
 }
@@ -79,7 +150,7 @@ bool _pv_renderer_cairo_recersive(
 		}
 	}else{
 		if(render_option.focus.element == element){
-			cairo_set_source_rgb (cr, 0.2, 0.4, 0.9);
+			_pv_render_workingcolor_cairo_set_source_rgb(cr);
 		}else{
 			cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
 		}

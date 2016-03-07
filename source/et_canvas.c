@@ -161,44 +161,93 @@ bool et_canvas_set_doc_id(EtCanvas *this, EtDocId doc_id)
 	return true;
 }
 
-gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data)
+bool _signal_et_canvas_mouse_action(
+		EtCanvas *this,
+		double x, double y,
+		EtMouseButtonType mouse_button, EtMouseActionType mouse_action)
 {
-	EtCanvas *this = (EtCanvas *)data;
-	et_debug("BUTTON PRESS: (%4d, %4d)\n", (int)event->x, (int)event->y);
-	et_mouse_util_button_kind(event->button);
-	et_mouse_util_modifier_kind(event->state);
-
 	if(NULL == this->slot_mouse_action){
 		et_error("");
-	}else{
-		EtPoint point = {
-			.x = event->x / this->render_context.scale,
-			.y = event->y / this->render_context.scale,
-		};
-		EtMouseAction mouse_action = {
-			.button = EtMouseButton_Right,
-			.action = EtMouseAction_Down,
-			.point = point,
-		};
-		if(!this->slot_mouse_action(this->doc_id, mouse_action)){
-			et_error("");
-		}
+		return false;
+	}
+
+	EtPoint point = {
+		.x = x,
+		.y = y,
+	};
+	EtMouseAction _mouse_action = {
+		.button = mouse_button,
+		.action = mouse_action,
+		.point = point,
+	};
+	if(!this->slot_mouse_action(this->doc_id, _mouse_action)){
+		et_error("");
+		return false;
+	}
+
+	return true;
+}
+
+gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data)
+{
+	/*
+	   et_debug("BUTTON PRESS: (%4d, %4d)\n", (int)event->x, (int)event->y);
+	   et_mouse_util_button_kind(event->button);
+	   et_mouse_util_modifier_kind(event->state);
+	 */
+	EtCanvas *this = (EtCanvas *)data;
+
+	if(!_signal_et_canvas_mouse_action(
+				this,
+				event->x / this->render_context.scale,
+				event->y / this->render_context.scale,
+				EtMouseButton_Right, EtMouseAction_Down))
+	{
+		et_error("");
+		goto error;
 	}
 
 	return false;
+error:
+	return true;
 }
 
 gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
-	et_debug("BUTTON RELEASE\n");
+	// et_debug("BUTTON RELEASE\n");
+	EtCanvas *this = (EtCanvas *)data;
+
+	if(!_signal_et_canvas_mouse_action(
+				this,
+				event->x / this->render_context.scale,
+				event->y / this->render_context.scale,
+				EtMouseButton_Right, EtMouseAction_Up))
+	{
+		et_error("");
+		goto error;
+	}
 	return false;
+error:
+	return true;
 }
 
 gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
 	//	et_debug("(%3d, %3d)\n", (int)event->x, (int)event->y);
+	EtCanvas *this = (EtCanvas *)data;
 
+	if(!_signal_et_canvas_mouse_action(
+				this,
+				event->x / this->render_context.scale,
+				event->y / this->render_context.scale,
+				EtMouseButton_Right, EtMouseAction_Move))
+	{
+		et_error("");
+		goto error;
+	}
 	return false;
+error:
+	return true;
 }
 
 gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer data)

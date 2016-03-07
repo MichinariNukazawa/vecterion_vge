@@ -49,7 +49,7 @@ bool et_etaion_set_current_doc_id(EtDocId doc_id)
 
 	_signal_et_etaion_change_state(this);
 
-return true;
+	return true;
 }
 
 EtDocId et_etaion_get_current_doc_id()
@@ -60,13 +60,31 @@ EtDocId et_etaion_get_current_doc_id()
 		exit(-1);
 	}
 
-return (this->state).doc_id;
+	return (this->state).doc_id;
 }
 
+void pv_anchor_point_move_handle(PvAnchorPoint *ap,
+		PvAnchorPointIndex ap_index, double x, double y)
+{
+	if(NULL == ap){
+		et_error("");
+		return;
+	}
+
+	ap->points[PvAnchorPointIndex_HandlePrev].x
+		= ap->points[PvAnchorPointIndex_Point].x
+		+ (-1.0 * (x - ap->points[PvAnchorPointIndex_Point].x));
+	ap->points[PvAnchorPointIndex_HandlePrev].y
+		= ap->points[PvAnchorPointIndex_Point].y
+		+ (-1.0 * (y - ap->points[PvAnchorPointIndex_Point].y));
+
+	ap->points[PvAnchorPointIndex_HandleNext].x = x;
+	ap->points[PvAnchorPointIndex_HandleNext].y = y;
+}
+
+static EtMouseActionType _mouse_action_up_down = EtMouseAction_Up;
 bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 {
-	et_debug(" x:%d, y:%d,\n", (int)mouse_action.point.x, (int)mouse_action.point.y);
-
 	EtEtaion *this = current_state;
 	if(NULL == this){
 		et_bug("");
@@ -94,20 +112,65 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 		et_error("");
 		return false;
 	}
-	PvElement *_element = focus.element;
-	if(!et_doc_add_point(doc, &_element,
-				mouse_action.point.x, mouse_action.point.y)){
-		et_error("");
-		return false;
-	}else{
-		focus.element = _element;
-		if(!et_doc_set_focus_to_id(id_doc, focus)){
-			et_error("");
-			return false;
-		}
-	}
 
-	et_doc_signal_update_from_id(id_doc);
+	switch(mouse_action.action){
+		case EtMouseAction_Down:
+			{
+				et_debug(" x:%d, y:%d,\n",
+						(int)mouse_action.point.x,
+						(int)mouse_action.point.y);
+
+				_mouse_action_up_down = mouse_action.action;
+
+				PvElement *_element = focus.element;
+				if(!et_doc_add_point(doc, &_element,
+							mouse_action.point.x, mouse_action.point.y)){
+					et_error("");
+					return false;
+				}else{
+					focus.element = _element;
+					if(!et_doc_set_focus_to_id(id_doc, focus)){
+						et_error("");
+						return false;
+					}
+				}
+
+				et_doc_signal_update_from_id(id_doc);
+			}
+			break;
+		case EtMouseAction_Up:
+			{
+				_mouse_action_up_down = mouse_action.action;
+			}
+				break;
+		case EtMouseAction_Move:
+			{
+				if(EtMouseAction_Down != _mouse_action_up_down){
+					break;
+				}
+
+				PvElement *_element = focus.element;
+				if(NULL == _element || PvElementKind_Bezier != _element->kind){
+					et_error("");
+					return false;
+				}
+
+				PvElementBezierData *_data =(PvElementBezierData *) _element->data;
+				if(NULL == _data){
+					et_error("");
+					return false;
+				}
+				PvAnchorPoint *ap = &_data->anchor_points[_data->anchor_points_num - 1];
+				pv_anchor_point_move_handle(ap, PvAnchorPointIndex_Point,
+						mouse_action.point.x, mouse_action.point.y);
+
+				et_doc_signal_update_from_id(id_doc);
+			}
+			break;
+		case EtMouseAction_Unknown:
+			et_bug("");
+			break;
+	}
 
 	return true;
 }
@@ -340,7 +403,7 @@ bool et_etaion_copy_layer(EtDocId doc_id)
 	}
 
 	if(!pv_element_append_child(element->parent, 
-			element, new_element_tree)){
+				element, new_element_tree)){
 		et_error("");
 		return false;
 	}
@@ -414,6 +477,4 @@ error:
 
 	return ret;
 }
-
-
 
