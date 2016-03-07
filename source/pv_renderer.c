@@ -31,13 +31,20 @@ void _pv_render_workingcolor_cairo_set_source_rgb(cairo_t *cr)
 	cairo_set_source_rgb (cr, 0.2, 0.4, 0.9);
 }
 
-bool _pv_renderer_cairo_anchor_points(
+bool _pv_renderer_draw_element_beziers(
 		cairo_t *cr,
 		const PvRenderOption render_option,
-		int anchor_points_num,
-		PvAnchorPoint * const anchor_points
+		const PvElement *element
 		)
 {
+	PvElementBezierData *data = element->data;
+	if(NULL == data){
+		pv_error("");
+		return false;
+	}
+	int anchor_points_num = data->anchor_points_num;
+	PvAnchorPoint * const anchor_points = data->anchor_points;
+
 	if(anchor_points_num <= 0){
 		return true;
 	}
@@ -47,22 +54,18 @@ bool _pv_renderer_cairo_anchor_points(
 	// ** stroke
 	double first_ap_x = 0, first_ap_y = 0, second_ap_x = 0, second_ap_y = 0;
 	for(int i = 0; i < anchor_points_num; i++){
-		// Todo: ポイントを繋げていない
-		// Todo: ハンドルを見ていない
 		double x = anchor_points[i].points[PvAnchorPointIndex_Point].x;
 		double y = anchor_points[i].points[PvAnchorPointIndex_Point].y;
 		x *= render_context.scale;
 		y *= render_context.scale;
-	
-		if((i - 1) < 0){
-			first_ap_x = anchor_points[i].points[PvAnchorPointIndex_Point].x;
-			first_ap_y = anchor_points[i].points[PvAnchorPointIndex_Point].y;
-		}else{
+
+		// (i == 0) is anchor not use.
+		if(i != 0){
 			first_ap_x = anchor_points[i - 1].points[PvAnchorPointIndex_HandleNext].x;
 			first_ap_y = anchor_points[i - 1].points[PvAnchorPointIndex_HandleNext].y;
+			first_ap_x *= render_context.scale;
+			first_ap_y *= render_context.scale;
 		}
-		first_ap_x *= render_context.scale;
-		first_ap_y *= render_context.scale;
 
 		second_ap_x = anchor_points[i].points[PvAnchorPointIndex_HandlePrev].x;
 		second_ap_y = anchor_points[i].points[PvAnchorPointIndex_HandlePrev].y;
@@ -79,26 +82,46 @@ bool _pv_renderer_cairo_anchor_points(
 				cairo_move_to(cr, x, y);
 			}
 		}else{
-			// cairo_line_to(cr, x, y);
 			cairo_curve_to(cr, first_ap_x, first_ap_y,
 					second_ap_x, second_ap_y, x, y);
 		}
 
 	}
+	if(data->is_close){
+		int ix_last = anchor_points_num - 1;
+		first_ap_x = anchor_points[ix_last].points[PvAnchorPointIndex_HandleNext].x;
+		first_ap_y = anchor_points[ix_last].points[PvAnchorPointIndex_HandleNext].y;
+		first_ap_x *= render_context.scale;
+		first_ap_y *= render_context.scale;
+
+		second_ap_x = anchor_points[0].points[PvAnchorPointIndex_HandlePrev].x;
+		second_ap_y = anchor_points[0].points[PvAnchorPointIndex_HandlePrev].y;
+		second_ap_x *= render_context.scale;
+		second_ap_y *= render_context.scale;
+
+		double x = anchor_points[0].points[PvAnchorPointIndex_Point].x;
+		double y = anchor_points[0].points[PvAnchorPointIndex_Point].y;
+		x *= render_context.scale;
+		y *= render_context.scale;
+
+		cairo_curve_to(cr, first_ap_x, first_ap_y, second_ap_x, second_ap_y, x, y);
+		cairo_close_path (cr);
+	}
 	cairo_stroke(cr);
 
 	// ** anchor point
-	double x = anchor_points[anchor_points_num - 1].points[PvAnchorPointIndex_Point].x;
-	double y = anchor_points[anchor_points_num - 1].points[PvAnchorPointIndex_Point].y;
+	int ix = ((data->is_close)? 0 : anchor_points_num - 1);
+	double x = anchor_points[ix].points[PvAnchorPointIndex_Point].x;
+	double y = anchor_points[ix].points[PvAnchorPointIndex_Point].y;
 	x *= render_context.scale;
 	y *= render_context.scale;
-	double prev_ap_x = anchor_points[anchor_points_num - 1]
+	double prev_ap_x = anchor_points[ix]
 				.points[PvAnchorPointIndex_HandlePrev].x;
-	double prev_ap_y = anchor_points[anchor_points_num - 1]
+	double prev_ap_y = anchor_points[ix]
 				.points[PvAnchorPointIndex_HandlePrev].y;
-	double next_ap_x = anchor_points[anchor_points_num - 1]
+	double next_ap_x = anchor_points[ix]
 				.points[PvAnchorPointIndex_HandleNext].x;
-	double next_ap_y = anchor_points[anchor_points_num - 1]
+	double next_ap_y = anchor_points[ix]
 				.points[PvAnchorPointIndex_HandleNext].y;
 	prev_ap_x *= render_context.scale;
 	prev_ap_y *= render_context.scale;
@@ -180,12 +203,11 @@ bool _pv_renderer_cairo_recersive(
 				break;
 			case PvElementKind_Bezier:
 				{
-					PvElementBezierData *data = element->data;
-					if(!_pv_renderer_cairo_anchor_points(
+					if(!_pv_renderer_draw_element_beziers(
 								cr,
 								render_option,
-								data->anchor_points_num,
-								data->anchor_points)){
+								element
+								)){
 						pv_error("");
 						ret = false;
 						goto end;

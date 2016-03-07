@@ -82,6 +82,21 @@ void pv_anchor_point_move_handle(PvAnchorPoint *ap,
 	ap->points[PvAnchorPointIndex_HandleNext].y = y;
 }
 
+bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
+{
+	if(
+			(p1.x - radius) < p2.x
+			&& p2.x < (p1.x + radius)
+			&& (p1.y - radius) < p2.y
+			&& p2.y < (p1.y + radius)
+	  ){
+		return true;
+	}else{
+		return false;
+	}
+}
+
+static int _et_etaion_radius_path_detect = 6;
 static EtMouseActionType _mouse_action_up_down = EtMouseAction_Up;
 bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 {
@@ -123,15 +138,44 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 				_mouse_action_up_down = mouse_action.action;
 
 				PvElement *_element = focus.element;
-				if(!et_doc_add_point(doc, &_element,
-							mouse_action.point.x, mouse_action.point.y)){
-					et_error("");
-					return false;
-				}else{
-					focus.element = _element;
-					if(!et_doc_set_focus_to_id(id_doc, focus)){
+
+				bool is_closed = false;
+				if(NULL != _element && PvElementKind_Bezier == _element->kind){
+					PvElementBezierData *_data =(PvElementBezierData *) _element->data;
+					if(NULL == _data){
 						et_error("");
 						return false;
+					}
+					if(_data->is_close){
+						// if already closed is goto new anchor_point
+						_element = NULL;
+					}else{
+						if(0 < _data->anchor_points_num){
+							if(_et_etaion_is_bound_point(
+										_et_etaion_radius_path_detect,
+										_data->anchor_points[0].points[PvAnchorPointIndex_Point],
+										mouse_action.point)
+							){
+								// ** do close anchor_point
+								_data->is_close = true;
+								is_closed = true;
+							}
+						}
+					}
+				}
+
+				// ** new anchor_point
+				if(!is_closed){
+					if(!et_doc_add_point(doc, &_element,
+								mouse_action.point.x, mouse_action.point.y)){
+						et_error("");
+						return false;
+					}else{
+						focus.element = _element;
+						if(!et_doc_set_focus_to_id(id_doc, focus)){
+							et_error("");
+							return false;
+						}
 					}
 				}
 
@@ -142,7 +186,7 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 			{
 				_mouse_action_up_down = mouse_action.action;
 			}
-				break;
+			break;
 		case EtMouseAction_Move:
 			{
 				if(EtMouseAction_Down != _mouse_action_up_down){
@@ -160,7 +204,12 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 					et_error("");
 					return false;
 				}
-				PvAnchorPoint *ap = &_data->anchor_points[_data->anchor_points_num - 1];
+				PvAnchorPoint *ap = NULL;
+				if(_data->is_close){
+					ap = &_data->anchor_points[0];
+				}else{
+					ap = &_data->anchor_points[_data->anchor_points_num - 1];
+				}
 				pv_anchor_point_move_handle(ap, PvAnchorPointIndex_Point,
 						mouse_action.point.x, mouse_action.point.y);
 

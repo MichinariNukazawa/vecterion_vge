@@ -52,6 +52,7 @@ static const PvAnchorPoint PvAnchorPoint_default = {
 struct PvElementBezierData;
 typedef struct PvElementBezierData PvElementBezierData;
 struct PvElementBezierData{
+	bool is_close;
 	int anchor_points_num;
 	PvAnchorPoint *anchor_points;
 };

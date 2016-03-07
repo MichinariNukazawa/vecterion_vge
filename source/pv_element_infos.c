@@ -209,6 +209,7 @@ gpointer _pv_element_bezier_data_new()
 		exit(-1);
 	}
 
+	data->is_close = false;
 	data->anchor_points_num = 0;
 	data->anchor_points = NULL;
 
