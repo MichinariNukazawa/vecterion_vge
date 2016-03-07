@@ -502,7 +502,7 @@ bool pv_element_bezier_add_anchor_point(PvElement * const this,
 	PvAnchorPoint *anchor_points = (PvAnchorPoint *)realloc(data->anchor_points,
 			sizeof(PvAnchorPoint) * (data->anchor_points_num + 1));
 	anchor_points[data->anchor_points_num] = anchor_point;
-	data->anchor_points_num += 1;
+	(data->anchor_points_num) += 1;
 	data->anchor_points = anchor_points;
 
 	return true;
@@ -550,3 +550,37 @@ const char *pv_element_get_name_from_kind(PvElementKind kind)
 
 	return info->name;
 }
+
+void pv_element_debug_print(const PvElement *element)
+{
+	if(NULL == element){
+		pv_debug("");
+		return;
+	}
+	if(PvElementKind_Bezier != element->kind){
+		pv_debug("%d", element->kind);
+		return;
+	}
+
+
+	PvElementBezierData *data = element->data;
+	if(NULL == data){
+		pv_debug("");
+		return;
+	}
+
+	pv_debug("anchor:%d(%s)\n", data->anchor_points_num, (data->is_close)? "true":"false");
+
+	for(int i = 0; i < data->anchor_points_num; i++){
+		const PvAnchorPoint *ap = &data->anchor_points[i];
+		pv_debug("%d:% 3.2f,% 3.2f, % 3.2f,% 3.2f, % 3.2f,% 3.2f, \n",
+				i,
+				ap->points[PvAnchorPointIndex_HandlePrev].x,
+				ap->points[PvAnchorPointIndex_HandlePrev].y,
+				ap->points[PvAnchorPointIndex_Point].x,
+				ap->points[PvAnchorPointIndex_Point].y,
+				ap->points[PvAnchorPointIndex_HandleNext].x,
+				ap->points[PvAnchorPointIndex_HandleNext].y);
+	}
+}
+

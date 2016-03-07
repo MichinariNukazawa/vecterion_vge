@@ -249,6 +249,7 @@ gpointer _pv_element_bezier_data_copy_new(void *_data)
 		exit(-1);
 	}
 
+	*new_data = *data;
 	new_data->anchor_points_num = 0;
 	new_data->anchor_points = NULL;
 	if(0 < data->anchor_points_num && NULL != data->anchor_points){

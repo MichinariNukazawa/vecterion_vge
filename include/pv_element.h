@@ -83,6 +83,7 @@ bool pv_element_raster_read_file(PvElement * const this,
 bool pv_element_bezier_add_anchor_point(PvElement * const this,
 		const PvAnchorPoint anchor_point);
 
+void pv_element_debug_print(const PvElement *element);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

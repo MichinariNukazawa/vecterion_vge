@@ -37,6 +37,8 @@ bool _pv_renderer_draw_element_beziers(
 		const PvElement *element
 		)
 {
+	pv_element_debug_print(element);
+
 	PvElementBezierData *data = element->data;
 	if(NULL == data){
 		pv_error("");
@@ -56,24 +58,12 @@ bool _pv_renderer_draw_element_beziers(
 	for(int i = 0; i < anchor_points_num; i++){
 		double x = anchor_points[i].points[PvAnchorPointIndex_Point].x;
 		double y = anchor_points[i].points[PvAnchorPointIndex_Point].y;
-		x *= render_context.scale;
-		y *= render_context.scale;
-
-		// (i == 0) is anchor not use.
-		if(i != 0){
-			first_ap_x = anchor_points[i - 1].points[PvAnchorPointIndex_HandleNext].x;
-			first_ap_y = anchor_points[i - 1].points[PvAnchorPointIndex_HandleNext].y;
-			first_ap_x *= render_context.scale;
-			first_ap_y *= render_context.scale;
-		}
-
-		second_ap_x = anchor_points[i].points[PvAnchorPointIndex_HandlePrev].x;
-		second_ap_y = anchor_points[i].points[PvAnchorPointIndex_HandlePrev].y;
-		second_ap_x *= render_context.scale;
-		second_ap_y *= render_context.scale;
 
 		// cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
 		if(0 == i){
+			x *= render_context.scale;
+			y *= render_context.scale;
+
 			if(1 == anchor_points_num){
 				cairo_rectangle (cr, x, y, 2, 2);
 				cairo_fill (cr);
@@ -82,28 +72,53 @@ bool _pv_renderer_draw_element_beziers(
 				cairo_move_to(cr, x, y);
 			}
 		}else{
+			const PvAnchorPoint *ap_prev = &anchor_points[i - 1];
+			first_ap_x = ap_prev->points[PvAnchorPointIndex_HandleNext].x
+				+ ap_prev->points[PvAnchorPointIndex_Point].x;
+			first_ap_y = ap_prev->points[PvAnchorPointIndex_HandleNext].y
+				+ ap_prev->points[PvAnchorPointIndex_Point].y;
+
+			second_ap_x = anchor_points[i].points[PvAnchorPointIndex_HandlePrev].x;
+			second_ap_y = anchor_points[i].points[PvAnchorPointIndex_HandlePrev].y;
+			second_ap_x += x;
+			second_ap_y += y;
+
+			x *= render_context.scale;
+			y *= render_context.scale;
+			first_ap_x *= render_context.scale;
+			first_ap_y *= render_context.scale;
+			second_ap_x *= render_context.scale;
+			second_ap_y *= render_context.scale;
+			cairo_curve_to(cr, first_ap_x, first_ap_y, second_ap_x, second_ap_y, x, y);
+		/*
 			cairo_curve_to(cr, first_ap_x, first_ap_y,
 					second_ap_x, second_ap_y, x, y);
+			*/
 		}
 
 	}
 	if(data->is_close){
-		int ix_last = anchor_points_num - 1;
-		first_ap_x = anchor_points[ix_last].points[PvAnchorPointIndex_HandleNext].x;
-		first_ap_y = anchor_points[ix_last].points[PvAnchorPointIndex_HandleNext].y;
-		first_ap_x *= render_context.scale;
-		first_ap_y *= render_context.scale;
-
-		second_ap_x = anchor_points[0].points[PvAnchorPointIndex_HandlePrev].x;
-		second_ap_y = anchor_points[0].points[PvAnchorPointIndex_HandlePrev].y;
-		second_ap_x *= render_context.scale;
-		second_ap_y *= render_context.scale;
-
 		double x = anchor_points[0].points[PvAnchorPointIndex_Point].x;
 		double y = anchor_points[0].points[PvAnchorPointIndex_Point].y;
+
+		const PvAnchorPoint *ap_last = &anchor_points[anchor_points_num - 1];
+		first_ap_x = ap_last->points[PvAnchorPointIndex_HandleNext].x
+			+ ap_last->points[PvAnchorPointIndex_Point].x;
+		first_ap_y = ap_last->points[PvAnchorPointIndex_HandleNext].y
+			+ ap_last->points[PvAnchorPointIndex_Point].y;
+
+		const PvAnchorPoint *ap_first = &anchor_points[0];
+		second_ap_x = ap_first->points[PvAnchorPointIndex_HandlePrev].x
+			+ ap_first->points[PvAnchorPointIndex_Point].x;
+		second_ap_y = ap_first->points[PvAnchorPointIndex_HandlePrev].y
+			+ ap_first->points[PvAnchorPointIndex_Point].y;
+
+		first_ap_x *= render_context.scale;
+		first_ap_y *= render_context.scale;
+		second_ap_x *= render_context.scale;
+		second_ap_y *= render_context.scale;
 		x *= render_context.scale;
 		y *= render_context.scale;
-
 		cairo_curve_to(cr, first_ap_x, first_ap_y, second_ap_x, second_ap_y, x, y);
 		cairo_close_path (cr);
 	}
@@ -113,8 +128,6 @@ bool _pv_renderer_draw_element_beziers(
 	int ix = ((data->is_close)? 0 : anchor_points_num - 1);
 	double x = anchor_points[ix].points[PvAnchorPointIndex_Point].x;
 	double y = anchor_points[ix].points[PvAnchorPointIndex_Point].y;
-	x *= render_context.scale;
-	y *= render_context.scale;
 	double prev_ap_x = anchor_points[ix]
 				.points[PvAnchorPointIndex_HandlePrev].x;
 	double prev_ap_y = anchor_points[ix]
@@ -123,11 +136,16 @@ bool _pv_renderer_draw_element_beziers(
 				.points[PvAnchorPointIndex_HandleNext].x;
 	double next_ap_y = anchor_points[ix]
 				.points[PvAnchorPointIndex_HandleNext].y;
+	prev_ap_x += x;
+	prev_ap_y += y;
+	next_ap_x += x;
+	next_ap_y += y;
+	x *= render_context.scale;
+	y *= render_context.scale;
 	prev_ap_x *= render_context.scale;
 	prev_ap_y *= render_context.scale;
 	next_ap_x *= render_context.scale;
 	next_ap_y *= render_context.scale;
-
 
 	cairo_set_line_width(cr, 1.0);
 	_pv_render_workingcolor_cairo_set_source_rgb(cr);

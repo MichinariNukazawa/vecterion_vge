@@ -4,34 +4,34 @@
 #include "pv_error.h"
 
 PvElement *_pv_svg_svg_new_element_from_svg(
-				PvElement *element_parent,
-				xmlNodePtr xmlnode,
-				bool *isDoChild,
-				gpointer data,
-				const ConfReadSvg *conf
-)
+		PvElement *element_parent,
+		xmlNodePtr xmlnode,
+		bool *isDoChild,
+		gpointer data,
+		const ConfReadSvg *conf
+		)
 {
 	return element_parent;
 }
 
 PvElement *_pv_svg_g_new_element_from_svg(
-				PvElement *element_parent,
-				xmlNodePtr xmlnode,
-				bool *isDoChild,
-				gpointer data,
-				const ConfReadSvg *conf
-)
+		PvElement *element_parent,
+		xmlNodePtr xmlnode,
+		bool *isDoChild,
+		gpointer data,
+		const ConfReadSvg *conf
+		)
 {
 	// ** is exist groupmode=layer
 	PvElementKind kind = PvElementKind_Group;
 	xmlChar *value = NULL;
 	/*
-	value = xmlGetNsProp(xmlnode,"groupmode",
-			"http://www.inkscape.org/namespaces/inkscape");
-	if(NULL == value){
-		value = xmlGetProp(xmlnode,"inkscape:groupmode");
-	}
-	*/
+	   value = xmlGetNsProp(xmlnode,"groupmode",
+	   "http://www.inkscape.org/namespaces/inkscape");
+	   if(NULL == value){
+	   value = xmlGetProp(xmlnode,"inkscape:groupmode");
+	   }
+	 */
 	if(NULL == value){
 		value = xmlGetProp(xmlnode, BAD_CAST "groupmode");
 	}
@@ -67,6 +67,10 @@ const char *_pv_svg_read_args_from_str(double *args, int num_args, const char *s
 	int i = 0;
 	const char *str_error = NULL;
 	while('\0' != *p){
+		if(',' == *p){
+			p++;
+			continue;
+		}
 		if(!pv_general_strtod(&args[i], p, &next, &str_error)){
 			break;
 		}
@@ -83,12 +87,37 @@ const char *_pv_svg_read_args_from_str(double *args, int num_args, const char *s
 	return p;
 }
 
+
+void _pv_svg_fill_double_array(double *dst, double value, int size)
+{
+	for(int i = 0; i < size; i++){
+		dst[i] = value;
+	}
+}
+
+void _pv_svg_copy_double_array(double *dst, double *src, int size)
+{
+	for(int i = 0; i < size; i++){
+		dst[i] = src[i];
+	}
+}
+
 bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const char *str)
 {
 	const int num_args = 10;
 	double args[num_args];
+	double prev_args[num_args];
+	_pv_svg_fill_double_array(args, 0, num_args);
+	_pv_svg_fill_double_array(prev_args, 0, num_args);
 
 	PvAnchorPoint ap;
+	if(NULL == element || NULL == element->data){
+		pv_error("");
+		return false;
+	}
+	PvElementBezierData *data = element->data;
+
+	double x_next_0 = 0, y_next_0 = 0;
 
 	const char *p = str;
 	while('\0' != *p){
@@ -96,11 +125,57 @@ bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const char *str
 		switch(*p){
 			case 'M':
 			case 'L':
-				p = _pv_svg_read_args_from_str(args, num_args, ++p);
+				p = _pv_svg_read_args_from_str(args, 2, ++p);
 				pv_element_anchor_point_init(&ap);
 				ap.points[PvAnchorPointIndex_Point].x = args[0];
 				ap.points[PvAnchorPointIndex_Point].y = args[1];
 				is_append = true;
+				break;
+			case 'C':
+				p = _pv_svg_read_args_from_str(args, 6, ++p);
+				pv_element_anchor_point_init(&ap);
+				ap.points[PvAnchorPointIndex_HandlePrev].x = args[2] - args[4];
+				ap.points[PvAnchorPointIndex_HandlePrev].y = args[3] - args[5];
+				ap.points[PvAnchorPointIndex_Point].x = args[4];
+				ap.points[PvAnchorPointIndex_Point].y = args[5];
+				ap.points[PvAnchorPointIndex_HandleNext].x = 0;
+				ap.points[PvAnchorPointIndex_HandleNext].y = 0;
+				if(0 < data->anchor_points_num){
+					PvAnchorPoint *ap_prev = &data->anchor_points[data->anchor_points_num - 1];
+					ap_prev->points[PvAnchorPointIndex_HandleNext].x = args[0];
+					ap_prev->points[PvAnchorPointIndex_HandleNext].y = args[1];
+				}else{
+					x_next_0 = args[0];
+					y_next_0 = args[1];
+				}
+				is_append = true;
+				break;
+			case 'S':
+				p = _pv_svg_read_args_from_str(args, 4, ++p);
+				pv_element_anchor_point_init(&ap);
+				ap.points[PvAnchorPointIndex_HandlePrev].x = args[0] - args[2];
+				ap.points[PvAnchorPointIndex_HandlePrev].y = args[1] - args[3];
+				ap.points[PvAnchorPointIndex_Point].x = args[2];
+				ap.points[PvAnchorPointIndex_Point].y = args[3];
+				ap.points[PvAnchorPointIndex_HandleNext].x = 0;
+				ap.points[PvAnchorPointIndex_HandleNext].y = 0;
+				is_append = true;
+				break;
+			case 'Z':
+			case 'z':
+				p++;
+				data->is_close = true;
+				if(data->anchor_points_num < 1){
+					break;
+				}
+				ap = data->anchor_points[0];
+				ap.points[PvAnchorPointIndex_HandlePrev].x = x_next_0;
+				ap.points[PvAnchorPointIndex_HandlePrev].y = y_next_0;
+				is_append = true;
+				break;
+			case ' ':
+			case ',':
+				p++;
 				break;
 			default:
 				p++;
@@ -118,12 +193,12 @@ bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const char *str
 }
 
 PvElement *_pv_svg_path_new_element_from_svg(
-				PvElement *element_parent,
-				xmlNodePtr xmlnode,
-				bool *isDoChild,
-				gpointer data,
-				const ConfReadSvg *conf
-)
+		PvElement *element_parent,
+		xmlNodePtr xmlnode,
+		bool *isDoChild,
+		gpointer data,
+		const ConfReadSvg *conf
+		)
 {
 	PvElement *element_new = pv_element_new(PvElementKind_Bezier);
 	if(NULL == element_new){
@@ -138,6 +213,8 @@ PvElement *_pv_svg_path_new_element_from_svg(
 			pv_error("");
 			return NULL;
 		}
+
+		pv_element_debug_print(element_new);
 	}
 	xmlFree(value);
 
@@ -150,12 +227,12 @@ PvElement *_pv_svg_path_new_element_from_svg(
 }
 
 PvElement *_pv_svg_unknown_new_element_from_svg(
-				PvElement *element_parent,
-				xmlNodePtr xmlnode,
-				bool *isDoChild,
-				gpointer data,
-				const ConfReadSvg *conf
-)
+		PvElement *element_parent,
+		xmlNodePtr xmlnode,
+		bool *isDoChild,
+		gpointer data,
+		const ConfReadSvg *conf
+		)
 {
 	pv_warning("Not implement:'%s'", xmlnode->name);
 

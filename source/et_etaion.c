@@ -71,6 +71,15 @@ void pv_anchor_point_move_handle(PvAnchorPoint *ap,
 		return;
 	}
 
+	ap->points[PvAnchorPointIndex_HandleNext].x
+		= x - ap->points[PvAnchorPointIndex_Point].x;
+	ap->points[PvAnchorPointIndex_HandleNext].y
+		= y - ap->points[PvAnchorPointIndex_Point].y;
+	ap->points[PvAnchorPointIndex_HandlePrev].x
+		= -1.0 * ap->points[PvAnchorPointIndex_HandleNext].x;
+	ap->points[PvAnchorPointIndex_HandlePrev].y
+		= -1.0 * ap->points[PvAnchorPointIndex_HandleNext].y;
+/*
 	ap->points[PvAnchorPointIndex_HandlePrev].x
 		= ap->points[PvAnchorPointIndex_Point].x
 		+ (-1.0 * (x - ap->points[PvAnchorPointIndex_Point].x));
@@ -80,6 +89,7 @@ void pv_anchor_point_move_handle(PvAnchorPoint *ap,
 
 	ap->points[PvAnchorPointIndex_HandleNext].x = x;
 	ap->points[PvAnchorPointIndex_HandleNext].y = y;
+*/
 }
 
 bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
