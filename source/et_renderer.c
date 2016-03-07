@@ -29,54 +29,6 @@ EtRenderer *et_renderer_init()
 	return this;
 }
 
-GdkPixbuf *_et_renderer_draw_pixbuf_from_point(GdkPixbuf *pixbuf, double x, double y)
-{
-	gint width;
-	gint height;
-	cairo_format_t format;
-	cairo_surface_t *surface;
-	cairo_t *cr;
-
-
-	format = (gdk_pixbuf_get_has_alpha (pixbuf)) ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
-	width = gdk_pixbuf_get_width (pixbuf);
-	height = gdk_pixbuf_get_height (pixbuf);
-	surface = cairo_image_surface_create (format, width, height);
-	if(surface == NULL){
-		et_bug("");
-		return NULL;
-	}
-	
-//	surface = gdk_cairo_surface_create_from_pixbuf (pixbuf, 1, NULL);
-	cr = cairo_create (surface);
-	/* Draw the pixbuf */
-	gdk_cairo_set_source_pixbuf (cr, pixbuf, 0, 0);
-	cairo_paint (cr);
-	/* Draw a red rectangle */
-	cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
-	cairo_rectangle (cr, x, y, 2, 2);
-	cairo_fill (cr);
-
-/*
-	if(CAIRO_STATUS_SUCCESS != cairo_surface_write_to_png (surface, "output.png")){
-		et_error("");
-		return NULL;
-	}
-*/
-	width = gdk_pixbuf_get_width (pixbuf);
-	height = gdk_pixbuf_get_height (pixbuf);
-	GdkPixbuf *pb = gdk_pixbuf_get_from_surface(surface, 0, 0, width, height);
-	if(NULL == pb){
-		et_error("");
-		return NULL;
-	}
-
-	cairo_surface_destroy (surface);
-	cairo_destroy (cr);
-
-	return pb;
-}
-
 GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext render_context)
 {
 	PvVg *vg = et_doc_get_vg_ref(doc);
