@@ -4,7 +4,7 @@
 #
 
 CC			= gcc
-TARGET_NAME		= gtk3_use_nanosvg
+TARGET_NAME		= etaion_vector
 SOURCE_DIR		= source
 OBJECT_DIR		= object
 BUILD_DIR		= build

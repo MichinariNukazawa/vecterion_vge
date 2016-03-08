@@ -18,6 +18,7 @@
 #include "et_layer_view.h"
 #include "pv_io.h"
 
+const char *APP_NAME = "Etaion Vector Graphic Editor";
 GtkWindow *_main_window = NULL;
 
 void _pvui_app_set_style();
@@ -542,7 +543,6 @@ static gboolean _cb_menu_file_open(gpointer data)
 
 void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
 {   
-	const char *appname = "Etaion Vector Graphic Editor";
 	GtkWindow *parent_window = NULL;
 	GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
 	GtkWidget *dialog = gtk_message_dialog_new (parent_window,
@@ -550,7 +550,7 @@ void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
 			GTK_MESSAGE_QUESTION,
 			GTK_BUTTONS_CLOSE,
 			"This is :'%s'",
-			appname);
+			APP_NAME);
 	gtk_dialog_run (GTK_DIALOG (dialog));
 	gtk_widget_destroy (dialog);
 }
