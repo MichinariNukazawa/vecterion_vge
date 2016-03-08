@@ -37,8 +37,6 @@ bool _pv_renderer_draw_element_beziers(
 		const PvElement *element
 		)
 {
-	pv_element_debug_print(element);
-
 	const PvElementBezierData *data = element->data;
 	if(NULL == data){
 		pv_error("");
@@ -246,7 +244,7 @@ bool _pv_renderer_cairo_background(cairo_t *cr,
 		const PvVg * const vg,
 		const PvRenderContext render_context)
 {
-	pv_debug("%f, %f, %f, %f, \n", (vg->rect).x, (vg->rect).y, (vg->rect).w, (vg->rect).h);
+	// pv_debug("%f, %f, %f, %f, \n", (vg->rect).x, (vg->rect).y, (vg->rect).w, (vg->rect).h);
 	cairo_set_source_rgb (cr, 0.6, 0.6, 0.6);
 
 	int unit = 16;

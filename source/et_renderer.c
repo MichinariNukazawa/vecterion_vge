@@ -55,8 +55,6 @@ GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext render_
 
 void slot_et_renderer_from_canvas_change(EtCanvas *canvas, gpointer data)
 {
-	et_debug("\n");
-
 	EtRenderer *this = _renderer;
 	if(NULL == this){
 		et_bug("");
