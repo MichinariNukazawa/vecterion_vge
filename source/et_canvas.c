@@ -87,7 +87,7 @@ EtCanvas *et_canvas_new()
 	g_signal_connect (G_OBJECT (this->canvas), "draw",
 			G_CALLBACK (cb_expose_event), (gpointer)this);
 
-	this->render_context.scale = 1.0;
+	this->render_context = PvRenderContext_default;
 
 	this->widget = this->box;
 	this->pixbuf_buffer = NULL;
@@ -113,7 +113,7 @@ GtkWidget *et_canvas_get_widget_frame(EtCanvas *this)
 
 PvRenderContext et_canvas_get_render_context(EtCanvas *this, bool *isError)
 {
-	PvRenderContext rc;
+	PvRenderContext rc = PvRenderContext_default;
 	if(NULL == this){
 		et_bug("");
 		*isError = true;

@@ -50,13 +50,21 @@ bool _pv_renderer_draw_element_beziers(
 
 	const PvRenderContext render_context = render_option.render_context;
 
+	// ** draw property is element or focus element
+	if(render_context.is_focus){
+		_pv_render_workingcolor_cairo_set_source_rgb(cr);
+		cairo_set_line_width(cr, 1.0);
+	}else{
+		cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
+		cairo_set_line_width(cr, 2.0);
+	}
+
 	// ** stroke
 	double first_ap_x = 0, first_ap_y = 0, second_ap_x = 0, second_ap_y = 0;
 	for(int i = 0; i < data->anchor_points_num; i++){
 		double x = anchor_points[i].points[PvAnchorPointIndex_Point].x;
 		double y = anchor_points[i].points[PvAnchorPointIndex_Point].y;
 
-		// cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
 		if(0 == i){
 			x *= render_context.scale;
 			y *= render_context.scale;
@@ -65,7 +73,6 @@ bool _pv_renderer_draw_element_beziers(
 				cairo_rectangle (cr, x, y, 2, 2);
 				cairo_fill (cr);
 			}else{
-				cairo_set_line_width(cr, 2.0);
 				cairo_move_to(cr, x, y);
 			}
 		}else{
@@ -115,51 +122,54 @@ bool _pv_renderer_draw_element_beziers(
 		cairo_curve_to(cr, first_ap_x, first_ap_y, second_ap_x, second_ap_y, x, y);
 		cairo_close_path (cr);
 	}
+
 	cairo_stroke(cr);
 
-	// ** anchor point
-	cairo_set_line_width(cr, 1.0);
-	_pv_render_workingcolor_cairo_set_source_rgb(cr);
-	// ** prev anchor_point
-	if(0 < (data->anchor_points_num)){
-		int ix =  data->anchor_points_num - ((data->is_close) ? 1:2);
-		const PvAnchorPoint ap = data->anchor_points[ix];
-		PvPoint gp_point = ap.points[PvAnchorPointIndex_Point];
-		PvPoint gp_next = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandleNext);
-		gp_point.x *= render_context.scale;
-		gp_point.y *= render_context.scale;
+	if(render_context.is_focus){
+		// ** anchor point
+		cairo_set_line_width(cr, 1.0);
+		_pv_render_workingcolor_cairo_set_source_rgb(cr);
+		// ** prev anchor_point
+		if(0 < (data->anchor_points_num)){
+			int ix =  data->anchor_points_num - ((data->is_close) ? 1:2);
+			const PvAnchorPoint ap = data->anchor_points[ix];
+			PvPoint gp_point = ap.points[PvAnchorPointIndex_Point];
+			PvPoint gp_next = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandleNext);
+			gp_point.x *= render_context.scale;
+			gp_point.y *= render_context.scale;
+			gp_next.x *= render_context.scale;
+			gp_next.y *= render_context.scale;
+			cairo_move_to(cr, gp_point.x, gp_point.y);
+			cairo_line_to(cr, gp_next.x, gp_next.y);
+			cairo_stroke(cr);
+			cairo_arc (cr, gp_next.x, gp_next.y, 2.0, 0., 2 * M_PI);
+			cairo_fill (cr);
+		}
+		// ** current anchor_point
+		int ix = ((data->is_close)? 0 : data->anchor_points_num - 1);
+		PvPoint gp_current = anchor_points[ix].points[PvAnchorPointIndex_Point];
+		PvPoint gp_prev = pv_anchor_point_get_handle(anchor_points[ix], PvAnchorPointIndex_HandlePrev);
+		PvPoint gp_next = pv_anchor_point_get_handle(anchor_points[ix], PvAnchorPointIndex_HandleNext);
+		gp_current.x *= render_context.scale;
+		gp_current.y *= render_context.scale;
+		gp_prev.x *= render_context.scale;
+		gp_prev.y *= render_context.scale;
 		gp_next.x *= render_context.scale;
 		gp_next.y *= render_context.scale;
-		cairo_move_to(cr, gp_point.x, gp_point.y);
+		cairo_set_line_width(cr, 1.0);
+		_pv_render_workingcolor_cairo_set_source_rgb(cr);
+		cairo_move_to(cr, gp_current.x, gp_current.y);
+		cairo_line_to(cr, gp_prev.x, gp_prev.y);
+		cairo_stroke(cr);
+		cairo_move_to(cr, gp_current.x, gp_current.y);
 		cairo_line_to(cr, gp_next.x, gp_next.y);
 		cairo_stroke(cr);
+
+		_pv_render_workingcolor_cairo_set_source_rgb(cr);
+		cairo_arc (cr, gp_prev.x, gp_prev.y, 2.0, 0., 2 * M_PI);
 		cairo_arc (cr, gp_next.x, gp_next.y, 2.0, 0., 2 * M_PI);
 		cairo_fill (cr);
 	}
-	// ** current anchor_point
-	int ix = ((data->is_close)? 0 : data->anchor_points_num - 1);
-	PvPoint gp_current = anchor_points[ix].points[PvAnchorPointIndex_Point];
-	PvPoint gp_prev = pv_anchor_point_get_handle(anchor_points[ix], PvAnchorPointIndex_HandlePrev);
-	PvPoint gp_next = pv_anchor_point_get_handle(anchor_points[ix], PvAnchorPointIndex_HandleNext);
-	gp_current.x *= render_context.scale;
-	gp_current.y *= render_context.scale;
-	gp_prev.x *= render_context.scale;
-	gp_prev.y *= render_context.scale;
-	gp_next.x *= render_context.scale;
-	gp_next.y *= render_context.scale;
-	cairo_set_line_width(cr, 1.0);
-	_pv_render_workingcolor_cairo_set_source_rgb(cr);
-	cairo_move_to(cr, gp_current.x, gp_current.y);
-	cairo_line_to(cr, gp_prev.x, gp_prev.y);
-	cairo_stroke(cr);
-	cairo_move_to(cr, gp_current.x, gp_current.y);
-	cairo_line_to(cr, gp_next.x, gp_next.y);
-	cairo_stroke(cr);
-
-	_pv_render_workingcolor_cairo_set_source_rgb(cr);
-	cairo_arc (cr, gp_prev.x, gp_prev.y, 2.0, 0., 2 * M_PI);
-	cairo_arc (cr, gp_next.x, gp_next.y, 2.0, 0., 2 * M_PI);
-	cairo_fill (cr);
 
 	return true;
 }
@@ -188,11 +198,6 @@ bool _pv_renderer_cairo_recersive(
 			}
 		}
 	}else{
-		if(render_option.focus.element == element){
-			_pv_render_workingcolor_cairo_set_source_rgb(cr);
-		}else{
-			cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
-		}
 		switch(element->kind){
 			case PvElementKind_Raster:
 				{
@@ -288,6 +293,14 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 	if(!_pv_renderer_cairo_recersive(cr, vg->element_root, render_option, &level)){
 		pv_error("");
 		return NULL;
+	}
+
+	if(NULL != focus.element && !_pv_renderer_is_group_kind(focus.element)){
+		render_option.render_context.is_focus = true;
+		if(!_pv_renderer_cairo_recersive(cr, focus.element, render_option, &level)){
+			pv_error("");
+			return NULL;
+		}
 	}
 
 	GdkPixbuf *pb = gdk_pixbuf_get_from_surface(surface, 0, 0, width, height);
