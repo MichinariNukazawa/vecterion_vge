@@ -566,15 +566,17 @@ GtkWidget *pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	menu = gtk_menu_new ();
 	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
 
+	// ** Accel to "/_File/_New (Ctrl+N)"
 	menuitem = gtk_menu_item_new_with_label ("_New");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_new), NULL);
-	// ** Accel to "/_File/_New (Ctrl+N)"
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_n, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
 	// ** "/_File/_Open (Ctrl+O)"
 	menuitem = gtk_menu_item_new_with_label ("_Open");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_open), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
@@ -582,9 +584,9 @@ GtkWidget *pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 
 	// ** "/_File/_Save (Ctrl+S)"
 	menuitem = gtk_menu_item_new_with_label ("_Save");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate",
-			G_CALLBACK(_cb_menu_file_save), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_save), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_s, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
@@ -595,6 +597,7 @@ GtkWidget *pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	   gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 	 */
 	menuitem = gtk_menu_item_new_with_label ("_Quit");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 	g_signal_connect(menuitem, "activate", G_CALLBACK(gtk_main_quit), NULL);
 
@@ -607,23 +610,23 @@ GtkWidget *_new_tree_of_help(GtkAccelGroup *accel_group){
 	GtkWidget *menu;
 
 	menuitem_root = gtk_menu_item_new_with_mnemonic ("_Help");
-	// gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
 
 	menu = gtk_menu_new ();
 	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
 
-	// ** Issue: Mnemonic not works on submenu in Ubuntu15.10(cause Unity/Ubuntu?).
-	menuitem = gtk_menu_item_new_with_mnemonic ("_About");
-	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate",
-			G_CALLBACK(_cb_menu_help_about), NULL);
 	// ** Accel to "Help > About (Ctrl+A)"
+	menuitem = gtk_menu_item_new_with_mnemonic ("_About");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_help_about), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_a, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
 	return menuitem_root;
 }
 
+// ** Issue: Mnemonic not works on submenu in Ubuntu15.10(cause Unity/Ubuntu?).
 bool _init_menu(GtkWidget *window, GtkWidget *box_root)
 {
 	GtkWidget *menubar;
