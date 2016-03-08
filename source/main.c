@@ -541,8 +541,15 @@ static gboolean _cb_menu_file_open(gpointer data)
 	return false;
 }
 
+void _cb_menu_view_extent(GtkCheckMenuItem *menuitem, gpointer user_data)
+{
+	if(!et_etaion_set_is_extent_view(gtk_check_menu_item_get_active(menuitem))){
+		et_error("");
+	}
+}
+
 void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
-{   
+{
 	GtkWindow *parent_window = NULL;
 	GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
 	GtkWidget *dialog = gtk_message_dialog_new (parent_window,
@@ -604,6 +611,32 @@ GtkWidget *pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	return menuitem_root;
 }
 
+GtkWidget *_pv_get_menuitem_new_tree_of_view(GtkAccelGroup *accel_group)
+{
+	GtkWidget *menuitem_root;
+	GtkWidget *menuitem;
+	GtkWidget *menu;
+
+	// menuitem_root = gtk_menu_item_new_with_mnemonic ("_View");
+	menuitem_root = gtk_menu_item_new_with_mnemonic ("_View");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
+
+	menu = gtk_menu_new ();
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
+
+#define GDK_ALT_MASK (GDK_MOD1_MASK)
+
+	// ** Accel to "View > extent show
+	menuitem = gtk_check_menu_item_new_with_mnemonic ("_Extent View");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "toggled", G_CALLBACK(_cb_menu_view_extent), NULL);
+	//gtk_widget_add_accelerator (menuitem, "toggled", accel_group,
+	//		GDK_KEY_e,( GDK_ALT_MASK|GDK_SHIFT_MASK|GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
+
+	return menuitem_root;
+}
+
 GtkWidget *_new_tree_of_help(GtkAccelGroup *accel_group){
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
@@ -640,6 +673,9 @@ bool _init_menu(GtkWidget *window, GtkWidget *box_root)
 	gtk_box_pack_start (GTK_BOX (box_root), menubar, FALSE, TRUE, 0);
 
 	menuitem = pv_get_menuitem_new_tree_of_file(accel_group);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
+
+	menuitem = _pv_get_menuitem_new_tree_of_view(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	menuitem = _new_tree_of_help(accel_group);

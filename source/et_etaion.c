@@ -63,6 +63,24 @@ EtDocId et_etaion_get_current_doc_id()
 	return (this->state).doc_id;
 }
 
+static bool _et_etaion_is_extent_view = false;
+bool et_etaion_set_is_extent_view(bool is_extent_view)
+{
+	et_debug("%s\n", (is_extent_view? "TRUE":"FALSE"));
+	_et_etaion_is_extent_view = is_extent_view;
+
+	// TODO: update all doc.
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(0 <= doc_id){
+		et_doc_signal_update_from_id(doc_id);
+	}
+	return true;
+}
+
+bool et_etaion_get_is_extent_view(){
+	return _et_etaion_is_extent_view;
+}
+
 bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
 {
 	if(

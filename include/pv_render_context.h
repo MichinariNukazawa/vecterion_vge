@@ -5,10 +5,12 @@ struct PvRenderContext;
 typedef struct PvRenderContext PvRenderContext;
 struct PvRenderContext{
 	bool is_focus;
+	bool is_extent_view;
 	double scale;
 };
 static const PvRenderContext PvRenderContext_default = {
 	.is_focus	= false,
+	.is_extent_view	= false,
 	.scale		= 1.0,
 };
 

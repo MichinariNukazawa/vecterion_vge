@@ -156,7 +156,7 @@ bool _pv_renderer_draw_element_beziers(
 
 	PvRect crect_extent = _pv_renderer_get_rect_extent_from_cr(cr);
 	cairo_stroke(cr);
-	if(!render_context.is_focus){
+	if(render_context.is_extent_view && !render_context.is_focus){
 		_pv_renderer_draw_extent_from_crect(cr, crect_extent);
 	}
 

@@ -4,6 +4,7 @@
 #include "et_error.h"
 #include "pv_renderer.h"
 #include "et_doc_manager.h"
+#include "et_etaion.h"
 
 struct EtRenderer{
 	int dummy;
@@ -77,12 +78,12 @@ void slot_et_renderer_from_canvas_change(EtCanvas *canvas, gpointer data)
 		return;
 	}
 	bool isError = true;
-	PvRenderContext render_context
-		= et_canvas_get_render_context(canvas, &isError);
+	PvRenderContext render_context = et_canvas_get_render_context(canvas, &isError);
 	if(isError){
 		et_bug("");
 		return;
 	}
+	render_context.is_extent_view = et_etaion_get_is_extent_view();
 	GdkPixbuf *pixbuf = _et_renderer_rendering_pixbuf_new(doc,
 			render_context);
 	if(NULL == pixbuf){
