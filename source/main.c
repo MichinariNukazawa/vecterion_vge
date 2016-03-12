@@ -16,6 +16,7 @@
 #include "et_doc_manager.h"
 #include "et_etaion.h"
 #include "et_layer_view.h"
+#include "et_tool_panel.h"
 #include "pv_io.h"
 
 const char *APP_NAME = "Etaion Vector Graphic Editor";
@@ -72,6 +73,10 @@ int main (int argc, char **argv){
 
 
 	// ** The etaion core modules initialize.
+	if(!et_tool_init()){
+		et_bug("");
+		return -1;
+	}
 	EtEtaion *current_state = et_etaion_init();
 	if(NULL == current_state){
 		et_bug("");
@@ -119,6 +124,9 @@ int main (int argc, char **argv){
 	gtk_statusbar_push(GTK_STATUSBAR(statusbar), 1, "Hello World");
 	status_bar = statusbar;
 
+	GtkWidget *hbox_left = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3);
+	gtk_box_pack_start(GTK_BOX(box1), hbox_left, false, false, 3);
+
 	GtkWidget *hpaned = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL);
 	gtk_box_pack_start(GTK_BOX(box1), hpaned, true, true, 3);
 
@@ -127,6 +135,19 @@ int main (int argc, char **argv){
 
 
 	// ** The etaion gui modules initialize.
+	EtToolPanel *tool_panel = et_tool_panel_init();
+	if(NULL == tool_panel){
+		et_bug("");
+		return -1;
+	}
+	GtkWidget *toolpanel_widget = et_tool_panel_get_widget_frame();
+	gtk_box_pack_start(GTK_BOX(hbox_left), toolpanel_widget, false, false, 3);
+
+	if(!et_tool_panel_set_slot_change(slot_et_etaion_change_tool, NULL)){
+		et_bug("");
+		return -1;
+	}
+
 	EtCanvasCollection *canvas_collection = et_canvas_collection_init();
 	if(NULL == canvas_collection){
 		et_bug("");
@@ -200,6 +221,7 @@ int main (int argc, char **argv){
 		return -1;
 	}
 
+	_pvui_app_set_style();
 	gtk_widget_show_all(window);
 	gtk_main();
 
@@ -324,25 +346,18 @@ void _pvui_app_set_style(){
 			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
 	gtk_css_provider_load_from_data (GTK_CSS_PROVIDER(provider),
+	/*
 			"GtkWindow {\n"
 			"   background-color: rgb (103, 103, 103);\n"
 			"}\n"
-			//"GtkWidget {\n"
-			"#canvasGtk {\n"
-			"   background-color: rgb (50, 50, 50);\n"
-			"   border-style: solid;\n"
-			"   border-width: 1px;\n"
-			"   border-color: rgb (255, 255, 10);\n"
-			"   margin: 0px;\n"
-			"   padding: 0px;\n"
+			"GtkWidget {\n"
+			"   background-color: rgb (103, 103, 103);\n"
 			"}\n"
-			"#canvasNanoSVG {\n"
-			"   background-color: rgb (50, 50, 50);\n"
-			"   border-style: solid;\n"
-			"   border-width: 1px;\n"
-			"   border-color: rgb (10, 255, 255);\n"
-			"   margin: 0px;\n"
-			"   padding: 0px;\n"
+	*/
+			"#toolpanel {\n"
+			"   border-color: rgb (100, 100, 10);\n"
+			"   border-width: 2px;\n"
+			"   padding: 2px;\n" 
 			"}\n"
 			"", -1, NULL);
 	g_object_unref (provider);

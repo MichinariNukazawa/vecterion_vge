@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "et_error.h"
 #include "et_doc_manager.h"
+#include "et_tool_panel.h"
 
 EtEtaion *current_state = NULL;
 
@@ -18,6 +19,12 @@ EtEtaion *et_etaion_init()
 		et_error("");
 		return NULL;
 	}
+
+	if(et_tool_get_num() <= 0){
+		et_bug("");
+		return NULL;
+	}
+	this->tool_id = 0; // default tool.
 
 	this->slot_change_state = NULL;
 	this->slot_change_state_data = NULL;
@@ -81,22 +88,17 @@ bool et_etaion_get_is_extent_view(){
 	return _et_etaion_is_extent_view;
 }
 
-bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
+EtToolId et_etaion_get_tool_id()
 {
-	if(
-			(p1.x - radius) < p2.x
-			&& p2.x < (p1.x + radius)
-			&& (p1.y - radius) < p2.y
-			&& p2.y < (p1.y + radius)
-	  ){
-		return true;
-	}else{
-		return false;
+	EtEtaion *this = current_state;
+	if(NULL == this){
+		et_bug("");
+		exit(-1);
 	}
+
+	return this->tool_id;
 }
 
-static int _et_etaion_radius_path_detect = 6;
-static EtMouseActionType _mouse_action_up_down = EtMouseAction_Up;
 bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 {
 	EtEtaion *this = current_state;
@@ -105,120 +107,32 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 		exit(-1);
 	}
 
-	if(id_doc != (this->state).doc_id){
-		(this->state).doc_id = id_doc;
-		if(!et_doc_set_focus_to_id(id_doc, pv_focus_get_nofocus())){
-			et_error("");
-			return false;
-		}
-		_signal_et_etaion_change_state(this);
+	if(this->tool_id < 0){
+		et_bug("");
+		return false;
+	}
+	const EtToolInfo *info = et_tool_get_info_from_id(this->tool_id);
+	if(NULL == info){
+		et_bug("");
+		return false;
+	}
+	if(NULL == info->func_mouse_action){
+		et_bug("");
+		return false;
 	}
 
-	EtDoc *doc = et_doc_manager_get_doc_from_id(id_doc);
-	if(NULL == doc){
+	EtDocId doc_id_prev = et_etaion_get_current_doc_id();
+
+	if(!info->func_mouse_action(id_doc, mouse_action)){
 		et_error("");
 		return false;
 	}
 
-	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id(id_doc, &is_error);
-	if(is_error){
-		et_error("");
-		return false;
+	// ** redraw docs
+	if(doc_id_prev != et_etaion_get_current_doc_id()){
+		et_doc_signal_update_from_id(doc_id_prev);
 	}
-
-	switch(mouse_action.action){
-		case EtMouseAction_Down:
-			{
-				et_debug(" x:%d, y:%d,\n",
-						(int)mouse_action.point.x,
-						(int)mouse_action.point.y);
-
-				_mouse_action_up_down = mouse_action.action;
-
-				PvElement *_element = focus.element;
-
-				bool is_closed = false;
-				if(NULL != _element && PvElementKind_Bezier == _element->kind){
-					PvElementBezierData *_data =(PvElementBezierData *) _element->data;
-					if(NULL == _data){
-						et_error("");
-						return false;
-					}
-					if(_data->is_close){
-						// if already closed is goto new anchor_point
-						_element = NULL;
-					}else{
-						if(0 < _data->anchor_points_num){
-							if(_et_etaion_is_bound_point(
-										_et_etaion_radius_path_detect,
-										_data->anchor_points[0].points[PvAnchorPointIndex_Point],
-										mouse_action.point)
-							){
-								// ** do close anchor_point
-								_data->is_close = true;
-								is_closed = true;
-							}
-						}
-					}
-				}
-
-				// ** new anchor_point
-				if(!is_closed){
-					if(!et_doc_add_point(doc, &_element,
-								mouse_action.point.x, mouse_action.point.y)){
-						et_error("");
-						return false;
-					}else{
-						focus.element = _element;
-						if(!et_doc_set_focus_to_id(id_doc, focus)){
-							et_error("");
-							return false;
-						}
-					}
-				}
-
-				et_doc_signal_update_from_id(id_doc);
-			}
-			break;
-		case EtMouseAction_Up:
-			{
-				_mouse_action_up_down = mouse_action.action;
-			}
-			break;
-		case EtMouseAction_Move:
-			{
-				if(EtMouseAction_Down != _mouse_action_up_down){
-					break;
-				}
-
-				PvElement *_element = focus.element;
-				if(NULL == _element || PvElementKind_Bezier != _element->kind){
-					et_error("");
-					return false;
-				}
-
-				PvElementBezierData *_data =(PvElementBezierData *) _element->data;
-				if(NULL == _data){
-					et_error("");
-					return false;
-				}
-				PvAnchorPoint *ap = NULL;
-				if(_data->is_close){
-					ap = &_data->anchor_points[0];
-				}else{
-					ap = &_data->anchor_points[_data->anchor_points_num - 1];
-				}
-				pv_element_bezier_anchor_point_set_handle(ap, PvAnchorPointIndex_Point,
-						mouse_action.point);
-
-				et_doc_signal_update_from_id(id_doc);
-			}
-			break;
-		case EtMouseAction_Unknown:
-			et_bug("");
-			break;
-	}
+	et_doc_signal_update_from_id(id_doc);
 
 	return true;
 }
@@ -524,5 +438,32 @@ error:
 	et_doc_signal_update_from_id((this->state).doc_id);
 
 	return ret;
+}
+
+bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data)
+{
+	et_debug("%d\n", tool_id);
+
+	EtEtaion *this = current_state;
+	if(NULL == this){
+		et_bug("");
+		exit(-1);
+	}
+
+	if(this->tool_id != tool_id){
+		et_debug("tool:%d->%d\n", this->tool_id, tool_id);
+#include "et_tool_panel.h"
+		if(!et_tool_panel_set_current_tool_id(tool_id)){
+			et_bug("");
+			return false;
+		}
+
+		this->tool_id = tool_id;
+		// TODO: tool_id change after work.
+
+		et_doc_signal_update_from_id((this->state).doc_id);
+	}
+
+	return true;
 }
 

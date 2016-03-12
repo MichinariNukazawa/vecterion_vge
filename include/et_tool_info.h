@@ -1,0 +1,37 @@
+#ifndef include_ET_TOOL_INFO_H
+#define include_ET_TOOL_INFO_H
+
+#include <gtk/gtk.h>
+#include <gdk/gdk.h>
+#include <stdbool.h>
+#include "et_tool.h"
+#include "et_doc_id.h"
+#include "et_mouse_action.h"
+
+typedef int EtToolId;
+
+typedef bool (*EtToolFuncMouseAction)(EtDocId id_doc, EtMouseAction mouse_action);
+
+typedef struct EtToolInfo{
+	EtToolId tool_id;
+	const char *name;
+	GdkPixbuf *icon;
+	GdkPixbuf *icon_focus;
+	GdkPixbuf *cursor;
+
+	const char *filepath_icon;
+	const char *filepath_cursor;
+
+	EtToolFuncMouseAction		func_mouse_action;
+}EtToolInfo;
+
+extern EtToolInfo _et_tool_infos[];
+
+int et_tool_get_num();
+const EtToolInfo *et_tool_get_info_from_id(EtToolId tool_id);
+
+#ifdef include_ET_TEST
+#endif // include_ET_TEST
+
+#endif // include_ET_TOOL_INFO_H
+
