@@ -32,6 +32,11 @@ typedef bool (*PvElementFuncDraw)(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element);
+typedef bool (*PvElementFuncIsTouchElement)(
+		bool *is_touch,
+		const PvElement *element,
+		double gx,
+		double gy);
 
 typedef struct PvElementInfo{
 	PvElementKind kind;
@@ -41,6 +46,7 @@ typedef struct PvElementInfo{
 	PvElementFuncCopyNewData	func_copy_new_data;
 	PvElementFuncWriteSvg		func_write_svg;
 	PvElementFuncDraw		func_draw;
+	PvElementFuncIsTouchElement	func_is_touch_element;
 }PvElementInfo;
 
 extern const PvElementInfo _pv_element_infos[];

@@ -80,6 +80,17 @@ bool _pv_element_notimplement_draw(
 	return true;
 }
 
+bool _pv_element_notimplement_is_touch_element(
+		bool *is_touch,
+		const PvElement *element,
+		double gx,
+		double gy)
+{
+	pv_error("");
+	*is_touch = false;
+	return true;
+}
+
 /* ****************
  * General
  **************** */
@@ -229,6 +240,16 @@ bool _pv_element_group_draw(
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
+	return true;
+}
+
+bool _pv_element_group_is_touch_element(
+		bool *is_touch,
+		const PvElement *element,
+		double gx,
+		double gy)
+{
+	*is_touch = false;
 	return true;
 }
 
@@ -410,9 +431,10 @@ int _pv_element_bezier_write_svg(
 	return 0;
 }
 
-bool _pv_element_bezier_draw(
+bool _pv_element_bezier_command_path(
 		cairo_t *cr,
-		const PvRenderOption render_option,
+		const PvRenderContext render_context,
+		int goffset, // use detection
 		const PvElement *element)
 {
 	const PvElementBezierData *data = element->data;
@@ -426,16 +448,11 @@ bool _pv_element_bezier_draw(
 		return true;
 	}
 
-	const PvRenderContext render_context = render_option.render_context;
-
 	// ** draw property is element or focus element
-	if(render_context.is_focus){
-		_pv_render_workingcolor_cairo_set_source_rgb(cr);
-		cairo_set_line_width(cr, 1.0);
-	}else{
-		cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
-		cairo_set_line_width(cr, 2.0);
-	}
+	cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
+	double offset = (goffset * (1.0 / render_context.scale));
+	double width = 2.0 + offset;
+	cairo_set_line_width(cr, width);
 
 	// ** stroke
 	double first_ap_x = 0, first_ap_y = 0, second_ap_x = 0, second_ap_y = 0;
@@ -501,6 +518,26 @@ bool _pv_element_bezier_draw(
 		cairo_close_path (cr);
 	}
 
+	return true;
+}
+
+bool _pv_element_bezier_draw(
+		cairo_t *cr,
+		const PvRenderOption render_option,
+		const PvElement *element)
+{
+	const PvRenderContext render_context = render_option.render_context;
+
+	if(!_pv_element_bezier_command_path(
+		cr,
+		render_context,
+		0,
+		element))
+	{
+		pv_error("");
+		return false;
+	}
+
 	PvRect crect_extent = _pv_renderer_get_rect_extent_from_cr(cr);
 	cairo_stroke(cr);
 	if(render_context.is_extent_view && !render_context.is_focus){
@@ -508,9 +545,16 @@ bool _pv_element_bezier_draw(
 	}
 
 	if(render_context.is_focus){
+		const PvElementBezierData *data = element->data;
+		if(NULL == data){
+			pv_error("");
+			return false;
+		}
+
 		// ** anchor point
 		cairo_set_line_width(cr, 1.0);
 		_pv_render_workingcolor_cairo_set_source_rgb(cr);
+
 		// ** prev anchor_point
 		if(0 < (data->anchor_points_num)){
 			int ix =  data->anchor_points_num - ((data->is_close) ? 1:2);
@@ -529,9 +573,9 @@ bool _pv_element_bezier_draw(
 		}
 		// ** current anchor_point
 		int ix = ((data->is_close)? 0 : data->anchor_points_num - 1);
-		PvPoint gp_current = anchor_points[ix].points[PvAnchorPointIndex_Point];
-		PvPoint gp_prev = pv_anchor_point_get_handle(anchor_points[ix], PvAnchorPointIndex_HandlePrev);
-		PvPoint gp_next = pv_anchor_point_get_handle(anchor_points[ix], PvAnchorPointIndex_HandleNext);
+		PvPoint gp_current = data->anchor_points[ix].points[PvAnchorPointIndex_Point];
+		PvPoint gp_prev = pv_anchor_point_get_handle(data->anchor_points[ix], PvAnchorPointIndex_HandlePrev);
+		PvPoint gp_next = pv_anchor_point_get_handle(data->anchor_points[ix], PvAnchorPointIndex_HandleNext);
 		gp_current.x *= render_context.scale;
 		gp_current.y *= render_context.scale;
 		gp_prev.x *= render_context.scale;
@@ -552,6 +596,41 @@ bool _pv_element_bezier_draw(
 		cairo_arc (cr, gp_next.x, gp_next.y, 2.0, 0., 2 * M_PI);
 		cairo_fill (cr);
 	}
+
+	return true;
+}
+
+bool _pv_element_bezier_is_touch_element(
+		bool *is_touch,
+		const PvElement *element,
+		double gx,
+		double gy)
+{
+	*is_touch = false;
+
+	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1,1);
+	cairo_t *cr = cairo_create (surface);
+	if(NULL == cr){
+		pv_error("");
+		return false;
+	}
+
+	PvRenderContext render_context = PvRenderContext_default;
+	if(!_pv_element_bezier_command_path(
+		cr,
+		render_context,
+		10,
+		element))
+	{
+		pv_error("");
+		return false;
+	}
+
+	// PvRect crect_extent = _pv_renderer_get_rect_extent_from_cr(cr);
+	*is_touch = cairo_in_stroke(cr, gx, gy);
+
+	cairo_surface_destroy (surface);
+	cairo_destroy (cr);
 
 	return true;
 }
@@ -660,6 +739,16 @@ bool _pv_element_raster_draw(
 	return true;
 }
 
+bool _pv_element_raster_is_touch_element(
+		bool *is_touch,
+		const PvElement *element,
+		double gx,
+		double gy)
+{
+	*is_touch = false;
+	return true;
+}
+
 
 /* ****************
  * ElementInfo配列の定義
@@ -672,6 +761,7 @@ const PvElementInfo _pv_element_infos[] = {
 		_pv_element_error_return_null_copy_new,
 		_pv_element_write_svg_notimplement,
 		.func_draw = _pv_element_notimplement_draw,
+		.func_is_touch_element = _pv_element_notimplement_is_touch_element,
 	},
 	{PvElementKind_Root, "Root",
 		_pv_element_group_data_new,
@@ -679,6 +769,7 @@ const PvElementInfo _pv_element_infos[] = {
 		_pv_element_group_data_copy_new,
 		_pv_element_group_write_svg,
 		.func_draw = _pv_element_group_draw,
+		.func_is_touch_element = _pv_element_group_is_touch_element,
 	},
 	{PvElementKind_Layer, "Layer",
 		_pv_element_group_data_new,
@@ -686,6 +777,7 @@ const PvElementInfo _pv_element_infos[] = {
 		_pv_element_group_data_copy_new,
 		_pv_element_group_write_svg,
 		.func_draw = _pv_element_group_draw,
+		.func_is_touch_element = _pv_element_group_is_touch_element,
 	},
 	{PvElementKind_Group, "Group",
 		_pv_element_group_data_new,
@@ -693,6 +785,7 @@ const PvElementInfo _pv_element_infos[] = {
 		_pv_element_group_data_copy_new,
 		_pv_element_group_write_svg,
 		.func_draw = _pv_element_group_draw,
+		.func_is_touch_element = _pv_element_group_is_touch_element,
 	},
 	{PvElementKind_Bezier, "Bezier",
 		_pv_element_bezier_data_new,
@@ -700,6 +793,7 @@ const PvElementInfo _pv_element_infos[] = {
 		_pv_element_bezier_data_copy_new,
 		_pv_element_bezier_write_svg,
 		.func_draw = _pv_element_bezier_draw,
+		.func_is_touch_element = _pv_element_bezier_is_touch_element,
 	},
 	{PvElementKind_Raster, "Raster",
 		_pv_element_raster_data_new,
@@ -707,6 +801,7 @@ const PvElementInfo _pv_element_infos[] = {
 		_pv_element_raster_data_copy_new,
 		_pv_element_write_svg_notimplement,
 		.func_draw = _pv_element_raster_draw,
+		.func_is_touch_element = _pv_element_raster_is_touch_element,
 	},
 	/* 番兵 */
 	{PvElementKind_EndOfKind, "EndOfKind",
@@ -715,6 +810,7 @@ const PvElementInfo _pv_element_infos[] = {
 		_pv_element_error_return_null_copy_new,
 		_pv_element_write_svg_notimplement,
 		.func_draw = _pv_element_notimplement_draw,
+		.func_is_touch_element = _pv_element_notimplement_is_touch_element,
 	},
 };
 

@@ -107,6 +107,20 @@ bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 		exit(-1);
 	}
 
+	// ** change current focus doc_id
+	EtDocId doc_id_prev = et_etaion_get_current_doc_id();
+	if(doc_id != doc_id_prev){
+		if(!et_doc_set_focus_to_id(doc_id, pv_focus_get_nofocus())){
+			et_error("");
+			return false;
+		}
+		if(!et_etaion_set_current_doc_id(doc_id)){
+			et_error("");
+			return false;
+		}
+	}
+
+	// ** call tool_info->function
 	if(this->tool_id < 0){
 		et_bug("");
 		return false;
@@ -120,8 +134,6 @@ bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 		et_bug("");
 		return false;
 	}
-
-	EtDocId doc_id_prev = et_etaion_get_current_doc_id();
 
 	if(!info->func_mouse_action(doc_id, mouse_action)){
 		et_error("");
