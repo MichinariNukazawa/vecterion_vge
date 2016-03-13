@@ -22,7 +22,7 @@ bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
 	}
 }
 
-bool _et_tool_nop_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
+bool _et_tool_nop_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 {
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
@@ -38,29 +38,29 @@ bool _et_tool_nop_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 
 static int _et_etaion_radius_path_detect = 6;
 static EtMouseActionType _mouse_action_up_down = EtMouseAction_Up;
-bool _et_tool_bezier_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
+bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 {
 	EtDocId doc_id_current = et_etaion_get_current_doc_id();
 
-	if(id_doc != doc_id_current){
-		if(!et_doc_set_focus_to_id(id_doc, pv_focus_get_nofocus())){
+	if(doc_id != doc_id_current){
+		if(!et_doc_set_focus_to_id(doc_id, pv_focus_get_nofocus())){
 			et_error("");
 			return false;
 		}
-		if(!et_etaion_set_current_doc_id(id_doc)){
+		if(!et_etaion_set_current_doc_id(doc_id)){
 			et_error("");
 			return false;
 		}
 	}
 
-	EtDoc *doc = et_doc_manager_get_doc_from_id(id_doc);
+	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
 	if(NULL == doc){
 		et_error("");
 		return false;
 	}
 
 	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id(id_doc, &is_error);
+	PvFocus focus = et_doc_get_focus_from_id(doc_id, &is_error);
 	if(is_error){
 		et_error("");
 		return false;
@@ -110,7 +110,7 @@ bool _et_tool_bezier_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 						return false;
 					}else{
 						focus.element = _element;
-						if(!et_doc_set_focus_to_id(id_doc, focus)){
+						if(!et_doc_set_focus_to_id(doc_id, focus)){
 							et_error("");
 							return false;
 						}

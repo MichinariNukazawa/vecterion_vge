@@ -10,8 +10,8 @@
 struct EtPointingManager;
 typedef struct EtPointingManager EtPointingManager;
 
-typedef bool (*EtPointingManagerSignalMouseAction)(EtDocId id_doc, EtMouseAction mouse_action);
-typedef bool (*EtPointingManagerSlotMouseAction)(EtDocId id_doc, EtMouseAction mouse_action);
+typedef bool (*EtPointingManagerSignalMouseAction)(EtDocId doc_id, EtMouseAction mouse_action);
+typedef bool (*EtPointingManagerSlotMouseAction)(EtDocId doc_id, EtMouseAction mouse_action);
 
 struct EtPointingManager{
 	EtPointingManagerSlotMouseAction slot_mouse_action;
@@ -19,7 +19,7 @@ struct EtPointingManager{
 
 EtPointingManager *et_pointing_manager_init();
 bool et_pointing_manager_set_slot_mouse_action(EtPointingManagerSlotMouseAction slot);
-bool et_pointing_manager_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action);
+bool et_pointing_manager_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

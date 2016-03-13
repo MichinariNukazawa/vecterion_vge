@@ -99,7 +99,7 @@ EtToolId et_etaion_get_tool_id()
 	return this->tool_id;
 }
 
-bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
+bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 {
 	EtEtaion *this = current_state;
 	if(NULL == this){
@@ -123,7 +123,7 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 
 	EtDocId doc_id_prev = et_etaion_get_current_doc_id();
 
-	if(!info->func_mouse_action(id_doc, mouse_action)){
+	if(!info->func_mouse_action(doc_id, mouse_action)){
 		et_error("");
 		return false;
 	}
@@ -132,7 +132,7 @@ bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action)
 	if(doc_id_prev != et_etaion_get_current_doc_id()){
 		et_doc_signal_update_from_id(doc_id_prev);
 	}
-	et_doc_signal_update_from_id(id_doc);
+	et_doc_signal_update_from_id(doc_id);
 
 	return true;
 }

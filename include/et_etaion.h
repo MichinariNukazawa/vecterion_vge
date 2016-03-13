@@ -30,7 +30,7 @@ EtDocId et_etaion_get_current_doc_id();
 bool et_etaion_set_is_extent_view(bool is_extent_view);
 bool et_etaion_get_is_extent_view();
 EtToolId et_etaion_get_tool_id();
-bool et_etaion_slot_mouse_action(EtDocId id_doc, EtMouseAction mouse_action);
+bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action);
 bool et_etaion_slot_key_action(EtKeyAction key_action);
 int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data);
 
