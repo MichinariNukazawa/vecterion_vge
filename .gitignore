@@ -6,6 +6,8 @@ tags
 
 *~
 *.back
+# patch command backup file
+*.orig
 
 # cash
 *~
