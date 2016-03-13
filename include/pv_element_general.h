@@ -9,14 +9,6 @@
 #include <string.h>
 #include "pv_type.h"
 
-struct PvRect;
-typedef struct PvRect PvRect;
-struct PvRect{
-	double x;
-	double y;
-	double w;
-	double h;
-};
 
 // ** 各 ElementKindのdata構造
 

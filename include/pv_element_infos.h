@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "pv_element_general.h"
 #include "pv_element.h"
+#include "pv_render_option.h"
 
 typedef struct {
 	int dummy;
@@ -27,6 +28,10 @@ typedef gpointer (*PvElementFuncCopyNewData)(void *data);
 typedef int (*PvElementFuncWriteSvg)(
 		InfoTargetSvg *target,
 		const PvElement *element, const ConfWriteSvg *conf);
+typedef bool (*PvElementFuncDraw)(
+		cairo_t *cr,
+		const PvRenderOption render_option,
+		const PvElement *element);
 
 typedef struct PvElementInfo{
 	PvElementKind kind;
@@ -35,6 +40,7 @@ typedef struct PvElementInfo{
 	PvElementFuncDeleteData		func_delete_data;
 	PvElementFuncCopyNewData	func_copy_new_data;
 	PvElementFuncWriteSvg		func_write_svg;
+	PvElementFuncDraw		func_draw;
 }PvElementInfo;
 
 extern const PvElementInfo _pv_element_infos[];

@@ -3,7 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pv_error.h"
+#include "pv_element_info_cairo.h"
+#include "pv_render_context.h"
 
+
+/* ****************
+ * null functions. (ex. use method not implement)
+ **************** */
 
 /** @brief 無効なindexを引いた際に埋め込まれているダミー関数 */
 gpointer _pv_element_error_return_null_new()
@@ -65,6 +71,19 @@ int _pv_element_write_svg_notimplement(
 	return 0;
 }
 
+bool _pv_element_notimplement_draw(
+		cairo_t *cr,
+		const PvRenderOption render_option,
+		const PvElement *element)
+{
+	pv_error("");
+	return true;
+}
+
+/* ****************
+ * General
+ **************** */
+
 /** @brief 
  * arg1 NULL -> return NULL and not error(is_error == false)
  */
@@ -94,6 +113,10 @@ char *pv_general_new_str(const char *src, bool *is_error)
 }
 
 // ** PvElementKindごとのdataのnew関数群
+
+/* ****************
+ * Group(Root,Layer,Group)
+ **************** */
 
 gpointer _pv_element_group_data_new()
 {
@@ -201,6 +224,18 @@ int _pv_element_group_write_svg(
 	return 0;
 }
 
+bool _pv_element_group_draw(
+		cairo_t *cr,
+		const PvRenderOption render_option,
+		const PvElement *element)
+{
+	return true;
+}
+
+/* ****************
+ * Bezier
+ **************** */
+
 gpointer _pv_element_bezier_data_new()
 {
 	PvElementBezierData *data = (PvElementBezierData *)malloc(sizeof(PvElementBezierData));
@@ -269,17 +304,17 @@ gpointer _pv_element_bezier_data_copy_new(void *_data)
 char *_pv_element_bezier_new_str_from_anchor(const PvAnchorPoint ap_current, const PvAnchorPoint ap_prev)
 {
 	char *str = g_strdup_printf("%c %f %f %f %f %f %f",
-				'C',
-				ap_prev.points[PvAnchorPointIndex_Point].x
-					+ ap_prev.points[PvAnchorPointIndex_HandleNext].x,
-				ap_prev.points[PvAnchorPointIndex_Point].y
-					+ ap_prev.points[PvAnchorPointIndex_HandleNext].y,
-				ap_current.points[PvAnchorPointIndex_Point].x
-					+ ap_current.points[PvAnchorPointIndex_HandlePrev].x,
-				ap_current.points[PvAnchorPointIndex_Point].y
-					+ ap_current.points[PvAnchorPointIndex_HandlePrev].y,
-				ap_current.points[PvAnchorPointIndex_Point].x,
-				ap_current.points[PvAnchorPointIndex_Point].y);
+			'C',
+			ap_prev.points[PvAnchorPointIndex_Point].x
+			+ ap_prev.points[PvAnchorPointIndex_HandleNext].x,
+			ap_prev.points[PvAnchorPointIndex_Point].y
+			+ ap_prev.points[PvAnchorPointIndex_HandleNext].y,
+			ap_current.points[PvAnchorPointIndex_Point].x
+			+ ap_current.points[PvAnchorPointIndex_HandlePrev].x,
+			ap_current.points[PvAnchorPointIndex_Point].y
+			+ ap_current.points[PvAnchorPointIndex_HandlePrev].y,
+			ap_current.points[PvAnchorPointIndex_Point].x,
+			ap_current.points[PvAnchorPointIndex_Point].y);
 
 	return str;
 }
@@ -313,7 +348,7 @@ int _pv_element_bezier_write_svg(
 	char *str_current = NULL;
 	for(int i = 0; i < data->anchor_points_num; i++){
 		const PvAnchorPoint ap = data->anchor_points[i];
-		
+
 		char *str_point = NULL;
 		if(0 == i){
 			// first anchor_point
@@ -375,6 +410,156 @@ int _pv_element_bezier_write_svg(
 	return 0;
 }
 
+bool _pv_element_bezier_draw(
+		cairo_t *cr,
+		const PvRenderOption render_option,
+		const PvElement *element)
+{
+	const PvElementBezierData *data = element->data;
+	if(NULL == data){
+		pv_error("");
+		return false;
+	}
+	PvAnchorPoint * const anchor_points = data->anchor_points;
+
+	if((data->anchor_points_num) <= 0){
+		return true;
+	}
+
+	const PvRenderContext render_context = render_option.render_context;
+
+	// ** draw property is element or focus element
+	if(render_context.is_focus){
+		_pv_render_workingcolor_cairo_set_source_rgb(cr);
+		cairo_set_line_width(cr, 1.0);
+	}else{
+		cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
+		cairo_set_line_width(cr, 2.0);
+	}
+
+	// ** stroke
+	double first_ap_x = 0, first_ap_y = 0, second_ap_x = 0, second_ap_y = 0;
+	for(int i = 0; i < data->anchor_points_num; i++){
+		double x = anchor_points[i].points[PvAnchorPointIndex_Point].x;
+		double y = anchor_points[i].points[PvAnchorPointIndex_Point].y;
+
+		if(0 == i){
+			x *= render_context.scale;
+			y *= render_context.scale;
+
+			if(1 == data->anchor_points_num){
+				cairo_rectangle (cr, x, y, 2, 2);
+				cairo_fill (cr);
+			}else{
+				cairo_move_to(cr, x, y);
+			}
+		}else{
+			const PvAnchorPoint *ap_prev = &anchor_points[i - 1];
+			first_ap_x = ap_prev->points[PvAnchorPointIndex_HandleNext].x
+				+ ap_prev->points[PvAnchorPointIndex_Point].x;
+			first_ap_y = ap_prev->points[PvAnchorPointIndex_HandleNext].y
+				+ ap_prev->points[PvAnchorPointIndex_Point].y;
+
+			second_ap_x = anchor_points[i].points[PvAnchorPointIndex_HandlePrev].x;
+			second_ap_y = anchor_points[i].points[PvAnchorPointIndex_HandlePrev].y;
+			second_ap_x += x;
+			second_ap_y += y;
+
+			x *= render_context.scale;
+			y *= render_context.scale;
+			first_ap_x *= render_context.scale;
+			first_ap_y *= render_context.scale;
+			second_ap_x *= render_context.scale;
+			second_ap_y *= render_context.scale;
+			cairo_curve_to(cr, first_ap_x, first_ap_y, second_ap_x, second_ap_y, x, y);
+		}
+
+	}
+	if(data->is_close){
+		double x = anchor_points[0].points[PvAnchorPointIndex_Point].x;
+		double y = anchor_points[0].points[PvAnchorPointIndex_Point].y;
+
+		const PvAnchorPoint *ap_last = &anchor_points[data->anchor_points_num - 1];
+		first_ap_x = ap_last->points[PvAnchorPointIndex_HandleNext].x
+			+ ap_last->points[PvAnchorPointIndex_Point].x;
+		first_ap_y = ap_last->points[PvAnchorPointIndex_HandleNext].y
+			+ ap_last->points[PvAnchorPointIndex_Point].y;
+
+		const PvAnchorPoint *ap_first = &anchor_points[0];
+		second_ap_x = ap_first->points[PvAnchorPointIndex_HandlePrev].x
+			+ ap_first->points[PvAnchorPointIndex_Point].x;
+		second_ap_y = ap_first->points[PvAnchorPointIndex_HandlePrev].y
+			+ ap_first->points[PvAnchorPointIndex_Point].y;
+
+		first_ap_x *= render_context.scale;
+		first_ap_y *= render_context.scale;
+		second_ap_x *= render_context.scale;
+		second_ap_y *= render_context.scale;
+		x *= render_context.scale;
+		y *= render_context.scale;
+		cairo_curve_to(cr, first_ap_x, first_ap_y, second_ap_x, second_ap_y, x, y);
+		cairo_close_path (cr);
+	}
+
+	PvRect crect_extent = _pv_renderer_get_rect_extent_from_cr(cr);
+	cairo_stroke(cr);
+	if(render_context.is_extent_view && !render_context.is_focus){
+		_pv_renderer_draw_extent_from_crect(cr, crect_extent);
+	}
+
+	if(render_context.is_focus){
+		// ** anchor point
+		cairo_set_line_width(cr, 1.0);
+		_pv_render_workingcolor_cairo_set_source_rgb(cr);
+		// ** prev anchor_point
+		if(0 < (data->anchor_points_num)){
+			int ix =  data->anchor_points_num - ((data->is_close) ? 1:2);
+			const PvAnchorPoint ap = data->anchor_points[ix];
+			PvPoint gp_point = ap.points[PvAnchorPointIndex_Point];
+			PvPoint gp_next = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandleNext);
+			gp_point.x *= render_context.scale;
+			gp_point.y *= render_context.scale;
+			gp_next.x *= render_context.scale;
+			gp_next.y *= render_context.scale;
+			cairo_move_to(cr, gp_point.x, gp_point.y);
+			cairo_line_to(cr, gp_next.x, gp_next.y);
+			cairo_stroke(cr);
+			cairo_arc (cr, gp_next.x, gp_next.y, 2.0, 0., 2 * M_PI);
+			cairo_fill (cr);
+		}
+		// ** current anchor_point
+		int ix = ((data->is_close)? 0 : data->anchor_points_num - 1);
+		PvPoint gp_current = anchor_points[ix].points[PvAnchorPointIndex_Point];
+		PvPoint gp_prev = pv_anchor_point_get_handle(anchor_points[ix], PvAnchorPointIndex_HandlePrev);
+		PvPoint gp_next = pv_anchor_point_get_handle(anchor_points[ix], PvAnchorPointIndex_HandleNext);
+		gp_current.x *= render_context.scale;
+		gp_current.y *= render_context.scale;
+		gp_prev.x *= render_context.scale;
+		gp_prev.y *= render_context.scale;
+		gp_next.x *= render_context.scale;
+		gp_next.y *= render_context.scale;
+		cairo_set_line_width(cr, 1.0);
+		_pv_render_workingcolor_cairo_set_source_rgb(cr);
+		cairo_move_to(cr, gp_current.x, gp_current.y);
+		cairo_line_to(cr, gp_prev.x, gp_prev.y);
+		cairo_stroke(cr);
+		cairo_move_to(cr, gp_current.x, gp_current.y);
+		cairo_line_to(cr, gp_next.x, gp_next.y);
+		cairo_stroke(cr);
+
+		_pv_render_workingcolor_cairo_set_source_rgb(cr);
+		cairo_arc (cr, gp_prev.x, gp_prev.y, 2.0, 0., 2 * M_PI);
+		cairo_arc (cr, gp_next.x, gp_next.y, 2.0, 0., 2 * M_PI);
+		cairo_fill (cr);
+	}
+
+	return true;
+}
+
+/* ****************
+ * Raster
+ **************** */
+
 gpointer _pv_element_raster_data_new()
 {
 	PvElementRasterData *data = (PvElementRasterData *)malloc(sizeof(PvElementRasterData));
@@ -432,7 +617,7 @@ gpointer _pv_element_raster_data_copy_new(void *_data)
 		pv_critical("");
 		exit(-1);
 	}
-	
+
 	if(NULL == data->pixbuf){
 		new_data->pixbuf = NULL;
 	}else{
@@ -446,54 +631,98 @@ gpointer _pv_element_raster_data_copy_new(void *_data)
 	return (gpointer)new_data;
 }
 
-// ** ElementInfo配列の定義
+bool _pv_element_raster_draw(
+		cairo_t *cr,
+		const PvRenderOption render_option,
+		const PvElement *element)
+{
+	const PvRenderContext render_context = render_option.render_context;
+
+	PvElementRasterData *data = element->data;
+	GdkPixbuf *pixbuf = data->pixbuf;
+	double w = (double)gdk_pixbuf_get_width(pixbuf);
+	double h = (double)gdk_pixbuf_get_height(pixbuf);
+	w *= render_context.scale;
+	h *= render_context.scale;
+	GdkPixbuf *pb = gdk_pixbuf_scale_simple(
+			pixbuf,
+			(int)w, (int)h,
+			GDK_INTERP_HYPER);
+	if(NULL == pb){
+		pv_error("");
+		return false;
+	}else{
+		gdk_cairo_set_source_pixbuf (cr, pb, 0, 0);
+		cairo_paint (cr);
+		g_object_unref(G_OBJECT(pb));
+	}
+
+	return true;
+}
+
+
+/* ****************
+ * ElementInfo配列の定義
+ **************** */
 
 const PvElementInfo _pv_element_infos[] = {
 	{PvElementKind_NotDefined, "NotDefined",
-			_pv_element_error_return_null_new,
-			_pv_element_error_return_null_delete,
-			_pv_element_error_return_null_copy_new,
-			_pv_element_write_svg_notimplement,
+		_pv_element_error_return_null_new,
+		_pv_element_error_return_null_delete,
+		_pv_element_error_return_null_copy_new,
+		_pv_element_write_svg_notimplement,
+		.func_draw = _pv_element_notimplement_draw,
 	},
 	{PvElementKind_Root, "Root",
-			_pv_element_group_data_new,
-			_pv_element_group_data_delete,
-			_pv_element_group_data_copy_new,
-			_pv_element_group_write_svg,
+		_pv_element_group_data_new,
+		_pv_element_group_data_delete,
+		_pv_element_group_data_copy_new,
+		_pv_element_group_write_svg,
+		.func_draw = _pv_element_group_draw,
 	},
 	{PvElementKind_Layer, "Layer",
-			_pv_element_group_data_new,
-			_pv_element_group_data_delete,
-			_pv_element_group_data_copy_new,
-			_pv_element_group_write_svg,
+		_pv_element_group_data_new,
+		_pv_element_group_data_delete,
+		_pv_element_group_data_copy_new,
+		_pv_element_group_write_svg,
+		.func_draw = _pv_element_group_draw,
 	},
 	{PvElementKind_Group, "Group",
-			_pv_element_group_data_new,
-			_pv_element_group_data_delete,
-			_pv_element_group_data_copy_new,
-			_pv_element_group_write_svg,
+		_pv_element_group_data_new,
+		_pv_element_group_data_delete,
+		_pv_element_group_data_copy_new,
+		_pv_element_group_write_svg,
+		.func_draw = _pv_element_group_draw,
 	},
 	{PvElementKind_Bezier, "Bezier",
-			_pv_element_bezier_data_new,
-			_pv_element_bezier_data_delete,
-			_pv_element_bezier_data_copy_new,
-			_pv_element_bezier_write_svg,
+		_pv_element_bezier_data_new,
+		_pv_element_bezier_data_delete,
+		_pv_element_bezier_data_copy_new,
+		_pv_element_bezier_write_svg,
+		.func_draw = _pv_element_bezier_draw,
 	},
 	{PvElementKind_Raster, "Raster",
-			_pv_element_raster_data_new,
-			_pv_element_raster_data_delete,
-			_pv_element_raster_data_copy_new,
-			_pv_element_write_svg_notimplement,
+		_pv_element_raster_data_new,
+		_pv_element_raster_data_delete,
+		_pv_element_raster_data_copy_new,
+		_pv_element_write_svg_notimplement,
+		.func_draw = _pv_element_raster_draw,
 	},
 	/* 番兵 */
 	{PvElementKind_EndOfKind, "EndOfKind",
-			_pv_element_error_return_null_new,
-			_pv_element_error_return_null_delete,
-			_pv_element_error_return_null_copy_new,
-			_pv_element_write_svg_notimplement,
+		_pv_element_error_return_null_new,
+		_pv_element_error_return_null_delete,
+		_pv_element_error_return_null_copy_new,
+		_pv_element_write_svg_notimplement,
+		.func_draw = _pv_element_notimplement_draw,
 	},
 };
 
+
+
+/* ****************
+ * ElementInfo関連関数の定義
+ **************** */
 
 const PvElementInfo *pv_element_get_info_from_kind(PvElementKind kind)
 {
@@ -513,3 +742,4 @@ const PvElementInfo *pv_element_get_info_from_kind(PvElementKind kind)
 	pv_bug("%d\n", kind);
 	return NULL;
 }
+
