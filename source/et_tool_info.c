@@ -28,7 +28,7 @@ bool _et_tool_nop_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
 		case EtMouseAction_Up:
-			et_debug("\n");
+			et_debug("");
 			break;
 		default:
 			break;
@@ -167,7 +167,7 @@ bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
 			{
-				et_debug(" x:%d, y:%d,\n",
+				et_debug(" x:%d, y:%d,",
 						(int)mouse_action.point.x,
 						(int)mouse_action.point.y);
 

@@ -226,7 +226,7 @@ PvElement *_pv_element_copy_recursive_inline(const PvElement *this,
 		goto error1;
 	}
 
-	pv_debug("copy childs:%3d:%d\n", *level, num);
+	pv_debug("copy childs:%3d:%d", *level, num);
 
 	PvElement **childs = NULL;
 	if(0 < num){
@@ -381,7 +381,7 @@ bool _pv_element_remove_delete_recursive_inline(PvElement *this,
 
 	(*level)++;
 
-	pv_debug("delete childs:%3d:%d\n", *level, num);
+	pv_debug("delete childs:%3d:%d", *level, num);
 
 	for(int i = (num - 1); 0 <= i; i--){
 		if(!_pv_element_remove_delete_recursive_inline(
@@ -641,11 +641,11 @@ void pv_element_debug_print(const PvElement *element)
 		return;
 	}
 
-	pv_debug("anchor:%d(%s)\n", data->anchor_points_num, (data->is_close)? "true":"false");
+	pv_debug("anchor:%d(%s)", data->anchor_points_num, (data->is_close)? "true":"false");
 
 	for(int i = 0; i < data->anchor_points_num; i++){
 		const PvAnchorPoint *ap = &data->anchor_points[i];
-		pv_debug("%d:% 3.2f,% 3.2f, % 3.2f,% 3.2f, % 3.2f,% 3.2f, \n",
+		pv_debug("%d:% 3.2f,% 3.2f, % 3.2f,% 3.2f, % 3.2f,% 3.2f, ",
 				i,
 				ap->points[PvAnchorPointIndex_HandlePrev].x,
 				ap->points[PvAnchorPointIndex_HandlePrev].y,

@@ -57,7 +57,7 @@ int _pv_element_write_svg_notimplement(
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 	if(NULL == info){
-		pv_bug("%d\n", element->kind);
+		pv_bug("%d", element->kind);
 		return -1;
 	}
 
@@ -108,7 +108,7 @@ char *pv_general_new_str(const char *src, bool *is_error)
 	}
 
 	if(20 < strlen(src)){
-		pv_debug("len:%lu '%s'\n", strlen(src), src);
+		pv_debug("len:%lu '%s'", strlen(src), src);
 	}
 
 	char *dst = (char *)malloc(sizeof(char) * (strlen(src) + 1));
@@ -215,7 +215,7 @@ int _pv_element_group_write_svg(
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 	if(NULL == info){
-		pv_bug("%d\n", element->kind);
+		pv_bug("%d", element->kind);
 		return -1;
 	}
 
@@ -824,7 +824,7 @@ const PvElementInfo *pv_element_get_info_from_kind(PvElementKind kind)
 {
 
 	if(PvElementKind_NotDefined == kind || PvElementKind_EndOfKind == kind){
-		pv_error("%d\n", kind);
+		pv_error("%d", kind);
 		return NULL;
 	}
 
@@ -835,7 +835,7 @@ const PvElementInfo *pv_element_get_info_from_kind(PvElementKind kind)
 		}
 	}
 
-	pv_bug("%d\n", kind);
+	pv_bug("%d", kind);
 	return NULL;
 }
 

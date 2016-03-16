@@ -192,7 +192,7 @@ bool _signal_et_canvas_mouse_action(
 gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	/*
-	   et_debug("BUTTON PRESS: (%4d, %4d)\n", (int)event->x, (int)event->y);
+	   et_debug("BUTTON PRESS: (%4d, %4d)", (int)event->x, (int)event->y);
 	   et_mouse_util_button_kind(event->button);
 	   et_mouse_util_modifier_kind(event->state);
 	 */
@@ -215,7 +215,7 @@ error:
 
 gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
-	// et_debug("BUTTON RELEASE\n");
+	// et_debug("BUTTON RELEASE");
 	EtCanvas *this = (EtCanvas *)data;
 
 	if(!_signal_et_canvas_mouse_action(
@@ -234,7 +234,7 @@ error:
 
 gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
-	//	et_debug("(%3d, %3d)\n", (int)event->x, (int)event->y);
+	//	et_debug("(%3d, %3d)", (int)event->x, (int)event->y);
 	EtCanvas *this = (EtCanvas *)data;
 
 	if(!_signal_et_canvas_mouse_action(
@@ -257,11 +257,11 @@ gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer da
 
 	switch(event->direction){
 		case GDK_SCROLL_UP:
-			et_debug("BUTTON SCROLL   UP\n");
+			et_debug("BUTTON SCROLL   UP");
 			this->render_context.scale += 0.1;
 			break;
 		case GDK_SCROLL_DOWN:
-			et_debug("BUTTON SCROLL DOWN\n");
+			et_debug("BUTTON SCROLL DOWN");
 			this->render_context.scale -= 0.1;
 			break;
 		default:

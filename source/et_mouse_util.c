@@ -7,13 +7,13 @@
 void et_mouse_util_modifier_kind(int state)
 {
 	if(state & GDK_SHIFT_MASK){
-		et_debug("Shift\n");
+		et_debug("Shift");
 	}
 	if(state & GDK_CONTROL_MASK){
-		et_debug("CONTROL\n");
+		et_debug("CONTROL");
 	}
 	if(state & GDK_MOD1_MASK){
-		et_debug("Alt\n");
+		et_debug("Alt");
 	}
 }
 
@@ -21,15 +21,15 @@ void et_mouse_util_button_kind(int button)
 {
 	switch(button){
 		case 1:
-			et_debug("LEFT\n");
+			et_debug("LEFT");
 			break;
 		case 2:
-			et_debug("CENTER\n");
+			et_debug("CENTER");
 			break;
 		case 3:
-			et_debug("RIGHT\n");
+			et_debug("RIGHT");
 			break;
 		default:
-			et_debug("UNKNOWN:%d\n", button);
+			et_debug("UNKNOWN:%d", button);
 	}
 }

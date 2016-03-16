@@ -33,7 +33,7 @@ bool _pv_renderer_cairo_recersive(
 						element->childs[i],
 						render_option,
 						level)){
-				pv_error("%d\n", i);
+				pv_error("%d", i);
 				ret = false;
 				goto end;
 			}
@@ -61,7 +61,7 @@ bool _pv_renderer_cairo_background(cairo_t *cr,
 		const PvVg * const vg,
 		const PvRenderContext render_context)
 {
-	// pv_debug("%f, %f, %f, %f, \n", (vg->rect).x, (vg->rect).y, (vg->rect).w, (vg->rect).h);
+	// pv_debug("%f, %f, %f, %f, ", (vg->rect).x, (vg->rect).y, (vg->rect).w, (vg->rect).h);
 	cairo_set_source_rgb (cr, 0.6, 0.6, 0.6);
 
 	int unit = 16;

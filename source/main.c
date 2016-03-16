@@ -56,7 +56,7 @@ static gpointer worker_func(gpointer data)
 
 static gboolean cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer user_data)
 {
-	et_debug("keyval=%04x status=%04x\n",
+	et_debug("keyval=%04x status=%04x",
 			event->keyval, event->state/*, event->string*/);
 
 	EtKeyAction ka = {
@@ -266,7 +266,7 @@ bool _debug_init()
 
 EtDocId _open_doc_new_from_file(const char* filepath)
 {
-	et_debug("filepath:'%s'\n", (NULL == filepath)? "NULL":filepath);
+	et_debug("filepath:'%s'", (NULL == filepath)? "NULL":filepath);
 
 	if(NULL == filepath){
 		et_error("");
@@ -412,13 +412,13 @@ static gboolean _cb_menu_file_new(gpointer data)
 			{
 				vg->rect.w = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_w));
 				vg->rect.h = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_h));
-				et_debug("size:%f,%f,%f,%f\n",
+				et_debug("size:%f,%f,%f,%f",
 						vg->rect.x, vg->rect.y, vg->rect.w, vg->rect.h);
 				_open_doc_new(vg);
 			}
 			break;
 		default:
-			et_debug("Cancel\n");
+			et_debug("Cancel");
 			break;
 	}
 	gtk_widget_destroy (dialog);
@@ -438,18 +438,18 @@ bool _save_file_from_doc_id(const char *filepath, EtDocId doc_id)
 
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
 	if(NULL == doc){
-		et_debug("%d\n", doc_id);
+		et_debug("%d", doc_id);
 		goto error;
 	}
 
 	PvVg *vg = et_doc_get_vg_ref(doc);
 	if(NULL == vg){
-		et_debug("%d\n", doc_id);
+		et_debug("%d", doc_id);
 		goto error;
 	}
 
 	if(!pv_io_write_file_svg_from_vg(vg, filepath)){
-		et_debug("%d\n", doc_id);
+		et_debug("%d", doc_id);
 		goto error;
 	}
 
@@ -545,7 +545,7 @@ static gboolean _cb_menu_file_open(gpointer data)
 		filename = gtk_file_chooser_get_filename (chooser);
 		if(!_open_doc_new_from_file(filename)){
 			// TODO: warning dialog.
-			et_debug("file not open:%s\n", filename);
+			et_debug("file not open:'%s'", filename);
 		}
 		g_free (filename);
 	}

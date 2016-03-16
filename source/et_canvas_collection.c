@@ -39,7 +39,7 @@ int et_general_get_parray_num(void **pointers)
 	}
 
 	if(15 < i){
-		et_debug("num:%d\n", i);
+		et_debug("num:%d", i);
 	}
 
 	return i;
@@ -84,7 +84,7 @@ gboolean _cb_notebook_change_current_page(GtkNotebook *notebook,
 		gint         page_num,
 		gpointer     user_data)
 {
-	et_debug("%d\n", page_num);
+	et_debug("%d", page_num);
 
 	// ** get current doc_id
 	EtDocId doc_id = _et_canvas_collection_get_doc_id_from_canvas_frame(page);
@@ -113,7 +113,7 @@ gboolean _cb_notebook_change_current_page(GtkNotebook *notebook,
 	// ** update thumbnail (キャンバスが再描画されるのは記述時点で副作用)
 	et_doc_signal_update_from_id(doc_id);
 
-	et_debug("%d\n", doc_id);
+	et_debug("%d", doc_id);
 
 	return false;
 error:
@@ -125,7 +125,7 @@ void _cb_notebook_page_added(GtkNotebook *notebook,
 		guint        page_num,
 		gpointer     user_data)
 {
-	et_debug("%d\n", page_num);
+	et_debug("%d", page_num);
 
 	gtk_widget_show_all(child);
 	gtk_notebook_set_current_page(notebook, page_num);

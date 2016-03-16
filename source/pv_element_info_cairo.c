@@ -9,7 +9,7 @@ void debug_print_path(cairo_t *cr)
 {
 	double x1, y1, x2, y2;
 	cairo_path_extents(cr, &x1, &y1, &x2, &y2);
-	pv_debug("Path:%f,%f %f,%f \n", x1, y1, x2, y2);
+	pv_debug("Path:%f,%f %f,%f ", x1, y1, x2, y2);
 }
 
 PvRect _pv_renderer_get_rect_extent_from_cr(cairo_t *cr)

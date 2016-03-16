@@ -73,7 +73,7 @@ EtDocId et_etaion_get_current_doc_id()
 static bool _et_etaion_is_extent_view = false;
 bool et_etaion_set_is_extent_view(bool is_extent_view)
 {
-	et_debug("%s\n", (is_extent_view? "TRUE":"FALSE"));
+	et_debug("%s", (is_extent_view? "TRUE":"FALSE"));
 	_et_etaion_is_extent_view = is_extent_view;
 
 	// TODO: update all doc.
@@ -157,7 +157,7 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 		exit(-1);
 	}
 
-	// et_debug("key:%04x\n", key_action.key);
+	// et_debug("key:%04x", key_action.key);
 
 	bool is_error = true;
 	PvFocus focus = et_doc_get_focus_from_id((this->state).doc_id, &is_error);
@@ -180,7 +180,7 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 			_signal_et_etaion_change_state(this);
 			break;
 		default:
-			et_debug("no use:%d\n", key_action.key);
+			et_debug("no use:%d", key_action.key);
 			return true;
 	}
 
@@ -454,7 +454,7 @@ error:
 
 bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data)
 {
-	et_debug("%d\n", tool_id);
+	et_debug("%d", tool_id);
 
 	EtEtaion *this = current_state;
 	if(NULL == this){
@@ -463,7 +463,7 @@ bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data)
 	}
 
 	if(this->tool_id != tool_id){
-		et_debug("tool:%d->%d\n", this->tool_id, tool_id);
+		et_debug("tool:%d->%d", this->tool_id, tool_id);
 #include "et_tool_panel.h"
 		if(!et_tool_panel_set_current_tool_id(tool_id)){
 			et_bug("");

@@ -16,7 +16,7 @@
 #define et_warning(fmt, ...)  \
 	fprintf(stderr, "warning: %s()[%d]: "fmt"\n", __func__, __LINE__, ## __VA_ARGS__)
 #define et_debug(fmt, ...)  \
-	fprintf(stdout, "debug: %s()[%d]: "fmt"", __func__, __LINE__, ## __VA_ARGS__)
+	fprintf(stdout, "debug: %s()[%d]: "fmt"\n", __func__, __LINE__, ## __VA_ARGS__)
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

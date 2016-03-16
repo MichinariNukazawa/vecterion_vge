@@ -56,7 +56,7 @@ bool et_tool_init()
 	}
 
 	int num_tool = et_tool_get_num();
-	et_debug("%d\n", num_tool);
+	et_debug("%d", num_tool);
 	for(int tool_id = 0; tool_id < num_tool; tool_id++){
 		EtToolInfo *info = _et_tool_get_info_from_id(tool_id);
 		if(NULL == info){
@@ -68,7 +68,7 @@ bool et_tool_init()
 		GError *error = NULL;
 		info->cursor = gdk_pixbuf_new_from_file(info->filepath_cursor, &error);
 		if(NULL == info->cursor){
-			et_error("'%s'\n", error->message);
+			et_error("'%s'", error->message);
 			return false;
 		}
 		info->icon = info->cursor;

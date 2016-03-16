@@ -42,7 +42,7 @@ bool _pv_io_svg_from_element_in_recursive_before(PvElement *element, gpointer da
 
 	int ret = info->func_write_svg(target, element, conf);
 	if(0 > ret){
-		pv_error("%d\n", ret);
+		pv_error("%d", ret);
 		return false;
 	}
 
@@ -136,7 +136,7 @@ bool pv_io_write_file_svg_from_vg(PvVg *vg, const char *path)
 	xmlDocSetRootElement(doc, root_node);
 
 	// ** width, height
-	pv_debug("x:%f y:%f w:%f h:%f\n",
+	pv_debug("x:%f y:%f w:%f h:%f",
 			(vg->rect).x, (vg->rect).y, (vg->rect).w, (vg->rect).h);
 
 	xmlNewProp(root_node, BAD_CAST "version", BAD_CAST "1.1");
@@ -183,7 +183,7 @@ print_element_names(xmlNode * a_node)
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
-			printf("node type: Element, name: %s\n", cur_node->name);
+			printf("node type: Element, name: %s", cur_node->name);
 		}
 
 		print_element_names(cur_node->children);
@@ -248,7 +248,7 @@ bool _pv_io_get_px_from_str(double *value, const char *str, const char **str_err
 
 bool _pv_io_set_vg_from_xmlnode_svg(PvVg *vg, xmlNode *xmlnode_svg)
 {
-	pv_debug("\n");
+	pv_debug("");
 	PvRect rect = {0, 0, -1, -1};
 	xmlAttr* attribute = xmlnode_svg->properties;
 	while(attribute)
@@ -286,7 +286,7 @@ bool _pv_io_set_vg_from_xmlnode_svg(PvVg *vg, xmlNode *xmlnode_svg)
 		}
 
 		if(!isOk){
-			pv_debug("Can not use:'%s':'%s' %s\n",
+			pv_debug("Can not use:'%s':'%s' %s",
 					name, strValue, str_error);
 		}
 

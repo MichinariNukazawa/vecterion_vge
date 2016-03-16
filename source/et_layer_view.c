@@ -399,12 +399,12 @@ int _et_layer_view_index_data_from_position(EtLayerView *this, int x, int y)
 gboolean _et_layer_view_cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	EtLayerView *this = (EtLayerView *)data;
-	et_debug("BUTTON PRESS: (%4d, %4d)\n", (int)event->x, (int)event->y);
+	et_debug("BUTTON PRESS: (%4d, %4d)", (int)event->x, (int)event->y);
 	et_mouse_util_button_kind(event->button);
 	et_mouse_util_modifier_kind(event->state);
 
 	int index = _et_layer_view_index_data_from_position(this, event->x, event->y);
-	et_debug("%d\n", index);
+	et_debug("%d", index);
 	if(0 <= index){
 		bool is_error = true;
 		PvFocus focus = et_doc_get_focus_from_id(this->doc_id, &is_error);
@@ -436,13 +436,13 @@ gboolean _et_layer_view_cb_button_press(GtkWidget *widget, GdkEventButton *event
 
 gboolean _et_layer_view_cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
-	et_debug("BUTTON RELEASE\n");
+	et_debug("BUTTON RELEASE");
 	return false;
 }
 
 gboolean _et_layer_view_cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
-	// et_debug("(%3d, %3d)\n", (int)event->x, (int)event->y);
+	// et_debug("(%3d, %3d)", (int)event->x, (int)event->y);
 
 	return false;
 }

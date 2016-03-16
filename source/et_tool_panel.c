@@ -177,7 +177,7 @@ EtToolId _et_tool_panel_tool_id_from_button(const EtToolPanel *this, const GtkWi
 	int num_tool = pv_general_get_parray_num((void **)this->tools);
 	for(int i = 0; i < num_tool; i++){
 		if((this->tools[i])->button == button){
-			et_debug("%d\n", (this->tools[i])->tool_id);
+			et_debug("%d", (this->tools[i])->tool_id);
 			return (this->tools[i])->tool_id;
 		}
 	}

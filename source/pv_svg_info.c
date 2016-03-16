@@ -200,7 +200,7 @@ PvElement *_pv_svg_path_new_element_from_svg(
 
 	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "d");
 	if(NULL != value){
-		pv_debug("d='%s'\n", (char *)value);
+		pv_debug("d='%s'", (char *)value);
 		if(!_pv_svg_path_set_anchor_points_from_str(element_new, (char*)value)){
 			pv_error("");
 			return NULL;
