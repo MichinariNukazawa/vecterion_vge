@@ -56,12 +56,13 @@ static gpointer worker_func(gpointer data)
 
 static gboolean cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer user_data)
 {
-	g_print("keyval=%d static=%d string=%s\n",
-			event->keyval, event->state, event->string);
+	et_debug("keyval=%04x status=%04x\n",
+			event->keyval, event->state/*, event->string*/);
 
 	EtKeyAction ka = {
 		.key = event->keyval,
 		.action = EtKeyAction_Down,
+		.state = event->state,
 	};
 	et_etaion_slot_key_action(ka);
 

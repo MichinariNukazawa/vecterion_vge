@@ -5,12 +5,11 @@
 #include <gdk/gdk.h>
 #include <stdbool.h>
 
-typedef enum _EtKeyType{
-	EtKey_Unknown,
-	EtKey_Right,
-	EtKey_Left,
-	EtKey_Enter = 65293,
-}EtKeyType;
+typedef enum Enum_EtKeyType{
+	EtKeyType_Enter = 65293,
+}Enum_EtKeyType;
+
+typedef unsigned int EtKeyType;
 
 typedef enum _EtKeyActionType{
 	EtKeyAction_Unknown,
@@ -18,11 +17,14 @@ typedef enum _EtKeyActionType{
 	EtKeyAction_Up,
 }EtKeyActionType;
 
+typedef unsigned int EtKeyState;
+
 struct EtKeyAction;
 typedef struct EtKeyAction EtKeyAction;
 struct EtKeyAction{
 	EtKeyType	key;
 	EtKeyActionType	action;
+	EtKeyState	state;
 };
 
 #ifdef include_ET_TEST

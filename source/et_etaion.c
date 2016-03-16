@@ -157,7 +157,7 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 		exit(-1);
 	}
 
-	et_debug("key:%d\n", key_action.key);
+	// et_debug("key:%04x\n", key_action.key);
 
 	bool is_error = true;
 	PvFocus focus = et_doc_get_focus_from_id((this->state).doc_id, &is_error);
@@ -167,7 +167,7 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 	}
 
 	switch(key_action.key){
-		case EtKey_Enter:
+		case EtKeyType_Enter:
 			if(NULL != focus.element){
 				if(PvElementKind_Layer != focus.element->kind){
 					focus.element = (focus.element)->parent;
