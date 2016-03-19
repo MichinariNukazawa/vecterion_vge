@@ -381,7 +381,7 @@ bool _pv_element_remove_delete_recursive_inline(PvElement *this,
 
 	(*level)++;
 
-	pv_debug("delete childs:%3d:%d", *level, num);
+	// pv_debug("delete childs:%3d:%d", *level, num);
 
 	for(int i = (num - 1); 0 <= i; i--){
 		if(!_pv_element_remove_delete_recursive_inline(

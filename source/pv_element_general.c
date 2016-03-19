@@ -14,10 +14,6 @@ int pv_general_get_parray_num(void **pointers)
 		i++;
 	}
 
-	if(15 < i){
-		pv_debug("num:%d", i);
-	}
-
 	return i;
 }
 
