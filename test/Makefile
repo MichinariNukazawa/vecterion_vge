@@ -12,6 +12,7 @@ TEST_SOURCE_DIR		= test/utest
 TEST_OBJECT_DIR		= object
 TEST_BUILD_DIR		= object
 CXX_FLAGS		= -std=c++11 -g -MMD -MP -W -Wall -Wextra
+CXX_FLAGS		+= $(filter-out -std=c11,$(CFLAGS))
 TEST_FLAGS		= -lpthread -lgtest_main -lgtest
 TEST_FLAGS		+= -Ltest
 TEST_FLAGS		+= -Dinclude_PV_TEST -Dinclude_ET_TEST
@@ -31,8 +32,11 @@ $(TEST_OBJECT_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cpp
 	$(CXX) -o $@ $(INCLUDE) $(TEST_INCLUDE) $(CXX_FLAGS) $(TEST_FLAGS) \
 		-c $<
 
+O_OBJECTS = $(filter-out object/main.o,$(OBJECTS))
 $(TEST_OBJECT_DIR)/test_test.exe: object/pv_general.o
 $(TEST_OBJECT_DIR)/test_pv_general.exe: object/pv_general.o
+#$(TEST_OBJECT_DIR)/test_pv_vg.exe: object/pv_vg.o object/pv_vg.o
+$(TEST_OBJECT_DIR)/test_pv_vg.exe: $(O_OBJECTS)
 
 $(TEST_BUILD_DIR)/test_%.exe: $(TEST_OBJECT_DIR)/test_%.o
 	$(CXX) \
