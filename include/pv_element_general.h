@@ -5,9 +5,8 @@
 #include <gdk/gdk.h>
 #include <stdbool.h>
 
-#include <errno.h>
-#include <string.h>
 #include "pv_type.h"
+#include "pv_general.h"
 
 
 // ** 各 ElementKindのdata構造
@@ -66,14 +65,6 @@ typedef enum _PvElementKind{
 	PvElementKind_EndOfKind,
 }PvElementKind;
 
-/** @brief pointer arrayの内容数を返す
- * (実長さは番兵のNULL終端があるため、return+1)
- */
-int pv_general_get_parray_num(void **pointers);
-
-
-bool pv_general_strtod(double *value, const char *str,
-		char **endptr, const char **str_error);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

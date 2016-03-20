@@ -2,6 +2,7 @@
 
 #include <libxml/encoding.h>
 #include <libxml/xmlwriter.h>
+#include <string.h>
 #include "pv_error.h"
 #include "pv_element_general.h"
 #include "pv_element_infos.h"

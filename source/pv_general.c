@@ -1,6 +1,8 @@
-#include "pv_element_general.h"
+#include "pv_general.h"
 
+#include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 #include "pv_error.h"
 
 int pv_general_get_parray_num(void **pointers)
