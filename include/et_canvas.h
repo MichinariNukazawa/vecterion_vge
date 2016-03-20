@@ -17,14 +17,14 @@ typedef bool (*EtCanvasSlotMouseAction)(EtDocId doc_id, EtMouseAction mouse_acti
 
 
 EtCanvas *et_canvas_new();
-GtkWidget *et_canvas_get_widget_frame(EtCanvas *this);
-PvRenderContext et_canvas_get_render_context(EtCanvas *this, bool *isError);
-EtDocId et_canvas_get_doc_id(EtCanvas *this);
-bool et_canvas_set_doc_id(EtCanvas *this, EtDocId doc_id);
-bool et_canvas_draw_pixbuf(EtCanvas *this, GdkPixbuf *pixbuf);
-int et_canvas_set_slot_change(EtCanvas *this,
+GtkWidget *et_canvas_get_widget_frame(EtCanvas *self);
+PvRenderContext et_canvas_get_render_context(EtCanvas *self, bool *isError);
+EtDocId et_canvas_get_doc_id(EtCanvas *self);
+bool et_canvas_set_doc_id(EtCanvas *self, EtDocId doc_id);
+bool et_canvas_draw_pixbuf(EtCanvas *self, GdkPixbuf *pixbuf);
+int et_canvas_set_slot_change(EtCanvas *self,
 		EtCanvasSlotChange slot, gpointer data);
-int et_canvas_set_slot_mouse_action(EtCanvas *this,
+int et_canvas_set_slot_mouse_action(EtCanvas *self,
 		EtCanvasSlotMouseAction slot, gpointer data);
 void slot_et_canvas_from_doc_change(EtDoc *doc, gpointer data);
 

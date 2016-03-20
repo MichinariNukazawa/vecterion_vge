@@ -3,12 +3,12 @@
 #include <stdlib.h>
 #include "et_error.h"
 
-void et_state_unfocus(EtState *this)
+void et_state_unfocus(EtState *self)
 {
-	if(NULL == this){
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
 
-	this->doc_id = -1;
+	self->doc_id = -1;
 }

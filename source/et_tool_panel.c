@@ -26,16 +26,16 @@ struct EtToolPanel{
 };
 
 void _cb_et_tool_panel_clicked_button(GtkWidget *toggle_button, gpointer data);
-bool _et_tool_panel_set_current_tool_id(EtToolPanel *this, EtToolId tool_id);
+bool _et_tool_panel_set_current_tool_id(EtToolPanel *self, EtToolId tool_id);
 
-bool _signal_et_tool_panel_change(EtToolPanel *this, EtToolId tool_id)
+bool _signal_et_tool_panel_change(EtToolPanel *self, EtToolId tool_id)
 {
-	if(NULL == this){
+	if(NULL == self){
 		et_bug("");
 		return false;
 	}
 
-	if(NULL == this->slot_change){
+	if(NULL == self->slot_change){
 		// ignore warning when in initialized.
 		if(NULL != _et_tool_panel){
 			et_warning("");
@@ -43,12 +43,12 @@ bool _signal_et_tool_panel_change(EtToolPanel *this, EtToolId tool_id)
 		return true;
 	}
 
-	return this->slot_change(tool_id, this->slot_change_data);
+	return self->slot_change(tool_id, self->slot_change_data);
 }
 
-bool _et_tool_panel_add_tool(EtToolPanel *this, const EtToolInfo *info)
+bool _et_tool_panel_add_tool(EtToolPanel *self, const EtToolInfo *info)
 {
-	if(NULL == this){
+	if(NULL == self){
 		et_bug("");
 		return false;
 	}
@@ -80,51 +80,51 @@ bool _et_tool_panel_add_tool(EtToolPanel *this, const EtToolInfo *info)
 	gtk_button_set_image(GTK_BUTTON(toggle_button), icon);
 	item->button = toggle_button;
 
-	int num_tool = pv_general_get_parray_num((void **)this->tools);
+	int num_tool = pv_general_get_parray_num((void **)self->tools);
 	int x = num_tool % 2;
 	int y = num_tool / 2;
 	printf("item:%s:%d, %d\n", info->name, x, y);
-	gtk_grid_attach(GTK_GRID(this->toolpanel), toggle_button, x, y, 1, 1);
+	gtk_grid_attach(GTK_GRID(self->toolpanel), toggle_button, x, y, 1, 1);
 
 	g_signal_connect(toggle_button, "clicked",
 			G_CALLBACK(_cb_et_tool_panel_clicked_button), NULL);
 
-	EtToolPanelItem **items = realloc(this->tools, sizeof(EtToolPanelItem *) * (num_tool + 2));
+	EtToolPanelItem **items = realloc(self->tools, sizeof(EtToolPanelItem *) * (num_tool + 2));
 	if(NULL == items){
 		et_critical("");
 		return false;
 	}
 	items[num_tool + 1] = NULL;
 	items[num_tool] = item;
-	this->tools = items;
+	self->tools = items;
 
-	gtk_widget_show_all(this->toolpanel);
+	gtk_widget_show_all(self->toolpanel);
 
 	return true;
 }
 
 EtToolPanel *et_tool_panel_init()
 {
-	EtToolPanel *this = (EtToolPanel *)malloc(sizeof(EtToolPanel));
-	if(NULL == this){
+	EtToolPanel *self = (EtToolPanel *)malloc(sizeof(EtToolPanel));
+	if(NULL == self){
 		et_critical("");
 		return NULL;
 	}
 
-	this->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
-	this->widget = this->box;
-	this->toolpanel = gtk_grid_new();
-	if(NULL == this->toolpanel){
+	self->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+	self->widget = self->box;
+	self->toolpanel = gtk_grid_new();
+	if(NULL == self->toolpanel){
 		et_critical("");
 		return NULL;
 	}
-	gtk_widget_set_name (GTK_WIDGET(this->toolpanel), "toolpanel");
-	gtk_widget_set_size_request(this->toolpanel, 20, 20);
+	gtk_widget_set_name (GTK_WIDGET(self->toolpanel), "toolpanel");
+	gtk_widget_set_size_request(self->toolpanel, 20, 20);
 
-	gtk_box_pack_start(GTK_BOX(this->box), this->toolpanel,
+	gtk_box_pack_start(GTK_BOX(self->box), self->toolpanel,
 			false, false, 3);
 
-	this->tools = NULL;
+	self->tools = NULL;
 
 	int num_tool = et_tool_get_num();
 	if(num_tool <= 0){
@@ -137,48 +137,48 @@ EtToolPanel *et_tool_panel_init()
 			et_error("");
 			return NULL;
 		}
-		if(!_et_tool_panel_add_tool(this, info)){
+		if(!_et_tool_panel_add_tool(self, info)){
 			et_error("");
 			return NULL;
 		}
 	}
 
-	this->slot_change = NULL;
-	this->slot_change_data = NULL;
+	self->slot_change = NULL;
+	self->slot_change_data = NULL;
 
-	if(!_et_tool_panel_set_current_tool_id(this, et_etaion_get_tool_id())){
+	if(!_et_tool_panel_set_current_tool_id(self, et_etaion_get_tool_id())){
 		et_error("");
 		return NULL;
 	}
 
-	_et_tool_panel = this;
+	_et_tool_panel = self;
 
 	return _et_tool_panel;
 }
 
 GtkWidget *et_tool_panel_get_widget_frame()
 {
-	EtToolPanel *this = _et_tool_panel;
-	if(NULL == this){
+	EtToolPanel *self = _et_tool_panel;
+	if(NULL == self){
 		et_bug("");
 		return false;
 	}
 
-	return this->widget;
+	return self->widget;
 }
 
-EtToolId _et_tool_panel_tool_id_from_button(const EtToolPanel *this, const GtkWidget *button)
+EtToolId _et_tool_panel_tool_id_from_button(const EtToolPanel *self, const GtkWidget *button)
 {
-	if(NULL == this){
+	if(NULL == self){
 		et_bug("");
 		return -1;
 	}
 
-	int num_tool = pv_general_get_parray_num((void **)this->tools);
+	int num_tool = pv_general_get_parray_num((void **)self->tools);
 	for(int i = 0; i < num_tool; i++){
-		if((this->tools[i])->button == button){
-			et_debug("%d", (this->tools[i])->tool_id);
-			return (this->tools[i])->tool_id;
+		if((self->tools[i])->button == button){
+			et_debug("%d", (self->tools[i])->tool_id);
+			return (self->tools[i])->tool_id;
 		}
 	}
 
@@ -186,17 +186,17 @@ EtToolId _et_tool_panel_tool_id_from_button(const EtToolPanel *this, const GtkWi
 	return -1;
 }
 
-GtkWidget *_et_tool_panel_get_tool_button_from_id(const EtToolPanel *this, EtToolId tool_id)
+GtkWidget *_et_tool_panel_get_tool_button_from_id(const EtToolPanel *self, EtToolId tool_id)
 {
-	if(NULL == this){
+	if(NULL == self){
 		et_bug("");
 		return NULL;
 	}
 
-	int num_tool = pv_general_get_parray_num((void **)this->tools);
+	int num_tool = pv_general_get_parray_num((void **)self->tools);
 	for(int i = 0; i < num_tool; i++){
-		if((this->tools[i])->tool_id == tool_id){
-			return (this->tools[i])->button;
+		if((self->tools[i])->tool_id == tool_id){
+			return (self->tools[i])->button;
 		}
 	}
 
@@ -204,23 +204,23 @@ GtkWidget *_et_tool_panel_get_tool_button_from_id(const EtToolPanel *this, EtToo
 	return NULL;
 }
 
-bool _et_tool_panel_set_current_tool_from_button(EtToolPanel *this, const GtkWidget *button)
+bool _et_tool_panel_set_current_tool_from_button(EtToolPanel *self, const GtkWidget *button)
 {
-	if(NULL == this){
+	if(NULL == self){
 		et_bug("");
 		return false;
 	}
 
 	// ** check exist tool.
-	EtToolId tool_id = _et_tool_panel_tool_id_from_button(this, button);
+	EtToolId tool_id = _et_tool_panel_tool_id_from_button(self, button);
 	if(tool_id < 0){
 		et_bug("");
 		return false;
 	}
 
-	int num_tool = pv_general_get_parray_num((void **)this->tools);
+	int num_tool = pv_general_get_parray_num((void **)self->tools);
 	for(int i = 0; i < num_tool; i++){
-		EtToolPanelItem *tool = this->tools[i];
+		EtToolPanelItem *tool = self->tools[i];
 		if(tool->button == button){
 			GtkWidget *icon = gtk_image_new_from_pixbuf(tool->icon_focus);
 			gtk_button_set_image(GTK_BUTTON(tool->button), icon);
@@ -233,15 +233,15 @@ bool _et_tool_panel_set_current_tool_from_button(EtToolPanel *this, const GtkWid
 	return true;
 }
 
-bool _et_tool_panel_set_current_tool_id(EtToolPanel *this, EtToolId tool_id)
+bool _et_tool_panel_set_current_tool_id(EtToolPanel *self, EtToolId tool_id)
 {
-	GtkWidget *button = _et_tool_panel_get_tool_button_from_id(this, tool_id);
+	GtkWidget *button = _et_tool_panel_get_tool_button_from_id(self, tool_id);
 	if(NULL == button){
 		et_bug("");
 		return false;
 	}
 
-	if(!_et_tool_panel_set_current_tool_from_button(this, button)){
+	if(!_et_tool_panel_set_current_tool_from_button(self, button)){
 		et_bug("");
 		return false;
 	}
@@ -251,44 +251,44 @@ bool _et_tool_panel_set_current_tool_id(EtToolPanel *this, EtToolId tool_id)
 
 bool et_tool_panel_set_current_tool_id(EtToolId tool_id)
 {
-	EtToolPanel *this = _et_tool_panel;
-	if(NULL == this){
+	EtToolPanel *self = _et_tool_panel;
+	if(NULL == self){
 		et_bug("");
 		return false;
 	}
 
-	return _et_tool_panel_set_current_tool_id(this, tool_id);
+	return _et_tool_panel_set_current_tool_id(self, tool_id);
 }
 
 bool et_tool_panel_set_slot_change(EtToolPanelSlotChange slot, gpointer data)
 {
-	EtToolPanel *this = _et_tool_panel;
-	if(NULL == this){
+	EtToolPanel *self = _et_tool_panel;
+	if(NULL == self){
 		et_bug("");
 		return false;
 	}
 
-	if(NULL != this->slot_change){
+	if(NULL != self->slot_change){
 		et_bug("");
 		return false;
 	}
 
-	this->slot_change = slot;
-	this->slot_change_data = data;
+	self->slot_change = slot;
+	self->slot_change_data = data;
 
 	return true;
 }
 
 void _cb_et_tool_panel_clicked_button(GtkWidget *button, gpointer data)
 {
-	EtToolPanel *this = _et_tool_panel;
-	if(NULL == this){
+	EtToolPanel *self = _et_tool_panel;
+	if(NULL == self){
 		et_bug("");
 		return;
 	}
 
-	EtToolId tool_id = _et_tool_panel_tool_id_from_button(this, button);
-	if(!_signal_et_tool_panel_change(this, tool_id)){
+	EtToolId tool_id = _et_tool_panel_tool_id_from_button(self, button);
+	if(!_signal_et_tool_panel_change(self, tool_id)){
 		et_warning("");
 	}
 }

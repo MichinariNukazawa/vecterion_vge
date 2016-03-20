@@ -14,8 +14,8 @@ EtEtaion *et_etaion_init()
 		exit(-1);
 	}
 
-	EtEtaion *this = (EtEtaion *)malloc(sizeof(EtEtaion));
-	if(NULL == this){
+	EtEtaion *self = (EtEtaion *)malloc(sizeof(EtEtaion));
+	if(NULL == self){
 		et_error("");
 		return NULL;
 	}
@@ -24,50 +24,50 @@ EtEtaion *et_etaion_init()
 		et_bug("");
 		return NULL;
 	}
-	this->tool_id = 0; // default tool.
+	self->tool_id = 0; // default tool.
 
-	this->slot_change_state = NULL;
-	this->slot_change_state_data = NULL;
-	et_state_unfocus(&(this->state));
+	self->slot_change_state = NULL;
+	self->slot_change_state_data = NULL;
+	et_state_unfocus(&(self->state));
 
-	current_state = this;
+	current_state = self;
 
-	return this;
+	return self;
 }
 
-void _signal_et_etaion_change_state(EtEtaion *this)
+void _signal_et_etaion_change_state(EtEtaion *self)
 {
-	if(NULL == this->slot_change_state){
+	if(NULL == self->slot_change_state){
 		return;
 	}
 
-	this->slot_change_state(this->state, this->slot_change_state_data);
+	self->slot_change_state(self->state, self->slot_change_state_data);
 }
 
 bool et_etaion_set_current_doc_id(EtDocId doc_id)
 {
-	EtEtaion *this = current_state;
-	if(NULL == this){
+	EtEtaion *self = current_state;
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
 
-	(this->state).doc_id = doc_id;
+	(self->state).doc_id = doc_id;
 
-	_signal_et_etaion_change_state(this);
+	_signal_et_etaion_change_state(self);
 
 	return true;
 }
 
 EtDocId et_etaion_get_current_doc_id()
 {
-	EtEtaion *this = current_state;
-	if(NULL == this){
+	EtEtaion *self = current_state;
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
 
-	return (this->state).doc_id;
+	return (self->state).doc_id;
 }
 
 static bool _et_etaion_is_extent_view = false;
@@ -90,19 +90,19 @@ bool et_etaion_get_is_extent_view(){
 
 EtToolId et_etaion_get_tool_id()
 {
-	EtEtaion *this = current_state;
-	if(NULL == this){
+	EtEtaion *self = current_state;
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
 
-	return this->tool_id;
+	return self->tool_id;
 }
 
 bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 {
-	EtEtaion *this = current_state;
-	if(NULL == this){
+	EtEtaion *self = current_state;
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
@@ -121,11 +121,11 @@ bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 	}
 
 	// ** call tool_info->function
-	if(this->tool_id < 0){
+	if(self->tool_id < 0){
 		et_bug("");
 		return false;
 	}
-	const EtToolInfo *info = et_tool_get_info_from_id(this->tool_id);
+	const EtToolInfo *info = et_tool_get_info_from_id(self->tool_id);
 	if(NULL == info){
 		et_bug("");
 		return false;
@@ -151,8 +151,8 @@ bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 
 bool et_etaion_slot_key_action(EtKeyAction key_action)
 {
-	EtEtaion *this = current_state;
-	if(NULL == this){
+	EtEtaion *self = current_state;
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
@@ -160,7 +160,7 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 	// et_debug("key:%04x", key_action.key);
 
 	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id((this->state).doc_id, &is_error);
+	PvFocus focus = et_doc_get_focus_from_id((self->state).doc_id, &is_error);
 	if(is_error){
 		et_error("");
 		return false;
@@ -171,39 +171,39 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 			if(NULL != focus.element){
 				if(PvElementKind_Layer != focus.element->kind){
 					focus.element = (focus.element)->parent;
-					if(!et_doc_set_focus_to_id((this->state).doc_id, focus)){
+					if(!et_doc_set_focus_to_id((self->state).doc_id, focus)){
 						et_error("");
 						return false;
 					}
 				}
 			}
-			_signal_et_etaion_change_state(this);
+			_signal_et_etaion_change_state(self);
 			break;
 		default:
 			et_debug("no use:%d", key_action.key);
 			return true;
 	}
 
-	et_doc_signal_update_from_id((this->state).doc_id);
+	et_doc_signal_update_from_id((self->state).doc_id);
 
 	return true;
 }
 
 int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data)
 {
-	EtEtaion *this = current_state;
-	if(NULL == this){
+	EtEtaion *self = current_state;
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
 
-	if(NULL != this->slot_change_state){
+	if(NULL != self->slot_change_state){
 		et_bug("");
 		return -1;
 	}
 
-	this->slot_change_state = slot;
-	this->slot_change_state_data = data;
+	self->slot_change_state = slot;
+	self->slot_change_state_data = data;
 
 	return 1; // Todo: return callback id
 }
@@ -226,16 +226,16 @@ PvElement *_et_etaion_get_parent_layer_from_element(PvElement *element)
 
 bool et_etaion_add_new_layer(EtDocId doc_id)
 {
-	EtEtaion *this = current_state;
-	if(NULL == this){
+	EtEtaion *self = current_state;
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
 
-	(this->state).doc_id = doc_id;
+	(self->state).doc_id = doc_id;
 
 	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id((this->state).doc_id, &is_error);
+	PvFocus focus = et_doc_get_focus_from_id((self->state).doc_id, &is_error);
 	if(is_error){
 		et_error("");
 		return false;
@@ -271,29 +271,29 @@ bool et_etaion_add_new_layer(EtDocId doc_id)
 	}
 
 	focus.element = layer;
-	if(!et_doc_set_focus_to_id((this->state).doc_id, focus)){
+	if(!et_doc_set_focus_to_id((self->state).doc_id, focus)){
 		et_error("");
 		return false;
 	}
 
-	_signal_et_etaion_change_state(this);
-	et_doc_signal_update_from_id((this->state).doc_id);
+	_signal_et_etaion_change_state(self);
+	et_doc_signal_update_from_id((self->state).doc_id);
 
 	return true;
 }
 
 bool et_etaion_add_new_layer_child(EtDocId doc_id)
 {
-	EtEtaion *this = current_state;
-	if(NULL == this){
+	EtEtaion *self = current_state;
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
 
-	(this->state).doc_id = doc_id;
+	(self->state).doc_id = doc_id;
 
 	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id((this->state).doc_id, &is_error);
+	PvFocus focus = et_doc_get_focus_from_id((self->state).doc_id, &is_error);
 	if(is_error){
 		et_error("");
 		return false;
@@ -322,13 +322,13 @@ bool et_etaion_add_new_layer_child(EtDocId doc_id)
 	}
 
 	focus.element = layer;
-	if(!et_doc_set_focus_to_id((this->state).doc_id, focus)){
+	if(!et_doc_set_focus_to_id((self->state).doc_id, focus)){
 		et_error("");
 		return false;
 	}
 
-	_signal_et_etaion_change_state(this);
-	et_doc_signal_update_from_id((this->state).doc_id);
+	_signal_et_etaion_change_state(self);
+	et_doc_signal_update_from_id((self->state).doc_id);
 
 	return true;
 }
@@ -337,16 +337,16 @@ bool et_etaion_add_new_layer_child(EtDocId doc_id)
 /** @brief focus(Layer)および子Elementを複製して親レイヤーに追加 */
 bool et_etaion_copy_layer(EtDocId doc_id)
 {
-	EtEtaion *this = current_state;
-	if(NULL == this){
+	EtEtaion *self = current_state;
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
 
-	(this->state).doc_id = doc_id;
+	(self->state).doc_id = doc_id;
 
 	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id((this->state).doc_id, &is_error);
+	PvFocus focus = et_doc_get_focus_from_id((self->state).doc_id, &is_error);
 	if(is_error){
 		et_error("");
 		return false;
@@ -383,29 +383,29 @@ bool et_etaion_copy_layer(EtDocId doc_id)
 	}
 
 	focus.element = new_element_tree;
-	if(!et_doc_set_focus_to_id((this->state).doc_id, focus)){
+	if(!et_doc_set_focus_to_id((self->state).doc_id, focus)){
 		et_error("");
 		return false;
 	}
 
-	_signal_et_etaion_change_state(this);
-	et_doc_signal_update_from_id((this->state).doc_id);
+	_signal_et_etaion_change_state(self);
+	et_doc_signal_update_from_id((self->state).doc_id);
 
 	return true;
 }
 
 bool et_etaion_remove_delete_layer(EtDocId doc_id)
 {
-	EtEtaion *this = current_state;
-	if(NULL == this){
+	EtEtaion *self = current_state;
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
 
-	(this->state).doc_id = doc_id;
+	(self->state).doc_id = doc_id;
 
 	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id((this->state).doc_id, &is_error);
+	PvFocus focus = et_doc_get_focus_from_id((self->state).doc_id, &is_error);
 	if(is_error){
 		et_error("");
 		return false;
@@ -442,12 +442,12 @@ error:
 	}
 
 	focus.element = parent; 
-	if(!et_doc_set_focus_to_id((this->state).doc_id, focus)){
+	if(!et_doc_set_focus_to_id((self->state).doc_id, focus)){
 		et_error("");
 	}
 
-	_signal_et_etaion_change_state(this);
-	et_doc_signal_update_from_id((this->state).doc_id);
+	_signal_et_etaion_change_state(self);
+	et_doc_signal_update_from_id((self->state).doc_id);
 
 	return ret;
 }
@@ -456,24 +456,24 @@ bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data)
 {
 	et_debug("%d", tool_id);
 
-	EtEtaion *this = current_state;
-	if(NULL == this){
+	EtEtaion *self = current_state;
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
 
-	if(this->tool_id != tool_id){
-		et_debug("tool:%d->%d", this->tool_id, tool_id);
+	if(self->tool_id != tool_id){
+		et_debug("tool:%d->%d", self->tool_id, tool_id);
 #include "et_tool_panel.h"
 		if(!et_tool_panel_set_current_tool_id(tool_id)){
 			et_bug("");
 			return false;
 		}
 
-		this->tool_id = tool_id;
+		self->tool_id = tool_id;
 		// TODO: tool_id change after work.
 
-		et_doc_signal_update_from_id((this->state).doc_id);
+		et_doc_signal_update_from_id((self->state).doc_id);
 	}
 
 	return true;

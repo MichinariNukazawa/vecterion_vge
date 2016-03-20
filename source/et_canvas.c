@@ -34,140 +34,140 @@ gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer da
 
 EtCanvas *et_canvas_new()
 {
-	EtCanvas *this = (EtCanvas *)malloc(sizeof(EtCanvas));
-	if(NULL == this){
+	EtCanvas *self = (EtCanvas *)malloc(sizeof(EtCanvas));
+	if(NULL == self){
 		et_error("");
 		return NULL;
 	}
 
-	this->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+	self->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
 
-	this->box_infobar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
-	gtk_container_add(GTK_CONTAINER(this->box), this->box_infobar);
+	self->box_infobar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+	gtk_container_add(GTK_CONTAINER(self->box), self->box_infobar);
 
-	this->scroll = gtk_scrolled_window_new(NULL, NULL);
-	gtk_widget_set_hexpand(GTK_WIDGET(this->scroll), TRUE);  
-	gtk_widget_set_vexpand(GTK_WIDGET(this->scroll), TRUE);
-	gtk_container_add(GTK_CONTAINER(this->box), this->scroll);
+	self->scroll = gtk_scrolled_window_new(NULL, NULL);
+	gtk_widget_set_hexpand(GTK_WIDGET(self->scroll), TRUE);  
+	gtk_widget_set_vexpand(GTK_WIDGET(self->scroll), TRUE);
+	gtk_container_add(GTK_CONTAINER(self->box), self->scroll);
 
-	this->text_scale = gtk_text_view_new();
-	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (this->text_scale));
+	self->text_scale = gtk_text_view_new();
+	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (self->text_scale));
 	gtk_text_buffer_set_text (buffer, "default scale", -1);
-	gtk_text_view_set_editable (GTK_TEXT_VIEW(this->text_scale), false);
-	gtk_container_add(GTK_CONTAINER(this->box_infobar), this->text_scale);
+	gtk_text_view_set_editable (GTK_TEXT_VIEW(self->text_scale), false);
+	gtk_container_add(GTK_CONTAINER(self->box_infobar), self->text_scale);
 
-	this->event_box = gtk_event_box_new();
-	if(NULL == this->event_box){
+	self->event_box = gtk_event_box_new();
+	if(NULL == self->event_box){
 		et_error("");
 		return NULL;
 	}
-	gtk_widget_set_events(this->event_box,
+	gtk_widget_set_events(self->event_box,
 			GDK_BUTTON_PRESS_MASK |
 			GDK_BUTTON_RELEASE_MASK |
 			GDK_POINTER_MOTION_MASK
 			);
-	g_signal_connect(this->event_box, "button-press-event",
-			G_CALLBACK(_cb_button_press), (gpointer)this);
-	g_signal_connect(this->event_box, "button-release-event",
-			G_CALLBACK(_cb_button_release), (gpointer)this);
-	g_signal_connect(this->event_box, "scroll-event",
-			G_CALLBACK(_cb_button_scroll), (gpointer)this);
-	g_signal_connect(this->event_box, "motion-notify-event",
-			G_CALLBACK(_cb_motion_notify), (gpointer)this);
+	g_signal_connect(self->event_box, "button-press-event",
+			G_CALLBACK(_cb_button_press), (gpointer)self);
+	g_signal_connect(self->event_box, "button-release-event",
+			G_CALLBACK(_cb_button_release), (gpointer)self);
+	g_signal_connect(self->event_box, "scroll-event",
+			G_CALLBACK(_cb_button_scroll), (gpointer)self);
+	g_signal_connect(self->event_box, "motion-notify-event",
+			G_CALLBACK(_cb_motion_notify), (gpointer)self);
 
-	gtk_container_add(GTK_CONTAINER(this->scroll), this->event_box);
+	gtk_container_add(GTK_CONTAINER(self->scroll), self->event_box);
 
-	this->canvas = gtk_drawing_area_new();
-	if(NULL == this->canvas){
+	self->canvas = gtk_drawing_area_new();
+	if(NULL == self->canvas){
 		et_error("");
 		return NULL;
 	}
-	gtk_container_add(GTK_CONTAINER(this->event_box), this->canvas);
+	gtk_container_add(GTK_CONTAINER(self->event_box), self->canvas);
 
-	g_signal_connect (G_OBJECT (this->canvas), "draw",
-			G_CALLBACK (cb_expose_event), (gpointer)this);
+	g_signal_connect (G_OBJECT (self->canvas), "draw",
+			G_CALLBACK (cb_expose_event), (gpointer)self);
 
-	this->render_context = PvRenderContext_default;
+	self->render_context = PvRenderContext_default;
 
-	this->widget = this->box;
-	this->pixbuf_buffer = NULL;
-	this->slot_change = NULL;
-	this->slot_change_data = NULL;
-	this->slot_mouse_action = NULL;
-	this->slot_mouse_action_data = NULL;
-	this->doc_id = -1;
+	self->widget = self->box;
+	self->pixbuf_buffer = NULL;
+	self->slot_change = NULL;
+	self->slot_change_data = NULL;
+	self->slot_mouse_action = NULL;
+	self->slot_mouse_action_data = NULL;
+	self->doc_id = -1;
 
-	return this;
+	return self;
 }
 
-GtkWidget *et_canvas_get_widget_frame(EtCanvas *this)
+GtkWidget *et_canvas_get_widget_frame(EtCanvas *self)
 {
-	if(NULL == this){
+	if(NULL == self){
 		et_bug("");
 		return NULL;
 	}
 
-	return this->widget;
+	return self->widget;
 }
 
 
-PvRenderContext et_canvas_get_render_context(EtCanvas *this, bool *isError)
+PvRenderContext et_canvas_get_render_context(EtCanvas *self, bool *isError)
 {
 	PvRenderContext rc = PvRenderContext_default;
-	if(NULL == this){
+	if(NULL == self){
 		et_bug("");
 		*isError = true;
 	}else{
 		*isError = false;
-		rc = this->render_context;
+		rc = self->render_context;
 	}
 
 	return rc;
 }
 
-EtDocId et_canvas_get_doc_id(EtCanvas *this)
+EtDocId et_canvas_get_doc_id(EtCanvas *self)
 {
-	if(NULL == this){
+	if(NULL == self){
 		et_bug("");
 		return -1;
 	}
 
-	return this->doc_id;
+	return self->doc_id;
 }
 
 void slot_et_canvas_from_doc_change(EtDoc *doc, gpointer data)
 {
-	EtCanvas *this = (EtCanvas *)data;
-	if(NULL == this){
+	EtCanvas *self = (EtCanvas *)data;
+	if(NULL == self){
 		et_bug("");
 		return;
 	}
 
-	if(NULL == this->slot_change){
+	if(NULL == self->slot_change){
 		et_warning("");
 	}else{
-		this->slot_change(this, this->slot_change_data);
+		self->slot_change(self, self->slot_change_data);
 	}
 }
 
-bool et_canvas_set_doc_id(EtCanvas *this, EtDocId doc_id)
+bool et_canvas_set_doc_id(EtCanvas *self, EtDocId doc_id)
 {
-	if(NULL == this){
+	if(NULL == self){
 		et_bug("");
 		return false;
 	}
 
-	this->doc_id = doc_id;
+	self->doc_id = doc_id;
 
 	return true;
 }
 
 bool _signal_et_canvas_mouse_action(
-		EtCanvas *this,
+		EtCanvas *self,
 		double x, double y,
 		EtMouseButtonType mouse_button, EtMouseActionType mouse_action)
 {
-	if(NULL == this->slot_mouse_action){
+	if(NULL == self->slot_mouse_action){
 		et_error("");
 		return false;
 	}
@@ -181,7 +181,7 @@ bool _signal_et_canvas_mouse_action(
 		.action = mouse_action,
 		.point = point,
 	};
-	if(!this->slot_mouse_action(this->doc_id, _mouse_action)){
+	if(!self->slot_mouse_action(self->doc_id, _mouse_action)){
 		et_error("");
 		return false;
 	}
@@ -196,12 +196,12 @@ gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer dat
 	   et_mouse_util_button_kind(event->button);
 	   et_mouse_util_modifier_kind(event->state);
 	 */
-	EtCanvas *this = (EtCanvas *)data;
+	EtCanvas *self = (EtCanvas *)data;
 
 	if(!_signal_et_canvas_mouse_action(
-				this,
-				event->x / this->render_context.scale,
-				event->y / this->render_context.scale,
+				self,
+				event->x / self->render_context.scale,
+				event->y / self->render_context.scale,
 				EtMouseButton_Right, EtMouseAction_Down))
 	{
 		et_error("");
@@ -216,12 +216,12 @@ error:
 gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	// et_debug("BUTTON RELEASE");
-	EtCanvas *this = (EtCanvas *)data;
+	EtCanvas *self = (EtCanvas *)data;
 
 	if(!_signal_et_canvas_mouse_action(
-				this,
-				event->x / this->render_context.scale,
-				event->y / this->render_context.scale,
+				self,
+				event->x / self->render_context.scale,
+				event->y / self->render_context.scale,
 				EtMouseButton_Right, EtMouseAction_Up))
 	{
 		et_error("");
@@ -235,12 +235,12 @@ error:
 gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
 	//	et_debug("(%3d, %3d)", (int)event->x, (int)event->y);
-	EtCanvas *this = (EtCanvas *)data;
+	EtCanvas *self = (EtCanvas *)data;
 
 	if(!_signal_et_canvas_mouse_action(
-				this,
-				event->x / this->render_context.scale,
-				event->y / this->render_context.scale,
+				self,
+				event->x / self->render_context.scale,
+				event->y / self->render_context.scale,
 				EtMouseButton_Right, EtMouseAction_Move))
 	{
 		et_error("");
@@ -253,34 +253,34 @@ error:
 
 gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer data)
 {
-	EtCanvas *this = (EtCanvas *)data;
+	EtCanvas *self = (EtCanvas *)data;
 
 	switch(event->direction){
 		case GDK_SCROLL_UP:
 			et_debug("BUTTON SCROLL   UP");
-			this->render_context.scale += 0.1;
+			self->render_context.scale += 0.1;
 			break;
 		case GDK_SCROLL_DOWN:
 			et_debug("BUTTON SCROLL DOWN");
-			this->render_context.scale -= 0.1;
+			self->render_context.scale -= 0.1;
 			break;
 		default:
 			break;
 	}
 
 	const int ET_RENDER_CONTEXT_SCALE_MIN = 0.01;
-	if(this->render_context.scale < ET_RENDER_CONTEXT_SCALE_MIN){
-		et_debug("under limit scale:%f", this->render_context.scale);
-		this->render_context.scale = ET_RENDER_CONTEXT_SCALE_MIN;
+	if(self->render_context.scale < ET_RENDER_CONTEXT_SCALE_MIN){
+		et_debug("under limit scale:%f", self->render_context.scale);
+		self->render_context.scale = ET_RENDER_CONTEXT_SCALE_MIN;
 	}
 
 	char buf[128];
-	snprintf(buf, sizeof(buf), "%.3f", this->render_context.scale);
-	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (this->text_scale));
+	snprintf(buf, sizeof(buf), "%.3f", self->render_context.scale);
+	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (self->text_scale));
 	gtk_text_buffer_set_text (buffer, buf, -1);
 
-	if(NULL != this->slot_change){
-		this->slot_change(this, this->slot_change_data);
+	if(NULL != self->slot_change){
+		self->slot_change(self, self->slot_change_data);
 	}
 
 	return false;
@@ -317,9 +317,9 @@ gboolean cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 	return FALSE;
 }
 
-bool et_canvas_draw_pixbuf(EtCanvas *this, GdkPixbuf *pixbuf)
+bool et_canvas_draw_pixbuf(EtCanvas *self, GdkPixbuf *pixbuf)
 {
-	if(NULL == this){
+	if(NULL == self){
 		et_bug("\n");
 		return false;
 	}
@@ -328,9 +328,9 @@ bool et_canvas_draw_pixbuf(EtCanvas *this, GdkPixbuf *pixbuf)
 		return false;
 	}
 
-	GdkPixbuf *pb_old = this->pixbuf_buffer;
-	this->pixbuf_buffer = gdk_pixbuf_copy(pixbuf);
-	gtk_widget_queue_draw(this->canvas);
+	GdkPixbuf *pb_old = self->pixbuf_buffer;
+	self->pixbuf_buffer = gdk_pixbuf_copy(pixbuf);
+	gtk_widget_queue_draw(self->canvas);
 	if(NULL != pb_old){
 		g_object_unref(G_OBJECT(pb_old));
 	}
@@ -338,30 +338,30 @@ bool et_canvas_draw_pixbuf(EtCanvas *this, GdkPixbuf *pixbuf)
 	return true;
 }
 
-int et_canvas_set_slot_change(EtCanvas *this,
+int et_canvas_set_slot_change(EtCanvas *self,
 		EtCanvasSlotChange slot, gpointer data)
 {
-	if(NULL != this->slot_change){
+	if(NULL != self->slot_change){
 		et_error("");
 		return -1;
 	}
 
-	this->slot_change = slot;
-	this->slot_change_data = data;
+	self->slot_change = slot;
+	self->slot_change_data = data;
 
 	return 1; // Todo: callback id
 }
 
-int et_canvas_set_slot_mouse_action(EtCanvas *this,
+int et_canvas_set_slot_mouse_action(EtCanvas *self,
 		EtCanvasSlotMouseAction slot, gpointer data)
 {
-	if(NULL != this->slot_mouse_action){
+	if(NULL != self->slot_mouse_action){
 		et_bug("");
 		return -1;
 	}
 
-	this->slot_mouse_action = slot;
-	this->slot_mouse_action_data = data;
+	self->slot_mouse_action = slot;
+	self->slot_mouse_action_data = data;
 
 	return 1; // Todo: callback id
 }

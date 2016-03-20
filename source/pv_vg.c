@@ -6,14 +6,14 @@
 
 PvVg *pv_vg_new()
 {
-	PvVg *this = (PvVg *)malloc(sizeof(PvVg));
-	if(NULL == this){
+	PvVg *self = (PvVg *)malloc(sizeof(PvVg));
+	if(NULL == self){
 		pv_error("");
 		return NULL;
 	}
 
-	this->element_root = pv_element_new(PvElementKind_Root);
-	if(NULL == this->element_root){
+	self->element_root = pv_element_new(PvElementKind_Root);
+	if(NULL == self->element_root){
 		pv_error("");
 		return NULL;
 	}
@@ -24,15 +24,15 @@ PvVg *pv_vg_new()
 		return NULL;
 	}
 
-	if(!pv_element_append_child(this->element_root, NULL, layer)){
+	if(!pv_element_append_child(self->element_root, NULL, layer)){
 		pv_error("");
 		return NULL;
 	}
 
 	PvRect _rect = {0,0,1,1};
-	this->rect = _rect;
+	self->rect = _rect;
 
-	return this;
+	return self;
 }
 
 void pv_vg_free(PvVg *vg)

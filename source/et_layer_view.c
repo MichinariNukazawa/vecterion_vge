@@ -56,7 +56,7 @@ gboolean _et_layer_view_cb_motion_notify(GtkWidget *widget, GdkEventMotion *even
 
 gboolean _et_layer_view_cb_layer_ctrl(GtkWidget *widget, gpointer data);
 
-bool _et_layer_view_set_layer_ctrl(EtLayerView *this, int index)
+bool _et_layer_view_set_layer_ctrl(EtLayerView *self, int index)
 {
 	GError *error = NULL;
 	GdkPixbuf *pixbuf = NULL;
@@ -74,25 +74,25 @@ bool _et_layer_view_set_layer_ctrl(EtLayerView *this, int index)
 		return false;
 	}
 
-	this->button_layer_ctrls[index] = gtk_button_new();
-	if(NULL == this->button_layer_ctrls[index]){
+	self->button_layer_ctrls[index] = gtk_button_new();
+	if(NULL == self->button_layer_ctrls[index]){
 		et_error("");
 		return false;
 	}
 	// フォーカス状態でEnterKey押下した際に、誤作動する問題への対処
-	gtk_button_set_focus_on_click(GTK_BUTTON(this->button_layer_ctrls[index]), false);
-	// gtk_widget_set_can_focus(this->button_layer_ctrls[index], false);
-	gtk_container_add(GTK_CONTAINER(this->button_layer_ctrls[index]),
+	gtk_button_set_focus_on_click(GTK_BUTTON(self->button_layer_ctrls[index]), false);
+	// gtk_widget_set_can_focus(self->button_layer_ctrls[index], false);
+	gtk_container_add(GTK_CONTAINER(self->button_layer_ctrls[index]),
 			image);
 
-	gtk_container_add(GTK_CONTAINER(this->box_button_layer_ctrl),
-			this->button_layer_ctrls[index]);
+	gtk_container_add(GTK_CONTAINER(self->box_button_layer_ctrl),
+			self->button_layer_ctrls[index]);
 
-	g_signal_connect(this->button_layer_ctrls[index], "clicked",
-			G_CALLBACK(_et_layer_view_cb_layer_ctrl), (gpointer)this);
+	g_signal_connect(self->button_layer_ctrls[index], "clicked",
+			G_CALLBACK(_et_layer_view_cb_layer_ctrl), (gpointer)self);
 
 	// デフォルト無効からスタート
-	gtk_widget_set_sensitive(this->button_layer_ctrls[index], false);
+	gtk_widget_set_sensitive(self->button_layer_ctrls[index], false);
 
 	return true;
 }
@@ -104,85 +104,85 @@ EtLayerView *et_layer_view_init()
 		exit(-1);
 	}
 
-	EtLayerView *this = (EtLayerView *)malloc(sizeof(EtLayerView));
-	if(NULL == this){
+	EtLayerView *self = (EtLayerView *)malloc(sizeof(EtLayerView));
+	if(NULL == self){
 		et_error("");
 		return NULL;
 	}
 
-	this->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+	self->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
 
-	this->scroll = gtk_scrolled_window_new(NULL, NULL);
-	gtk_widget_set_hexpand(GTK_WIDGET(this->scroll), TRUE);  
-	gtk_widget_set_vexpand(GTK_WIDGET(this->scroll), TRUE);
-	gtk_container_add(GTK_CONTAINER(this->box), this->scroll);
+	self->scroll = gtk_scrolled_window_new(NULL, NULL);
+	gtk_widget_set_hexpand(GTK_WIDGET(self->scroll), TRUE);  
+	gtk_widget_set_vexpand(GTK_WIDGET(self->scroll), TRUE);
+	gtk_container_add(GTK_CONTAINER(self->box), self->scroll);
 
-	this->event_box = gtk_event_box_new();
-	if(NULL == this->event_box){
+	self->event_box = gtk_event_box_new();
+	if(NULL == self->event_box){
 		et_error("");
 		return NULL;
 	}
-	gtk_widget_set_events(this->event_box,
+	gtk_widget_set_events(self->event_box,
 			GDK_BUTTON_PRESS_MASK |
 			GDK_BUTTON_RELEASE_MASK |
 			GDK_POINTER_MOTION_MASK
 			);
-	g_signal_connect(this->event_box, "button-press-event",
-			G_CALLBACK(_et_layer_view_cb_button_press), (gpointer)this);
-	g_signal_connect(this->event_box, "button-release-event",
-			G_CALLBACK(_et_layer_view_cb_button_release), (gpointer)this);
-	g_signal_connect(this->event_box, "motion-notify-event",
-			G_CALLBACK(_et_layer_view_cb_motion_notify), (gpointer)this);
+	g_signal_connect(self->event_box, "button-press-event",
+			G_CALLBACK(_et_layer_view_cb_button_press), (gpointer)self);
+	g_signal_connect(self->event_box, "button-release-event",
+			G_CALLBACK(_et_layer_view_cb_button_release), (gpointer)self);
+	g_signal_connect(self->event_box, "motion-notify-event",
+			G_CALLBACK(_et_layer_view_cb_motion_notify), (gpointer)self);
 
-	gtk_container_add(GTK_CONTAINER(this->scroll), this->event_box);
+	gtk_container_add(GTK_CONTAINER(self->scroll), self->event_box);
 
-	this->text = gtk_text_view_new();
-	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (this->text));
+	self->text = gtk_text_view_new();
+	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (self->text));
 	gtk_text_buffer_set_text (buffer, "default scale", -1);
-	gtk_text_view_set_editable (GTK_TEXT_VIEW(this->text), false);
-	gtk_text_view_set_monospace (GTK_TEXT_VIEW(this->text), TRUE);
-	gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW(this->text), false);
-	gtk_container_add(GTK_CONTAINER(this->event_box), this->text);
+	gtk_text_view_set_editable (GTK_TEXT_VIEW(self->text), false);
+	gtk_text_view_set_monospace (GTK_TEXT_VIEW(self->text), TRUE);
+	gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW(self->text), false);
+	gtk_container_add(GTK_CONTAINER(self->event_box), self->text);
 
-	this->box_button_layer_ctrl = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
-	gtk_container_add(GTK_CONTAINER(this->box), this->box_button_layer_ctrl);
+	self->box_button_layer_ctrl = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+	gtk_container_add(GTK_CONTAINER(self->box), self->box_button_layer_ctrl);
 
-	if(!_et_layer_view_set_layer_ctrl(this, 0)){
+	if(!_et_layer_view_set_layer_ctrl(self, 0)){
 		et_error("");
 		return NULL;
 	}
-	if(!_et_layer_view_set_layer_ctrl(this, 1)){
+	if(!_et_layer_view_set_layer_ctrl(self, 1)){
 		et_error("");
 		return NULL;
 	}
-	if(!_et_layer_view_set_layer_ctrl(this, 2)){
+	if(!_et_layer_view_set_layer_ctrl(self, 2)){
 		et_error("");
 		return NULL;
 	}
-	if(!_et_layer_view_set_layer_ctrl(this, 3)){
+	if(!_et_layer_view_set_layer_ctrl(self, 3)){
 		et_error("");
 		return NULL;
 	}
 
-	this->widget = this->box;
+	self->widget = self->box;
 
-	this->doc_id = -1;
-	this->elementDatas = NULL;
+	self->doc_id = -1;
+	self->elementDatas = NULL;
 
-	layer_view = this;
+	layer_view = self;
 
-	return this;
+	return self;
 }
 
 GtkWidget *et_layer_view_get_widget_frame()
 {
-	EtLayerView *this = layer_view;
-	if(NULL == this){
+	EtLayerView *self = layer_view;
+	if(NULL == self){
 		et_error("");
 		return NULL;
 	}
 
-	return this->widget;
+	return self->widget;
 }
 
 bool _et_layer_view_read_layer_tree(PvElement *element, gpointer data, int level)
@@ -214,21 +214,21 @@ bool _et_layer_view_read_layer_tree(PvElement *element, gpointer data, int level
 	return true;
 }
 
-bool _et_layer_view_draw(EtLayerView *this)
+bool _et_layer_view_draw(EtLayerView *self)
 {
-	if(NULL == this){
+	if(NULL == self){
 		et_bug("");
 		return false;
 	}
 
 	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id(this->doc_id, &is_error);
+	PvFocus focus = et_doc_get_focus_from_id(self->doc_id, &is_error);
 	if(is_error){
 		et_error("");
 		return false;
 	}
 
-	EtLayerViewElementData **elementDatas = this->elementDatas;
+	EtLayerViewElementData **elementDatas = self->elementDatas;
 
 	char buf[10240];
 	buf[0] = '\0';
@@ -283,27 +283,27 @@ bool _et_layer_view_draw(EtLayerView *this)
 	}
 
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer(
-			GTK_TEXT_VIEW (this->text));
+			GTK_TEXT_VIEW (self->text));
 	gtk_text_buffer_set_text (buffer, buf, -1);
 
 	// ターゲット状態でlayer_ctrlsのbutton状態を変更する
-	gtk_widget_set_sensitive(this->button_layer_ctrls[0], (0 <= this->doc_id));
-	gtk_widget_set_sensitive(this->button_layer_ctrls[1], (NULL != focus.element));
-	gtk_widget_set_sensitive(this->button_layer_ctrls[2], (NULL != focus.element));
-	gtk_widget_set_sensitive(this->button_layer_ctrls[3], (NULL != focus.element));
+	gtk_widget_set_sensitive(self->button_layer_ctrls[0], (0 <= self->doc_id));
+	gtk_widget_set_sensitive(self->button_layer_ctrls[1], (NULL != focus.element));
+	gtk_widget_set_sensitive(self->button_layer_ctrls[2], (NULL != focus.element));
+	gtk_widget_set_sensitive(self->button_layer_ctrls[3], (NULL != focus.element));
 
 	return true;
 }
 
 bool _et_layer_view_update_doc_tree()
 {
-	EtLayerView *this = layer_view;
-	if(NULL == this){
+	EtLayerView *self = layer_view;
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
 
-	EtDoc *doc = et_doc_manager_get_doc_from_id(this->doc_id);
+	EtDoc *doc = et_doc_manager_get_doc_from_id(self->doc_id);
 	if(NULL == doc){
 		et_error("");
 		return false;
@@ -326,8 +326,8 @@ bool _et_layer_view_update_doc_tree()
 		return false;
 	}
 
-	EtLayerViewElementData **before = this->elementDatas;
-	this->elementDatas = func_rlt_data_pack.datas;
+	EtLayerViewElementData **before = self->elementDatas;
+	self->elementDatas = func_rlt_data_pack.datas;
 	if(NULL != before){
 		int num = pv_general_get_parray_num((void **)before);
 		for(int i = 0; i < num; i++){
@@ -336,18 +336,18 @@ bool _et_layer_view_update_doc_tree()
 		}
 	}
 
-	return _et_layer_view_draw(this);
+	return _et_layer_view_draw(self);
 }
 
 bool et_layer_view_set_doc_id(EtDocId doc_id)
 {
-	EtLayerView *this = layer_view;
-	if(NULL == this){
+	EtLayerView *self = layer_view;
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
 
-	this->doc_id = doc_id;
+	self->doc_id = doc_id;
 
 	if(!_et_layer_view_update_doc_tree()){
 		et_error("");
@@ -366,29 +366,29 @@ void et_layer_view_slot_from_doc_change(EtDoc *doc, gpointer data)
 
 void et_layer_view_slot_from_etaion_change_state(EtState state, gpointer data)
 {
-	EtLayerView *this = layer_view;
-	if(NULL == this){
+	EtLayerView *self = layer_view;
+	if(NULL == self){
 		et_bug("");
 		exit(-1);
 	}
 
-	this->doc_id = state.doc_id;
+	self->doc_id = state.doc_id;
 
-	if(!et_layer_view_set_doc_id(this->doc_id)){
+	if(!et_layer_view_set_doc_id(self->doc_id)){
 		et_error("");
 		return;
 	}
 }
 
-int _et_layer_view_index_data_from_position(EtLayerView *this, int x, int y)
+int _et_layer_view_index_data_from_position(EtLayerView *self, int x, int y)
 {
-	if(NULL == this){
+	if(NULL == self){
 		et_bug("");
 		return -1;
 	}
 	int index = (y/16) + 1; // +1 = hidden root layer
 
-	int num = pv_general_get_parray_num((void **)this->elementDatas);
+	int num = pv_general_get_parray_num((void **)self->elementDatas);
 	if(!(index < num)){
 		return -1;
 	}
@@ -398,34 +398,34 @@ int _et_layer_view_index_data_from_position(EtLayerView *this, int x, int y)
 
 gboolean _et_layer_view_cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
-	EtLayerView *this = (EtLayerView *)data;
+	EtLayerView *self = (EtLayerView *)data;
 	et_debug("BUTTON PRESS: (%4d, %4d)", (int)event->x, (int)event->y);
 	et_mouse_util_button_kind(event->button);
 	et_mouse_util_modifier_kind(event->state);
 
-	int index = _et_layer_view_index_data_from_position(this, event->x, event->y);
+	int index = _et_layer_view_index_data_from_position(self, event->x, event->y);
 	et_debug("%d", index);
 	if(0 <= index){
 		bool is_error = true;
-		PvFocus focus = et_doc_get_focus_from_id(this->doc_id, &is_error);
+		PvFocus focus = et_doc_get_focus_from_id(self->doc_id, &is_error);
 		if(is_error){
 			et_error("");
 			return false;
 		}
 
-		focus.element = this->elementDatas[index]->element;
+		focus.element = self->elementDatas[index]->element;
 
-		if(!et_doc_set_focus_to_id(this->doc_id, focus)){
+		if(!et_doc_set_focus_to_id(self->doc_id, focus)){
 			et_error("");
 			return false;
 		}
 
-		if(!_et_layer_view_draw(this)){
+		if(!_et_layer_view_draw(self)){
 			et_error("");
 			return false;
 		}
 
-		if(!et_doc_signal_update_from_id(this->doc_id)){
+		if(!et_doc_signal_update_from_id(self->doc_id)){
 			et_error("");
 			return false;
 		}
@@ -449,15 +449,15 @@ gboolean _et_layer_view_cb_motion_notify(GtkWidget *widget, GdkEventMotion *even
 
 gboolean _et_layer_view_cb_layer_ctrl(GtkWidget *widget, gpointer data)
 {
-	EtLayerView *this = (EtLayerView *)data;
-	if(NULL == this){
+	EtLayerView *self = (EtLayerView *)data;
+	if(NULL == self){
 		et_bug("");
 		return false;
 	}
 
 	int index = -1;
 	for(int i = 0; i < 4; i++){
-		if(widget == this->button_layer_ctrls[i]){
+		if(widget == self->button_layer_ctrls[i]){
 			index = i;
 			break;
 		}
@@ -465,25 +465,25 @@ gboolean _et_layer_view_cb_layer_ctrl(GtkWidget *widget, gpointer data)
 
 	switch(index){
 		case 0:
-			if(!et_etaion_add_new_layer(this->doc_id)){
+			if(!et_etaion_add_new_layer(self->doc_id)){
 				et_error("");
 				return false;
 			}
 			break;
 		case 1:
-			if(!et_etaion_add_new_layer_child(this->doc_id)){
+			if(!et_etaion_add_new_layer_child(self->doc_id)){
 				et_error("");
 				return false;
 			}
 			break;
 		case 2:
-			if(!et_etaion_copy_layer(this->doc_id)){
+			if(!et_etaion_copy_layer(self->doc_id)){
 				et_error("");
 				return false;
 			}
 			break;
 		case 3:
-			if(!et_etaion_remove_delete_layer(this->doc_id)){
+			if(!et_etaion_remove_delete_layer(self->doc_id)){
 				et_error("");
 				return false;
 			}

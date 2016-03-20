@@ -12,51 +12,50 @@ EtPointingManager *et_pointing_manager_init()
 		exit(-1);
 	}
 
-	EtPointingManager *this;
-	this = (EtPointingManager *)malloc(sizeof(EtPointingManager));
-	if(NULL == this){
+	EtPointingManager *self = (EtPointingManager *)malloc(sizeof(EtPointingManager));
+	if(NULL == self){
 		et_critical("");
 		return NULL;
 	}
 
-	this->slot_mouse_action = NULL;
+	self->slot_mouse_action = NULL;
 
-	pointing_manager = this;
+	pointing_manager = self;
 
-	return this;
+	return self;
 }
 
 bool et_pointing_manager_set_slot_mouse_action(EtPointingManagerSlotMouseAction slot)
 {
-	EtPointingManager *this = pointing_manager;
-	if(NULL == this){
+	EtPointingManager *self = pointing_manager;
+	if(NULL == self){
 		et_bug("");
 		return false;
 	}
 
-	if(NULL != this->slot_mouse_action){
+	if(NULL != self->slot_mouse_action){
 		et_bug("");
 		return false;
 	}
 
-	this->slot_mouse_action = slot;
+	self->slot_mouse_action = slot;
 
 	return true;
 }
 
 bool et_pointing_manager_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 {
-	EtPointingManager *this = pointing_manager;
-	if(NULL == this){
+	EtPointingManager *self = pointing_manager;
+	if(NULL == self){
 		et_bug("");
 		return false;
 	}
-	if(NULL == this->slot_mouse_action){
+	if(NULL == self->slot_mouse_action){
 		et_bug("");
 		return false;
 	}
 
-	if(!this->slot_mouse_action(doc_id, mouse_action)){
+	if(!self->slot_mouse_action(doc_id, mouse_action)){
 		et_error("");
 		return false;
 	}

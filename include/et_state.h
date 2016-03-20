@@ -11,7 +11,7 @@ struct EtState{
 	EtDocId doc_id;
 };
 
-void et_state_unfocus(EtState *this);
+void et_state_unfocus(EtState *self);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

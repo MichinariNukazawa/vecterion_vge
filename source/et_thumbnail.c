@@ -13,14 +13,14 @@ EtThumbnail *et_thumbnail_new()
 	return (EtThumbnail *)canvas;
 }
 
-EtCanvas *et_thumbnail_get_canvas(EtThumbnail *this)
+EtCanvas *et_thumbnail_get_canvas(EtThumbnail *self)
 {
-	return (EtCanvas *)this;
+	return (EtCanvas *)self;
 }
 
-GtkWidget *et_thumbnail_get_widget_frame(EtThumbnail *this)
+GtkWidget *et_thumbnail_get_widget_frame(EtThumbnail *self)
 {
-	EtCanvas *canvas = et_thumbnail_get_canvas(this);
+	EtCanvas *canvas = et_thumbnail_get_canvas(self);
 
 	GtkWidget *widget = et_canvas_get_widget_frame(canvas);
 	if(NULL == widget){

@@ -12,8 +12,8 @@ typedef EtCanvas EtThumbnail;
 
 
 EtThumbnail *et_thumbnail_new();
-EtCanvas *et_thumbnail_get_canvas(EtThumbnail *this);
-GtkWidget *et_thumbnail_get_widget_frame(EtThumbnail *this);
+EtCanvas *et_thumbnail_get_canvas(EtThumbnail *self);
+GtkWidget *et_thumbnail_get_widget_frame(EtThumbnail *self);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

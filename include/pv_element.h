@@ -41,9 +41,9 @@ PvElement *pv_element_new(const PvElementKind kind);
 /** @brief 
  * copy element_tree parent is NULL.
  */
-PvElement *pv_element_copy_recursive(const PvElement *this);
+PvElement *pv_element_copy_recursive(const PvElement *self);
 /** @brief
- * @return false: error from this function.
+ * @return false: error from self function.
  */
 bool pv_element_recursive_desc_before(PvElement *element,
 		PvElementRecursiveFunc func, gpointer data,
@@ -68,20 +68,20 @@ bool pv_element_append_child(PvElement * const parent,
  * element remove in parent->childs
  * delete element and childs recursive.
  */
-bool pv_element_remove_delete_recursive(PvElement * const this);
+bool pv_element_remove_delete_recursive(PvElement * const self);
 
 const char *pv_element_get_name_from_kind(PvElementKind kind);
 
 
-bool pv_element_raster_read_file(PvElement * const this,
+bool pv_element_raster_read_file(PvElement * const self,
 		const char * const path);
 
 /** @brief 
  *
- * @param this
+ * @param self
  *		Not Bezier: return Error.
  */
-bool pv_element_bezier_add_anchor_point(PvElement * const this,
+bool pv_element_bezier_add_anchor_point(PvElement * const self,
 		const PvAnchorPoint anchor_point);
 
 /** @brief set handle from graphic point.

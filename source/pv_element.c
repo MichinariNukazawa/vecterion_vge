@@ -5,7 +5,7 @@
 #include "pv_error.h"
 #include "pv_element_infos.h"
 
-bool _pv_element_delete_single(PvElement *this);
+bool _pv_element_delete_single(PvElement *self);
 
 char *pv_general_str_new(const char * const src)
 {
@@ -35,7 +35,7 @@ bool _pv_element_recursive_desc_inline(PvElement *element,
 {
 	if(NULL != func_before){
 		if(!func_before(element, data, *level)){
-			// cancel function this childs
+			// cancel function self childs
 			return true;
 		}
 	}
@@ -68,7 +68,7 @@ end:
 
 	if(NULL != func_after){
 		if(!func_after(element, data, *level)){
-			// this point "return false" is not mean.
+			// self point "return false" is not mean.
 			return true;
 		}
 	}
@@ -131,14 +131,14 @@ bool pv_element_recursive_desc(PvElement *element,
 
 PvElement *pv_element_new(const PvElementKind kind)
 {
-	PvElement *this = (PvElement *)malloc(sizeof(PvElement));
-	if(NULL == this){
+	PvElement *self = (PvElement *)malloc(sizeof(PvElement));
+	if(NULL == self){
 		pv_critical("");
 		exit(-1);
 	}
 
-	this->parent = NULL;
-	this->childs = NULL;
+	self->parent = NULL;
+	self->childs = NULL;
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(kind);
 	if(NULL == info || NULL == info->func_new_data){
@@ -152,15 +152,15 @@ PvElement *pv_element_new(const PvElementKind kind)
 		return NULL;
 	}
 
-	this->kind = kind;
-	this->data = data;
+	self->kind = kind;
+	self->data = data;
 
-	return this;
+	return self;
 }
 
-PvElement *_pv_element_copy_single(const PvElement *this)
+PvElement *_pv_element_copy_single(const PvElement *self)
 {
-	if(NULL == this){
+	if(NULL == self){
 		pv_error("");
 		return NULL;
 	}
@@ -171,17 +171,17 @@ PvElement *_pv_element_copy_single(const PvElement *this)
 		return NULL;
 	}
 
-	new_element->kind = this->kind;
+	new_element->kind = self->kind;
 	new_element->parent = NULL;
 	new_element->childs = NULL;
 	new_element->data = NULL;
 
-	const PvElementInfo *info = pv_element_get_info_from_kind(this->kind);
+	const PvElementInfo *info = pv_element_get_info_from_kind(self->kind);
 	if(NULL == info || NULL == info->func_copy_new_data){
 		pv_error("");
 		return NULL;
 	}
-	void *new_data = info->func_copy_new_data(this->data);
+	void *new_data = info->func_copy_new_data(self->data);
 	if(NULL == new_data){
 		pv_error("");
 		goto error1;
@@ -196,33 +196,33 @@ error1:
 	return NULL;
 }
 
-PvElement *_pv_element_copy_recursive_inline(const PvElement *this,
+PvElement *_pv_element_copy_recursive_inline(const PvElement *self,
 		int *level, PvElementRecursiveError *error)
 {
-	if(NULL == this){
+	if(NULL == self){
 		error->is_error =true;
 		error->level = *level;
-		error->element = this;
+		error->element = self;
 		return NULL;
 	}
 
-	// copy this
-	PvElement *new_element = _pv_element_copy_single(this);
+	// copy self
+	PvElement *new_element = _pv_element_copy_single(self);
 	if(NULL == new_element){
 		error->is_error =true;
 		error->level = *level;
-		error->element = this;
+		error->element = self;
 		return NULL;
 	}
 
 	// ** copy childs
 	(*level)++;
 
-	int num = pv_general_get_parray_num((void **)this->childs);
+	int num = pv_general_get_parray_num((void **)self->childs);
 	if(0 > num){
 		error->is_error = true;
 		error->level = *level;
-		error->element = this;
+		error->element = self;
 		goto error1;
 	}
 
@@ -234,20 +234,20 @@ PvElement *_pv_element_copy_recursive_inline(const PvElement *this,
 		if(NULL == childs){
 			error->is_error = true;
 			error->level = *level;
-			error->element = this;
+			error->element = self;
 			goto error1;
 		}
 
 		for(int i = 0; i < num; i++){
 			PvElement *child = _pv_element_copy_recursive_inline(
-					this->childs[i],
+					self->childs[i],
 					level,
 					error);
 			if(NULL == child){
 				if(!error->is_error){
 					error->is_error =true;
 					error->level = *level;
-					error->element = this;
+					error->element = self;
 					goto error2;
 				}
 			}
@@ -274,9 +274,9 @@ error1:
 	return NULL;
 }
 
-PvElement *pv_element_copy_recursive(const PvElement *this)
+PvElement *pv_element_copy_recursive(const PvElement *self)
 {
-	if(NULL == this){
+	if(NULL == self){
 		pv_error("");
 		return NULL;
 	}
@@ -287,7 +287,7 @@ PvElement *pv_element_copy_recursive(const PvElement *this)
 		.element = NULL,
 	};
 	int level = 0;
-	PvElement *new_element_tree = _pv_element_copy_recursive_inline( this, &level, &error);
+	PvElement *new_element_tree = _pv_element_copy_recursive_inline( self, &level, &error);
 	if(NULL == new_element_tree){
 		pv_error("");
 		return NULL;
@@ -347,33 +347,33 @@ bool pv_element_append_child(PvElement * const parent,
 	return true;
 }
 
-bool _pv_element_delete_single(PvElement *this)
+bool _pv_element_delete_single(PvElement *self)
 {
-	if(NULL == this){
+	if(NULL == self){
 		pv_bug("");
 		return false;
 	}
 
-	const PvElementInfo *info = pv_element_get_info_from_kind(this->kind);
+	const PvElementInfo *info = pv_element_get_info_from_kind(self->kind);
 	if(NULL == info){
 		pv_bug("");
 		return false;
 	}
 
-	if(!info->func_delete_data(this->data)){
+	if(!info->func_delete_data(self->data)){
 		pv_bug("");
 		return false;
 	}
 
-	free(this);
+	free(self);
 
 	return true;
 }
 
-bool _pv_element_remove_delete_recursive_inline(PvElement *this,
+bool _pv_element_remove_delete_recursive_inline(PvElement *self,
 		int *level, PvElementRecursiveError *error)
 {
-	int num = pv_general_get_parray_num((void **)this->childs);
+	int num = pv_general_get_parray_num((void **)self->childs);
 	if(0 > num){
 		pv_bug("");
 		return false;
@@ -385,13 +385,13 @@ bool _pv_element_remove_delete_recursive_inline(PvElement *this,
 
 	for(int i = (num - 1); 0 <= i; i--){
 		if(!_pv_element_remove_delete_recursive_inline(
-					this->childs[i],
+					self->childs[i],
 					level,
 					error)){
 			if(!error->is_error){
 				error->is_error =true;
 				error->level = *level;
-				error->element = this->childs[i];
+				error->element = self->childs[i];
 				break;
 			}
 		}
@@ -399,33 +399,33 @@ bool _pv_element_remove_delete_recursive_inline(PvElement *this,
 
 	(*level)--;
 
-	if(!_pv_element_delete_single(this)){
+	if(!_pv_element_delete_single(self)){
 		error->is_error =true;
 		error->level = *level;
-		error->element = this;
+		error->element = self;
 		return false;
 	}
 
 	return true;
 }
 
-bool _pv_element_detouch_parent(PvElement * const this)
+bool _pv_element_detouch_parent(PvElement * const self)
 {
-	if(NULL == this){
+	if(NULL == self){
 		pv_error("");
 		return false;
 	}
 
-	if(NULL == this->parent){
+	if(NULL == self->parent){
 		pv_error("");
 		return false;
 	}
 
-	PvElement **childs = this->parent->childs;
+	PvElement **childs = self->parent->childs;
 	int num = pv_general_get_parray_num((void **)childs);
 	bool is_exist = false;
 	for(int i = 0; i < num; i++){
-		if(this == childs[i]){
+		if(self == childs[i]){
 			is_exist = true;
 			memmove(&childs[i], &childs[i + 1], sizeof(PvElement*) * (num - i));
 			break;
@@ -445,22 +445,22 @@ bool _pv_element_detouch_parent(PvElement * const this)
 		childs[num - 1] = NULL;
 	}
 
-	this->parent->childs = childs;
-	this->parent = NULL;
+	self->parent->childs = childs;
+	self->parent = NULL;
 
 	return true;
 }
 
-bool pv_element_remove_delete_recursive(PvElement * const this)
+bool pv_element_remove_delete_recursive(PvElement * const self)
 {
-	if(NULL == this){
+	if(NULL == self){
 		pv_error("");
 		return false;
 	}
 
 	// 親がいるなら連結を外す
-	if(NULL != this->parent){
-		if(!_pv_element_detouch_parent(this)){
+	if(NULL != self->parent){
+		if(!_pv_element_detouch_parent(self)){
 			pv_error("");
 			return false;
 		}
@@ -472,7 +472,7 @@ bool pv_element_remove_delete_recursive(PvElement * const this)
 		.element = NULL,
 	};
 	int level = 0;
-	if(!_pv_element_remove_delete_recursive_inline(this, &level, &error)){
+	if(!_pv_element_remove_delete_recursive_inline(self, &level, &error)){
 		pv_error("%d\n", error.level);
 		return false;
 	}
@@ -480,25 +480,25 @@ bool pv_element_remove_delete_recursive(PvElement * const this)
 	return true;
 }
 
-bool pv_element_bezier_add_anchor_point(PvElement * const this,
+bool pv_element_bezier_add_anchor_point(PvElement * const self,
 		const PvAnchorPoint anchor_point)
 {
-	if(NULL == this){
+	if(NULL == self){
 		pv_error("");
 		return false;
 	}
 
-	if(PvElementKind_Bezier != this->kind){
+	if(PvElementKind_Bezier != self->kind){
 		pv_bug("");
 		return false;
 	}
 
-	if(NULL == this->data){
+	if(NULL == self->data){
 		pv_bug("");
 		return false;
 	}
 
-	PvElementBezierData *data = this->data;
+	PvElementBezierData *data = self->data;
 	PvAnchorPoint *anchor_points = (PvAnchorPoint *)realloc(data->anchor_points,
 			sizeof(PvAnchorPoint) * (data->anchor_points_num + 1));
 	anchor_points[data->anchor_points_num] = anchor_point;
@@ -508,20 +508,20 @@ bool pv_element_bezier_add_anchor_point(PvElement * const this,
 	return true;
 }
 
-bool pv_element_raster_read_file(PvElement * const this,
+bool pv_element_raster_read_file(PvElement * const self,
 		const char * const path)
 {
-	if(PvElementKind_Raster != this->kind){
+	if(PvElementKind_Raster != self->kind){
 		pv_bug("");
 		return false;
 	}
 
-	if(NULL == this->data){
+	if(NULL == self->data){
 		pv_bug("");
 		return false;
 	}
 
-	PvElementRasterData *data = this->data;
+	PvElementRasterData *data = self->data;
 	if(NULL != data->path){
 		pv_fixme("");
 		return false;

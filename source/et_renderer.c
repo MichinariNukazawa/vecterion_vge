@@ -19,15 +19,15 @@ EtRenderer *et_renderer_init()
 		return NULL;
 	}
 
-	EtRenderer *this = (EtRenderer *)malloc(sizeof(EtRenderer));
-	if(NULL == this){
+	EtRenderer *self = (EtRenderer *)malloc(sizeof(EtRenderer));
+	if(NULL == self){
 		et_error("");
 		return NULL;
 	}
 
-	_renderer = this;
+	_renderer = self;
 
-	return this;
+	return self;
 }
 
 GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext render_context)
@@ -56,8 +56,8 @@ GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext render_
 
 void slot_et_renderer_from_canvas_change(EtCanvas *canvas, gpointer data)
 {
-	EtRenderer *this = _renderer;
-	if(NULL == this){
+	EtRenderer *self = _renderer;
+	if(NULL == self){
 		et_bug("");
 		return;
 	}

@@ -46,14 +46,14 @@ int et_general_get_parray_num(void **pointers)
 }
 EtDocId _et_canvas_collection_get_doc_id_from_canvas_frame(GtkWidget *canvas_frame)
 {
-	EtCanvasCollection *this = _canvas_collection;
-	if(NULL == this){
+	EtCanvasCollection *self = _canvas_collection;
+	if(NULL == self){
 		et_bug("");
 		return -1;
 	}
 
-	for(int i = 0; i < this->num_collects; i++){
-		const EtCanvasCollectionCollect *collect = &(this->collects[i]);
+	for(int i = 0; i < self->num_collects; i++){
+		const EtCanvasCollectionCollect *collect = &(self->collects[i]);
 		int num = et_general_get_parray_num((void **)collect->canvases);
 		for(int t = 0; t < num; t++){
 			// TODO: const
@@ -94,12 +94,12 @@ gboolean _cb_notebook_change_current_page(GtkNotebook *notebook,
 	}
 
 	// ** change Thumbnail doc_id
-	EtCanvasCollection *this = _canvas_collection;
-	if(NULL == this){
+	EtCanvasCollection *self = _canvas_collection;
+	if(NULL == self){
 		et_bug("");
 		return false;
 	}
-	EtCanvas *canvas_thumbnail = et_thumbnail_get_canvas(this->thumbnail);
+	EtCanvas *canvas_thumbnail = et_thumbnail_get_canvas(self->thumbnail);
 	if(!et_canvas_set_doc_id(canvas_thumbnail, doc_id)){
 		et_bug("");
 		return false;
@@ -138,33 +138,33 @@ EtCanvasCollection *et_canvas_collection_init()
 		return NULL;
 	}
 
-	EtCanvasCollection *this = (EtCanvasCollection *)malloc(sizeof(EtCanvasCollection));
-	if(NULL == this){
+	EtCanvasCollection *self = (EtCanvasCollection *)malloc(sizeof(EtCanvasCollection));
+	if(NULL == self){
 		et_error("");
 		return NULL;
 	}
 
-	this->widget_tab = gtk_notebook_new();
-	if(NULL == this->widget_tab){
+	self->widget_tab = gtk_notebook_new();
+	if(NULL == self->widget_tab){
 		et_error("");
 		return NULL;
 	}
 
-	g_signal_connect(GTK_NOTEBOOK(this->widget_tab), "page-added",
+	g_signal_connect(GTK_NOTEBOOK(self->widget_tab), "page-added",
 			G_CALLBACK(_cb_notebook_page_added), NULL);
-	int t = g_signal_connect(GTK_NOTEBOOK(this->widget_tab), "switch-page",
+	int t = g_signal_connect(GTK_NOTEBOOK(self->widget_tab), "switch-page",
 			G_CALLBACK(_cb_notebook_change_current_page), NULL);
 	if(0 >= t){
 		et_error("");
 	}
 
-	this->thumbnail = et_thumbnail_new();
-	if(NULL == this->thumbnail){
+	self->thumbnail = et_thumbnail_new();
+	if(NULL == self->thumbnail){
 		et_error("");
 		return NULL;
 	}
 
-	EtCanvas *canvas_thumbnail = et_thumbnail_get_canvas(this->thumbnail);
+	EtCanvas *canvas_thumbnail = et_thumbnail_get_canvas(self->thumbnail);
 	int id = et_canvas_set_slot_change(canvas_thumbnail,
 			slot_et_renderer_from_canvas_change, NULL);
 	if(id < 0){
@@ -172,47 +172,47 @@ EtCanvasCollection *et_canvas_collection_init()
 		return NULL;
 	}
 
-	this->widget = this->widget_tab;
+	self->widget = self->widget_tab;
 
-	this->num_collects = 0;
-	this->collects = NULL;
+	self->num_collects = 0;
+	self->collects = NULL;
 
-	_canvas_collection = this;
+	_canvas_collection = self;
 
-	return this;
+	return self;
 }
 
 GtkWidget *et_canvas_collection_get_widget_frame()
 {
-	EtCanvasCollection *this = _canvas_collection;
-	if(NULL == this){
+	EtCanvasCollection *self = _canvas_collection;
+	if(NULL == self){
 		et_bug("");
 		return NULL;
 	}
 
-	return this->widget;
+	return self->widget;
 }
 
 EtThumbnail *et_canvas_collection_get_thumbnail()
 {
-	EtCanvasCollection *this = _canvas_collection;
-	if(NULL == this){
+	EtCanvasCollection *self = _canvas_collection;
+	if(NULL == self){
 		et_bug("");
 		return NULL;
 	}
 
-	return this->thumbnail;
+	return self->thumbnail;
 }
 
 GtkWidget *et_canvas_collection_get_thumbnail_frame()
 {
-	EtCanvasCollection *this = _canvas_collection;
-	if(NULL == this){
+	EtCanvasCollection *self = _canvas_collection;
+	if(NULL == self){
 		et_bug("");
 		return NULL;
 	}
 
-	GtkWidget *widget = et_thumbnail_get_widget_frame(this->thumbnail);
+	GtkWidget *widget = et_thumbnail_get_widget_frame(self->thumbnail);
 	if(NULL == widget){
 		et_bug("");
 		return NULL;
@@ -223,8 +223,8 @@ GtkWidget *et_canvas_collection_get_thumbnail_frame()
 
 EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 {
-	EtCanvasCollection *this = _canvas_collection;
-	if(NULL == this){
+	EtCanvasCollection *self = _canvas_collection;
+	if(NULL == self){
 		et_bug("");
 		return NULL;
 	}
@@ -267,7 +267,7 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 		return NULL;
 	}
 
-	EtCanvas *canvas_thumbnail = et_thumbnail_get_canvas(this->thumbnail);
+	EtCanvas *canvas_thumbnail = et_thumbnail_get_canvas(self->thumbnail);
 	if(!et_canvas_set_doc_id(canvas_thumbnail, doc_id)){
 		et_bug("");
 		return false;
@@ -286,8 +286,8 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 
 	// ** add collects.
 	// TODO: search doc_id in collects alreary.
-	EtCanvasCollectionCollect *new = realloc(this->collects,
-			sizeof(EtCanvasCollectionCollect) * (this->num_collects + 1));
+	EtCanvasCollectionCollect *new = realloc(self->collects,
+			sizeof(EtCanvasCollectionCollect) * (self->num_collects + 1));
 	if(NULL == new){
 		et_error("");
 		return NULL;
@@ -303,14 +303,14 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 	canvases[num_canvases + 1] = NULL;
 	canvases[num_canvases] = canvas;
 
-	new[this->num_collects].canvases = canvases;
-	new[this->num_collects].doc_id = doc_id;
-	(this->num_collects)++;
+	new[self->num_collects].canvases = canvases;
+	new[self->num_collects].doc_id = doc_id;
+	(self->num_collects)++;
 
-	this->collects = new;
+	self->collects = new;
 
 	int ix = gtk_notebook_append_page_menu(
-			GTK_NOTEBOOK(this->widget_tab), canvas_frame1, NULL, NULL);
+			GTK_NOTEBOOK(self->widget_tab), canvas_frame1, NULL, NULL);
 	if(ix < 0){
 		et_error("");
 		return NULL;
