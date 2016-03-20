@@ -42,5 +42,19 @@ debug: $(TARGET)
 clean:
 	$(RM) $(TARGET) $(OBJECT_DIR)/* $(BUILD_DIR)/*
 
+dist_clean:
+	$(MAKE) clean
+	$(MAKE) -f test/Makefile clean
+
+
+## test
+
+export
+test_run: $(OBJECTS)
+	$(MAKE) -f test/Makefile run
+
+test_clean:
+	$(MAKE) -f test/Makefile clean
+
 -include $(DEPENDS)
 
