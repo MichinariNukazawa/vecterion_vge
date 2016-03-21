@@ -91,6 +91,16 @@ bool _pv_element_notimplement_is_touch_element(
 	return true;
 }
 
+bool _pv_element_notimplement_is_diff_one(
+		bool *is_diff,
+		const PvElement *element0,
+		const PvElement *element1)
+{
+	pv_error("");
+	*is_diff = true;
+	return true;
+}
+
 /* ****************
  * General
  **************** */
@@ -250,6 +260,35 @@ bool _pv_element_group_is_touch_element(
 		double gy)
 {
 	*is_touch = false;
+	return true;
+}
+
+bool pv_general_strcmp(char *str0, char *str1)
+{
+	if(NULL == str0 && NULL == str1){
+		return true;
+	}
+	if(NULL == str0 || NULL == str1){
+		return false;
+	}
+
+	return (0 == strcmp(str0, str1));
+}
+
+bool _pv_element_group_is_diff_one(
+		bool *is_diff,
+		const PvElement *element0,
+		const PvElement *element1)
+{
+	PvElementGroupData *data0 = element0->data;
+	PvElementGroupData *data1 = element1->data;
+	if(NULL == data0 || NULL == data1){
+		pv_bug("%p,%p", data0, data1);
+		*is_diff = true;
+		return false;
+	}
+
+	*is_diff = !pv_general_strcmp(data0->name, data1->name);
 	return true;
 }
 
@@ -635,6 +674,49 @@ bool _pv_element_bezier_is_touch_element(
 	return true;
 }
 
+bool _pv_element_bezier_is_diff_one(
+		bool *is_diff,
+		const PvElement *element0,
+		const PvElement *element1)
+{
+	const PvElementBezierData *data0 = element0->data;
+	const PvElementBezierData *data1 = element1->data;
+	if(NULL == data0 || NULL == data1){
+		pv_bug("%p,%p", data0, data1);
+		*is_diff = true;
+		return false;
+	}
+
+	if(data0->is_close != data1->is_close){
+		*is_diff = true;
+		return true;
+	}
+
+	if(data0->anchor_points_num != data1->anchor_points_num){
+		*is_diff = true;
+		return true;
+	}
+
+	for(int i = 0; i < data0->anchor_points_num; i++){
+		const PvAnchorPoint *ap0 = &(data0->anchor_points[i]);
+		const PvAnchorPoint *ap1 = &(data1->anchor_points[i]);
+		if(!(true
+			&& ap0->points[0].x == ap1->points[0].x
+			&& ap0->points[0].y == ap1->points[0].y
+			&& ap0->points[1].x == ap1->points[1].x
+			&& ap0->points[1].y == ap1->points[1].y
+			&& ap0->points[2].x == ap1->points[2].x
+			&& ap0->points[2].y == ap1->points[2].y))
+		{
+			*is_diff = true;
+			return true;
+		}
+	}
+
+	*is_diff = false;
+	return true;
+}
+
 /* ****************
  * Raster
  **************** */
@@ -743,6 +825,30 @@ bool _pv_element_raster_is_touch_element(
 	return true;
 }
 
+bool _pv_element_raster_is_diff_one(
+		bool *is_diff,
+		const PvElement *element0,
+		const PvElement *element1)
+{
+	const PvElementRasterData *data0 = element0->data;
+	const PvElementRasterData *data1 = element1->data;
+	if(NULL == data0 || NULL == data1){
+		pv_bug("%p,%p", data0, data1);
+		*is_diff = true;
+		return false;
+	}
+
+	// ** dataX->path is not check.
+
+	// ** TODO: check raster pixbuf.
+	if(data0->pixbuf != data1->pixbuf){
+		*is_diff = true;
+		return true;
+	}
+
+	*is_diff = false;
+	return true;
+}
 
 /* ****************
  * ElementInfo配列の定義
@@ -756,6 +862,7 @@ const PvElementInfo _pv_element_infos[] = {
 		_pv_element_write_svg_notimplement,
 		.func_draw = _pv_element_notimplement_draw,
 		.func_is_touch_element = _pv_element_notimplement_is_touch_element,
+		.func_is_diff_one		= _pv_element_notimplement_is_diff_one,
 	},
 	{PvElementKind_Root, "Root",
 		_pv_element_group_data_new,
@@ -764,6 +871,7 @@ const PvElementInfo _pv_element_infos[] = {
 		_pv_element_group_write_svg,
 		.func_draw = _pv_element_group_draw,
 		.func_is_touch_element = _pv_element_group_is_touch_element,
+		.func_is_diff_one		= _pv_element_group_is_diff_one,
 	},
 	{PvElementKind_Layer, "Layer",
 		_pv_element_group_data_new,
@@ -772,6 +880,7 @@ const PvElementInfo _pv_element_infos[] = {
 		_pv_element_group_write_svg,
 		.func_draw = _pv_element_group_draw,
 		.func_is_touch_element = _pv_element_group_is_touch_element,
+		.func_is_diff_one		= _pv_element_group_is_diff_one,
 	},
 	{PvElementKind_Group, "Group",
 		_pv_element_group_data_new,
@@ -780,6 +889,7 @@ const PvElementInfo _pv_element_infos[] = {
 		_pv_element_group_write_svg,
 		.func_draw = _pv_element_group_draw,
 		.func_is_touch_element = _pv_element_group_is_touch_element,
+		.func_is_diff_one		= _pv_element_group_is_diff_one,
 	},
 	{PvElementKind_Bezier, "Bezier",
 		_pv_element_bezier_data_new,
@@ -788,6 +898,7 @@ const PvElementInfo _pv_element_infos[] = {
 		_pv_element_bezier_write_svg,
 		.func_draw = _pv_element_bezier_draw,
 		.func_is_touch_element = _pv_element_bezier_is_touch_element,
+		.func_is_diff_one		= _pv_element_bezier_is_diff_one,
 	},
 	{PvElementKind_Raster, "Raster",
 		_pv_element_raster_data_new,
@@ -796,6 +907,7 @@ const PvElementInfo _pv_element_infos[] = {
 		_pv_element_write_svg_notimplement,
 		.func_draw = _pv_element_raster_draw,
 		.func_is_touch_element = _pv_element_raster_is_touch_element,
+		.func_is_diff_one		= _pv_element_raster_is_diff_one,
 	},
 	/* 番兵 */
 	{PvElementKind_EndOfKind, "EndOfKind",
@@ -805,6 +917,7 @@ const PvElementInfo _pv_element_infos[] = {
 		_pv_element_write_svg_notimplement,
 		.func_draw = _pv_element_notimplement_draw,
 		.func_is_touch_element = _pv_element_notimplement_is_touch_element,
+		.func_is_diff_one		= _pv_element_notimplement_is_diff_one,
 	},
 };
 

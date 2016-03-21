@@ -29,6 +29,12 @@ void pv_vg_free(PvVg *vg);
  */
 PvElement *pv_vg_get_layer_top(const PvVg *vg);
 bool pv_vg_copy_overwrite(PvVg *dst, const PvVg *src);
+PvVg *pv_vg_copy_new(const PvVg *src);
+
+/*
+ * @return is exist difference (internal error is not returned.)
+ */
+bool pv_vg_is_diff(const PvVg *vg0, const PvVg *vg1);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

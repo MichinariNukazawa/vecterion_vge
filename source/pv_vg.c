@@ -92,3 +92,64 @@ bool pv_vg_copy_overwrite(PvVg *dst, const PvVg *src)
 return true;
 }
 
+PvVg *pv_vg_copy_new(const PvVg *src)
+{
+	if(NULL == src){
+		pv_bug("");
+		return NULL;
+	}
+
+	PvVg *vg_new = pv_vg_new();
+	if(NULL == vg_new){
+		pv_bug("");
+		return NULL;
+	}
+
+	if(!pv_vg_copy_overwrite(vg_new, src)){
+		pv_error("");
+		return NULL;
+	}
+
+	// TODO not implement.
+	return vg_new;
+}
+
+bool _pv_vg_is_diff_rect(PvRect rect0, PvRect rect1)
+{
+	return !(rect0.x == rect1.x
+		&& rect0.y == rect1.y
+		&& rect0.w == rect1.w
+		&& rect0.h == rect1.h
+	);
+}
+
+bool pv_vg_is_diff(const PvVg *vg0, const PvVg *vg1)
+{
+	if(NULL == vg0 && NULL == vg1){
+		pv_bug("");
+		return false; // not difference.
+	}
+
+	if(NULL == vg0 || NULL == vg1){
+		pv_bug("%p,%p", vg0, vg1);
+		return false; // not difference.
+	}
+
+	if(vg0 == vg1){
+		pv_debug("");
+		return false;
+	}
+
+	if(_pv_vg_is_diff_rect(vg0->rect, vg1->rect)){
+		pv_debug("");
+		return true;
+	}
+
+	if(pv_element_is_diff_recursive(vg0->element_root, vg1->element_root)){
+		return true;
+	}else{
+		return false;
+	}
+}
+
+

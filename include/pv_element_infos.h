@@ -37,6 +37,10 @@ typedef bool (*PvElementFuncIsTouchElement)(
 		const PvElement *element,
 		double gx,
 		double gy);
+typedef bool (*PvElementFuncIsDiffOne)(
+		bool *is_diff,
+		const PvElement *element0,
+		const PvElement *element1);
 
 typedef struct PvElementInfo{
 	PvElementKind kind;
@@ -47,6 +51,7 @@ typedef struct PvElementInfo{
 	PvElementFuncWriteSvg		func_write_svg;
 	PvElementFuncDraw		func_draw;
 	PvElementFuncIsTouchElement	func_is_touch_element;
+	PvElementFuncIsDiffOne		func_is_diff_one;
 }PvElementInfo;
 
 extern const PvElementInfo _pv_element_infos[];

@@ -35,6 +35,11 @@ typedef struct PvElementRecursiveError{
 	int level;
 	const PvElement *element;
 }PvElementRecursiveError;
+static const PvElementRecursiveError PvElementRecursiveError_default = {
+	.is_error	= false,
+	.level		= 0,
+	.element	= NULL,
+};
 
 
 PvElement *pv_element_new(const PvElementKind kind);
@@ -69,6 +74,14 @@ bool pv_element_append_child(PvElement * const parent,
  * delete element and childs recursive.
  */
 bool pv_element_remove_delete_recursive(PvElement * const self);
+
+bool pv_element_is_diff_recursive(
+		PvElement *element0,
+		PvElement *element1);
+/*
+		const PvElement * const element0,
+		const PvElement * const element1);
+*/
 
 const char *pv_element_get_name_from_kind(PvElementKind kind);
 

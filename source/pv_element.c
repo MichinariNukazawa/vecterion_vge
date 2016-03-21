@@ -480,6 +480,128 @@ bool pv_element_remove_delete_recursive(PvElement * const self)
 	return true;
 }
 
+typedef struct PvElementIsDiffRecursiveData{
+	bool is_diff;
+}PvElementIsDiffRecursiveData;
+
+bool _pv_element_is_diff_one(
+		PvElement *element0,
+		PvElement *element1,
+		PvElementIsDiffRecursiveData *data)
+{
+	if(NULL == element0 || NULL == element1){
+		pv_error("%p,%p", element0, element1);
+		goto error;
+	}
+
+	if(element0->kind != element1->kind){
+		data->is_diff = true;
+		return true;
+	}
+
+	int num0 = pv_general_get_parray_num((void **)element0->childs);
+	int num1 = pv_general_get_parray_num((void **)element1->childs);
+	if(num0 != num1){
+		data->is_diff = true;
+		return true;
+	}
+
+	const PvElementInfo *info = pv_element_get_info_from_kind(element0->kind);
+	if(NULL == info || NULL == info->func_is_diff_one){
+		pv_bug("");
+		goto error;
+	}
+
+	if(!info->func_is_diff_one(&(data->is_diff), element0, element1)){
+		pv_bug("");
+		goto error;
+	}
+
+	return true;
+error:
+	return false;
+}
+
+bool _pv_element_is_diff_recursive_inline(
+		PvElement *element0,
+		PvElement *element1,
+		gpointer data,
+		int *level,
+		PvElementRecursiveError *error)
+{
+	bool ret = true;
+	PvElementIsDiffRecursiveData *_data = data;
+
+	if(!_pv_element_is_diff_one(element0, element1, _data)){
+		pv_error("");
+		error->is_error = true;
+		error->level = *level;
+		error->element = element0;
+		return false;
+	}
+	if(_data->is_diff){
+		return false;
+	}
+
+	int num0 = pv_general_get_parray_num((void **)element0->childs);
+	int num1 = pv_general_get_parray_num((void **)element1->childs);
+	if(num0 != num1){
+		// pv_debug("level:%d num:%d,%d", *level, num0, num1);
+		_data->is_diff = true;
+		return false;
+	}else{
+		(*level)++;
+		for(int i = 0; i < num0; i++){
+			ret = _pv_element_is_diff_recursive_inline(
+					element0->childs[i],
+					element1->childs[i],
+					data,
+					level,
+					error);
+			if(!ret){
+				break;
+			}
+			if(error->is_error){
+				ret = false;
+				break;
+			}
+		}
+		(*level)--;
+	}
+
+	return ret;
+}
+
+bool pv_element_is_diff_recursive(
+		PvElement *element0,
+		PvElement *element1)
+{
+	if(element0 == element1){
+		pv_debug("");
+		return true;
+	}
+
+	PvElementIsDiffRecursiveData _data = {
+		.is_diff = false,
+	};
+	PvElementRecursiveError error = PvElementRecursiveError_default;
+	int level = 0;
+	_pv_element_is_diff_recursive_inline(
+			element0,
+			element1,
+			&_data,
+			&level,
+			&error);
+	if(error.is_error){
+		pv_error("%d\n", error.level);
+		return false;
+	}
+
+	pv_debug("%s", _data.is_diff? "TRUE":"FALSE");
+
+	return _data.is_diff;
+}
+
 bool pv_element_bezier_add_anchor_point(PvElement * const self,
 		const PvAnchorPoint anchor_point)
 {
