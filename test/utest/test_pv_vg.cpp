@@ -27,18 +27,35 @@ TEST(Test, PvVg){
 }
 
 TEST(Test, CopyAndDiff){
+
+	{
+		PvVg *vg = pv_vg_new();
+		PvVg *vg2 = pv_vg_copy_new(vg);
+		ASSERT_TRUE(NULL != vg2);
+		ASSERT_FALSE(pv_vg_is_diff(vg, vg2));
+
+		PvVg *vg3 = pv_vg_new();
+		if(NULL == vg3){
+			FAIL();
+		}
+		bool ret;
+		ret = pv_vg_copy_overwrite(vg3, vg);
+		ASSERT_TRUE(ret);
+		ASSERT_FALSE(pv_vg_is_diff(vg, vg3));
+	}
+
 	const char *filepath = "test/utest/image_01.svg";
 	PvVg *vg = pv_io_new_from_file(filepath);
 	ASSERT_TRUE(NULL != vg);
 	ASSERT_TRUE(NULL != vg->element_root);
 	ASSERT_TRUE(NULL != vg->element_root->childs[0]);
 	/*
-	int num0 = pv_general_get_parray_num((void **)vg->element_root->childs);
-	int num1 = pv_general_get_parray_num((void **)vg->element_root->childs[0]->childs);
-	int num2 = pv_general_get_parray_num((void **)vg->element_root->childs[1]->childs);
-	printf("nums:%d,%d,%d,\n", num0, num1, num2);
-	ASSERT_EQ(1, num0);
-	*/
+	   int num0 = pv_general_get_parray_num((void **)vg->element_root->childs);
+	   int num1 = pv_general_get_parray_num((void **)vg->element_root->childs[0]->childs);
+	   int num2 = pv_general_get_parray_num((void **)vg->element_root->childs[1]->childs);
+	   printf("nums:%d,%d,%d,\n", num0, num1, num2);
+	   ASSERT_EQ(1, num0);
+	 */
 
 	PvVg *vg2 = pv_vg_copy_new(vg);
 	ASSERT_TRUE(NULL != vg2);
