@@ -684,7 +684,8 @@ gpointer _pv_element_raster_data_copy_new(void *_data)
 
 	PvElementRasterData *data = (PvElementRasterData *)_data;
 
-	PvElementRasterData *new_data = (PvElementRasterData *)malloc(sizeof(PvElementRasterData));
+	PvElementRasterData *new_data 
+			= (PvElementRasterData *)malloc(sizeof(PvElementRasterData));
 	if(NULL == new_data){
 		pv_critical("");
 		exit(-1);
@@ -697,15 +698,8 @@ gpointer _pv_element_raster_data_copy_new(void *_data)
 		exit(-1);
 	}
 
-	if(NULL == data->pixbuf){
-		new_data->pixbuf = NULL;
-	}else{
-		new_data->pixbuf = gdk_pixbuf_copy(data->pixbuf);
-		if(NULL == new_data->pixbuf){
-			pv_critical("");
-			exit(-1);
-		}
-	}
+	g_object_ref(G_OBJECT(data->pixbuf));
+	new_data->pixbuf = data->pixbuf;
 
 	return (gpointer)new_data;
 }
