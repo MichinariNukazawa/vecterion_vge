@@ -226,7 +226,7 @@ PvElement *_pv_element_copy_recursive_inline(const PvElement *self,
 		goto error1;
 	}
 
-	pv_debug("copy childs:%3d:%d", *level, num);
+	// pv_debug("copy childs:%3d:%d", *level, num);
 
 	PvElement **childs = NULL;
 	if(0 < num){
