@@ -597,8 +597,6 @@ bool pv_element_is_diff_recursive(
 		return false;
 	}
 
-	pv_debug("%s", _data.is_diff? "TRUE":"FALSE");
-
 	return _data.is_diff;
 }
 

@@ -294,24 +294,10 @@ EtDocId _open_doc_new_from_file(const char* filepath)
 
 EtDocId _open_doc_new(PvVg *vg_src)
 {
-
-	EtDocId doc_id = et_doc_manager_new_doc();
+	EtDocId doc_id = et_doc_manager_new_doc_from_vg(vg_src);
 	if(0 > doc_id){
 		et_error("");
 		return -1;
-	}
-
-	// ** setting doc
-	if(NULL != vg_src){
-		PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
-		if(NULL == vg){
-			et_error("");
-			return -1;
-		}
-		if(!pv_vg_copy_overwrite(vg, vg_src)){
-			et_error("");
-			return -1;
-		}
 	}
 
 	// ** gui

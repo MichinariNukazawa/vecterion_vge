@@ -174,6 +174,8 @@ bool _et_tool_bezier_add_point(EtDoc *doc, PvElement **_element, double x, doubl
 	}
 
 	if(is_new){
+		et_doc_save_from_id(et_doc_get_id(doc));
+
 		element = pv_element_new(PvElementKind_Bezier);
 		if(NULL == element){
 			et_error("");

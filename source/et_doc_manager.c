@@ -27,9 +27,9 @@ EtDocManager *et_doc_manager_init()
 	return self;
 }
 
-EtDocId et_doc_manager_new_doc()
+EtDocId et_doc_manager_new_doc_from_vg(const PvVg *vg)
 {
-	EtDoc *doc = et_doc_new();
+	EtDoc *doc = et_doc_new_from_vg(vg);
 	if(NULL == doc){
 		et_error("");
 		return -1;

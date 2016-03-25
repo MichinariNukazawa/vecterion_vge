@@ -77,10 +77,7 @@ bool pv_vg_copy_overwrite(PvVg *dst, const PvVg *src)
 	}
 	dst->element_root = NULL;
 
-	pv_debug("%f", src->rect.x);
-	PvRect rect = src->rect;
-	dst->rect = rect;
-//	dst->rect = src->rect;
+	dst->rect = src->rect;
 
 	PvElement *new_element_root = pv_element_copy_recursive(src->element_root);
 	if(NULL == new_element_root){

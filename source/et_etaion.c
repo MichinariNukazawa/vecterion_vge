@@ -52,6 +52,20 @@ bool et_etaion_set_current_doc_id(EtDocId doc_id)
 		exit(-1);
 	}
 
+	if((self->state).doc_id == doc_id){
+		return true;
+	}
+
+	if(0 <= (self->state).doc_id){
+		if(!et_doc_save_from_id((self->state).doc_id)){
+			et_error("");
+			return false;
+		}
+	}
+	if(!et_doc_save_from_id(doc_id)){
+		et_error("");
+		return false;
+	}
 	(self->state).doc_id = doc_id;
 
 	_signal_et_etaion_change_state(self);
@@ -110,6 +124,7 @@ bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 	// ** change current focus doc_id
 	EtDocId doc_id_prev = et_etaion_get_current_doc_id();
 	if(doc_id != doc_id_prev){
+		et_debug("%d, %d", doc_id, doc_id_prev);
 		if(!et_doc_set_focus_to_id(doc_id, pv_focus_get_nofocus())){
 			et_error("");
 			return false;
@@ -140,10 +155,13 @@ bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 		return false;
 	}
 
-	// ** redraw docs
-	if(doc_id_prev != et_etaion_get_current_doc_id()){
-		et_doc_signal_update_from_id(doc_id_prev);
+/*
+	if(EtMouseAction_Up == mouse_action.action){
+		et_doc_save_from_id(doc_id);
 	}
+*/
+
+	// ** redraw doc
 	et_doc_signal_update_from_id(doc_id);
 
 	return true;
@@ -178,6 +196,22 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 				}
 			}
 			_signal_et_etaion_change_state(self);
+			break;
+		case GDK_KEY_z:
+			if(0 != (key_action.state & GDK_CONTROL_MASK)){
+				if(!et_doc_undo_from_id((self->state).doc_id)){
+					et_error("");
+					return false;
+				}
+			}
+			break;
+		case GDK_KEY_Z:
+			if(0 != (key_action.state & (GDK_CONTROL_MASK))){
+				if(!et_doc_redo_from_id((self->state).doc_id)){
+					et_error("");
+					return false;
+				}
+			}
 			break;
 		default:
 			et_debug("no use:%d", key_action.key);
@@ -460,6 +494,11 @@ bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data)
 	if(NULL == self){
 		et_bug("");
 		exit(-1);
+	}
+
+	if(!et_doc_save_from_id(et_etaion_get_current_doc_id())){
+		et_error("");
+		return false;
 	}
 
 	if(self->tool_id != tool_id){
