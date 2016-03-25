@@ -29,8 +29,6 @@ PvFocus et_doc_get_focus_from_id(EtDocId id, bool *is_error);
 bool et_doc_set_focus_to_id(EtDocId id, PvFocus focus);
 // PvFocus et_doc_get_focus(EtDoc *self);
 // void et_doc_set_focus(EtDoc *self, PvFocus focus);
-// _element: 
-bool et_doc_add_point(EtDoc *self, PvElement **_element, double x, double y);
 bool et_doc_signal_update(EtDoc *self);
 bool et_doc_signal_update_from_id(EtDocId id);
 

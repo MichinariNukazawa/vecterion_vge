@@ -147,6 +147,69 @@ bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 	return true;
 }
 
+bool _et_tool_bezier_add_point(EtDoc *doc, PvElement **_element, double x, double y)
+{
+	bool is_new = true;
+	PvElement *element = *_element;
+	PvElement *parent = NULL;
+	if(NULL == element){
+		parent = NULL;
+		//element = NULL;
+	}else{
+		switch(element->kind){
+			case PvElementKind_Bezier:
+				parent = element->parent;
+				//element = element;
+				is_new = false;
+				break;
+			case PvElementKind_Layer:
+			case PvElementKind_Group:
+				parent = *_element;
+				element = NULL;
+				break;
+			default:
+				parent = element->parent;
+				element = NULL;
+		}
+	}
+
+	if(is_new){
+		element = pv_element_new(PvElementKind_Bezier);
+		if(NULL == element){
+			et_error("");
+			return false;
+		}
+	}
+
+	PvAnchorPoint anchor_point = {
+		.points = {{0,0}, {x, y,}, {0,0}},
+	};
+	if(!pv_element_bezier_add_anchor_point(element, anchor_point)){
+		et_error("");
+		return false;
+	}
+
+	if(is_new){
+		if(NULL == parent){
+			parent = pv_vg_get_layer_top(et_doc_get_vg_ref(doc));
+			if(NULL == parent){
+				et_error("");
+				return false;
+			}
+		}
+
+		if(!pv_element_append_child(parent, 
+					NULL, element)){
+			et_error("");
+			return false;
+		}
+	}
+
+	*_element = element;
+
+	return true;
+}
+
 static int _et_etaion_radius_path_detect = 6;
 static EtMouseActionType _mouse_action_up_down = EtMouseAction_Up;
 bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
@@ -202,7 +265,7 @@ bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 
 				// ** new anchor_point
 				if(!is_closed){
-					if(!et_doc_add_point(doc, &_element,
+					if(!_et_tool_bezier_add_point(doc, &_element,
 								mouse_action.point.x, mouse_action.point.y)){
 						et_error("");
 						return false;
