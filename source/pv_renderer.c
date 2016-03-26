@@ -73,9 +73,11 @@ bool _pv_renderer_cairo_background(cairo_t *cr,
 	// pv_debug("%f, %f, %f, %f, ", (vg->rect).x, (vg->rect).y, (vg->rect).w, (vg->rect).h);
 	cairo_set_source_rgb (cr, 0.6, 0.6, 0.6);
 
+	int w_size = (vg->rect).w * render_context.scale;
+	int h_size = (vg->rect).h * render_context.scale;
 	int unit = 16;
-	for(int y = 0; y < (vg->rect).h; y += unit){
-		for(int x = 0 + (((y/unit) % 2) * unit); x < (vg->rect).w; x += (unit * 2)){
+	for(int y = 0; y < h_size; y += unit){
+		for(int x = 0 + (((y/unit) % 2) * unit); x < w_size; x += (unit * 2)){
 			cairo_rectangle (cr, x, y, unit, unit);
 		}
 	}
