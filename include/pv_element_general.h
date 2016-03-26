@@ -18,9 +18,19 @@ struct PvElementGroupData{
 	char *name;
 };
 
+typedef struct PvMatrix{
+	double x;
+	double y;
+}PvMatrix;
+static const PvMatrix PvMatrix_default = {
+	.x = 0,
+	.y = 0,
+};
+
 struct PvElementRasterData;
 typedef struct PvElementRasterData PvElementRasterData;
 struct PvElementRasterData{
+	PvMatrix matrix;
 	char *path;
 	GdkPixbuf *pixbuf;
 };

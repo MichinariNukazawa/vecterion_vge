@@ -687,6 +687,7 @@ gpointer _pv_element_raster_data_new()
 		exit(-1);
 	}
 
+	data->matrix = PvMatrix_default;
 	data->path = NULL;
 	data->pixbuf = NULL;
 
@@ -730,6 +731,7 @@ gpointer _pv_element_raster_data_copy_new(void *_data)
 		pv_critical("");
 		exit(-1);
 	}
+	new_data = data;
 
 	bool is_error = true;
 	new_data->path = pv_general_new_str(data->path, &is_error);
@@ -765,12 +767,54 @@ bool _pv_element_raster_draw(
 		pv_error("");
 		return false;
 	}else{
-		gdk_cairo_set_source_pixbuf (cr, pb, 0, 0);
+		double x = data->matrix.x;
+		double y = data->matrix.y;
+		x *= render_context.scale;
+		y *= render_context.scale;
+		gdk_cairo_set_source_pixbuf (cr, pb, x, y);
 		cairo_paint (cr);
 		g_object_unref(G_OBJECT(pb));
 	}
 
 	return true;
+}
+
+bool _pv_element_raster_draw_focusing(
+		cairo_t *cr,
+		const PvRenderOption render_option,
+		const PvElement *element)
+{
+	const PvRenderContext render_context = render_option.render_context;
+
+	const PvElementRasterData *data = element->data;
+	if(NULL == data){
+		pv_error("");
+		return false;
+	}
+	GdkPixbuf *pixbuf = data->pixbuf;
+	double w = (double)gdk_pixbuf_get_width(pixbuf);
+	double h = (double)gdk_pixbuf_get_height(pixbuf);
+	w *= render_context.scale;
+	h *= render_context.scale;
+	double x = data->matrix.x;
+	double y = data->matrix.y;
+	x *= render_context.scale;
+	y *= render_context.scale;
+
+	cairo_rectangle(cr, x, y, w, h);
+	cairo_set_line_width(cr, 1.0);
+	_pv_render_workingcolor_cairo_set_source_rgb(cr);
+	cairo_stroke(cr);
+
+	return true;
+}
+
+bool _is_inside_rect(
+		double x_min, double x_max,
+		double y_min, double y_max,
+		double x, double y)
+{
+	return (x_min <= x && x <= x_max && y_min <= y && y <= y_max);
 }
 
 bool _pv_element_raster_is_touch_element(
@@ -780,7 +824,26 @@ bool _pv_element_raster_is_touch_element(
 		double gy)
 {
 	*is_touch = false;
+
+	PvElementRasterData *data = element->data;
+
+	GdkPixbuf *pixbuf = data->pixbuf;
+	double w = (double)gdk_pixbuf_get_width(pixbuf);
+	double h = (double)gdk_pixbuf_get_height(pixbuf);
+	*is_touch = _is_inside_rect(
+			data->matrix.x,
+			data->matrix.x + w,
+			data->matrix.y,
+			data->matrix.y + h,
+			gx,
+			gy);
+
 	return true;
+}
+
+bool pv_matrix_is_diff(const PvMatrix matrix1, const PvMatrix matrix2)
+{
+	return !(matrix1.x == matrix2.x && matrix1.y == matrix2.y);
 }
 
 bool _pv_element_raster_is_diff_one(
@@ -792,6 +855,11 @@ bool _pv_element_raster_is_diff_one(
 	const PvElementRasterData *data1 = element1->data;
 	if(NULL == data0 || NULL == data1){
 		pv_bug("%p,%p", data0, data1);
+		*is_diff = true;
+		return false;
+	}
+
+	if(pv_matrix_is_diff(data0->matrix, data1->matrix)){
 		*is_diff = true;
 		return false;
 	}
@@ -808,6 +876,26 @@ bool _pv_element_raster_is_diff_one(
 	return true;
 }
 
+bool _pv_element_raster_move_element(
+		const PvElement *element,
+		double gx,
+		double gy)
+{
+	if(NULL == element || PvElementKind_Raster != element->kind){
+		pv_error("%p", element);
+		return false;
+	}
+	PvElementRasterData *data = element->data;
+	if(NULL == data){
+		pv_error("");
+		return false;
+	}
+
+	data->matrix.x += gx;
+	data->matrix.y += gy;
+
+	return true;
+}
 /* ****************
  * ElementInfo配列の定義
  **************** */
@@ -874,10 +962,10 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_copy_new_data		= _pv_element_raster_data_copy_new,
 		.func_write_svg			= _pv_element_notimplement_svg_write,
 		.func_draw			= _pv_element_raster_draw,
-		.func_draw_focusing		= _pv_element_notimplement_draw,
+		.func_draw_focusing		= _pv_element_raster_draw_focusing,
 		.func_is_touch_element		= _pv_element_raster_is_touch_element,
 		.func_is_diff_one		= _pv_element_raster_is_diff_one,
-		.func_move_element		= _pv_element_notimplement_move_element,
+		.func_move_element		= _pv_element_raster_move_element,
 	},
 	/* 番兵 */
 	{PvElementKind_EndOfKind, "EndOfKind",
