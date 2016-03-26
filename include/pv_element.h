@@ -50,6 +50,12 @@ PvElement *pv_element_copy_recursive(const PvElement *self);
 /** @brief
  * @return false: error from self function.
  */
+bool pv_element_recursive_asc(PvElement *element,
+		PvElementRecursiveFunc func_before,
+		PvElementRecursiveFunc func_after,
+		gpointer data,
+		PvElementRecursiveError *error);
+
 bool pv_element_recursive_desc_before(PvElement *element,
 		PvElementRecursiveFunc func, gpointer data,
 		PvElementRecursiveError *error);
@@ -58,6 +64,7 @@ bool pv_element_recursive_desc(PvElement *element,
 		PvElementRecursiveFunc func_after,
 		gpointer data,
 		PvElementRecursiveError *error);
+
 /** @brief 
  *
  * @param parent

@@ -97,7 +97,7 @@ bool _et_tool_focus_element_mouse_action_get_focus_element(
 		.gy = gy,
 	};
 	PvElementRecursiveError error;
-	if(!pv_element_recursive_desc(vg->element_root,
+	if(!pv_element_recursive_asc(vg->element_root,
 				_et_tool_func_pv_element_recurse_get_focus_element,
 				NULL,
 				&rec_data,

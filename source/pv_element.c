@@ -25,11 +25,11 @@ char *pv_general_str_new(const char * const src)
 	return dst;
 }
 
-
-bool _pv_element_recursive_desc_inline(PvElement *element,
+bool _pv_element_recursive_inline_2(PvElement *element,
 		PvElementRecursiveFunc func_before,
 		PvElementRecursiveFunc func_after,
 		gpointer data,
+		bool is_asc,
 		int *level,
 		PvElementRecursiveError *error)
 {
@@ -45,18 +45,25 @@ bool _pv_element_recursive_desc_inline(PvElement *element,
 	bool ret = true;
 
 	int num = pv_general_get_parray_num((void **)element->childs);
-	for(int i = num - 1; 0 <= i; i--){
-		if(!_pv_element_recursive_desc_inline(element->childs[i],
+	for(int i = 0; i < num; i++){
+		int ix = 0;
+		if(is_asc){
+			ix = i;
+		}else{
+			ix = ((num - 1) - i);
+		}
+		if(!_pv_element_recursive_inline_2(element->childs[ix],
 					func_before,
 					func_after,
 					data,
+					is_asc,
 					level,
 					error)){
 			if(!error->is_error){
 				// logging first error.
 				error->is_error = true;
 				error->level = *level;
-				error->element = element->childs[i];
+				error->element = element->childs[ix];
 			}
 			ret = false;
 			goto end;
@@ -76,28 +83,11 @@ end:
 	return ret;
 }
 
-
-bool pv_element_recursive_desc_before(PvElement *element,
-		PvElementRecursiveFunc func_before,
-		gpointer data,
-		PvElementRecursiveError *error)
-{
-	if(NULL == func_before){
-		pv_error("");
-		return false;
-	}
-
-	return pv_element_recursive_desc(element,
-			func_before,
-			NULL,
-			data,
-			error);
-}
-
-bool pv_element_recursive_desc(PvElement *element,
+bool _pv_element_recursive_inline_1(PvElement *element,
 		PvElementRecursiveFunc func_before,
 		PvElementRecursiveFunc func_after,
 		gpointer data,
+		bool is_asc,
 		PvElementRecursiveError *error)
 {
 	if(NULL == element){
@@ -119,14 +109,60 @@ bool pv_element_recursive_desc(PvElement *element,
 	error->element = NULL;
 
 	int level = 0;
-	bool ret = _pv_element_recursive_desc_inline(element,
+	bool ret = _pv_element_recursive_inline_2(element,
 			func_before,
 			func_after,
 			data,
+			is_asc,
 			&level,
 			error);
 
 	return ret;
+}
+
+bool pv_element_recursive_asc(PvElement *element,
+		PvElementRecursiveFunc func_before,
+		PvElementRecursiveFunc func_after,
+		gpointer data,
+		PvElementRecursiveError *error)
+{
+	return _pv_element_recursive_inline_1(element,
+			func_before,
+			func_after,
+			data,
+			true,
+			error);
+}
+
+bool pv_element_recursive_desc(PvElement *element,
+		PvElementRecursiveFunc func_before,
+		PvElementRecursiveFunc func_after,
+		gpointer data,
+		PvElementRecursiveError *error)
+{
+	return _pv_element_recursive_inline_1(element,
+			func_before,
+			func_after,
+			data,
+			false,
+			error);
+}
+
+bool pv_element_recursive_desc_before(PvElement *element,
+		PvElementRecursiveFunc func_before,
+		gpointer data,
+		PvElementRecursiveError *error)
+{
+	if(NULL == func_before){
+		pv_error("");
+		return false;
+	}
+
+	return pv_element_recursive_desc(element,
+			func_before,
+			NULL,
+			data,
+			error);
 }
 
 PvElement *pv_element_new(const PvElementKind kind)
