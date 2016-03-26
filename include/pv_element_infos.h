@@ -32,6 +32,7 @@ typedef bool (*PvElementFuncDraw)(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element);
+typedef PvElementFuncDraw PvElementFuncDrawFocusing;
 typedef bool (*PvElementFuncIsTouchElement)(
 		bool *is_touch,
 		const PvElement *element,
@@ -54,6 +55,7 @@ typedef struct PvElementInfo{
 	PvElementFuncCopyNewData	func_copy_new_data;
 	PvElementFuncWriteSvg		func_write_svg;
 	PvElementFuncDraw		func_draw;
+	PvElementFuncDrawFocusing	func_draw_focusing;
 	PvElementFuncIsTouchElement	func_is_touch_element;
 	PvElementFuncIsDiffOne		func_is_diff_one;
 	PvElementFuncMoveElement	func_move_element;

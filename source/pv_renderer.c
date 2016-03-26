@@ -45,10 +45,19 @@ bool _pv_renderer_cairo_recersive(
 			ret = false;
 			goto end;
 		}
-		if(!info->func_draw(cr, render_option, element)){
-			pv_bug("");
-			ret = false;
-			goto end;
+		if(render_option.render_context.is_focus){
+			if(NULL == info->func_draw_focusing
+					|| !info->func_draw_focusing(cr, render_option, element)){
+				pv_bug("");
+				ret = false;
+				goto end;
+			}
+		}else{
+			if(NULL == info->func_draw || !info->func_draw(cr, render_option, element)){
+				pv_bug("");
+				ret = false;
+				goto end;
+			}
 		}
 	}
 
