@@ -101,6 +101,15 @@ bool _pv_element_notimplement_is_diff_one(
 	return true;
 }
 
+bool _pv_element_notimplement_move_element(
+		const PvElement *element,
+		double gx,
+		double gy)
+{
+	pv_error("");
+	return false;
+}
+
 /* ****************
  * General
  **************** */
@@ -289,6 +298,14 @@ bool _pv_element_group_is_diff_one(
 	}
 
 	*is_diff = !pv_general_strcmp(data0->name, data1->name);
+	return true;
+}
+
+bool _pv_element_group_move_element(
+		const PvElement *element,
+		double gx,
+		double gy)
+{
 	return true;
 }
 
@@ -717,6 +734,29 @@ bool _pv_element_bezier_is_diff_one(
 	return true;
 }
 
+bool _pv_element_bezier_move_element(
+		const PvElement *element,
+		double gx,
+		double gy)
+{
+	if(NULL == element || PvElementKind_Bezier != element->kind){
+		pv_error("%p", element);
+		return false;
+	}
+	PvElementBezierData *data = element->data;
+	if(NULL == data){
+		pv_error("");
+		return false;
+	}
+
+	for(int i = 0; i < data->anchor_points_num; i++){
+		data->anchor_points[i].points[PvAnchorPointIndex_Point].x += gx;
+		data->anchor_points[i].points[PvAnchorPointIndex_Point].y += gy;
+	}
+
+	return true;
+}
+
 /* ****************
  * Raster
  **************** */
@@ -863,6 +903,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw = _pv_element_notimplement_draw,
 		.func_is_touch_element = _pv_element_notimplement_is_touch_element,
 		.func_is_diff_one		= _pv_element_notimplement_is_diff_one,
+		.func_move_element		= _pv_element_notimplement_move_element,
 	},
 	{PvElementKind_Root, "Root",
 		_pv_element_group_data_new,
@@ -872,6 +913,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw = _pv_element_group_draw,
 		.func_is_touch_element = _pv_element_group_is_touch_element,
 		.func_is_diff_one		= _pv_element_group_is_diff_one,
+		.func_move_element		= _pv_element_group_move_element,
 	},
 	{PvElementKind_Layer, "Layer",
 		_pv_element_group_data_new,
@@ -881,6 +923,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw = _pv_element_group_draw,
 		.func_is_touch_element = _pv_element_group_is_touch_element,
 		.func_is_diff_one		= _pv_element_group_is_diff_one,
+		.func_move_element		= _pv_element_group_move_element,
 	},
 	{PvElementKind_Group, "Group",
 		_pv_element_group_data_new,
@@ -890,6 +933,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw = _pv_element_group_draw,
 		.func_is_touch_element = _pv_element_group_is_touch_element,
 		.func_is_diff_one		= _pv_element_group_is_diff_one,
+		.func_move_element		= _pv_element_group_move_element,
 	},
 	{PvElementKind_Bezier, "Bezier",
 		_pv_element_bezier_data_new,
@@ -899,6 +943,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw = _pv_element_bezier_draw,
 		.func_is_touch_element = _pv_element_bezier_is_touch_element,
 		.func_is_diff_one		= _pv_element_bezier_is_diff_one,
+		.func_move_element		= _pv_element_bezier_move_element,
 	},
 	{PvElementKind_Raster, "Raster",
 		_pv_element_raster_data_new,
@@ -908,6 +953,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw = _pv_element_raster_draw,
 		.func_is_touch_element = _pv_element_raster_is_touch_element,
 		.func_is_diff_one		= _pv_element_raster_is_diff_one,
+		.func_move_element		= _pv_element_notimplement_move_element,
 	},
 	/* 番兵 */
 	{PvElementKind_EndOfKind, "EndOfKind",
@@ -918,6 +964,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw = _pv_element_notimplement_draw,
 		.func_is_touch_element = _pv_element_notimplement_is_touch_element,
 		.func_is_diff_one		= _pv_element_notimplement_is_diff_one,
+		.func_move_element		= _pv_element_notimplement_move_element,
 	},
 };
 

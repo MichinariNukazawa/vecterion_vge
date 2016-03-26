@@ -165,6 +165,8 @@ bool et_canvas_set_doc_id(EtCanvas *self, EtDocId doc_id)
 bool _signal_et_canvas_mouse_action(
 		EtCanvas *self,
 		double x, double y,
+		double x_move, double y_move,
+		GdkModifierType state,
 		EtMouseButtonType mouse_button, EtMouseActionType mouse_action)
 {
 	if(NULL == self->slot_mouse_action){
@@ -176,10 +178,16 @@ bool _signal_et_canvas_mouse_action(
 		.x = x,
 		.y = y,
 	};
+	PvPoint move = {
+		.x = x_move,
+		.y = y_move,
+	};
 	EtMouseAction _mouse_action = {
 		.button = mouse_button,
 		.action = mouse_action,
 		.point = point,
+		.move = move,
+		.state = state,
 	};
 	if(!self->slot_mouse_action(self->doc_id, _mouse_action)){
 		et_error("");
@@ -189,6 +197,7 @@ bool _signal_et_canvas_mouse_action(
 	return true;
 }
 
+PvPoint _et_canvas_previous_mouse_point = {0,0};
 gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	/*
@@ -198,10 +207,17 @@ gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer dat
 	 */
 	EtCanvas *self = (EtCanvas *)data;
 
+	PvPoint move = {.x = 0, .y = 0};
+	_et_canvas_previous_mouse_point.x = event->x;
+	_et_canvas_previous_mouse_point.y = event->y;
+
 	if(!_signal_et_canvas_mouse_action(
 				self,
 				event->x / self->render_context.scale,
 				event->y / self->render_context.scale,
+				move.x / self->render_context.scale,
+				move.y / self->render_context.scale,
+				event->state,
 				EtMouseButton_Right, EtMouseAction_Down))
 	{
 		et_error("");
@@ -218,10 +234,21 @@ gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer d
 	// et_debug("BUTTON RELEASE");
 	EtCanvas *self = (EtCanvas *)data;
 
+	PvPoint move = {
+		.x = event->x - _et_canvas_previous_mouse_point.x,
+		.y = event->y - _et_canvas_previous_mouse_point.y,
+	};
+	_et_canvas_previous_mouse_point.x = event->x;
+	_et_canvas_previous_mouse_point.y = event->y;
+
+
 	if(!_signal_et_canvas_mouse_action(
 				self,
 				event->x / self->render_context.scale,
 				event->y / self->render_context.scale,
+				move.x / self->render_context.scale,
+				move.y / self->render_context.scale,
+				event->state,
 				EtMouseButton_Right, EtMouseAction_Up))
 	{
 		et_error("");
@@ -237,10 +264,20 @@ gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer da
 	//	et_debug("(%3d, %3d)", (int)event->x, (int)event->y);
 	EtCanvas *self = (EtCanvas *)data;
 
+	PvPoint move = {
+		.x = event->x - _et_canvas_previous_mouse_point.x,
+		.y = event->y - _et_canvas_previous_mouse_point.y,
+	};
+	_et_canvas_previous_mouse_point.x = event->x;
+	_et_canvas_previous_mouse_point.y = event->y;
+
 	if(!_signal_et_canvas_mouse_action(
 				self,
 				event->x / self->render_context.scale,
 				event->y / self->render_context.scale,
+				move.x / self->render_context.scale,
+				move.y / self->render_context.scale,
+				event->state,
 				EtMouseButton_Right, EtMouseAction_Move))
 	{
 		et_error("");

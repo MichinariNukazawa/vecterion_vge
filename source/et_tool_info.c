@@ -113,33 +113,65 @@ bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 {
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
-		{
-			PvElement *element = NULL;
-			if(!_et_tool_focus_element_mouse_action_get_focus_element(
-					&element,
-					doc_id,
-					mouse_action.point.x,
-					mouse_action.point.y))
 			{
-				et_error("");
-				return false;
-			}
+				PvElement *element = NULL;
+				if(!_et_tool_focus_element_mouse_action_get_focus_element(
+							&element,
+							doc_id,
+							mouse_action.point.x,
+							mouse_action.point.y))
+				{
+					et_error("");
+					return false;
+				}
 
-			bool is_error = true;
-			PvFocus focus = et_doc_get_focus_from_id(doc_id, &is_error);
-			if(is_error){
-				et_error("");
-				return false;
-			}
+				bool is_error = true;
+				PvFocus focus = et_doc_get_focus_from_id(doc_id, &is_error);
+				if(is_error){
+					et_error("");
+					return false;
+				}
 
-			focus.element = element;
-			if(!et_doc_set_focus_to_id(doc_id, focus)){
-				et_error("");
-				return false;
+				focus.element = element;
+				if(!et_doc_set_focus_to_id(doc_id, focus)){
+					et_error("");
+					return false;
+				}
 			}
-		}
+			break;
+		case EtMouseAction_Move:
+			{
+				if(0 == (mouse_action.state & GDK_BUTTON1_MASK)){
+					break;
+				}else{
+
+					bool is_error = true;
+					PvFocus focus = et_doc_get_focus_from_id(doc_id, &is_error);
+					if(is_error){
+						et_error("");
+						return false;
+					}
+
+					if(NULL == focus.element){
+						break;
+					}
+					const PvElementInfo *info = pv_element_get_info_from_kind(focus.element->kind);
+					if(NULL == info || NULL == info->func_move_element){
+						et_bug("%p", info);
+						break;
+					}
+					if(!info->func_move_element(focus.element, mouse_action.move.x, mouse_action.move.y)){
+						et_error("");
+						break;
+					}
+				}
+			}
 			break;
 		case EtMouseAction_Up:
+			{
+				et_doc_save_from_id(doc_id);
+			}
+			break;
 		default:
 			break;
 	}
@@ -213,7 +245,6 @@ bool _et_tool_bezier_add_point(EtDoc *doc, PvElement **_element, double x, doubl
 }
 
 static int _et_etaion_radius_path_detect = 6;
-static EtMouseActionType _mouse_action_up_down = EtMouseAction_Up;
 bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 {
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
@@ -236,8 +267,6 @@ bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 						(int)mouse_action.point.x,
 						(int)mouse_action.point.y);
 
-				_mouse_action_up_down = mouse_action.action;
-
 				PvElement *_element = focus.element;
 
 				bool is_closed = false;
@@ -256,7 +285,7 @@ bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 										_et_etaion_radius_path_detect,
 										_data->anchor_points[0].points[PvAnchorPointIndex_Point],
 										mouse_action.point)
-							){
+							  ){
 								// ** do close anchor_point
 								_data->is_close = true;
 								is_closed = true;
@@ -283,13 +312,10 @@ bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 			}
 			break;
 		case EtMouseAction_Up:
-			{
-				_mouse_action_up_down = mouse_action.action;
-			}
 			break;
 		case EtMouseAction_Move:
 			{
-				if(EtMouseAction_Down != _mouse_action_up_down){
+				if(0 == (mouse_action.state & GDK_BUTTON1_MASK)){
 					break;
 				}
 

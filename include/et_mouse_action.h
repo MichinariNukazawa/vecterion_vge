@@ -26,6 +26,9 @@ struct EtMouseAction{
 	EtMouseButtonType	button;
 	EtMouseActionType	action;
 	PvPoint			point;
+	// ** used in moving
+	PvPoint			move;	// mouse move difference previous.
+	GdkModifierType		state;	// mouse buttons state.
 };
 
 #ifdef include_ET_TEST
