@@ -28,6 +28,9 @@ int et_canvas_set_slot_mouse_action(EtCanvas *self,
 		EtCanvasSlotMouseAction slot, gpointer data);
 void slot_et_canvas_from_doc_change(EtDoc *doc, gpointer data);
 
+// ** use thumbnail.
+void et_canvas_set_is_thumbnail(EtCanvas *self, bool is_thumbnail);
+
 #ifdef include_ET_TEST
 #endif // include_ET_TEST
 

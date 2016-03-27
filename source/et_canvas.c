@@ -23,6 +23,7 @@ struct EtCanvas{
 	GdkPixbuf *pixbuf_buffer;
 
 	bool is_first_fitting;
+	bool is_fitting_scale;
 
 	EtCanvasSlotChange slot_change;
 	gpointer slot_change_data;
@@ -52,7 +53,7 @@ bool _signal_et_canvas_slot_change(EtCanvas *self)
 	return true;
 }
 
-gboolean _cb_size_allocate_event_box(
+gboolean _cb_size_allocate_canvas(
 		GtkWidget    *widget,
 		GdkRectangle *allocation,
 		gpointer      data)
@@ -63,7 +64,7 @@ gboolean _cb_size_allocate_event_box(
 
 	// ** first drawing to cancel and rescaleing.
 	//	bool is_fitting_scale_from_widget = true;
-	if(self->is_first_fitting && 0 <= self->doc_id){
+	if((self->is_first_fitting || self->is_fitting_scale) && 0 <= self->doc_id){
 		self->is_first_fitting = false;
 
 		const PvVg *vg = et_doc_get_vg_ref_from_id(self->doc_id);
@@ -129,8 +130,8 @@ EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 	g_signal_connect(self->event_box, "motion-notify-event",
 			G_CALLBACK(_cb_motion_notify), (gpointer)self);
 
-	g_signal_connect(self->event_box, "size-allocate",
-			G_CALLBACK(_cb_size_allocate_event_box), (gpointer)self);
+	g_signal_connect(self->scroll, "size-allocate",
+			G_CALLBACK(_cb_size_allocate_canvas), (gpointer)self);
 
 	gtk_container_add(GTK_CONTAINER(self->scroll), self->event_box);
 
@@ -155,6 +156,7 @@ EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 	self->doc_id = doc_id;
 
 	self->is_first_fitting = true;
+	self->is_fitting_scale = false;
 
 	return self;
 }
@@ -357,6 +359,9 @@ gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer da
 
 	// ** scale change.
 	if(0 != (ET_GDK_ALT_MASK & event->state)){
+		if(self->is_fitting_scale){
+			return false; // cancel rescale (is not error.)
+		}
 
 		switch(event->direction){
 			case GDK_SCROLL_UP:
@@ -472,3 +477,15 @@ int et_canvas_set_slot_mouse_action(EtCanvas *self,
 
 	return 1; // Todo: callback id
 }
+
+void et_canvas_set_is_thumbnail(EtCanvas *self, bool is_thumbnail)
+{
+	if(NULL == self){
+		et_bug("");
+		return;
+	}
+	
+	self->is_fitting_scale = is_thumbnail;
+	gtk_widget_set_sensitive(self->text_scale, !is_thumbnail);
+}
+

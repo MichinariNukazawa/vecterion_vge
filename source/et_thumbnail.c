@@ -10,6 +10,8 @@ EtThumbnail *et_thumbnail_new()
 		return NULL;
 	}
 
+	et_canvas_set_is_thumbnail(canvas, true);
+
 	return (EtThumbnail *)canvas;
 }
 
