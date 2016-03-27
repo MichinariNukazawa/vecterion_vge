@@ -353,6 +353,10 @@ void _pvui_app_set_style(){
 			"   border-width: 2px;\n"
 			"   padding: 2px;\n" 
 			"}\n"
+			"GtkDrawingArea {\n"
+			"   background-color: rgb(255, 255, 255);\n"
+			//"   background-color: rgb(0, 0, 0);\n"
+			"}\n"
 			"", -1, NULL);
 	g_object_unref (provider);
 }

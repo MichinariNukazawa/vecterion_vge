@@ -15,6 +15,8 @@ struct EtCanvas{
 	GtkWidget *text_scale;
 	GtkWidget *scroll;
 	GtkWidget *event_box;
+	GtkWidget *cussion_v;
+	GtkWidget *cussion_h;
 	GtkWidget *canvas;
 
 	PvRenderContext render_context;
@@ -135,12 +137,18 @@ EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 
 	gtk_container_add(GTK_CONTAINER(self->scroll), self->event_box);
 
+	self->cussion_v = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	self->cussion_h = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+
 	self->canvas = gtk_drawing_area_new();
 	if(NULL == self->canvas){
 		et_error("");
 		return NULL;
 	}
-	gtk_container_add(GTK_CONTAINER(self->event_box), self->canvas);
+	gtk_container_add(GTK_CONTAINER(self->event_box), self->cussion_h);
+	gtk_container_add(GTK_CONTAINER(self->cussion_h), self->cussion_v);
+	gtk_container_add(GTK_CONTAINER(self->cussion_v), self->canvas);
+	//gtk_container_add(GTK_CONTAINER(self->event_box), self->canvas);
 
 	g_signal_connect (G_OBJECT (self->canvas), "draw",
 			G_CALLBACK (cb_expose_event), (gpointer)self);
