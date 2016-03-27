@@ -7,6 +7,7 @@
 #include <stdatomic.h>
 
 #include "et_error.h"
+#include "et_define.h"
 #include "et_canvas.h"
 #include "et_canvas_collection.h"
 #include "et_thumbnail.h"
@@ -626,15 +627,13 @@ GtkWidget *_pv_get_menuitem_new_tree_of_view(GtkAccelGroup *accel_group)
 	menu = gtk_menu_new ();
 	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
 
-#define GDK_ALT_MASK (GDK_MOD1_MASK)
-
 	// ** Accel to "View > extent show
 	menuitem = gtk_check_menu_item_new_with_mnemonic ("_Extent View");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 	g_signal_connect(menuitem, "toggled", G_CALLBACK(_cb_menu_view_extent), NULL);
 	//gtk_widget_add_accelerator (menuitem, "toggled", accel_group,
-	//		GDK_KEY_e,( GDK_ALT_MASK|GDK_SHIFT_MASK|GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
+	//		GDK_KEY_e,( ET_GDK_ALT_MASK|GDK_SHIFT_MASK|GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
 
 	return menuitem_root;
 }

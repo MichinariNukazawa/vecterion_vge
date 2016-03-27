@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include "et_error.h"
+#include "et_define.h"
 #include "et_mouse_util.h"
 #include "pv_type.h"
 
@@ -292,29 +293,35 @@ gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer da
 {
 	EtCanvas *self = (EtCanvas *)data;
 
-	switch(event->direction){
-		case GDK_SCROLL_UP:
-			et_debug("BUTTON SCROLL   UP");
-			self->render_context.scale += 0.1;
-			break;
-		case GDK_SCROLL_DOWN:
-			et_debug("BUTTON SCROLL DOWN");
-			self->render_context.scale -= 0.1;
-			break;
-		default:
-			break;
-	}
+	// ** scale change.
+	if(0 != (ET_GDK_ALT_MASK & event->state)){
 
-	const int ET_RENDER_CONTEXT_SCALE_MIN = 0.01;
-	if(self->render_context.scale < ET_RENDER_CONTEXT_SCALE_MIN){
-		et_debug("under limit scale:%f", self->render_context.scale);
-		self->render_context.scale = ET_RENDER_CONTEXT_SCALE_MIN;
-	}
+		switch(event->direction){
+			case GDK_SCROLL_UP:
+				et_debug("BUTTON SCROLL   UP");
+				self->render_context.scale += 0.1;
+				break;
+			case GDK_SCROLL_DOWN:
+				et_debug("BUTTON SCROLL DOWN");
+				self->render_context.scale -= 0.1;
+				break;
+			default:
+				break;
+		}
 
-	char buf[128];
-	snprintf(buf, sizeof(buf), "%.3f", self->render_context.scale);
-	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (self->text_scale));
-	gtk_text_buffer_set_text (buffer, buf, -1);
+		const int ET_RENDER_CONTEXT_SCALE_MIN = 0.01;
+		if(self->render_context.scale < ET_RENDER_CONTEXT_SCALE_MIN){
+			et_debug("under limit scale:%f", self->render_context.scale);
+			self->render_context.scale = ET_RENDER_CONTEXT_SCALE_MIN;
+		}
+		char buf[128];
+		snprintf(buf, sizeof(buf), "%.3f", self->render_context.scale);
+		GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (self->text_scale));
+		gtk_text_buffer_set_text (buffer, buf, -1);
+
+	}else{
+		// ** move(vertical,horizontal) has GtkScrolledWindow.
+	}
 
 	if(NULL != self->slot_change){
 		self->slot_change(self, self->slot_change_data);
