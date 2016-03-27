@@ -36,11 +36,14 @@ EtDoc *et_doc_new()
 EtDoc *et_doc_new_from_vg(const PvVg *vg)
 {
 	if(NULL == vg){
-		vg = pv_vg_new();
-		if(NULL == vg){
+		PvVg *_vg = pv_vg_new();
+		if(NULL == _vg){
 			et_error("");
 			return NULL;
 		}
+		_vg->rect.w = 1;
+		_vg->rect.h = 1;
+		vg = _vg;
 	}
 
 	EtDoc *self = (EtDoc *)malloc(sizeof(EtDoc));

@@ -4,7 +4,7 @@
 
 EtThumbnail *et_thumbnail_new()
 {
-	EtCanvas *canvas = et_canvas_new();
+	EtCanvas *canvas = et_canvas_new_from_doc_id(-1);
 	if(NULL == canvas){
 		et_error("");
 		return NULL;

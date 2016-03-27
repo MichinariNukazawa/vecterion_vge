@@ -1,5 +1,6 @@
 #include "pv_renderer.h"
 
+#include <math.h>
 #include "pv_error.h"
 #include "pv_render_option.h"
 #include "pv_element_infos.h"
@@ -90,10 +91,18 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		const PvRenderContext render_context,
 		const PvFocus focus)
 {
-	int width = (int)vg->rect.w;
-	int height = (int)vg->rect.h;
-	width *= render_context.scale;
-	height *= render_context.scale;
+	if(NULL == vg){
+		pv_bug("");
+		return NULL;
+	}
+
+	const int width  = ceil(vg->rect.w * render_context.scale);
+	const int height = ceil(vg->rect.h * render_context.scale);
+	if(width <= 0 || height <= 0){
+		pv_bug("");
+		return NULL;
+	}
+
 	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
 			width, height);
 	if(NULL == surface){
@@ -128,7 +137,7 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 
 	GdkPixbuf *pb = gdk_pixbuf_get_from_surface(surface, 0, 0, width, height);
 	if(NULL == pb){
-		pv_error("");
+		pv_error("%d, %d, %f", width, height, render_context.scale);
 		return NULL;
 	}
 

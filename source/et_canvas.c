@@ -1,10 +1,12 @@
 #include "et_canvas.h"
 
 #include <stdlib.h>
+#include <math.h>
 #include "et_error.h"
 #include "et_define.h"
 #include "et_mouse_util.h"
 #include "pv_type.h"
+#include "et_doc.h"
 
 struct EtCanvas{
 	GtkWidget *widget; // Top widget pointer.
@@ -20,6 +22,8 @@ struct EtCanvas{
 	EtDocId doc_id;
 	GdkPixbuf *pixbuf_buffer;
 
+	bool is_first_fitting;
+
 	EtCanvasSlotChange slot_change;
 	gpointer slot_change_data;
 	EtCanvasSlotMouseAction slot_mouse_action;
@@ -33,7 +37,55 @@ gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer d
 gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data);
 gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer data);
 
-EtCanvas *et_canvas_new()
+bool _signal_et_canvas_slot_change(EtCanvas *self)
+{
+	if(NULL == self){
+		return false;
+	}
+
+	if(NULL == self->slot_change){
+		et_warning("");
+	}else{
+		self->slot_change(self, self->slot_change_data);
+	}
+
+	return true;
+}
+
+gboolean _cb_size_allocate_event_box(
+		GtkWidget    *widget,
+		GdkRectangle *allocation,
+		gpointer      data)
+{
+	et_debug("%p: %d,%d", widget, allocation->width, allocation->height);
+
+	EtCanvas *self = (EtCanvas *)data;
+
+	// ** first drawing to cancel and rescaleing.
+	//	bool is_fitting_scale_from_widget = true;
+	if(self->is_first_fitting && 0 <= self->doc_id){
+		self->is_first_fitting = false;
+
+		const PvVg *vg = et_doc_get_vg_ref_from_id(self->doc_id);
+		const double w_doc = vg->rect.w;
+		const double h_doc = vg->rect.h;
+		if(w_doc < allocation->width && h_doc < allocation->height){
+			self->render_context.scale = 1.0;
+		}else{
+			double w_scale = allocation->width / w_doc;
+			double h_scale = allocation->height / h_doc;
+			// trunc digit
+			w_scale = trunc(w_scale * 100.0) / 100.0;
+			h_scale = trunc(h_scale * 100.0) / 100.0;
+			self->render_context.scale = fmin(w_scale, h_scale);
+		}
+		_signal_et_canvas_slot_change(self);
+	}
+
+	return false;
+}
+
+EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 {
 	EtCanvas *self = (EtCanvas *)malloc(sizeof(EtCanvas));
 	if(NULL == self){
@@ -67,6 +119,7 @@ EtCanvas *et_canvas_new()
 			GDK_BUTTON_RELEASE_MASK |
 			GDK_POINTER_MOTION_MASK
 			);
+
 	g_signal_connect(self->event_box, "button-press-event",
 			G_CALLBACK(_cb_button_press), (gpointer)self);
 	g_signal_connect(self->event_box, "button-release-event",
@@ -75,6 +128,9 @@ EtCanvas *et_canvas_new()
 			G_CALLBACK(_cb_button_scroll), (gpointer)self);
 	g_signal_connect(self->event_box, "motion-notify-event",
 			G_CALLBACK(_cb_motion_notify), (gpointer)self);
+
+	g_signal_connect(self->event_box, "size-allocate",
+			G_CALLBACK(_cb_size_allocate_event_box), (gpointer)self);
 
 	gtk_container_add(GTK_CONTAINER(self->scroll), self->event_box);
 
@@ -96,7 +152,9 @@ EtCanvas *et_canvas_new()
 	self->slot_change_data = NULL;
 	self->slot_mouse_action = NULL;
 	self->slot_mouse_action_data = NULL;
-	self->doc_id = -1;
+	self->doc_id = doc_id;
+
+	self->is_first_fitting = true;
 
 	return self;
 }
@@ -144,11 +202,7 @@ void slot_et_canvas_from_doc_change(EtDoc *doc, gpointer data)
 		return;
 	}
 
-	if(NULL == self->slot_change){
-		et_warning("");
-	}else{
-		self->slot_change(self, self->slot_change_data);
-	}
+	_signal_et_canvas_slot_change(self);
 }
 
 bool et_canvas_set_doc_id(EtCanvas *self, EtDocId doc_id)
@@ -289,6 +343,14 @@ error:
 	return true;
 }
 
+double _et_ceil_unit(double value, double unit)
+{
+	double t = (unit / 10);
+	return unit * ((int)((value / unit) + t)); // trick for value 0.6 can't ceiled.
+}
+
+const double ET_RENDER_CONTEXT_SCALE_MIN = 0.01;
+const double ET_CANVAS_SCALE_UNIT = (0.1);
 gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer data)
 {
 	EtCanvas *self = (EtCanvas *)data;
@@ -299,33 +361,27 @@ gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer da
 		switch(event->direction){
 			case GDK_SCROLL_UP:
 				et_debug("BUTTON SCROLL   UP");
-				self->render_context.scale += 0.1;
+				self->render_context.scale = _et_ceil_unit(self->render_context.scale, ET_CANVAS_SCALE_UNIT);
+				self->render_context.scale += ET_CANVAS_SCALE_UNIT; 
 				break;
 			case GDK_SCROLL_DOWN:
 				et_debug("BUTTON SCROLL DOWN");
-				self->render_context.scale -= 0.1;
+				self->render_context.scale = _et_ceil_unit(self->render_context.scale, ET_CANVAS_SCALE_UNIT);
+				self->render_context.scale -= ET_CANVAS_SCALE_UNIT; 
 				break;
 			default:
 				break;
 		}
 
-		const int ET_RENDER_CONTEXT_SCALE_MIN = 0.01;
 		if(self->render_context.scale < ET_RENDER_CONTEXT_SCALE_MIN){
 			et_debug("under limit scale:%f", self->render_context.scale);
 			self->render_context.scale = ET_RENDER_CONTEXT_SCALE_MIN;
 		}
-		char buf[128];
-		snprintf(buf, sizeof(buf), "%.3f", self->render_context.scale);
-		GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (self->text_scale));
-		gtk_text_buffer_set_text (buffer, buf, -1);
-
 	}else{
 		// ** move(vertical,horizontal) has GtkScrolledWindow.
 	}
 
-	if(NULL != self->slot_change){
-		self->slot_change(self, self->slot_change_data);
-	}
+	_signal_et_canvas_slot_change(self);
 
 	return false;
 }
@@ -333,16 +389,22 @@ gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer da
 
 gboolean cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 {
-	EtCanvas *etCanvas = (EtCanvas *)data;
+	EtCanvas *self = (EtCanvas *)data;
 
-	GdkPixbuf *pixbuf = etCanvas->pixbuf_buffer;
+	// ** scale
+	char buf[128];
+	snprintf(buf, sizeof(buf), "%.3f", self->render_context.scale);
+	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (self->text_scale));
+	gtk_text_buffer_set_text (buffer, buf, -1);
 
+	// ** canvas
+	GdkPixbuf *pixbuf = self->pixbuf_buffer;
 	if(NULL == pixbuf){
 		et_warning("");
 	}else{
 
 		gtk_widget_set_size_request(
-				etCanvas->canvas,
+				self->canvas,
 				gdk_pixbuf_get_width(pixbuf),
 				gdk_pixbuf_get_height(pixbuf));
 
@@ -378,6 +440,7 @@ bool et_canvas_draw_pixbuf(EtCanvas *self, GdkPixbuf *pixbuf)
 	if(NULL != pb_old){
 		g_object_unref(G_OBJECT(pb_old));
 	}
+
 
 	return true;
 }

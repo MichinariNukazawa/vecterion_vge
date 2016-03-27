@@ -16,7 +16,7 @@ typedef void (*EtCanvasSlotChange)(EtCanvas *canvas, gpointer data);
 typedef bool (*EtCanvasSlotMouseAction)(EtDocId doc_id, EtMouseAction mouse_action);
 
 
-EtCanvas *et_canvas_new();
+EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id);
 GtkWidget *et_canvas_get_widget_frame(EtCanvas *self);
 PvRenderContext et_canvas_get_render_context(EtCanvas *self, bool *isError);
 EtDocId et_canvas_get_doc_id(EtCanvas *self);

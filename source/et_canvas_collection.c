@@ -230,13 +230,9 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 	}
 
 	// ** canvas new and setup.
-	EtCanvas *canvas = et_canvas_new();
-	if(!(et_canvas_get_doc_id(canvas) < 0)){
-		et_bug("");
-		return false;
-	}
-	if(!et_canvas_set_doc_id(canvas, doc_id)){
-		et_bug("");
+	EtCanvas *canvas = et_canvas_new_from_doc_id(doc_id);
+	if(NULL == canvas){
+		et_error("");
 		return false;
 	}
 
