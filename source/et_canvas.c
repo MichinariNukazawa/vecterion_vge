@@ -41,15 +41,15 @@ EtCanvas *et_canvas_new()
 		return NULL;
 	}
 
-	self->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
-
-	self->box_infobar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
-	gtk_container_add(GTK_CONTAINER(self->box), self->box_infobar);
+	self->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 3);
 
 	self->scroll = gtk_scrolled_window_new(NULL, NULL);
 	gtk_widget_set_hexpand(GTK_WIDGET(self->scroll), TRUE);  
 	gtk_widget_set_vexpand(GTK_WIDGET(self->scroll), TRUE);
 	gtk_container_add(GTK_CONTAINER(self->box), self->scroll);
+
+	self->box_infobar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3);
+	gtk_container_add(GTK_CONTAINER(self->box), self->box_infobar);
 
 	self->text_scale = gtk_text_view_new();
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (self->text_scale));

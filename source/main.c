@@ -342,6 +342,12 @@ void _pvui_app_set_style(){
 			"   background-color: rgb (103, 103, 103);\n"
 			"}\n"
 	*/
+			"GtkNotebook {\n"
+			"   padding: 2px;\n"
+			"}\n"
+			"GtkFrame {\n"
+			"   padding: 2px;\n"
+			"}\n"
 			"#toolpanel {\n"
 			"   border-color: rgb (100, 100, 10);\n"
 			"   border-width: 2px;\n"
