@@ -125,10 +125,6 @@ bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 	EtDocId doc_id_prev = et_etaion_get_current_doc_id();
 	if(doc_id != doc_id_prev){
 		et_debug("%d, %d", doc_id, doc_id_prev);
-		if(!et_doc_set_focus_to_id(doc_id, pv_focus_get_nofocus())){
-			et_error("");
-			return false;
-		}
 		if(!et_etaion_set_current_doc_id(doc_id)){
 			et_error("");
 			return false;
@@ -177,22 +173,17 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 
 	// et_debug("key:%04x", key_action.key);
 
-	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id((self->state).doc_id, &is_error);
-	if(is_error){
+	PvFocus *focus = et_doc_get_focus_ref_from_id((self->state).doc_id);
+	if(NULL == focus){
 		et_error("");
 		return false;
 	}
 
 	switch(key_action.key){
 		case EtKeyType_Enter:
-			if(NULL != focus.element){
-				if(PvElementKind_Layer != focus.element->kind){
-					focus.element = (focus.element)->parent;
-					if(!et_doc_set_focus_to_id((self->state).doc_id, focus)){
-						et_error("");
-						return false;
-					}
+			if(NULL != focus->element){
+				if(PvElementKind_Layer != focus->element->kind){
+					focus->element = (focus->element)->parent;
 				}
 			}
 			_signal_et_etaion_change_state(self);
@@ -268,19 +259,18 @@ bool et_etaion_add_new_layer(EtDocId doc_id)
 
 	(self->state).doc_id = doc_id;
 
-	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id((self->state).doc_id, &is_error);
-	if(is_error){
+	PvFocus *focus = et_doc_get_focus_ref_from_id((self->state).doc_id);
+	if(NULL == focus){
 		et_error("");
 		return false;
 	}
 
 	PvElement *parent = NULL;
-	PvElement *prev = focus.element;
+	PvElement *prev = focus->element;
 
 	// **レイヤの追加位置を決める
 	// FocusされたElementに近い親Layerを位置指定にする
-	prev = _et_etaion_get_parent_layer_from_element(focus.element);
+	prev = _et_etaion_get_parent_layer_from_element(focus->element);
 	// 位置指定から親を取る
 	if(NULL != prev){
 		parent = prev->parent;
@@ -304,11 +294,7 @@ bool et_etaion_add_new_layer(EtDocId doc_id)
 		return false;
 	}
 
-	focus.element = layer;
-	if(!et_doc_set_focus_to_id((self->state).doc_id, focus)){
-		et_error("");
-		return false;
-	}
+	focus->element = layer;
 
 	_signal_et_etaion_change_state(self);
 	et_doc_signal_update_from_id((self->state).doc_id);
@@ -326,18 +312,17 @@ bool et_etaion_add_new_layer_child(EtDocId doc_id)
 
 	(self->state).doc_id = doc_id;
 
-	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id((self->state).doc_id, &is_error);
-	if(is_error){
+	PvFocus *focus = et_doc_get_focus_ref_from_id((self->state).doc_id);
+	if(NULL == focus){
 		et_error("");
 		return false;
 	}
 
-	PvElement *parent = focus.element;
+	PvElement *parent = focus->element;
 
 	// **レイヤの追加位置を決める
 	// FocusされたElementに近いLayerをparentにする
-	parent = _et_etaion_get_parent_layer_from_element(focus.element);
+	parent = _et_etaion_get_parent_layer_from_element(focus->element);
 	// 親がNULLはありえない
 	if(NULL == parent){
 		et_bug("");
@@ -355,11 +340,7 @@ bool et_etaion_add_new_layer_child(EtDocId doc_id)
 		return false;
 	}
 
-	focus.element = layer;
-	if(!et_doc_set_focus_to_id((self->state).doc_id, focus)){
-		et_error("");
-		return false;
-	}
+	focus->element = layer;
 
 	_signal_et_etaion_change_state(self);
 	et_doc_signal_update_from_id((self->state).doc_id);
@@ -379,18 +360,17 @@ bool et_etaion_copy_layer(EtDocId doc_id)
 
 	(self->state).doc_id = doc_id;
 
-	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id((self->state).doc_id, &is_error);
-	if(is_error){
+	PvFocus *focus = et_doc_get_focus_ref_from_id((self->state).doc_id);
+	if(NULL == focus){
 		et_error("");
 		return false;
 	}
 
 	// 対象Layerを取得
-	PvElement *element = _et_etaion_get_parent_layer_from_element(focus.element);
+	PvElement *element = _et_etaion_get_parent_layer_from_element(focus->element);
 	if(NULL == element){
 		unsigned long tmp = 0;
-		memcpy(&tmp, &(focus.element), sizeof(tmp));
+		memcpy(&tmp, &(focus->element), sizeof(tmp));
 		et_error("%lx\n", tmp);
 		return false;
 	}
@@ -416,11 +396,7 @@ bool et_etaion_copy_layer(EtDocId doc_id)
 		return false;
 	}
 
-	focus.element = new_element_tree;
-	if(!et_doc_set_focus_to_id((self->state).doc_id, focus)){
-		et_error("");
-		return false;
-	}
+	focus->element = new_element_tree;
 
 	_signal_et_etaion_change_state(self);
 	et_doc_signal_update_from_id((self->state).doc_id);
@@ -438,14 +414,13 @@ bool et_etaion_remove_delete_layer(EtDocId doc_id)
 
 	(self->state).doc_id = doc_id;
 
-	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id((self->state).doc_id, &is_error);
-	if(is_error){
+	PvFocus *focus = et_doc_get_focus_ref_from_id((self->state).doc_id);
+	if(NULL == focus){
 		et_error("");
 		return false;
 	}
 
-	PvElement *element = _et_etaion_get_parent_layer_from_element(focus.element);
+	PvElement *element = _et_etaion_get_parent_layer_from_element(focus->element);
 	if(NULL == element){
 		et_error("");
 		return false;
@@ -475,10 +450,7 @@ error:
 		}
 	}
 
-	focus.element = parent; 
-	if(!et_doc_set_focus_to_id((self->state).doc_id, focus)){
-		et_error("");
-	}
+	focus->element = parent; 
 
 	_signal_et_etaion_change_state(self);
 	et_doc_signal_update_from_id((self->state).doc_id);

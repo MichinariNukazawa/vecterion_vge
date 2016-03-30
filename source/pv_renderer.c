@@ -89,7 +89,7 @@ bool _pv_renderer_cairo_background(cairo_t *cr,
 
 GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		const PvRenderContext render_context,
-		const PvFocus focus)
+		const PvFocus *focus)
 {
 	if(NULL == vg){
 		pv_bug("");
@@ -127,9 +127,9 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		return NULL;
 	}
 
-	if(NULL != focus.element && !_pv_renderer_is_group_kind(focus.element)){
+	if(NULL != focus->element && !_pv_renderer_is_group_kind(focus->element)){
 		render_option.render_context.is_focus = true;
-		if(!_pv_renderer_cairo_recersive(cr, focus.element, render_option, &level)){
+		if(!_pv_renderer_cairo_recersive(cr, focus->element, render_option, &level)){
 			pv_error("");
 			return NULL;
 		}

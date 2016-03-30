@@ -38,9 +38,8 @@ GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext render_
 		return NULL;
 	}
 
-	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id(et_doc_get_id(doc), &is_error);
-	if(is_error){
+	const PvFocus *focus = et_doc_get_focus_ref_from_id(et_doc_get_id(doc));
+	if(NULL == focus){
 		et_error("");
 		return NULL;
 	}

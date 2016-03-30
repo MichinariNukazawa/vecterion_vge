@@ -125,18 +125,13 @@ bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 					return false;
 				}
 
-				bool is_error = true;
-				PvFocus focus = et_doc_get_focus_from_id(doc_id, &is_error);
-				if(is_error){
+				PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+				if(NULL == focus){
 					et_error("");
 					return false;
 				}
 
-				focus.element = element;
-				if(!et_doc_set_focus_to_id(doc_id, focus)){
-					et_error("");
-					return false;
-				}
+				focus->element = element;
 			}
 			break;
 		case EtMouseAction_Move:
@@ -145,22 +140,21 @@ bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 					break;
 				}else{
 
-					bool is_error = true;
-					PvFocus focus = et_doc_get_focus_from_id(doc_id, &is_error);
-					if(is_error){
+					PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+					if(NULL == focus){
 						et_error("");
 						return false;
 					}
 
-					if(NULL == focus.element){
+					if(NULL == focus->element){
 						break;
 					}
-					const PvElementInfo *info = pv_element_get_info_from_kind(focus.element->kind);
+					const PvElementInfo *info = pv_element_get_info_from_kind(focus->element->kind);
 					if(NULL == info || NULL == info->func_move_element){
 						et_bug("%p", info);
 						break;
 					}
-					if(!info->func_move_element(focus.element, mouse_action.move.x, mouse_action.move.y)){
+					if(!info->func_move_element(focus->element, mouse_action.move.x, mouse_action.move.y)){
 						et_error("");
 						break;
 					}
@@ -253,9 +247,8 @@ bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 		return false;
 	}
 
-	bool is_error = true;
-	PvFocus focus = et_doc_get_focus_from_id(doc_id, &is_error);
-	if(is_error){
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	if(NULL == focus){
 		et_error("");
 		return false;
 	}
@@ -267,7 +260,7 @@ bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 						(int)mouse_action.point.x,
 						(int)mouse_action.point.y);
 
-				PvElement *_element = focus.element;
+				PvElement *_element = focus->element;
 
 				bool is_closed = false;
 				if(NULL != _element && PvElementKind_Bezier == _element->kind){
@@ -301,11 +294,7 @@ bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 						et_error("");
 						return false;
 					}else{
-						focus.element = _element;
-						if(!et_doc_set_focus_to_id(doc_id, focus)){
-							et_error("");
-							return false;
-						}
+						focus->element = _element;
 					}
 				}
 
@@ -319,7 +308,7 @@ bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 					break;
 				}
 
-				PvElement *_element = focus.element;
+				PvElement *_element = focus->element;
 				if(NULL == _element || PvElementKind_Bezier != _element->kind){
 					et_error("");
 					return false;

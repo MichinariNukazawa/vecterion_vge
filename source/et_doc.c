@@ -237,7 +237,7 @@ EtCallbackId et_doc_add_slot_change(EtDocId doc_id, EtDocSlotChange slot, gpoint
 	return new[num].id;
 }
 
-PvFocus et_doc_get_focus_from_id(EtDocId id, bool *is_error)
+PvFocus *et_doc_get_focus_ref_from_id(EtDocId id)
 {
 	EtDoc *self = et_doc_manager_get_doc_from_id(id);
 	if(NULL == self){
@@ -251,29 +251,9 @@ PvFocus et_doc_get_focus_from_id(EtDocId id, bool *is_error)
 		goto error;
 	}
 
-	*is_error = false;
-	return hist_item->focus;
+	return &hist_item->focus;
 error:
-	*is_error = true;
-	return pv_focus_get_nofocus();
-}
-
-bool et_doc_set_focus_to_id(EtDocId id, PvFocus focus)
-{
-	EtDoc *self = et_doc_manager_get_doc_from_id(id);
-	if(NULL == self){
-		et_error("");
-		return false;
-	}
-
-	EtDocHistoryItem *hist_item = et_doc_history_get_from_relative(self->hist, 0);
-	if(NULL == hist_item){
-		et_bug("");
-		return false;
-	}
-	hist_item->focus = focus;
-
-	return true;
+	return NULL;
 }
 
 bool et_doc_save_from_id(EtDocId doc_id)

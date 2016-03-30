@@ -6,7 +6,7 @@
 
 GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		const PvRenderContext render_context,
-		const PvFocus focus);
+		const PvFocus *focus);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

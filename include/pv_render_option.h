@@ -5,7 +5,7 @@
 
 typedef struct PvRenderOption{
 	PvRenderContext render_context;
-	PvFocus focus;
+	const PvFocus *focus;
 }PvRenderOption;
 
 #ifdef include_ET_TEST
