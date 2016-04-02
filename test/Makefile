@@ -33,12 +33,7 @@ $(TEST_OBJECT_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cpp
 		-c $<
 
 O_OBJECTS = $(filter-out object/main.o,$(OBJECTS))
-$(TEST_OBJECT_DIR)/test_test.exe: object/pv_general.o
-$(TEST_OBJECT_DIR)/test_pv_general.exe: object/pv_general.o
-$(TEST_OBJECT_DIR)/test_pv_vg.exe: $(O_OBJECTS)
-$(TEST_OBJECT_DIR)/test_et_doc_history.exe: $(O_OBJECTS)
-
-$(TEST_BUILD_DIR)/test_%.exe: $(TEST_OBJECT_DIR)/test_%.o
+$(TEST_BUILD_DIR)/test_%.exe: $(TEST_OBJECT_DIR)/test_%.o $(O_OBJECTS)
 	$(CXX) \
 		$^ \
 		$(INCLUDE) $(TEST_INCLUDE) \
