@@ -109,11 +109,60 @@ bool _et_tool_focus_element_mouse_action_get_focus_element(
 	return true;
 }
 
+static bool is_move_of_down = false;
+bool _et_tool_info_move(EtDocId doc_id, EtMouseAction mouse_action)
+{
+	const int pxdiff = 3;
+
+	if(0 == (mouse_action.state & GDK_BUTTON1_MASK)){
+		return true;
+	}
+
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	if(NULL == focus){
+		et_error("");
+		return false;
+	}
+
+	if(NULL == focus->element){
+		return true;
+	}
+	const PvElementInfo *info = pv_element_get_info_from_kind(focus->element->kind);
+	if(NULL == info || NULL == info->func_move_element){
+		et_bug("%p", info);
+		return false;
+	}
+
+	if(!is_move_of_down)
+	{
+		if( pxdiff < abs(mouse_action.diff_down.x)
+				|| pxdiff < abs(mouse_action.diff_down.y))
+		{
+			is_move_of_down = true;
+			if(!info->func_move_element(focus->element,
+						mouse_action.diff_down.x, mouse_action.diff_down.y)){
+				et_error("");
+				return false;
+			}
+		}
+	}else{
+		if(!info->func_move_element(focus->element,
+					mouse_action.move.x, mouse_action.move.y)){
+			et_error("");
+			return false;
+		}
+	}
+
+	return true;
+}
+
 bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 {
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
 			{
+				is_move_of_down = false;
+
 				PvElement *element = NULL;
 				if(!_et_tool_focus_element_mouse_action_get_focus_element(
 							&element,
@@ -136,28 +185,9 @@ bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 			break;
 		case EtMouseAction_Move:
 			{
-				if(0 == (mouse_action.state & GDK_BUTTON1_MASK)){
+				if(!_et_tool_info_move(doc_id, mouse_action)){
+					et_error("");
 					break;
-				}else{
-
-					PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-					if(NULL == focus){
-						et_error("");
-						return false;
-					}
-
-					if(NULL == focus->element){
-						break;
-					}
-					const PvElementInfo *info = pv_element_get_info_from_kind(focus->element->kind);
-					if(NULL == info || NULL == info->func_move_element){
-						et_bug("%p", info);
-						break;
-					}
-					if(!info->func_move_element(focus->element, mouse_action.move.x, mouse_action.move.y)){
-						et_error("");
-						break;
-					}
 				}
 			}
 			break;
