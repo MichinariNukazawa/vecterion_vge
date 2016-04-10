@@ -110,7 +110,7 @@ bool _et_tool_focus_element_mouse_action_get_focus_element(
 }
 
 static bool is_move_of_down = false;
-bool _et_tool_info_move(EtDocId doc_id, EtMouseAction mouse_action)
+bool _et_tool_info_move(EtDocId doc_id, EtMouseAction mouse_action, PvElement **elements)
 {
 	const int pxdiff = 3;
 
@@ -118,36 +118,32 @@ bool _et_tool_info_move(EtDocId doc_id, EtMouseAction mouse_action)
 		return true;
 	}
 
-	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-	if(NULL == focus){
-		et_error("");
-		return false;
-	}
-
-	if(NULL == focus->element){
-		return true;
-	}
-	const PvElementInfo *info = pv_element_get_info_from_kind(focus->element->kind);
-	if(NULL == info || NULL == info->func_move_element){
-		et_bug("%p", info);
-		return false;
-	}
-
+	PvPoint move = {.x = 0, .y = 0};
 	if(!is_move_of_down)
 	{
 		if( pxdiff < abs(mouse_action.diff_down.x)
 				|| pxdiff < abs(mouse_action.diff_down.y))
 		{
 			is_move_of_down = true;
-			if(!info->func_move_element(focus->element,
-						mouse_action.diff_down.x, mouse_action.diff_down.y)){
-				et_error("");
-				return false;
-			}
+
+			move = mouse_action.diff_down;
 		}
 	}else{
-		if(!info->func_move_element(focus->element,
-					mouse_action.move.x, mouse_action.move.y)){
+		move = mouse_action.move;
+	}
+
+	int num = pv_general_get_parray_num((void **)elements);
+	for(int i = 0; i < num; i++){
+		PvElement *focus_element = elements[i];
+
+		const PvElementInfo *info = pv_element_get_info_from_kind(focus_element->kind);
+		if(NULL == info || NULL == info->func_move_element){
+			et_bug("%p", info);
+			return false;
+		}
+
+		if(!info->func_move_element(focus_element,
+					move.x, move.y)){
 			et_error("");
 			return false;
 		}
@@ -156,6 +152,8 @@ bool _et_tool_info_move(EtDocId doc_id, EtMouseAction mouse_action)
 	return true;
 }
 
+static PvElement *_element_touch = NULL;
+static PvElement *_element_touch_already = NULL;
 bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 {
 	switch(mouse_action.action){
@@ -180,12 +178,48 @@ bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 					return false;
 				}
 
-				focus->element = element;
+				et_debug("%p", element);
+				_element_touch = NULL;
+				_element_touch_already = NULL;
+				if(NULL == element){
+					pv_focus_clear_to_parent_layer(focus);
+				}else{
+					_element_touch = element;
+					if(pv_focus_is_exist_element(focus, element)){
+						_element_touch_already = element;
+					}
+
+					if(!pv_focus_add_element(focus, element)){
+						et_error("");
+						return false;
+					}
+				}
+
 			}
 			break;
 		case EtMouseAction_Move:
 			{
-				if(!_et_tool_info_move(doc_id, mouse_action)){
+				if(0 != (mouse_action.state & GDK_SHIFT_MASK)){
+					break;
+				}
+
+				// one element if touch new element.
+				PvElement *elements_tmp[2] = {NULL, NULL};
+				PvElement **elements_move = NULL; // target elements.
+				if(NULL == _element_touch_already){
+					elements_tmp[0] = _element_touch;
+					elements_move = elements_tmp;
+				}else{
+					PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+					if(NULL == focus){
+						et_error("");
+						break;
+					}
+
+					elements_move = focus->elements;
+				}
+
+				if(!_et_tool_info_move(doc_id, mouse_action, elements_move)){
 					et_error("");
 					break;
 				}
@@ -193,6 +227,33 @@ bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 			break;
 		case EtMouseAction_Up:
 			{
+				et_debug("%d, %p", is_move_of_down, _element_touch_already);
+				PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+				if(NULL == focus){
+					et_error("");
+					return false;
+				}
+
+				if(0 == (mouse_action.state & GDK_SHIFT_MASK)){
+					if(!is_move_of_down || NULL == _element_touch_already){
+						if(NULL != _element_touch){
+							if(!pv_focus_clear_set_element(focus, _element_touch)){
+								et_error("");
+								return false;
+							}
+						}
+					}
+				}else{
+					if(!is_move_of_down){
+						if(NULL != _element_touch_already){
+							if(!pv_focus_remove_element(focus, _element_touch_already)){
+								et_error("");
+								return false;
+							}
+						}
+					}
+				}
+
 				et_doc_save_from_id(doc_id);
 			}
 			break;
@@ -290,7 +351,7 @@ bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 						(int)mouse_action.point.x,
 						(int)mouse_action.point.y);
 
-				PvElement *_element = focus->element;
+				PvElement *_element = pv_focus_get_first_element(focus);
 
 				bool is_closed = false;
 				if(NULL != _element && PvElementKind_Bezier == _element->kind){
@@ -324,7 +385,7 @@ bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 						et_error("");
 						return false;
 					}else{
-						focus->element = _element;
+						pv_focus_clear_set_element(focus, _element);
 					}
 				}
 
@@ -338,7 +399,7 @@ bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 					break;
 				}
 
-				PvElement *_element = focus->element;
+				PvElement *_element = pv_focus_get_first_element(focus);
 				if(NULL == _element || PvElementKind_Bezier != _element->kind){
 					et_error("");
 					return false;

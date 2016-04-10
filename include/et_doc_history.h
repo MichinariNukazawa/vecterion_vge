@@ -8,7 +8,7 @@
 #include "pv_focus.h"
 
 typedef struct EtDocHistoryItem{
-	PvFocus 	focus;
+	PvFocus		*focus;
 	PvVg		*vg;
 }EtDocHistoryItem;
 

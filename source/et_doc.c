@@ -251,7 +251,7 @@ PvFocus *et_doc_get_focus_ref_from_id(EtDocId id)
 		goto error;
 	}
 
-	return &hist_item->focus;
+	return hist_item->focus;
 error:
 	return NULL;
 }

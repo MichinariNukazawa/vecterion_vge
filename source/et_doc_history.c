@@ -31,7 +31,7 @@ EtDocHistory *et_doc_history_new(const PvVg *vg)
 	}
 	for(int ix = 0; ix < this->num_history; ix++){
 		this->hists[ix].vg = NULL;
-		this->hists[ix].focus = pv_focus_get_nofocus();
+		this->hists[ix].focus = NULL;
 	}
 
 	PvVg *vg_new0 = pv_vg_copy_new(vg);
@@ -44,10 +44,20 @@ EtDocHistory *et_doc_history_new(const PvVg *vg)
 		et_error("");
 		return NULL;
 	}
+	PvFocus *focus_new0 = pv_focus_new(vg_new0);
+	if(NULL == focus_new0){
+		et_error("");
+		return NULL;
+	}
+	PvFocus *focus_new1 = pv_focus_new(vg_new1);
+	if(NULL == focus_new1){
+		et_error("");
+		return NULL;
+	}
 	this->hists[0].vg = vg_new0;
-	this->hists[0].focus = pv_focus_get_nofocus();
+	this->hists[0].focus = focus_new0;
 	this->hist_work.vg = vg_new1;
-	this->hist_work.focus = pv_focus_get_nofocus();
+	this->hist_work.focus = focus_new1;
 
 	return this;
 }
@@ -214,17 +224,21 @@ PvElement *et_doc_element_get_tree_from_indexes(
 	return _element;
 }
 
-bool _et_doc_history_copy_focus_by_vg(PvFocus *focus_dst, PvFocus focus_src, const PvVg *vg_dst)
+PvFocus *_et_doc_history_copy_focus_by_vg(const PvFocus *focus_src, const PvVg *vg_dst)
 {
-	*focus_dst = focus_src;
-	focus_dst->element = NULL;
+	PvFocus *focus_dst = pv_focus_new(vg_dst);
+	if(NULL == focus_dst){
+		et_error("");
+		return NULL;
+	}
 
 	// search focus element.
 	int *indexes = NULL;
-	if(NULL != focus_src.element){
+	const PvElement *focus_element = pv_focus_get_first_element(focus_src);
+	if(NULL != focus_element){
 		// ** get focus path(index's)
 		indexes = et_doc_history_element_get_indexes(
-				focus_src.element);
+				focus_element);
 		if(NULL == indexes){
 			et_error("");
 			goto error;
@@ -233,19 +247,23 @@ bool _et_doc_history_copy_focus_by_vg(PvFocus *focus_dst, PvFocus focus_src, con
 		PvElement *elem = et_doc_element_get_tree_from_indexes(
 				vg_dst->element_root,
 				indexes);
-		focus_dst->element = elem;
+		pv_focus_clear_set_element(focus_dst, elem);
 	}
-	return true;
-error:
+
 	free(indexes);
-	return false;
+	return focus_dst;
+error:
+	pv_focus_free(focus_dst);
+	free(indexes);
+	return NULL;
 }
 
 void _et_doc_hist_free_history(EtDocHistory *hist, int ix)
 {
 	pv_vg_free(hist->hists[ix].vg);
+	pv_focus_free(hist->hists[ix].focus);
 	hist->hists[ix].vg = NULL;
-	hist->hists[ix].focus = pv_focus_get_nofocus();
+	hist->hists[ix].focus = NULL;
 }
 
 bool _et_doc_hist_free_redo_all(EtDocHistory *hist)
@@ -324,18 +342,17 @@ bool _et_doc_history_copy_hist(
 		return false;
 	}
 	// ** restructed focus.
-	PvFocus focus_new;
-	if(!_et_doc_history_copy_focus_by_vg(
-				&focus_new,
+	PvFocus *focus_new = _et_doc_history_copy_focus_by_vg(
 				item_src->focus,
-				vg_new))
-	{
+				vg_new);
+	if(NULL == focus_new){
 		et_error("");
 		return false;
 	}
 
 	if(NULL != item_dst->vg){
 		pv_vg_free(item_dst->vg);
+		pv_focus_free(item_dst->focus);
 	}
 	item_dst->vg = vg_new;
 	item_dst->focus = focus_new;

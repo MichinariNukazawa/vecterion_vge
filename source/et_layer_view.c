@@ -232,6 +232,7 @@ bool _et_layer_view_draw(EtLayerView *self)
 	char buf[10240];
 	buf[0] = '\0';
 	int num = pv_general_get_parray_num((void **)elementDatas);
+	const PvElement *focus_element = pv_focus_get_first_element(focus);
 	for(int i = 0; i < num; i++){
 		EtLayerViewElementData *data = elementDatas[i];
 
@@ -268,7 +269,7 @@ bool _et_layer_view_draw(EtLayerView *self)
 		snprintf(str_tmp, sizeof(str_tmp),
 				"%s%c:%s\t:%08lx '%s'\n",
 				str_head,
-				((focus->element == data->element)? '>':'_'),
+				((focus_element == data->element)? '>':'_'),
 				//data->level,
 				kind_name,
 				debug_pointer,
@@ -287,9 +288,9 @@ bool _et_layer_view_draw(EtLayerView *self)
 
 	// ターゲット状態でlayer_ctrlsのbutton状態を変更する
 	gtk_widget_set_sensitive(self->button_layer_ctrls[0], (0 <= self->doc_id));
-	gtk_widget_set_sensitive(self->button_layer_ctrls[1], (NULL != focus->element));
-	gtk_widget_set_sensitive(self->button_layer_ctrls[2], (NULL != focus->element));
-	gtk_widget_set_sensitive(self->button_layer_ctrls[3], (NULL != focus->element));
+	gtk_widget_set_sensitive(self->button_layer_ctrls[1], (NULL != focus_element));
+	gtk_widget_set_sensitive(self->button_layer_ctrls[2], (NULL != focus_element));
+	gtk_widget_set_sensitive(self->button_layer_ctrls[3], (NULL != focus_element));
 
 	return true;
 }
@@ -411,7 +412,7 @@ gboolean _et_layer_view_cb_button_press(GtkWidget *widget, GdkEventButton *event
 			return false;
 		}
 
-		focus->element = self->elementDatas[index]->element;
+		pv_focus_clear_set_element(focus, self->elementDatas[index]->element);
 
 		if(!_et_layer_view_draw(self)){
 			et_error("");

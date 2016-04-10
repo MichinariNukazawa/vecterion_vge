@@ -5,7 +5,7 @@
 #include "pv_render_option.h"
 #include "pv_element_infos.h"
 
-bool _pv_renderer_is_group_kind(PvElement * const element)
+bool _pv_renderer_is_group_kind(const PvElement *element)
 {
 	switch(element->kind){
 		case PvElementKind_Root:
@@ -20,7 +20,7 @@ bool _pv_renderer_is_group_kind(PvElement * const element)
 
 bool _pv_renderer_cairo_recersive(
 		cairo_t *cr,
-		PvElement * const element,
+		const PvElement *element,
 		const PvRenderOption render_option,
 		int *level)
 {
@@ -127,11 +127,15 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		return NULL;
 	}
 
-	if(NULL != focus->element && !_pv_renderer_is_group_kind(focus->element)){
-		render_option.render_context.is_focus = true;
-		if(!_pv_renderer_cairo_recersive(cr, focus->element, render_option, &level)){
-			pv_error("");
-			return NULL;
+	int num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < num; i++){
+		const PvElement *focus_element = focus->elements[i];
+		if(NULL != focus_element && !_pv_renderer_is_group_kind(focus_element)){
+			render_option.render_context.is_focus = true;
+			if(!_pv_renderer_cairo_recersive(cr, focus_element, render_option, &level)){
+				pv_error("");
+				return NULL;
+			}
 		}
 	}
 
