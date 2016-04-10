@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stdatomic.h>
+#include <stdlib.h>
 
 #include "et_error.h"
 #include "et_define.h"
@@ -334,14 +335,14 @@ void _pvui_app_set_style(){
 			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
 	gtk_css_provider_load_from_data (GTK_CSS_PROVIDER(provider),
-	/*
-			"GtkWindow {\n"
-			"   background-color: rgb (103, 103, 103);\n"
-			"}\n"
-			"GtkWidget {\n"
-			"   background-color: rgb (103, 103, 103);\n"
-			"}\n"
-	*/
+			/*
+			   "GtkWindow {\n"
+			   "   background-color: rgb (103, 103, 103);\n"
+			   "}\n"
+			   "GtkWidget {\n"
+			   "   background-color: rgb (103, 103, 103);\n"
+			   "}\n"
+			 */
 			"GtkNotebook {\n"
 			"   padding: 2px;\n"
 			"}\n"
@@ -561,6 +562,158 @@ void _cb_menu_view_extent(GtkCheckMenuItem *menuitem, gpointer user_data)
 	}
 }
 
+bool pv_element_is_exist_from_elements(const PvElement *element, PvElement **elements)
+{
+	int num = pv_general_get_parray_num((void **)elements);
+	for(int i = 0; i < num; i++){
+		if(element == elements[i]){
+			return true;
+		}
+	}
+
+	return false;
+}
+
+typedef struct{
+	PvFocus *focus;
+	PvElement **elements_ignore;
+}EtSelectAllFuncRecurseDataPack;
+
+bool _cb_menu_select_all_func_recurse_prev(PvElement *element, gpointer data, int level)
+{
+	EtSelectAllFuncRecurseDataPack *func_safr_data_pack = data;
+	PvFocus *focus = func_safr_data_pack->focus;
+
+	if(PvElementKind_Layer == element->kind){
+		return true;
+	}
+	if(pv_element_is_exist_from_elements(element, func_safr_data_pack->elements_ignore)){
+		return true;
+	}
+
+	if(!pv_focus_add_element(focus, element)){
+		return false;
+	}
+
+	return true;
+}
+
+void _cb_menu_select_all (GtkMenuItem *menuitem, gpointer user_data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// Todo: Nothing document.
+		et_bug("%d\n", doc_id);
+		return;
+	}
+
+	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
+	if(NULL == vg){
+		et_debug("%d", doc_id);
+		return;
+	}
+
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	if(NULL == focus){
+		et_bug("");
+		return;
+	}
+	EtSelectAllFuncRecurseDataPack func_safr_data_pack = {
+		.focus = focus,
+		.elements_ignore = NULL,
+	};
+	PvElementRecursiveError error;
+	if(!pv_element_recursive_desc_before(
+				vg->element_root,
+				_cb_menu_select_all_func_recurse_prev,
+				&func_safr_data_pack,
+				&error))
+	{
+		et_error("level:%d", error.level);
+		return;
+	}
+
+	et_doc_signal_update_from_id(doc_id);
+}
+
+void _cb_menu_select_none (GtkMenuItem *menuitem, gpointer user_data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// Todo: Nothing document.
+		et_bug("%d\n", doc_id);
+		return;
+	}
+
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	if(NULL == focus){
+		et_bug("");
+		return;
+	}
+
+	if(!pv_focus_clear_to_parent_layer(focus)){
+		et_error("");
+		return;
+	}
+
+	et_doc_signal_update_from_id(doc_id);
+}
+
+void _cb_menu_select_invert (GtkMenuItem *menuitem, gpointer user_data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// Todo: Nothing document.
+		et_bug("%d\n", doc_id);
+		return;
+	}
+
+	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
+	if(NULL == vg){
+		et_debug("%d", doc_id);
+		return;
+	}
+
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	if(NULL == focus){
+		et_bug("");
+		return;
+	}
+
+	int num = pv_general_get_parray_num((void **)focus->elements);
+	PvElement **elements_prefocus = malloc(sizeof(PvElement *) * (num + 1));
+	if(NULL == elements_prefocus){
+		et_bug("");
+		return;
+	}
+	memcpy(elements_prefocus, focus->elements, sizeof(PvElement *) * (num + 1));
+
+	if(!pv_focus_clear_to_parent_layer(focus)){
+		et_error("");
+		goto finally;
+	}
+
+	EtSelectAllFuncRecurseDataPack func_safr_data_pack = {
+		.focus = focus,
+		.elements_ignore = elements_prefocus,
+	};
+	PvElementRecursiveError error;
+	if(!pv_element_recursive_desc_before(
+				vg->element_root,
+				_cb_menu_select_all_func_recurse_prev,
+				&func_safr_data_pack,
+				&error))
+	{
+		et_error("level:%d", error.level);
+		goto finally;
+	}
+
+finally:
+	free(elements_prefocus);
+
+	et_doc_signal_update_from_id(doc_id);
+}
+
 void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
 {
 	GtkWindow *parent_window = NULL;
@@ -573,6 +726,42 @@ void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
 			APP_NAME);
 	gtk_dialog_run (GTK_DIALOG (dialog));
 	gtk_widget_destroy (dialog);
+}
+
+GtkWidget *pv_get_menuitem_new_tree_of_select(GtkAccelGroup *accel_group){
+	GtkWidget *menuitem_root;
+	GtkWidget *menuitem;
+	GtkWidget *menu;
+
+	menuitem_root = gtk_menu_item_new_with_label ("_Select");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
+
+	menu = gtk_menu_new ();
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
+
+	// ** Accel to "/_Select/_All (Ctrl+A)"
+	menuitem = gtk_menu_item_new_with_label ("_All");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_select_all), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_a, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+	// ** Accel to "/_Select/_None (Shift+Ctrl+A)"
+	menuitem = gtk_menu_item_new_with_label ("_None");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_select_none), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_a, (GDK_SHIFT_MASK | GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
+	// ** Accel to "/_Select/_Invert (Ctrl+I)"
+	menuitem = gtk_menu_item_new_with_label ("_Invert");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_select_invert), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_i, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+
+	return menuitem_root;
 }
 
 GtkWidget *pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
@@ -659,13 +848,15 @@ GtkWidget *_new_tree_of_help(GtkAccelGroup *accel_group){
 	menu = gtk_menu_new ();
 	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
 
-	// ** Accel to "Help > About (Ctrl+A)"
+	// ** Accel to "Help > About"
 	menuitem = gtk_menu_item_new_with_mnemonic ("_About");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_help_about), NULL);
-	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
-			GDK_KEY_a, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+	/*
+	   gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+	   GDK_KEY_a, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+	 */
 
 	return menuitem_root;
 }
@@ -684,6 +875,9 @@ bool _init_menu(GtkWidget *window, GtkWidget *box_root)
 	gtk_box_pack_start (GTK_BOX (box_root), menubar, FALSE, TRUE, 0);
 
 	menuitem = pv_get_menuitem_new_tree_of_file(accel_group);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
+
+	menuitem = pv_get_menuitem_new_tree_of_select(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	menuitem = _pv_get_menuitem_new_tree_of_view(accel_group);
