@@ -1,0 +1,31 @@
+
+#### etaion
+DOXYFILE_ENCODING	= UTF-8
+PROJECT_NAME		= "Etaion -Vector Graphic Editor-"
+PROJECT_NUMBER		= "Unit 00 is the Prototype"
+PROJECT_BRIEF		= "The Etaion is true a vector graphic editor for linux (and other)."
+# PROJECT_LOGO		=
+OUTPUT_DIRECTORY	= doxygen/
+OUTPUT_LANGUAGE		= English
+TAB_SIZE		= 8
+# OPTIMIZE_OUTPUT_FOR_C	= YES # not thing to unit test ...
+
+EXTRACT_PRIVATE		= YES
+EXTRACT_STATIC		= YES
+SHOW_INCLUDE_FILES	= YES
+SHOW_DIRECTORIES	= YES
+
+FILE_PATTERNS		= *.h *.c *.cpp
+EXCLUDE_PATTERNS	= */.git/* */doxygen/* tags
+EXCLUDE_PATTERNS	+= */object/* */build/*
+EXCLUDE_PATTERNS	+= */work/* */gabage/* */temp/* */tmp/*
+EXCLUDE_PATTERNS	+= */library/* */test/googletest/*
+SOURCE_BROWSER		= YES
+EXTRACT_ANON_NSPACES	= YES
+RECURSIVE		= YES
+HAVE_DOT		= YES
+DOT_NUM_THREAD		= 4
+CALL_GRAPH		= YES
+CALLER_GRAPH		= YES
+EXTRACT_ALL		= YES
+

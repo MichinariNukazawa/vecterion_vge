@@ -49,3 +49,6 @@ tags
 # tested save file
 /*.svg
 
+# doxygen
+/doxygen
+
