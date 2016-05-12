@@ -50,13 +50,16 @@ typedef struct EtLayerViewRltDataPack{
 
 static EtLayerView *layer_view = NULL;
 
-gboolean _et_layer_view_cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data);
-gboolean _et_layer_view_cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data);
-gboolean _et_layer_view_cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data);
+static gboolean _et_layer_view_cb_button_press(
+		GtkWidget *widget, GdkEventButton *event, gpointer data);
+static gboolean _et_layer_view_cb_button_release(
+		GtkWidget *widget, GdkEventButton *event, gpointer data);
+static gboolean _et_layer_view_cb_motion_notify(
+		GtkWidget *widget, GdkEventMotion *event, gpointer data);
 
-gboolean _et_layer_view_cb_layer_ctrl(GtkWidget *widget, gpointer data);
+static gboolean _et_layer_view_cb_layer_ctrl(GtkWidget *widget, gpointer data);
 
-bool _et_layer_view_set_layer_ctrl(EtLayerView *self, int index)
+static bool _et_layer_view_set_layer_ctrl(EtLayerView *self, int index)
 {
 	GError *error = NULL;
 	GdkPixbuf *pixbuf = NULL;
@@ -185,7 +188,7 @@ GtkWidget *et_layer_view_get_widget_frame()
 	return self->widget;
 }
 
-bool _et_layer_view_read_layer_tree(PvElement *element, gpointer data, int level)
+static bool _et_layer_view_read_layer_tree(PvElement *element, gpointer data, int level)
 {
 	EtLayerViewRltDataPack *func_rlt_data_pack = data;
 	EtLayerViewElementData ***datas = &(func_rlt_data_pack->datas);
@@ -214,7 +217,7 @@ bool _et_layer_view_read_layer_tree(PvElement *element, gpointer data, int level
 	return true;
 }
 
-bool _et_layer_view_draw(EtLayerView *self)
+static bool _et_layer_view_draw(EtLayerView *self)
 {
 	if(NULL == self){
 		et_bug("");
@@ -295,7 +298,7 @@ bool _et_layer_view_draw(EtLayerView *self)
 	return true;
 }
 
-bool _et_layer_view_update_doc_tree()
+static bool _et_layer_view_update_doc_tree()
 {
 	EtLayerView *self = layer_view;
 	if(NULL == self){
@@ -396,7 +399,8 @@ int _et_layer_view_index_data_from_position(EtLayerView *self, int x, int y)
 	return index;
 }
 
-gboolean _et_layer_view_cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data)
+static gboolean _et_layer_view_cb_button_press(
+		GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	EtLayerView *self = (EtLayerView *)data;
 	et_debug("BUTTON PRESS: (%4d, %4d)", (int)event->x, (int)event->y);
@@ -428,20 +432,23 @@ gboolean _et_layer_view_cb_button_press(GtkWidget *widget, GdkEventButton *event
 	return false;
 }
 
-gboolean _et_layer_view_cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data)
+static gboolean _et_layer_view_cb_button_release(
+		GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	et_debug("BUTTON RELEASE");
 	return false;
 }
 
-gboolean _et_layer_view_cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data)
+static gboolean _et_layer_view_cb_motion_notify(
+		GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
 	// et_debug("(%3d, %3d)", (int)event->x, (int)event->y);
 
 	return false;
 }
 
-gboolean _et_layer_view_cb_layer_ctrl(GtkWidget *widget, gpointer data)
+static gboolean _et_layer_view_cb_layer_ctrl(
+		GtkWidget *widget, gpointer data)
 {
 	EtLayerView *self = (EtLayerView *)data;
 	if(NULL == self){
@@ -489,3 +496,4 @@ gboolean _et_layer_view_cb_layer_ctrl(GtkWidget *widget, gpointer data)
 
 	return false;
 }
+

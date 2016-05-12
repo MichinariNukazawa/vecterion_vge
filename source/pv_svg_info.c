@@ -3,7 +3,7 @@
 #include <strings.h>
 #include "pv_error.h"
 
-PvElement *_pv_svg_svg_new_element_from_svg(
+static PvElement *_pv_svg_svg_new_element_from_svg(
 		PvElement *element_parent,
 		xmlNodePtr xmlnode,
 		bool *isDoChild,
@@ -14,7 +14,7 @@ PvElement *_pv_svg_svg_new_element_from_svg(
 	return element_parent;
 }
 
-PvElement *_pv_svg_g_new_element_from_svg(
+static PvElement *_pv_svg_g_new_element_from_svg(
 		PvElement *element_parent,
 		xmlNodePtr xmlnode,
 		bool *isDoChild,
@@ -60,7 +60,7 @@ void pv_element_anchor_point_init(PvAnchorPoint *ap)
 	*ap = PvAnchorPoint_default;
 }
 
-const char *_pv_svg_read_args_from_str(double *args, int num_args, const char *str)
+static const char *_pv_svg_read_args_from_str(double *args, int num_args, const char *str)
 {
 	const char *p = str;
 	char *next;
@@ -88,21 +88,14 @@ const char *_pv_svg_read_args_from_str(double *args, int num_args, const char *s
 }
 
 
-void _pv_svg_fill_double_array(double *dst, double value, int size)
+static void _pv_svg_fill_double_array(double *dst, double value, int size)
 {
 	for(int i = 0; i < size; i++){
 		dst[i] = value;
 	}
 }
 
-void _pv_svg_copy_double_array(double *dst, double *src, int size)
-{
-	for(int i = 0; i < size; i++){
-		dst[i] = src[i];
-	}
-}
-
-bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const char *str)
+static bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const char *str)
 {
 	const int num_args = 10;
 	double args[num_args];
@@ -184,7 +177,7 @@ bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const char *str
 	return true;
 }
 
-PvElement *_pv_svg_path_new_element_from_svg(
+static PvElement *_pv_svg_path_new_element_from_svg(
 		PvElement *element_parent,
 		xmlNodePtr xmlnode,
 		bool *isDoChild,
@@ -218,7 +211,7 @@ PvElement *_pv_svg_path_new_element_from_svg(
 	return element_new;
 }
 
-PvElement *_pv_svg_unknown_new_element_from_svg(
+static PvElement *_pv_svg_unknown_new_element_from_svg(
 		PvElement *element_parent,
 		xmlNodePtr xmlnode,
 		bool *isDoChild,

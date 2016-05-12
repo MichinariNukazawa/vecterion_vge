@@ -9,7 +9,7 @@
 #include "et_doc_manager.h"
 #include "et_etaion.h"
 
-bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
+static bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
 {
 	if(
 			(p1.x - radius) < p2.x
@@ -23,27 +23,13 @@ bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
 	}
 }
 
-bool _et_tool_nop_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
-{
-	switch(mouse_action.action){
-		case EtMouseAction_Down:
-		case EtMouseAction_Up:
-			et_debug("");
-			break;
-		default:
-			break;
-	}
-
-	return true;
-}
-
 typedef struct RecursiveDataGetFocus{
 	PvElement **p_element;
 	double gx;
 	double gy;
 }RecursiveDataGetFocus;
 
-bool _et_tool_func_pv_element_recurse_get_focus_element(
+static bool _et_tool_func_pv_element_recurse_get_focus_element(
 		PvElement *element, gpointer data, int level)
 {
 	RecursiveDataGetFocus *_data = data;
@@ -79,7 +65,7 @@ error:
 	return false;
 }
 
-bool _et_tool_focus_element_mouse_action_get_focus_element(
+static bool _et_tool_focus_element_mouse_action_get_focus_element(
 		PvElement **p_element,
 		EtDocId doc_id,
 		double gx,
@@ -110,7 +96,8 @@ bool _et_tool_focus_element_mouse_action_get_focus_element(
 }
 
 static bool is_move_of_down = false;
-bool _et_tool_info_move(EtDocId doc_id, EtMouseAction mouse_action, PvElement **elements)
+static bool _et_tool_info_move(
+		EtDocId doc_id, EtMouseAction mouse_action, PvElement **elements)
 {
 	const int pxdiff = 3;
 
@@ -154,7 +141,8 @@ bool _et_tool_info_move(EtDocId doc_id, EtMouseAction mouse_action, PvElement **
 
 static PvElement *_element_touch = NULL;
 static PvElement *_element_touch_already = NULL;
-bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
+static bool _et_tool_focus_element_mouse_action(
+		EtDocId doc_id, EtMouseAction mouse_action)
 {
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
@@ -264,7 +252,7 @@ bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 	return true;
 }
 
-bool _et_tool_bezier_add_point(EtDoc *doc, PvElement **_element, double x, double y)
+static bool _et_tool_bezier_add_point(EtDoc *doc, PvElement **_element, double x, double y)
 {
 	bool is_new = true;
 	PvElement *element = *_element;
@@ -330,7 +318,7 @@ bool _et_tool_bezier_add_point(EtDoc *doc, PvElement **_element, double x, doubl
 }
 
 static int _et_etaion_radius_path_detect = 6;
-bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
+static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 {
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
 	if(NULL == doc){

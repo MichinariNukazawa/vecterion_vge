@@ -5,7 +5,7 @@
 #include "pv_error.h"
 #include "pv_element_infos.h"
 
-bool _pv_element_delete_single(PvElement *self);
+static bool _pv_element_delete_single(PvElement *self);
 
 char *pv_general_str_new(const char * const src)
 {
@@ -25,7 +25,7 @@ char *pv_general_str_new(const char * const src)
 	return dst;
 }
 
-bool _pv_element_recursive_inline_2(PvElement *element,
+static bool _pv_element_recursive_inline_2(PvElement *element,
 		PvElementRecursiveFunc func_before,
 		PvElementRecursiveFunc func_after,
 		gpointer data,
@@ -83,7 +83,7 @@ end:
 	return ret;
 }
 
-bool _pv_element_recursive_inline_1(PvElement *element,
+static bool _pv_element_recursive_inline_1(PvElement *element,
 		PvElementRecursiveFunc func_before,
 		PvElementRecursiveFunc func_after,
 		gpointer data,
@@ -194,7 +194,7 @@ PvElement *pv_element_new(const PvElementKind kind)
 	return self;
 }
 
-PvElement *_pv_element_copy_single(const PvElement *self)
+static PvElement *_pv_element_copy_single(const PvElement *self)
 {
 	if(NULL == self){
 		pv_error("");
@@ -232,7 +232,7 @@ error1:
 	return NULL;
 }
 
-PvElement *_pv_element_copy_recursive_inline(const PvElement *self,
+static PvElement *_pv_element_copy_recursive_inline(const PvElement *self,
 		int *level, PvElementRecursiveError *error)
 {
 	if(NULL == self){
@@ -383,7 +383,7 @@ bool pv_element_append_child(PvElement * const parent,
 	return true;
 }
 
-bool _pv_element_delete_single(PvElement *self)
+static bool _pv_element_delete_single(PvElement *self)
 {
 	if(NULL == self){
 		pv_bug("");
@@ -406,7 +406,7 @@ bool _pv_element_delete_single(PvElement *self)
 	return true;
 }
 
-bool _pv_element_remove_delete_recursive_inline(PvElement *self,
+static bool _pv_element_remove_delete_recursive_inline(PvElement *self,
 		int *level, PvElementRecursiveError *error)
 {
 	int num = pv_general_get_parray_num((void **)self->childs);
@@ -445,7 +445,7 @@ bool _pv_element_remove_delete_recursive_inline(PvElement *self,
 	return true;
 }
 
-bool _pv_element_detouch_parent(PvElement * const self)
+static bool _pv_element_detouch_parent(PvElement * const self)
 {
 	if(NULL == self){
 		pv_error("");
@@ -520,7 +520,7 @@ typedef struct PvElementIsDiffRecursiveData{
 	bool is_diff;
 }PvElementIsDiffRecursiveData;
 
-bool _pv_element_is_diff_one(
+static bool _pv_element_is_diff_one(
 		PvElement *element0,
 		PvElement *element1,
 		PvElementIsDiffRecursiveData *data)
@@ -558,7 +558,7 @@ error:
 	return false;
 }
 
-bool _pv_element_is_diff_recursive_inline(
+static bool _pv_element_is_diff_recursive_inline(
 		PvElement *element0,
 		PvElement *element1,
 		gpointer data,

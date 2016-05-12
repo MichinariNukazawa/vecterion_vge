@@ -5,7 +5,7 @@
 
 EtDocManager *doc_manager = NULL;
 
-bool _et_doc_manager_add_doc(EtDoc *doc);
+static bool _et_doc_manager_add_doc(EtDoc *doc);
 
 EtDocManager *et_doc_manager_init()
 {
@@ -43,7 +43,7 @@ EtDocId et_doc_manager_new_doc_from_vg(const PvVg *vg)
 	return et_doc_get_id(doc);
 }
 
-int _et_doc_manager_get_num_doc_node(EtDocNode *doc_nodes)
+static int _et_doc_manager_get_num_doc_node(EtDocNode *doc_nodes)
 {
 	int i = 0;
 	while(NULL != doc_nodes[i].doc){
@@ -59,7 +59,7 @@ int _et_doc_manager_get_num_doc_node(EtDocNode *doc_nodes)
 	return i;
 }
 
-bool _et_doc_manager_add_doc(EtDoc *doc)
+static bool _et_doc_manager_add_doc(EtDoc *doc)
 {
 	EtDocManager *self = doc_manager;
 	if(NULL == self){
@@ -97,3 +97,4 @@ EtDoc *et_doc_manager_get_doc_from_id(const EtDocId doc_id)
 
 	return NULL;
 }
+

@@ -33,14 +33,14 @@ struct EtCanvas{
 	gpointer slot_mouse_action_data;
 };
 
-gboolean cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data);
+static gboolean _cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data);
 
-gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data);
-gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data);
-gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data);
-gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer data);
+static gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data);
+static gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data);
+static gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data);
+static gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer data);
 
-bool _signal_et_canvas_slot_change(EtCanvas *self)
+static bool _signal_et_canvas_slot_change(EtCanvas *self)
 {
 	if(NULL == self){
 		return false;
@@ -55,7 +55,7 @@ bool _signal_et_canvas_slot_change(EtCanvas *self)
 	return true;
 }
 
-gboolean _cb_size_allocate_canvas(
+static gboolean _cb_size_allocate_canvas(
 		GtkWidget    *widget,
 		GdkRectangle *allocation,
 		gpointer      data)
@@ -151,7 +151,7 @@ EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 	//gtk_container_add(GTK_CONTAINER(self->event_box), self->canvas);
 
 	g_signal_connect (G_OBJECT (self->canvas), "draw",
-			G_CALLBACK (cb_expose_event), (gpointer)self);
+			G_CALLBACK (_cb_expose_event), (gpointer)self);
 
 	self->render_context = PvRenderContext_default;
 
@@ -227,7 +227,7 @@ bool et_canvas_set_doc_id(EtCanvas *self, EtDocId doc_id)
 	return true;
 }
 
-bool _signal_et_canvas_mouse_action(
+static bool _signal_et_canvas_mouse_action(
 		EtCanvas *self,
 		double x, double y,
 		double x_move, double y_move,
@@ -266,7 +266,7 @@ bool _signal_et_canvas_mouse_action(
 
 PvPoint _et_canvas_previous_mouse_point = {0,0};
 PvPoint _et_canvas_down_mouse_point = {0,0};
-gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data)
+static gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	/*
 	   et_debug("BUTTON PRESS: (%4d, %4d)", (int)event->x, (int)event->y);
@@ -301,7 +301,7 @@ error:
 	return true;
 }
 
-gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data)
+static gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	// et_debug("BUTTON RELEASE");
 	EtCanvas *self = (EtCanvas *)data;
@@ -336,7 +336,7 @@ error:
 	return true;
 }
 
-gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data)
+static gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
 	//	et_debug("(%3d, %3d)", (int)event->x, (int)event->y);
 	EtCanvas *self = (EtCanvas *)data;
@@ -370,7 +370,7 @@ error:
 	return true;
 }
 
-double _et_ceil_unit(double value, double unit)
+static double _et_ceil_unit(double value, double unit)
 {
 	double t = (unit / 10);
 	return unit * ((int)((value / unit) + t)); // trick for value 0.6 can't ceiled.
@@ -378,7 +378,7 @@ double _et_ceil_unit(double value, double unit)
 
 const double ET_RENDER_CONTEXT_SCALE_MIN = 0.01;
 const double ET_CANVAS_SCALE_UNIT = (0.1);
-gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer data)
+static gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer data)
 {
 	EtCanvas *self = (EtCanvas *)data;
 
@@ -417,7 +417,7 @@ gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer da
 }
 
 
-gboolean cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
+static gboolean _cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 {
 	EtCanvas *self = (EtCanvas *)data;
 
@@ -509,7 +509,7 @@ void et_canvas_set_is_thumbnail(EtCanvas *self, bool is_thumbnail)
 		et_bug("");
 		return;
 	}
-	
+
 	self->is_fitting_scale = is_thumbnail;
 	gtk_widget_set_sensitive(self->text_scale, !is_thumbnail);
 }

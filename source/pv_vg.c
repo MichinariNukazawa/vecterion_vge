@@ -86,7 +86,7 @@ bool pv_vg_copy_overwrite(PvVg *dst, const PvVg *src)
 	}
 	dst->element_root = new_element_root;
 
-return true;
+	return true;
 }
 
 PvVg *pv_vg_copy_new(const PvVg *src)
@@ -111,13 +111,13 @@ PvVg *pv_vg_copy_new(const PvVg *src)
 	return vg_new;
 }
 
-bool _pv_vg_is_diff_rect(PvRect rect0, PvRect rect1)
+static bool _pv_vg_is_diff_rect(PvRect rect0, PvRect rect1)
 {
 	return !(rect0.x == rect1.x
-		&& rect0.y == rect1.y
-		&& rect0.w == rect1.w
-		&& rect0.h == rect1.h
-	);
+			&& rect0.y == rect1.y
+			&& rect0.w == rect1.w
+			&& rect0.h == rect1.h
+		);
 }
 
 bool pv_vg_is_diff(const PvVg *vg0, const PvVg *vg1)
@@ -148,5 +148,4 @@ bool pv_vg_is_diff(const PvVg *vg0, const PvVg *vg1)
 		return false;
 	}
 }
-
 

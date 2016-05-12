@@ -27,24 +27,7 @@ struct EtCanvasCollection{
 
 
 
-int et_general_get_parray_num(void **pointers)
-{
-	if(NULL == pointers){
-		return 0;
-	}
-
-	int i = 0;
-	while(NULL != pointers[i]){
-		i++;
-	}
-
-	if(15 < i){
-		et_debug("num:%d", i);
-	}
-
-	return i;
-}
-EtDocId _et_canvas_collection_get_doc_id_from_canvas_frame(GtkWidget *canvas_frame)
+static EtDocId _et_canvas_collection_get_doc_id_from_canvas_frame(GtkWidget *canvas_frame)
 {
 	EtCanvasCollection *self = _canvas_collection;
 	if(NULL == self){
@@ -79,7 +62,7 @@ error:
 	return -1;
 }
 
-gboolean _cb_notebook_change_current_page(GtkNotebook *notebook,
+static gboolean _cb_notebook_change_current_page(GtkNotebook *notebook,
 		GtkWidget    *page,
 		gint         page_num,
 		gpointer     user_data)
@@ -120,7 +103,7 @@ error:
 	return true;
 }
 
-void _cb_notebook_page_added(GtkNotebook *notebook,
+static void _cb_notebook_page_added(GtkNotebook *notebook,
 		GtkWidget   *child,
 		guint        page_num,
 		gpointer     user_data)

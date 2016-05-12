@@ -12,3 +12,4 @@ void et_state_unfocus(EtState *self)
 
 	self->doc_id = -1;
 }
+

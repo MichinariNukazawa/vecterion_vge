@@ -12,26 +12,26 @@
  **************** */
 
 /** @brief 無効なindexを引いた際に埋め込まれているダミー関数 */
-gpointer _pv_element_error_return_null_new()
+static gpointer _pv_element_error_return_null_new()
 {
 	pv_error("");
 	return NULL;
 }
 
-bool _pv_element_error_return_null_delete(void *_data)
+static bool _pv_element_error_return_null_delete(void *_data)
 {
 	pv_error("");
 	return false;
 }
 
-gpointer _pv_element_error_return_null_copy_new(void *_data)
+static gpointer _pv_element_error_return_null_copy_new(void *_data)
 {
 	pv_error("");
 	return NULL;
 }
 
 /** @brief write_svg未実装箇所に挿入する */
-int _pv_element_notimplement_svg_write(
+static int _pv_element_notimplement_svg_write(
 		InfoTargetSvg *target,
 		const PvElement *element, const ConfWriteSvg *conf)
 {
@@ -71,7 +71,7 @@ int _pv_element_notimplement_svg_write(
 	return 0;
 }
 
-bool _pv_element_notimplement_draw(
+static bool _pv_element_notimplement_draw(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
@@ -80,7 +80,7 @@ bool _pv_element_notimplement_draw(
 	return true;
 }
 
-bool _pv_element_notimplement_is_touch_element(
+static bool _pv_element_notimplement_is_touch_element(
 		bool *is_touch,
 		const PvElement *element,
 		double gx,
@@ -91,7 +91,7 @@ bool _pv_element_notimplement_is_touch_element(
 	return true;
 }
 
-bool _pv_element_notimplement_is_diff_one(
+static bool _pv_element_notimplement_is_diff_one(
 		bool *is_diff,
 		const PvElement *element0,
 		const PvElement *element1)
@@ -101,7 +101,7 @@ bool _pv_element_notimplement_is_diff_one(
 	return true;
 }
 
-bool _pv_element_notimplement_move_element(
+static bool _pv_element_notimplement_move_element(
 		const PvElement *element,
 		double gx,
 		double gy)
@@ -148,7 +148,7 @@ char *pv_general_new_str(const char *src, bool *is_error)
  * Group(Root,Layer,Group)
  **************** */
 
-gpointer _pv_element_group_data_new()
+static gpointer _pv_element_group_data_new()
 {
 	PvElementGroupData *data = (PvElementGroupData *)malloc(sizeof(PvElementGroupData));
 	if(NULL == data){
@@ -161,7 +161,7 @@ gpointer _pv_element_group_data_new()
 	return (gpointer)data;
 }
 
-bool _pv_element_group_data_delete(void *_data)
+static bool _pv_element_group_data_delete(void *_data)
 {
 	if(NULL == _data){
 		pv_error("");
@@ -179,7 +179,7 @@ bool _pv_element_group_data_delete(void *_data)
 	return true;
 }
 
-gpointer _pv_element_group_data_copy_new(void *_data)
+static gpointer _pv_element_group_data_copy_new(void *_data)
 {
 	if(NULL == _data){
 		pv_error("");
@@ -204,7 +204,7 @@ gpointer _pv_element_group_data_copy_new(void *_data)
 	return (gpointer)new_data;
 }
 
-int _pv_element_group_write_svg(
+static int _pv_element_group_write_svg(
 		InfoTargetSvg *target,
 		const PvElement *element, const ConfWriteSvg *conf)
 {
@@ -254,7 +254,7 @@ int _pv_element_group_write_svg(
 	return 0;
 }
 
-bool _pv_element_group_draw(
+static bool _pv_element_group_draw(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
@@ -262,7 +262,7 @@ bool _pv_element_group_draw(
 	return true;
 }
 
-bool _pv_element_group_is_touch_element(
+static bool _pv_element_group_is_touch_element(
 		bool *is_touch,
 		const PvElement *element,
 		double gx,
@@ -272,7 +272,7 @@ bool _pv_element_group_is_touch_element(
 	return true;
 }
 
-bool pv_general_strcmp(char *str0, char *str1)
+static bool _pv_general_strcmp(char *str0, char *str1)
 {
 	if(NULL == str0 && NULL == str1){
 		return true;
@@ -284,7 +284,7 @@ bool pv_general_strcmp(char *str0, char *str1)
 	return (0 == strcmp(str0, str1));
 }
 
-bool _pv_element_group_is_diff_one(
+static bool _pv_element_group_is_diff_one(
 		bool *is_diff,
 		const PvElement *element0,
 		const PvElement *element1)
@@ -297,11 +297,11 @@ bool _pv_element_group_is_diff_one(
 		return false;
 	}
 
-	*is_diff = !pv_general_strcmp(data0->name, data1->name);
+	*is_diff = !_pv_general_strcmp(data0->name, data1->name);
 	return true;
 }
 
-bool _pv_element_group_move_element(
+static bool _pv_element_group_move_element(
 		const PvElement *element,
 		double gx,
 		double gy)
@@ -313,7 +313,7 @@ bool _pv_element_group_move_element(
  * Bezier
  **************** */
 
-gpointer _pv_element_bezier_data_new()
+static gpointer _pv_element_bezier_data_new()
 {
 	PvElementBezierData *data = (PvElementBezierData *)malloc(sizeof(PvElementBezierData));
 	if(NULL == data){
@@ -328,7 +328,7 @@ gpointer _pv_element_bezier_data_new()
 	return (gpointer)data;
 }
 
-bool _pv_element_bezier_data_delete(void *_data)
+static bool _pv_element_bezier_data_delete(void *_data)
 {
 	if(NULL == _data){
 		pv_error("");
@@ -346,7 +346,7 @@ bool _pv_element_bezier_data_delete(void *_data)
 	return true;
 }
 
-gpointer _pv_element_bezier_data_copy_new(void *_data)
+static gpointer _pv_element_bezier_data_copy_new(void *_data)
 {
 	if(NULL == _data){
 		pv_error("");
@@ -378,7 +378,7 @@ gpointer _pv_element_bezier_data_copy_new(void *_data)
 	return (gpointer)new_data;
 }
 
-char *_pv_element_bezier_new_str_from_anchor(const PvAnchorPoint ap_current, const PvAnchorPoint ap_prev)
+static char *_pv_element_bezier_new_str_from_anchor(const PvAnchorPoint ap_current, const PvAnchorPoint ap_prev)
 {
 	char *str = g_strdup_printf("%c %f %f %f %f %f %f",
 			'C',
@@ -396,7 +396,7 @@ char *_pv_element_bezier_new_str_from_anchor(const PvAnchorPoint ap_current, con
 	return str;
 }
 
-int _pv_element_bezier_write_svg(
+static int _pv_element_bezier_write_svg(
 		InfoTargetSvg *target,
 		const PvElement *element, const ConfWriteSvg *conf)
 {
@@ -487,7 +487,7 @@ int _pv_element_bezier_write_svg(
 	return 0;
 }
 
-bool _pv_element_bezier_draw(
+static bool _pv_element_bezier_draw(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
@@ -513,7 +513,7 @@ bool _pv_element_bezier_draw(
 	return true;
 }
 
-bool _pv_element_bezier_draw_focusing(
+static bool _pv_element_bezier_draw_focusing(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
@@ -574,7 +574,7 @@ bool _pv_element_bezier_draw_focusing(
 	return true;
 }
 
-bool _pv_element_bezier_is_touch_element(
+static bool _pv_element_bezier_is_touch_element(
 		bool *is_touch,
 		const PvElement *element,
 		double gx,
@@ -609,7 +609,7 @@ bool _pv_element_bezier_is_touch_element(
 	return true;
 }
 
-bool _pv_element_bezier_is_diff_one(
+static bool _pv_element_bezier_is_diff_one(
 		bool *is_diff,
 		const PvElement *element0,
 		const PvElement *element1)
@@ -652,7 +652,7 @@ bool _pv_element_bezier_is_diff_one(
 	return true;
 }
 
-bool _pv_element_bezier_move_element(
+static bool _pv_element_bezier_move_element(
 		const PvElement *element,
 		double gx,
 		double gy)
@@ -679,7 +679,7 @@ bool _pv_element_bezier_move_element(
  * Raster
  **************** */
 
-gpointer _pv_element_raster_data_new()
+static gpointer _pv_element_raster_data_new()
 {
 	PvElementRasterData *data = (PvElementRasterData *)malloc(sizeof(PvElementRasterData));
 	if(NULL == data){
@@ -694,7 +694,7 @@ gpointer _pv_element_raster_data_new()
 	return (gpointer)data;
 }
 
-bool _pv_element_raster_data_delete(void *_data)
+static bool _pv_element_raster_data_delete(void *_data)
 {
 	if(NULL == _data){
 		pv_error("");
@@ -716,7 +716,7 @@ bool _pv_element_raster_data_delete(void *_data)
 	return true;
 }
 
-gpointer _pv_element_raster_data_copy_new(void *_data)
+static gpointer _pv_element_raster_data_copy_new(void *_data)
 {
 	if(NULL == _data){
 		pv_error("");
@@ -746,7 +746,7 @@ gpointer _pv_element_raster_data_copy_new(void *_data)
 	return (gpointer)new_data;
 }
 
-bool _pv_element_raster_draw(
+static bool _pv_element_raster_draw(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
@@ -779,7 +779,7 @@ bool _pv_element_raster_draw(
 	return true;
 }
 
-bool _pv_element_raster_draw_focusing(
+static bool _pv_element_raster_draw_focusing(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
@@ -809,7 +809,7 @@ bool _pv_element_raster_draw_focusing(
 	return true;
 }
 
-bool _is_inside_rect(
+static bool _is_inside_rect(
 		double x_min, double x_max,
 		double y_min, double y_max,
 		double x, double y)
@@ -817,7 +817,7 @@ bool _is_inside_rect(
 	return (x_min <= x && x <= x_max && y_min <= y && y <= y_max);
 }
 
-bool _pv_element_raster_is_touch_element(
+static bool _pv_element_raster_is_touch_element(
 		bool *is_touch,
 		const PvElement *element,
 		double gx,
@@ -841,12 +841,12 @@ bool _pv_element_raster_is_touch_element(
 	return true;
 }
 
-bool pv_matrix_is_diff(const PvMatrix matrix1, const PvMatrix matrix2)
+static bool _pv_matrix_is_diff(const PvMatrix matrix1, const PvMatrix matrix2)
 {
 	return !(matrix1.x == matrix2.x && matrix1.y == matrix2.y);
 }
 
-bool _pv_element_raster_is_diff_one(
+static bool _pv_element_raster_is_diff_one(
 		bool *is_diff,
 		const PvElement *element0,
 		const PvElement *element1)
@@ -859,7 +859,7 @@ bool _pv_element_raster_is_diff_one(
 		return false;
 	}
 
-	if(pv_matrix_is_diff(data0->matrix, data1->matrix)){
+	if(_pv_matrix_is_diff(data0->matrix, data1->matrix)){
 		*is_diff = true;
 		return false;
 	}
@@ -876,7 +876,7 @@ bool _pv_element_raster_is_diff_one(
 	return true;
 }
 
-bool _pv_element_raster_move_element(
+static bool _pv_element_raster_move_element(
 		const PvElement *element,
 		double gx,
 		double gy)

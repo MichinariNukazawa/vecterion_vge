@@ -7,4 +7,3 @@ EtDocId et_doc_id_new()
 	return et_doc_id_num++;
 }
 
-

@@ -65,7 +65,7 @@ EtDocHistory *et_doc_history_new(const PvVg *vg)
 /** @brief
  * @return is nusefe (index history enable is not check.)
  */
-int _et_doc_history_get_index_from_relative(
+static int _et_doc_history_get_index_from_relative(
 		const EtDocHistory *hist,
 		int ix_base,
 		int relative,
@@ -94,7 +94,7 @@ int _et_doc_history_get_index_from_relative(
 	return ix;
 }
 
-bool _et_doc_history_is_extent_enable(EtDocHistory *hist, int ix)
+static bool _et_doc_history_is_extent_enable(EtDocHistory *hist, int ix)
 {
 	if(!(0 <= ix && ix < hist->num_history)){
 		return false;
@@ -224,7 +224,7 @@ PvElement *et_doc_element_get_tree_from_indexes(
 	return _element;
 }
 
-PvFocus *_et_doc_history_copy_focus_by_vg(const PvFocus *focus_src, const PvVg *vg_dst)
+static PvFocus *_et_doc_history_copy_focus_by_vg(const PvFocus *focus_src, const PvVg *vg_dst)
 {
 	PvFocus *focus_dst = pv_focus_new(vg_dst);
 	if(NULL == focus_dst){
@@ -258,7 +258,7 @@ error:
 	return NULL;
 }
 
-void _et_doc_hist_free_history(EtDocHistory *hist, int ix)
+static void _et_doc_hist_free_history(EtDocHistory *hist, int ix)
 {
 	pv_vg_free(hist->hists[ix].vg);
 	pv_focus_free(hist->hists[ix].focus);
@@ -266,7 +266,7 @@ void _et_doc_hist_free_history(EtDocHistory *hist, int ix)
 	hist->hists[ix].focus = NULL;
 }
 
-bool _et_doc_hist_free_redo_all(EtDocHistory *hist)
+static bool _et_doc_hist_free_redo_all(EtDocHistory *hist)
 {
 	if(hist->ix_redo < hist->ix_current){
 		for(; 0 <= hist->ix_redo; (hist->ix_redo)--){
@@ -281,7 +281,7 @@ bool _et_doc_hist_free_redo_all(EtDocHistory *hist)
 	return true;
 }
 
-bool _et_doc_hist_free_history_next(EtDocHistory *hist)
+static bool _et_doc_hist_free_history_next(EtDocHistory *hist)
 {
 	// ** このあと、current == redo 前提で記述する
 	if(hist->ix_current != hist->ix_redo){
@@ -318,7 +318,7 @@ bool _et_doc_hist_free_history_next(EtDocHistory *hist)
 	return true;
 }
 
-bool _et_doc_history_copy_hist(
+static bool _et_doc_history_copy_hist(
 		EtDocHistoryItem *item_dst,
 		const EtDocHistoryItem *item_src)
 {
@@ -343,8 +343,8 @@ bool _et_doc_history_copy_hist(
 	}
 	// ** restructed focus.
 	PvFocus *focus_new = _et_doc_history_copy_focus_by_vg(
-				item_src->focus,
-				vg_new);
+			item_src->focus,
+			vg_new);
 	if(NULL == focus_new){
 		et_error("");
 		return false;
@@ -358,13 +358,6 @@ bool _et_doc_history_copy_hist(
 	item_dst->focus = focus_new;
 
 	return true;
-}
-
-bool _et_doc_history_copy_hist_by_index(EtDocHistory *hist, int ix_dst, int ix_src)
-{
-	return _et_doc_history_copy_hist(
-			&(hist->hists[ix_dst]),
-			&(hist->hists[ix_src]));
 }
 
 bool et_doc_history_save_with_focus(EtDocHistory *hist)

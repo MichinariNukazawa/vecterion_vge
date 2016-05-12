@@ -25,10 +25,10 @@ struct EtToolPanel{
 	gpointer slot_change_data;
 };
 
-void _cb_et_tool_panel_clicked_button(GtkWidget *toggle_button, gpointer data);
-bool _et_tool_panel_set_current_tool_id(EtToolPanel *self, EtToolId tool_id);
+static void _cb_et_tool_panel_clicked_button(GtkWidget *toggle_button, gpointer data);
+static bool _et_tool_panel_set_current_tool_id(EtToolPanel *self, EtToolId tool_id);
 
-bool _signal_et_tool_panel_change(EtToolPanel *self, EtToolId tool_id)
+static bool _signal_et_tool_panel_change(EtToolPanel *self, EtToolId tool_id)
 {
 	if(NULL == self){
 		et_bug("");
@@ -46,7 +46,7 @@ bool _signal_et_tool_panel_change(EtToolPanel *self, EtToolId tool_id)
 	return self->slot_change(tool_id, self->slot_change_data);
 }
 
-bool _et_tool_panel_add_tool(EtToolPanel *self, const EtToolInfo *info)
+static bool _et_tool_panel_add_tool(EtToolPanel *self, const EtToolInfo *info)
 {
 	if(NULL == self){
 		et_bug("");
@@ -167,7 +167,8 @@ GtkWidget *et_tool_panel_get_widget_frame()
 	return self->widget;
 }
 
-EtToolId _et_tool_panel_tool_id_from_button(const EtToolPanel *self, const GtkWidget *button)
+static EtToolId _et_tool_panel_tool_id_from_button(
+		const EtToolPanel *self, const GtkWidget *button)
 {
 	if(NULL == self){
 		et_bug("");
@@ -186,7 +187,8 @@ EtToolId _et_tool_panel_tool_id_from_button(const EtToolPanel *self, const GtkWi
 	return -1;
 }
 
-GtkWidget *_et_tool_panel_get_tool_button_from_id(const EtToolPanel *self, EtToolId tool_id)
+static GtkWidget *_et_tool_panel_get_tool_button_from_id(
+		const EtToolPanel *self, EtToolId tool_id)
 {
 	if(NULL == self){
 		et_bug("");
@@ -204,7 +206,8 @@ GtkWidget *_et_tool_panel_get_tool_button_from_id(const EtToolPanel *self, EtToo
 	return NULL;
 }
 
-bool _et_tool_panel_set_current_tool_from_button(EtToolPanel *self, const GtkWidget *button)
+static bool _et_tool_panel_set_current_tool_from_button(
+		EtToolPanel *self, const GtkWidget *button)
 {
 	if(NULL == self){
 		et_bug("");
@@ -233,7 +236,7 @@ bool _et_tool_panel_set_current_tool_from_button(EtToolPanel *self, const GtkWid
 	return true;
 }
 
-bool _et_tool_panel_set_current_tool_id(EtToolPanel *self, EtToolId tool_id)
+static bool _et_tool_panel_set_current_tool_id(EtToolPanel *self, EtToolId tool_id)
 {
 	GtkWidget *button = _et_tool_panel_get_tool_button_from_id(self, tool_id);
 	if(NULL == button){
@@ -279,7 +282,7 @@ bool et_tool_panel_set_slot_change(EtToolPanelSlotChange slot, gpointer data)
 	return true;
 }
 
-void _cb_et_tool_panel_clicked_button(GtkWidget *button, gpointer data)
+static void _cb_et_tool_panel_clicked_button(GtkWidget *button, gpointer data)
 {
 	EtToolPanel *self = _et_tool_panel;
 	if(NULL == self){

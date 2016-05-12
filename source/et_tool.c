@@ -4,7 +4,7 @@
 
 bool _et_tool_is_init = false; // check initialized tools
 
-EtToolInfo *_et_tool_get_info_from_id(EtToolId tool_id)
+static EtToolInfo *_et_tool_get_info_from_id(EtToolId tool_id)
 {
 	// TODO: implement to infos.
 	int num_tool = et_tool_get_num();
@@ -16,7 +16,7 @@ EtToolInfo *_et_tool_get_info_from_id(EtToolId tool_id)
 	return &_et_tool_infos[tool_id];
 }
 
-GdkPixbuf *_et_tool_conv_pixbuf(GdkPixbuf *pb_src)
+static GdkPixbuf *_et_tool_conv_pixbuf(GdkPixbuf *pb_src)
 {
 
 	double w = (double)gdk_pixbuf_get_width(pb_src);

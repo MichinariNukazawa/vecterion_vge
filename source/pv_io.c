@@ -14,7 +14,9 @@ typedef struct{
 }PvIoSvgRecursiveData;
 
 
-bool _pv_io_svg_from_element_in_recursive_before(PvElement *element, gpointer data, int level)
+
+static bool _pv_io_svg_from_element_in_recursive_before(
+		PvElement *element, gpointer data, int level)
 {
 	PvIoSvgRecursiveData *_data = data;
 	InfoTargetSvg *target = _data->target;
@@ -50,7 +52,8 @@ bool _pv_io_svg_from_element_in_recursive_before(PvElement *element, gpointer da
 	return true;
 }
 
-bool _pv_io_svg_from_element_in_recursive_after(PvElement *element, gpointer data, int level)
+static bool _pv_io_svg_from_element_in_recursive_after(
+		PvElement *element, gpointer data, int level)
 {
 	PvIoSvgRecursiveData *_data = data;
 	InfoTargetSvg *target = _data->target;
@@ -67,7 +70,8 @@ bool _pv_io_svg_from_element_in_recursive_after(PvElement *element, gpointer dat
 	return true;
 }
 
-bool _pv_io_svg_from_pvvg_element_recurseve(xmlNodePtr xml_svg, PvElement *element_root,
+static bool _pv_io_svg_from_pvvg_element_recurseve(
+		xmlNodePtr xml_svg, PvElement *element_root,
 		const ConfWriteSvg *conf)
 {
 	if(NULL == xml_svg){
@@ -177,8 +181,7 @@ bool pv_io_write_file_svg_from_vg(PvVg *vg, const char *path)
 	return true;
 }
 
-	static void
-print_element_names(xmlNode * a_node)
+static void print_element_names(xmlNode * a_node)
 {
 	xmlNode *cur_node = NULL;
 
@@ -191,7 +194,7 @@ print_element_names(xmlNode * a_node)
 	}
 }
 
-bool _pv_io_get_svg_from_xml(xmlNode **xmlnode_svg, xmlNode *xmlnode)
+static bool _pv_io_get_svg_from_xml(xmlNode **xmlnode_svg, xmlNode *xmlnode)
 {
 	*xmlnode_svg = NULL;
 
@@ -210,7 +213,7 @@ bool _pv_io_get_svg_from_xml(xmlNode **xmlnode_svg, xmlNode *xmlnode)
 	return false;
 }
 
-bool _pv_io_get_px_from_str(double *value, const char *str, const char **str_error)
+static bool _pv_io_get_px_from_str(double *value, const char *str, const char **str_error)
 {
 	char *endptr = NULL;
 	if(!pv_general_strtod(value, str, &endptr, str_error)){
@@ -247,7 +250,7 @@ bool _pv_io_get_px_from_str(double *value, const char *str, const char **str_err
 	return true;
 }
 
-bool _pv_io_set_vg_from_xmlnode_svg(PvVg *vg, xmlNode *xmlnode_svg)
+static bool _pv_io_set_vg_from_xmlnode_svg(PvVg *vg, xmlNode *xmlnode_svg)
 {
 	pv_debug("");
 	PvRect rect = {0, 0, -1, -1};
@@ -308,7 +311,7 @@ bool _pv_io_set_vg_from_xmlnode_svg(PvVg *vg, xmlNode *xmlnode_svg)
 	return true;
 }
 
-bool _pv_io_element_from_svg_in_recursive_inline(PvElement *element_parent,
+static bool _pv_io_element_from_svg_in_recursive_inline(PvElement *element_parent,
 		xmlNode *xmlnode,
 		gpointer data,
 		const ConfReadSvg *conf)
@@ -325,23 +328,23 @@ bool _pv_io_element_from_svg_in_recursive_inline(PvElement *element_parent,
 
 	bool isDoChild = true;
 	PvElement *element_current = svg_info->func_new_element_from_svg(
-					element_parent, xmlnode, &isDoChild, data, conf);
+			element_parent, xmlnode, &isDoChild, data, conf);
 	if(NULL == element_current){
 		pv_error("");
 		goto error;
 	}
 
 	if(isDoChild){
-	for (xmlNode *cur_node = xmlnode->children; cur_node; cur_node = cur_node->next) {
-		if(!_pv_io_element_from_svg_in_recursive_inline(element_current,
+		for (xmlNode *cur_node = xmlnode->children; cur_node; cur_node = cur_node->next) {
+			if(!_pv_io_element_from_svg_in_recursive_inline(element_current,
 						cur_node,
 						data,
 						conf))
-		{
-			pv_error("");
-			return false;
+			{
+				pv_error("");
+				return false;
+			}
 		}
-	}
 	}
 
 	return true;
@@ -349,7 +352,7 @@ error:
 	return false;
 }
 
-bool _pv_io_pvvg_from_svg_element_recurseve(PvVg *vg,
+static bool _pv_io_pvvg_from_svg_element_recurseve(PvVg *vg,
 		xmlNodePtr xml_svg, 
 		const ConfReadSvg *conf)
 {

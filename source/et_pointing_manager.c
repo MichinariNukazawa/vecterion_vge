@@ -62,3 +62,4 @@ bool et_pointing_manager_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_a
 
 	return true;
 }
+

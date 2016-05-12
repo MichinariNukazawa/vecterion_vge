@@ -5,7 +5,7 @@
 #include "pv_render_option.h"
 #include "pv_element_infos.h"
 
-bool _pv_renderer_is_group_kind(const PvElement *element)
+static bool _pv_renderer_is_group_kind(const PvElement *element)
 {
 	switch(element->kind){
 		case PvElementKind_Root:
@@ -18,7 +18,7 @@ bool _pv_renderer_is_group_kind(const PvElement *element)
 	}
 }
 
-bool _pv_renderer_cairo_recersive(
+static bool _pv_renderer_cairo_recersive(
 		cairo_t *cr,
 		const PvElement *element,
 		const PvRenderOption render_option,
@@ -67,7 +67,7 @@ end:
 	return ret;
 }
 
-bool _pv_renderer_cairo_background(cairo_t *cr,
+static bool _pv_renderer_cairo_background(cairo_t *cr,
 		const PvVg * const vg,
 		const PvRenderContext render_context)
 {
@@ -150,3 +150,4 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 
 	return pb;
 }
+

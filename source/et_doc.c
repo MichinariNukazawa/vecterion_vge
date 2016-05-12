@@ -142,7 +142,7 @@ PvVg *et_doc_get_vg_ref(EtDoc *self)
 	return hist_item->vg;
 }
 
-int _et_doc_get_num_slot_change_infos(EtDocSlotChangeInfo *slot_change_infos){
+static int _et_doc_get_num_slot_change_infos(EtDocSlotChangeInfo *slot_change_infos){
 	int i = 0;
 	while(0 <= slot_change_infos[i].id){
 		i++;

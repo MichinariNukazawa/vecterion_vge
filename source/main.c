@@ -24,11 +24,11 @@
 const char *APP_NAME = "Etaion Vector Graphic Editor";
 GtkWindow *_main_window = NULL;
 
-void _pvui_app_set_style();
-bool _init_menu(GtkWidget *window, GtkWidget *box_root);
-bool _debug_init();
-EtDocId _open_doc_new(PvVg *pv_src);
-EtDocId _open_doc_new_from_file(const char* filepath);
+static void _pvui_app_set_style();
+static bool _init_menu(GtkWidget *window, GtkWidget *box_root);
+static bool _debug_init();
+static EtDocId _open_doc_new(PvVg *pv_src);
+static EtDocId _open_doc_new_from_file(const char* filepath);
 
 
 
@@ -46,7 +46,7 @@ static gboolean in_worker_func(gpointer data)
 	return G_SOURCE_REMOVE;
 }
 static atomic_int isStop = ATOMIC_VAR_INIT(0);
-static gpointer worker_func(gpointer data)
+static gpointer _worker_func(gpointer data)
 {
 	while( !isStop ){
 		g_usleep(500000);
@@ -56,7 +56,7 @@ static gpointer worker_func(gpointer data)
 	return NULL;
 }
 
-static gboolean cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer user_data)
+static gboolean _cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer user_data)
 {
 	et_debug("keyval=%04x status=%04x",
 			event->keyval, event->state/*, event->string*/);
@@ -113,7 +113,7 @@ int main (int argc, char **argv){
 	}
 
 	g_signal_connect(G_OBJECT(window), "key-press-event",
-			G_CALLBACK(cb_key_press), NULL);
+			G_CALLBACK(_cb_key_press), NULL);
 	g_signal_connect(window, "delete-event",
 			G_CALLBACK(gtk_main_quit), NULL);
 
@@ -218,7 +218,7 @@ int main (int argc, char **argv){
 
 
 	GThread* thread;
-	thread = g_thread_new ("", worker_func, NULL);
+	thread = g_thread_new ("", _worker_func, NULL);
 	if(NULL == thread){
 		et_critical("");
 		return -1;
@@ -234,7 +234,7 @@ int main (int argc, char **argv){
 	return 0;
 }
 
-bool _debug_init()
+static bool _debug_init()
 {
 	EtDocId doc_id = _open_doc_new(NULL);
 	if(0 > doc_id){
@@ -266,7 +266,7 @@ bool _debug_init()
 	return true;
 }
 
-EtDocId _open_doc_new_from_file(const char* filepath)
+static EtDocId _open_doc_new_from_file(const char* filepath)
 {
 	et_debug("filepath:'%s'", (NULL == filepath)? "NULL":filepath);
 
@@ -294,7 +294,7 @@ EtDocId _open_doc_new_from_file(const char* filepath)
 	return doc_id;
 }
 
-EtDocId _open_doc_new(PvVg *vg_src)
+static EtDocId _open_doc_new(PvVg *vg_src)
 {
 	EtDocId doc_id = et_doc_manager_new_doc_from_vg(vg_src);
 	if(0 > doc_id){
@@ -322,7 +322,7 @@ EtDocId _open_doc_new(PvVg *vg_src)
 	return doc_id;
 }
 
-void _pvui_app_set_style(){
+static void _pvui_app_set_style(){
 	GtkCssProvider *provider;
 	provider = gtk_css_provider_new ();
 
@@ -426,7 +426,7 @@ static gboolean _cb_menu_file_new(gpointer data)
 	return false;
 }
 
-bool _save_file_from_doc_id(const char *filepath, EtDocId doc_id)
+static bool _save_file_from_doc_id(const char *filepath, EtDocId doc_id)
 {
 	if(NULL == filepath){
 		et_bug("");
@@ -555,14 +555,14 @@ static gboolean _cb_menu_file_open(gpointer data)
 	return false;
 }
 
-void _cb_menu_view_extent(GtkCheckMenuItem *menuitem, gpointer user_data)
+static void _cb_menu_view_extent(GtkCheckMenuItem *menuitem, gpointer user_data)
 {
 	if(!et_etaion_set_is_extent_view(gtk_check_menu_item_get_active(menuitem))){
 		et_error("");
 	}
 }
 
-bool pv_element_is_exist_from_elements(const PvElement *element, PvElement **elements)
+static bool _pv_element_is_exist_from_elements(const PvElement *element, PvElement **elements)
 {
 	int num = pv_general_get_parray_num((void **)elements);
 	for(int i = 0; i < num; i++){
@@ -579,7 +579,7 @@ typedef struct{
 	PvElement **elements_ignore;
 }EtSelectAllFuncRecurseDataPack;
 
-bool _cb_menu_select_all_func_recurse_prev(PvElement *element, gpointer data, int level)
+static bool _cb_menu_select_all_func_recurse_prev(PvElement *element, gpointer data, int level)
 {
 	EtSelectAllFuncRecurseDataPack *func_safr_data_pack = data;
 	PvFocus *focus = func_safr_data_pack->focus;
@@ -587,7 +587,7 @@ bool _cb_menu_select_all_func_recurse_prev(PvElement *element, gpointer data, in
 	if(PvElementKind_Layer == element->kind){
 		return true;
 	}
-	if(pv_element_is_exist_from_elements(element, func_safr_data_pack->elements_ignore)){
+	if(_pv_element_is_exist_from_elements(element, func_safr_data_pack->elements_ignore)){
 		return true;
 	}
 
@@ -598,7 +598,7 @@ bool _cb_menu_select_all_func_recurse_prev(PvElement *element, gpointer data, in
 	return true;
 }
 
-void _cb_menu_select_all (GtkMenuItem *menuitem, gpointer user_data)
+static void _cb_menu_select_all (GtkMenuItem *menuitem, gpointer user_data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -636,7 +636,7 @@ void _cb_menu_select_all (GtkMenuItem *menuitem, gpointer user_data)
 	et_doc_signal_update_from_id(doc_id);
 }
 
-void _cb_menu_select_none (GtkMenuItem *menuitem, gpointer user_data)
+static void _cb_menu_select_none (GtkMenuItem *menuitem, gpointer user_data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -659,7 +659,7 @@ void _cb_menu_select_none (GtkMenuItem *menuitem, gpointer user_data)
 	et_doc_signal_update_from_id(doc_id);
 }
 
-void _cb_menu_select_invert (GtkMenuItem *menuitem, gpointer user_data)
+static void _cb_menu_select_invert (GtkMenuItem *menuitem, gpointer user_data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -714,7 +714,7 @@ finally:
 	et_doc_signal_update_from_id(doc_id);
 }
 
-void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
+static void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
 {
 	GtkWindow *parent_window = NULL;
 	GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
@@ -728,7 +728,7 @@ void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
 	gtk_widget_destroy (dialog);
 }
 
-GtkWidget *pv_get_menuitem_new_tree_of_select(GtkAccelGroup *accel_group){
+static GtkWidget *_pv_get_menuitem_new_tree_of_select(GtkAccelGroup *accel_group){
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
 	GtkWidget *menu;
@@ -764,7 +764,7 @@ GtkWidget *pv_get_menuitem_new_tree_of_select(GtkAccelGroup *accel_group){
 	return menuitem_root;
 }
 
-GtkWidget *pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
+static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
 	GtkWidget *menu;
@@ -813,7 +813,7 @@ GtkWidget *pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	return menuitem_root;
 }
 
-GtkWidget *_pv_get_menuitem_new_tree_of_view(GtkAccelGroup *accel_group)
+static GtkWidget *_pv_get_menuitem_new_tree_of_view(GtkAccelGroup *accel_group)
 {
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
@@ -837,7 +837,7 @@ GtkWidget *_pv_get_menuitem_new_tree_of_view(GtkAccelGroup *accel_group)
 	return menuitem_root;
 }
 
-GtkWidget *_new_tree_of_help(GtkAccelGroup *accel_group){
+static GtkWidget *_new_tree_of_help(GtkAccelGroup *accel_group){
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
 	GtkWidget *menu;
@@ -862,7 +862,7 @@ GtkWidget *_new_tree_of_help(GtkAccelGroup *accel_group){
 }
 
 // ** Issue: Mnemonic not works on submenu in Ubuntu15.10(cause Unity/Ubuntu?).
-bool _init_menu(GtkWidget *window, GtkWidget *box_root)
+static bool _init_menu(GtkWidget *window, GtkWidget *box_root)
 {
 	GtkWidget *menubar;
 	GtkWidget *menuitem;
@@ -874,10 +874,10 @@ bool _init_menu(GtkWidget *window, GtkWidget *box_root)
 	menubar = gtk_menu_bar_new ();
 	gtk_box_pack_start (GTK_BOX (box_root), menubar, FALSE, TRUE, 0);
 
-	menuitem = pv_get_menuitem_new_tree_of_file(accel_group);
+	menuitem = _pv_get_menuitem_new_tree_of_file(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
-	menuitem = pv_get_menuitem_new_tree_of_select(accel_group);
+	menuitem = _pv_get_menuitem_new_tree_of_select(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	menuitem = _pv_get_menuitem_new_tree_of_view(accel_group);

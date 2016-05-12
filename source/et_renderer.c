@@ -30,7 +30,7 @@ EtRenderer *et_renderer_init()
 	return self;
 }
 
-GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext render_context)
+static GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext render_context)
 {
 	PvVg *vg = et_doc_get_vg_ref(doc);
 	if(NULL == vg){

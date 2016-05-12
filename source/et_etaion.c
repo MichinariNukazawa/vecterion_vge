@@ -35,7 +35,7 @@ EtEtaion *et_etaion_init()
 	return self;
 }
 
-void _signal_et_etaion_change_state(EtEtaion *self)
+static void _signal_et_etaion_change_state(EtEtaion *self)
 {
 	if(NULL == self->slot_change_state){
 		return;
@@ -151,11 +151,11 @@ bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 		return false;
 	}
 
-/*
-	if(EtMouseAction_Up == mouse_action.action){
-		et_doc_save_from_id(doc_id);
-	}
-*/
+	/*
+	   if(EtMouseAction_Up == mouse_action.action){
+	   et_doc_save_from_id(doc_id);
+	   }
+	 */
 
 	// ** redraw doc
 	et_doc_signal_update_from_id(doc_id);
@@ -228,22 +228,6 @@ int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data)
 	self->slot_change_state_data = data;
 
 	return 1; // Todo: return callback id
-}
-
-// @brief 自分を含めて、親方向へLayerを探す
-PvElement *_et_etaion_get_parent_layer_from_element(PvElement *element)
-{
-	if(NULL == element){
-		return NULL;
-	}
-
-	if(PvElementKind_Layer != element->kind){
-		// parent方向へLayerを探しに行く
-		return _et_etaion_get_parent_layer_from_element(element->parent);
-	}else{
-		// 自分がLayerであれば自分を返す
-		return element;
-	}
 }
 
 bool et_etaion_add_new_layer(EtDocId doc_id)
