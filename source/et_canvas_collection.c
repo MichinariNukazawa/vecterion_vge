@@ -54,7 +54,7 @@ EtDocId _et_canvas_collection_get_doc_id_from_canvas_frame(GtkWidget *canvas_fra
 
 	for(int i = 0; i < self->num_collects; i++){
 		const EtCanvasCollectionCollect *collect = &(self->collects[i]);
-		int num = et_general_get_parray_num((void **)collect->canvases);
+		int num = pv_general_get_parray_num((void **)collect->canvases);
 		for(int t = 0; t < num; t++){
 			// TODO: const
 			// const EtCanvas *canvas = collect->canvases[t];
