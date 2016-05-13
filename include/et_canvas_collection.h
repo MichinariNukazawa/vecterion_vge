@@ -17,7 +17,6 @@ typedef struct EtCanvasCollection EtCanvasCollection;
 EtCanvasCollection *et_canvas_collection_init();
 GtkWidget *et_canvas_collection_get_widget_frame();
 EtThumbnail *et_canvas_collection_get_thumbnail();
-// GtkWidget *et_canvas_collection_get_thumbnail_frame();
 EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id);
 
 #ifdef include_ET_TEST

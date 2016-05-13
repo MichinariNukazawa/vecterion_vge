@@ -108,10 +108,10 @@ static void _cb_notebook_page_added(GtkNotebook *notebook,
 		guint        page_num,
 		gpointer     user_data)
 {
-	et_debug("%d", page_num);
+	et_debug("%u", page_num);
 
 	gtk_widget_show_all(child);
-	gtk_notebook_set_current_page(notebook, page_num);
+	gtk_notebook_set_current_page(notebook, (gint)page_num);
 }
 
 EtCanvasCollection *et_canvas_collection_init()
@@ -135,11 +135,8 @@ EtCanvasCollection *et_canvas_collection_init()
 
 	g_signal_connect(GTK_NOTEBOOK(self->widget_tab), "page-added",
 			G_CALLBACK(_cb_notebook_page_added), NULL);
-	int t = g_signal_connect(GTK_NOTEBOOK(self->widget_tab), "switch-page",
+	g_signal_connect(GTK_NOTEBOOK(self->widget_tab), "switch-page",
 			G_CALLBACK(_cb_notebook_change_current_page), NULL);
-	if(0 >= t){
-		et_error("");
-	}
 
 	self->thumbnail = et_thumbnail_new();
 	if(NULL == self->thumbnail){
@@ -185,23 +182,6 @@ EtThumbnail *et_canvas_collection_get_thumbnail()
 	}
 
 	return self->thumbnail;
-}
-
-GtkWidget *et_canvas_collection_get_thumbnail_frame()
-{
-	EtCanvasCollection *self = _canvas_collection;
-	if(NULL == self){
-		et_bug("");
-		return NULL;
-	}
-
-	GtkWidget *widget = et_thumbnail_get_widget_frame(self->thumbnail);
-	if(NULL == widget){
-		et_bug("");
-		return NULL;
-	}
-
-	return widget;
 }
 
 EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
@@ -272,7 +252,7 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 		return NULL;
 	}
 
-	int num_canvases = 0;
+	unsigned int num_canvases = 0;
 	EtCanvas **canvases = realloc(NULL, sizeof(EtCanvas *) * (num_canvases + 2));
 	if(NULL == new){
 		et_error("");

@@ -9,12 +9,23 @@ SOURCE_DIR		= source
 OBJECT_DIR		= object
 BUILD_DIR		= build
 PKG_CONFIG	= pkg-config
-CFLAGS		= -W -Wall -MMD -MP -g -std=c11
+CFLAGS		= -W -Wall -Wextra
+CFLAGS		+= -MMD -MP -g -std=c11
 CFLAGS		+= -lm
-CFLAGS		+= -Wno-unused-parameter # please check!
-CFLAGS		+= $(shell $(PKG_CONFIG) --libs --cflags gtk+-3.0)
-CFLAGS		+= $(shell xml2-config --cflags --libs)
+CFLAGS		+= -Werror
+CFLAGS		+= -Wno-unused-parameter
+CFLAGS		+= -Wunused -Wimplicit-function-declaration -Wincompatible-pointer-types \
+			 -Wbad-function-cast -Wcast-align \
+			 -Wdisabled-optimization -Wdouble-promotion \
+			 -Wformat-y2k -Wuninitialized -Winit-self \
+			 -Wlogical-op -Wmissing-include-dirs \
+			 -Wshadow -Wswitch-default -Wundef \
+			 -Wwrite-strings -Wunused-macros
+#CFLAGS		+= -Wmissing-declarations -Wcast-qual -Wconversion -Wno-sign-conversion
+# -Wswitch-enum -Wjump-misses-init
 INCLUDE		= -I./ -I./include
+INCLUDE		+= $(shell $(PKG_CONFIG) --libs --cflags gtk+-3.0)
+INCLUDE		+= $(shell xml2-config --cflags --libs)
 TARGET		= $(BUILD_DIR)/$(TARGET_NAME).exe
 
 SOURCES		= $(shell ls $(SOURCE_DIR)/*.c) 

@@ -12,7 +12,6 @@ TEST_SOURCE_DIR		= test/utest
 TEST_OBJECT_DIR		= object
 TEST_BUILD_DIR		= object
 CXX_FLAGS		= -std=c++11 -g -MMD -MP -W -Wall -Wextra
-CXX_FLAGS		+= $(filter-out -std=c11,$(CFLAGS))
 TEST_FLAGS		= -lpthread -lgtest_main -lgtest
 TEST_FLAGS		+= -Ltest
 TEST_FLAGS		+= -Dinclude_PV_TEST -Dinclude_ET_TEST

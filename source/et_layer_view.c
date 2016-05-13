@@ -8,7 +8,7 @@
 #include "et_mouse_util.h"
 #include "et_etaion.h"
 
-static char *DIRECTORY_RESOURCE = "./resource";
+static const char *DIRECTORY_RESOURCE = "./resource";
 
 typedef struct EtLayerViewLayerCtrl{
 	const char * const name;
@@ -24,7 +24,7 @@ const EtLayerViewLayerCtrl _et_layer_view_layer_ctrls[] = {
 
 typedef struct EtLayerViewElementData{
 	int level;
-	char *name;
+	const char *name;
 	PvElementKind kind;
 	PvElement *element;
 }EtLayerViewElementData;
@@ -257,10 +257,10 @@ static bool _et_layer_view_draw(EtLayerView *self)
 
 		char str_head[128];
 		str_head[0] = '\0';
-		for(int i = 0; i < data->level; i++){
-			str_head[i] = '_';
-			str_head[i + 1] = '\0';
-			if(!(i < ((int)sizeof(str_head) - 2))){
+		for(int t = 0; t < data->level; t++){
+			str_head[t] = '_';
+			str_head[t + 1] = '\0';
+			if(!(t < ((int)sizeof(str_head) - 2))){
 				break;
 			}
 		}

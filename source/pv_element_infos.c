@@ -755,8 +755,8 @@ static bool _pv_element_raster_draw(
 
 	PvElementRasterData *data = element->data;
 	GdkPixbuf *pixbuf = data->pixbuf;
-	double w = (double)gdk_pixbuf_get_width(pixbuf);
-	double h = (double)gdk_pixbuf_get_height(pixbuf);
+	double w = gdk_pixbuf_get_width(pixbuf);
+	double h = gdk_pixbuf_get_height(pixbuf);
 	w *= render_context.scale;
 	h *= render_context.scale;
 	GdkPixbuf *pb = gdk_pixbuf_scale_simple(
@@ -792,8 +792,8 @@ static bool _pv_element_raster_draw_focusing(
 		return false;
 	}
 	GdkPixbuf *pixbuf = data->pixbuf;
-	double w = (double)gdk_pixbuf_get_width(pixbuf);
-	double h = (double)gdk_pixbuf_get_height(pixbuf);
+	double w = gdk_pixbuf_get_width(pixbuf);
+	double h = gdk_pixbuf_get_height(pixbuf);
 	w *= render_context.scale;
 	h *= render_context.scale;
 	double x = data->matrix.x;
@@ -828,8 +828,8 @@ static bool _pv_element_raster_is_touch_element(
 	PvElementRasterData *data = element->data;
 
 	GdkPixbuf *pixbuf = data->pixbuf;
-	double w = (double)gdk_pixbuf_get_width(pixbuf);
-	double h = (double)gdk_pixbuf_get_height(pixbuf);
+	double w = gdk_pixbuf_get_width(pixbuf);
+	double h = gdk_pixbuf_get_height(pixbuf);
 	*is_touch = _is_inside_rect(
 			data->matrix.x,
 			data->matrix.x + w,

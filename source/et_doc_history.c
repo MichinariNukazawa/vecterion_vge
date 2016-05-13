@@ -140,7 +140,7 @@ error:
 	return NULL;
 }
 
-int et_doc_history_element_get_index(const PvElement *element)
+static int et_doc_history_element_get_index(const PvElement *element)
 {
 	PvElement *parent = element->parent;
 	if(NULL == parent){
@@ -156,7 +156,7 @@ int et_doc_history_element_get_index(const PvElement *element)
 	return -1;
 }
 
-int *et_doc_history_element_get_indexes(const PvElement *element)
+static int *et_doc_history_element_get_indexes(const PvElement *element)
 {
 	if(NULL == element){
 		// et_warning("");
@@ -194,7 +194,7 @@ error:
 	return NULL;
 }
 
-PvElement *et_doc_element_get_tree_from_indexes(
+static PvElement *et_doc_element_get_tree_from_indexes(
 		PvElement *element_root,
 		const int *indexes)
 {
@@ -499,7 +499,8 @@ int et_doc_history_get_num_redo(EtDocHistory *hist)
 	return num;
 }
 
-void et_doc_history_debug_print(const EtDocHistory *hist){
+void et_doc_history_debug_print(const EtDocHistory *hist)
+{
 	et_debug("undo:%3d, curr:%3d, redo:%3d, num:%3d",
 			hist->ix_undo, hist->ix_current, hist->ix_redo,
 			hist->num_history);

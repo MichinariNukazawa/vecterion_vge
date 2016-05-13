@@ -41,7 +41,7 @@ void _pv_renderer_draw_extent_from_crect(cairo_t *cr, const PvRect rect)
 bool _pv_element_bezier_command_path(
 		cairo_t *cr,
 		const PvRenderContext render_context,
-		int goffset, // use detection
+		int gpx_offset, // use detection
 		const PvElement *element)
 {
 	const PvElementBezierData *data = element->data;
@@ -57,7 +57,7 @@ bool _pv_element_bezier_command_path(
 
 	// ** draw property is element or focus element
 	cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
-	double offset = (goffset * (1.0 / render_context.scale));
+	double offset = (gpx_offset * (1.0 / render_context.scale));
 	double width = 2.0 + offset;
 	cairo_set_line_width(cr, width);
 

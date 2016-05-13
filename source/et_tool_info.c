@@ -409,7 +409,8 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 			}
 			break;
 		case EtMouseAction_Unknown:
-			et_bug("");
+		default:
+			et_bug("0x%x", mouse_action.action);
 			break;
 	}
 

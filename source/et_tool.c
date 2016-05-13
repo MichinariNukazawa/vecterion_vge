@@ -19,8 +19,8 @@ static EtToolInfo *_et_tool_get_info_from_id(EtToolId tool_id)
 static GdkPixbuf *_et_tool_conv_pixbuf(GdkPixbuf *pb_src)
 {
 
-	double w = (double)gdk_pixbuf_get_width(pb_src);
-	double h = (double)gdk_pixbuf_get_height(pb_src);
+	double w = gdk_pixbuf_get_width(pb_src);
+	double h = gdk_pixbuf_get_height(pb_src);
 	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
 	if(NULL == surface){
 		et_bug("");
