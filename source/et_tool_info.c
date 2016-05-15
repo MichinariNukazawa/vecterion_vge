@@ -25,8 +25,7 @@ static bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
 
 typedef struct RecursiveDataGetFocus{
 	PvElement **p_element;
-	double gx;
-	double gy;
+	PvPoint g_point;
 }RecursiveDataGetFocus;
 
 static bool _et_tool_func_pv_element_recurse_get_focus_element(
@@ -36,20 +35,16 @@ static bool _et_tool_func_pv_element_recurse_get_focus_element(
 	PvElement **p_element = _data->p_element;
 
 	const PvElementInfo *elem_info = pv_element_get_info_from_kind(element->kind);
-	if(NULL == elem_info){
-		et_bug("");
-		goto error;
-	}
-	if(NULL == elem_info->func_is_touch_element){
-		et_bug("");
+	if(NULL == elem_info || NULL == elem_info->func_is_touch_element){
+		et_bug("%p", elem_info);
 		goto error;
 	}
 	bool is_touch = false;
 	bool ret = elem_info->func_is_touch_element(
 			&is_touch,
 			element,
-			_data->gx,
-			_data->gy);
+			_data->g_point.x,
+			_data->g_point.y);
 	if(!ret){
 		et_error("");
 		goto error;
@@ -68,8 +63,7 @@ error:
 static bool _et_tool_focus_element_mouse_action_get_focus_element(
 		PvElement **p_element,
 		EtDocId doc_id,
-		double gx,
-		double gy)
+		PvPoint g_point)
 {
 	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
 	if(NULL == vg){
@@ -79,8 +73,7 @@ static bool _et_tool_focus_element_mouse_action_get_focus_element(
 
 	RecursiveDataGetFocus rec_data = {
 		.p_element = p_element,
-		.gx = gx,
-		.gy = gy,
+		.g_point = g_point,
 	};
 	PvElementRecursiveError error;
 	if(!pv_element_recursive_asc(vg->element_root,
@@ -153,8 +146,7 @@ static bool _et_tool_focus_element_mouse_action(
 				if(!_et_tool_focus_element_mouse_action_get_focus_element(
 							&element,
 							doc_id,
-							mouse_action.point.x,
-							mouse_action.point.y))
+							mouse_action.point))
 				{
 					et_error("");
 					return false;
