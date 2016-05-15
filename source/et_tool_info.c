@@ -9,6 +9,8 @@
 #include "et_doc_manager.h"
 #include "et_etaion.h"
 
+static int _et_tool_info_touch_offset = 6;
+
 static bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
 {
 	if(
@@ -43,6 +45,7 @@ static bool _et_tool_func_pv_element_recurse_get_focus_element(
 	bool ret = elem_info->func_is_touch_element(
 			&is_touch,
 			element,
+			_et_tool_info_touch_offset,
 			_data->g_point.x,
 			_data->g_point.y);
 	if(!ret){
@@ -309,7 +312,6 @@ static bool _et_tool_bezier_add_point(EtDoc *doc, PvElement **_element, double x
 	return true;
 }
 
-static int _et_etaion_radius_path_detect = 6;
 static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 {
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
@@ -346,7 +348,7 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 					}else{
 						if(0 < _data->anchor_points_num){
 							if(_et_etaion_is_bound_point(
-										_et_etaion_radius_path_detect,
+										_et_tool_info_touch_offset,
 										_data->anchor_points[0].points[PvAnchorPointIndex_Point],
 										mouse_action.point)
 							  ){

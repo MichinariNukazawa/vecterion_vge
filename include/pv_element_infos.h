@@ -36,6 +36,7 @@ typedef PvElementFuncDraw PvElementFuncDrawFocusing;
 typedef bool (*PvElementFuncIsTouchElement)(
 		bool *is_touch,
 		const PvElement *element,
+		int offset,
 		double gx,
 		double gy);
 typedef bool (*PvElementFuncIsDiffOne)(

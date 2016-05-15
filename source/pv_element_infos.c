@@ -83,6 +83,7 @@ static bool _pv_element_notimplement_draw(
 static bool _pv_element_notimplement_is_touch_element(
 		bool *is_touch,
 		const PvElement *element,
+		int offset,
 		double gx,
 		double gy)
 {
@@ -265,6 +266,7 @@ static bool _pv_element_group_draw(
 static bool _pv_element_group_is_touch_element(
 		bool *is_touch,
 		const PvElement *element,
+		int offset,
 		double gx,
 		double gy)
 {
@@ -577,6 +579,7 @@ static bool _pv_element_bezier_draw_focusing(
 static bool _pv_element_bezier_is_touch_element(
 		bool *is_touch,
 		const PvElement *element,
+		int offset,
 		double gx,
 		double gy)
 {
@@ -593,7 +596,7 @@ static bool _pv_element_bezier_is_touch_element(
 	if(!_pv_element_bezier_command_path(
 				cr,
 				render_context,
-				10,
+				offset,
 				element))
 	{
 		pv_error("");
@@ -820,6 +823,7 @@ static bool _is_inside_rect(
 static bool _pv_element_raster_is_touch_element(
 		bool *is_touch,
 		const PvElement *element,
+		int offset,
 		double gx,
 		double gy)
 {
