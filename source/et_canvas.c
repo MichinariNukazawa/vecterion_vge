@@ -1,3 +1,14 @@
+/**
+ * @brief
+ *
+ * PvPoint huangarian
+ * ep:	event point // GtkEvent position
+ * cwp:	canvas widget point // Canvas Widget position
+ * cp:	canvas point // canvas position (sub canvas margin)
+ * dp:	document point document. scale pixel by pixel. // notice: not "display point"
+ *
+ */
+
 #include "et_canvas.h"
 
 #include <stdlib.h>
@@ -229,9 +240,9 @@ bool et_canvas_set_doc_id(EtCanvas *self, EtDocId doc_id)
 
 static bool _signal_et_canvas_mouse_action(
 		EtCanvas *self,
-		double x, double y,
-		double x_move, double y_move,
-		PvPoint diff_down,
+		PvPoint dp,
+		PvPoint dp_move,
+		PvPoint cwp_diff_down,
 		GdkModifierType state,
 		EtMouseButtonType mouse_button, EtMouseActionType mouse_action)
 {
@@ -240,20 +251,12 @@ static bool _signal_et_canvas_mouse_action(
 		return false;
 	}
 
-	PvPoint point = {
-		.x = x,
-		.y = y,
-	};
-	PvPoint move = {
-		.x = x_move,
-		.y = y_move,
-	};
 	EtMouseAction _mouse_action = {
 		.button = mouse_button,
 		.action = mouse_action,
-		.point = point,
-		.move = move,
-		.diff_down = diff_down,
+		.point = dp,
+		.move = dp_move,
+		.diff_down = cwp_diff_down,
 		.state = state,
 	};
 	if(!self->slot_mouse_action(self->doc_id, _mouse_action)){
@@ -262,6 +265,37 @@ static bool _signal_et_canvas_mouse_action(
 	}
 
 	return true;
+}
+
+
+PvPoint PV_POINT_ADD(PvPoint p, PvPoint p_diff)
+{
+	PvPoint ret = {
+		.x = p.x + p_diff.x,
+		.y = p.y + p_diff.y,
+	};
+
+	return ret;
+}
+
+PvPoint PV_POINT_SUB(PvPoint p, PvPoint p_diff)
+{
+	PvPoint ret = {
+		.x = p.x - p_diff.x,
+		.y = p.y - p_diff.y,
+	};
+
+	return ret;
+}
+
+PvPoint PV_POINT_DIVISION_VALUE(PvPoint p, double scale)
+{
+	PvPoint ret = {
+	.x = p.x / scale,
+	.y = p.y / scale
+	};
+
+	return ret;
 }
 
 PvPoint _et_canvas_previous_mouse_point = {0,0};
@@ -275,20 +309,20 @@ static gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpoin
 	 */
 	EtCanvas *self = (EtCanvas *)data;
 
-	PvPoint move = {.x = 0, .y = 0};
-	_et_canvas_previous_mouse_point.x = event->x;
-	_et_canvas_previous_mouse_point.y = event->y;
-	_et_canvas_down_mouse_point.x = event->x;
-	_et_canvas_down_mouse_point.y = event->y;
-	PvPoint diff_down = {.x = 0, .y = 0};
+	PvPoint ep = {.x = event->x, .y = event->y};
+	_et_canvas_previous_mouse_point = ep;
+	_et_canvas_down_mouse_point = ep;
+	PvPoint cwp = ep;
+	PvPoint cp = cwp;
+	PvPoint dp = PV_POINT_DIVISION_VALUE(cp, self->render_context.scale);
 
+	PvPoint dp_move = {.x = 0, .y = 0};
+	PvPoint cwp_diff_down = {.x = 0, .y = 0};
 	if(!_signal_et_canvas_mouse_action(
 				self,
-				event->x / self->render_context.scale,
-				event->y / self->render_context.scale,
-				move.x / self->render_context.scale,
-				move.y / self->render_context.scale,
-				diff_down,
+				dp,
+				dp_move,
+				cwp_diff_down,
 				event->state,
 				EtMouseButton_Right, EtMouseAction_Down))
 	{
@@ -301,30 +335,36 @@ error:
 	return true;
 }
 
+PvPoint _et_canvas_dp_from_cwp(PvPoint cwp, PvRenderContext render_context)
+{
+	PvPoint cp = cwp;
+	PvPoint dp = PV_POINT_DIVISION_VALUE(cp, render_context.scale);
+
+	return dp;
+}
+
+
 static gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	// et_debug("BUTTON RELEASE");
 	EtCanvas *self = (EtCanvas *)data;
 
-	PvPoint move = {
-		.x = event->x - _et_canvas_previous_mouse_point.x,
-		.y = event->y - _et_canvas_previous_mouse_point.y,
-	};
-	_et_canvas_previous_mouse_point.x = event->x;
-	_et_canvas_previous_mouse_point.y = event->y;
-	PvPoint diff_down = {
-		.x = event->x - _et_canvas_down_mouse_point.x,
-		.y = event->y - _et_canvas_down_mouse_point.y,
-	};
+	PvPoint ep = {.x = event->x, .y = event->y};
+	PvPoint cwp = ep;
+	PvPoint dp = _et_canvas_dp_from_cwp(cwp, self->render_context);
+	PvPoint ep_move = PV_POINT_SUB(ep, _et_canvas_previous_mouse_point);
+	PvPoint cwp_move = ep_move;
+	PvPoint dp_move = _et_canvas_dp_from_cwp(cwp_move, self->render_context);
+	_et_canvas_previous_mouse_point = ep;
 
+	PvPoint ep_diff_down = PV_POINT_SUB(ep, _et_canvas_down_mouse_point);
+	PvPoint cwp_diff_down = ep_diff_down;
 
 	if(!_signal_et_canvas_mouse_action(
 				self,
-				event->x / self->render_context.scale,
-				event->y / self->render_context.scale,
-				move.x / self->render_context.scale,
-				move.y / self->render_context.scale,
-				diff_down,
+				dp,
+				dp_move,
+				cwp_diff_down,
 				event->state,
 				EtMouseButton_Right, EtMouseAction_Up))
 	{
@@ -341,24 +381,21 @@ static gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpoi
 	//	et_debug("(%3d, %3d)", (int)event->x, (int)event->y);
 	EtCanvas *self = (EtCanvas *)data;
 
-	PvPoint move = {
-		.x = event->x - _et_canvas_previous_mouse_point.x,
-		.y = event->y - _et_canvas_previous_mouse_point.y,
-	};
-	_et_canvas_previous_mouse_point.x = event->x;
-	_et_canvas_previous_mouse_point.y = event->y;
-	PvPoint diff_down = {
-		.x = event->x - _et_canvas_down_mouse_point.x,
-		.y = event->y - _et_canvas_down_mouse_point.y,
-	};
+	PvPoint ep = {.x = event->x, .y = event->y};
+	PvPoint cwp = ep;
+	PvPoint dp = _et_canvas_dp_from_cwp(cwp, self->render_context);
+	PvPoint ep_move = PV_POINT_SUB(ep, _et_canvas_previous_mouse_point);
+	PvPoint cwp_move = ep_move;
+	PvPoint dp_move = _et_canvas_dp_from_cwp(cwp_move, self->render_context);
+	_et_canvas_previous_mouse_point = ep;
+	PvPoint ep_diff_down = PV_POINT_SUB(ep, _et_canvas_down_mouse_point);
+	PvPoint cwp_diff_down = ep_diff_down;
 
 	if(!_signal_et_canvas_mouse_action(
 				self,
-				event->x / self->render_context.scale,
-				event->y / self->render_context.scale,
-				move.x / self->render_context.scale,
-				move.y / self->render_context.scale,
-				diff_down,
+				dp,
+				dp_move,
+				cwp_diff_down,
 				event->state,
 				EtMouseButton_Right, EtMouseAction_Move))
 	{
