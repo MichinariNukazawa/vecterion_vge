@@ -7,11 +7,13 @@ struct PvRenderContext{
 	bool is_focus;
 	bool is_extent_view;
 	double scale;
+	int margin;
 };
 static const PvRenderContext PvRenderContext_default = {
 	.is_focus	= false,
 	.is_extent_view	= false,
 	.scale		= 1.0,
+	.margin		= 0,
 };
 
 #ifdef include_ET_TEST

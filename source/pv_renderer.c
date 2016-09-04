@@ -72,10 +72,22 @@ static bool _pv_renderer_cairo_background(cairo_t *cr,
 		const PvRenderContext render_context)
 {
 	// pv_debug("%f, %f, %f, %f, ", (vg->rect).x, (vg->rect).y, (vg->rect).w, (vg->rect).h);
-	cairo_set_source_rgb (cr, 0.6, 0.6, 0.6);
 
 	int w_size = (vg->rect).w * render_context.scale;
 	int h_size = (vg->rect).h * render_context.scale;
+
+	// clipping
+	cairo_save(cr);
+	cairo_rectangle (cr, 0, 0, w_size, h_size);
+	cairo_clip(cr);
+
+	// ** fill background white
+	cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
+	cairo_rectangle (cr, 0, 0, w_size, h_size);
+	cairo_fill (cr);
+	cairo_set_source_rgb (cr, 0.6, 0.6, 0.6);
+
+	// ** draw checkboard
 	int unit = 16;
 	for(int y = 0; y < h_size; y += unit){
 		for(int x = 0 + (((y/unit) % 2) * unit); x < w_size; x += (unit * 2)){
@@ -83,6 +95,9 @@ static bool _pv_renderer_cairo_background(cairo_t *cr,
 		}
 	}
 	cairo_fill (cr);
+
+	// clear clipping
+	cairo_restore(cr);
 
 	return true;
 }
@@ -96,8 +111,8 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		return NULL;
 	}
 
-	const int width  = ceil(vg->rect.w * render_context.scale);
-	const int height = ceil(vg->rect.h * render_context.scale);
+	const int width  = ceil(vg->rect.w * render_context.scale) + (render_context.margin * 2);
+	const int height = ceil(vg->rect.h * render_context.scale) + (render_context.margin * 2);
 	if(width <= 0 || height <= 0){
 		pv_bug("");
 		return NULL;
@@ -111,6 +126,7 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 	}
 
 	cairo_t *cr = cairo_create (surface);
+	cairo_translate(cr, render_context.margin, render_context.margin);
 
 	if(!_pv_renderer_cairo_background(cr, vg, render_context)){
 		pv_error("");
@@ -138,6 +154,7 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 			}
 		}
 	}
+
 
 	GdkPixbuf *pb = gdk_pixbuf_get_from_surface(surface, 0, 0, width, height);
 	if(NULL == pb){

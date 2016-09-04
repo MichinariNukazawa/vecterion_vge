@@ -51,6 +51,8 @@ static gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpo
 static gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer data);
 static gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer data);
 
+static gboolean _cb_size_allocate_scrolled(GtkWidget *widget, GdkRectangle *allocation, gpointer data);
+
 static bool _signal_et_canvas_slot_change(EtCanvas *self)
 {
 	if(NULL == self){
@@ -66,7 +68,25 @@ static bool _signal_et_canvas_slot_change(EtCanvas *self)
 	return true;
 }
 
-static gboolean _cb_size_allocate_canvas(
+static int _max(double a, double b)
+{
+	return (int)((a > b)? a:b);
+}
+
+static int _et_canvas_get_margin_from_doc_id(EtDocId doc_id)
+{
+	const PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
+	if(NULL == vg){
+		et_bug("%d", doc_id);
+		return 0;
+	}
+	int px_majoraxis = _max(vg->rect.w, vg->rect.h);
+	int margin = ((px_majoraxis / 200) + 1) * 20;
+
+	return margin;
+}
+
+static gboolean _cb_size_allocate_scrolled(
 		GtkWidget    *widget,
 		GdkRectangle *allocation,
 		gpointer      data)
@@ -79,6 +99,8 @@ static gboolean _cb_size_allocate_canvas(
 	//	bool is_fitting_scale_from_widget = true;
 	if((self->is_first_fitting || self->is_fitting_scale) && 0 <= self->doc_id){
 		self->is_first_fitting = false;
+
+		self->render_context.margin = _et_canvas_get_margin_from_doc_id(self->doc_id);
 
 		const PvVg *vg = et_doc_get_vg_ref_from_id(self->doc_id);
 		const double w_doc = vg->rect.w;
@@ -144,7 +166,7 @@ EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 			G_CALLBACK(_cb_motion_notify), (gpointer)self);
 
 	g_signal_connect(self->scroll, "size-allocate",
-			G_CALLBACK(_cb_size_allocate_canvas), (gpointer)self);
+			G_CALLBACK(_cb_size_allocate_scrolled), (gpointer)self);
 
 	gtk_container_add(GTK_CONTAINER(self->scroll), self->event_box);
 
@@ -288,14 +310,32 @@ PvPoint PV_POINT_SUB(PvPoint p, PvPoint p_diff)
 	return ret;
 }
 
-PvPoint PV_POINT_DIVISION_VALUE(PvPoint p, double scale)
+PvPoint PV_POINT_ADD_VALUE(PvPoint p, double diff)
 {
 	PvPoint ret = {
-	.x = p.x / scale,
-	.y = p.y / scale
+		.x = p.x + diff,
+		.y = p.y + diff,
 	};
 
 	return ret;
+}
+
+PvPoint PV_POINT_DIVISION_VALUE(PvPoint p, double scale)
+{
+	PvPoint ret = {
+		.x = p.x / scale,
+		.y = p.y / scale
+	};
+
+	return ret;
+}
+
+PvPoint _et_canvas_dp_from_cwp(PvPoint cwp, PvRenderContext render_context)
+{
+	PvPoint cp = PV_POINT_ADD_VALUE(cwp, -1 * render_context.margin);
+	PvPoint dp = PV_POINT_DIVISION_VALUE(cp, render_context.scale);
+
+	return dp;
 }
 
 PvPoint _et_canvas_previous_mouse_point = {0,0};
@@ -313,8 +353,7 @@ static gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpoin
 	_et_canvas_previous_mouse_point = ep;
 	_et_canvas_down_mouse_point = ep;
 	PvPoint cwp = ep;
-	PvPoint cp = cwp;
-	PvPoint dp = PV_POINT_DIVISION_VALUE(cp, self->render_context.scale);
+	PvPoint dp = _et_canvas_dp_from_cwp(cwp, self->render_context);
 
 	PvPoint dp_move = {.x = 0, .y = 0};
 	PvPoint cwp_diff_down = {.x = 0, .y = 0};
@@ -334,15 +373,6 @@ static gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpoin
 error:
 	return true;
 }
-
-PvPoint _et_canvas_dp_from_cwp(PvPoint cwp, PvRenderContext render_context)
-{
-	PvPoint cp = cwp;
-	PvPoint dp = PV_POINT_DIVISION_VALUE(cp, render_context.scale);
-
-	return dp;
-}
-
 
 static gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
@@ -486,6 +516,7 @@ static gboolean _cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 		 */
 		//    cr = gdk_cairo_create (da->window);
 		gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
+		//				self->render_context.margin, self->render_context.margin);
 		cairo_paint(cr);
 		//    cairo_fill (cr);
 		//		cairo_destroy (cr);
