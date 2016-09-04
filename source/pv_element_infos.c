@@ -528,12 +528,8 @@ static bool _pv_element_bezier_draw_focusing(
 		return false;
 	}
 
-	// ** anchor point
-	cairo_set_line_width(cr, 1.0);
-	_pv_render_workingcolor_cairo_set_source_rgb(cr);
-
 	// ** prev anchor_point
-	if(0 < (data->anchor_points_num)){
+	if(1 < (data->anchor_points_num)){
 		int ix =  data->anchor_points_num - ((data->is_close) ? 1:2);
 		const PvAnchorPoint ap = data->anchor_points[ix];
 		PvPoint gp_point = ap.points[PvAnchorPointIndex_Point];
@@ -542,6 +538,8 @@ static bool _pv_element_bezier_draw_focusing(
 		gp_point.y *= render_context.scale;
 		gp_next.x *= render_context.scale;
 		gp_next.y *= render_context.scale;
+		cairo_set_line_width(cr, 1.0);
+		_pv_render_workingcolor_cairo_set_source_rgb(cr);
 		cairo_move_to(cr, gp_point.x, gp_point.y);
 		cairo_line_to(cr, gp_next.x, gp_next.y);
 		cairo_stroke(cr);
