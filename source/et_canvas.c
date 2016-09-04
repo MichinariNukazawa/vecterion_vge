@@ -419,10 +419,14 @@ static gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpoi
 {
 	EtCanvas *self = (EtCanvas *)data;
 
-	// ** scale change.
+	gboolean is_stop_signal = FALSE; // シグナル続行、デフォルトコールバック呼び出し
+
 	if(0 != (ET_GDK_ALT_MASK & event->state)){
+		// ** scale change.
+		is_stop_signal = TRUE; // cancel scroll up/down (default scrolled callback).
+
 		if(self->is_fitting_scale){
-			return false; // cancel rescale (is not error.)
+			return FALSE; // cancel rescale (is not error.)
 		}
 
 		switch(event->direction){
@@ -450,7 +454,7 @@ static gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpoi
 
 	_signal_et_canvas_slot_change(self);
 
-	return false;
+	return is_stop_signal;
 }
 
 
