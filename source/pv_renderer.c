@@ -73,6 +73,8 @@ static bool _pv_renderer_cairo_background(cairo_t *cr,
 {
 	// pv_debug("%f, %f, %f, %f, ", (vg->rect).x, (vg->rect).y, (vg->rect).w, (vg->rect).h);
 
+	//! @todo checkboard drawing use to start offset (x,y)
+
 	int w_size = (vg->rect).w * render_context.scale;
 	int h_size = (vg->rect).h * render_context.scale;
 
