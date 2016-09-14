@@ -382,9 +382,11 @@ static gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpo
 	PvPoint ep = {.x = event->x, .y = event->y};
 	PvPoint cwp = ep;
 	PvPoint dp = _et_canvas_dp_from_cwp(cwp, self->render_context);
-	PvPoint ep_move = PV_POINT_SUB(ep, _et_canvas_previous_mouse_point);
-	PvPoint cwp_move = ep_move;
-	PvPoint dp_move = _et_canvas_dp_from_cwp(cwp_move, self->render_context);
+
+	PvPoint cwp_prev =_et_canvas_previous_mouse_point;
+	PvPoint dp_prev = _et_canvas_dp_from_cwp(cwp_prev, self->render_context); 
+	PvPoint dp_move = PV_POINT_SUB(dp, dp_prev);
+
 	_et_canvas_previous_mouse_point = ep;
 
 	PvPoint ep_diff_down = PV_POINT_SUB(ep, _et_canvas_down_mouse_point);
@@ -414,10 +416,13 @@ static gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpoi
 	PvPoint ep = {.x = event->x, .y = event->y};
 	PvPoint cwp = ep;
 	PvPoint dp = _et_canvas_dp_from_cwp(cwp, self->render_context);
-	PvPoint ep_move = PV_POINT_SUB(ep, _et_canvas_previous_mouse_point);
-	PvPoint cwp_move = ep_move;
-	PvPoint dp_move = _et_canvas_dp_from_cwp(cwp_move, self->render_context);
+
+	PvPoint cwp_prev =_et_canvas_previous_mouse_point;
+	PvPoint dp_prev = _et_canvas_dp_from_cwp(cwp_prev, self->render_context); 
+	PvPoint dp_move = PV_POINT_SUB(dp, dp_prev);
+
 	_et_canvas_previous_mouse_point = ep;
+
 	PvPoint ep_diff_down = PV_POINT_SUB(ep, _et_canvas_down_mouse_point);
 	PvPoint cwp_diff_down = ep_diff_down;
 
