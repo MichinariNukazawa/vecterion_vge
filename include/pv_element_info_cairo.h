@@ -15,7 +15,6 @@ void _pv_renderer_draw_extent_from_crect(cairo_t *cr, const PvRect rect);
 bool _pv_element_bezier_command_path(
 		cairo_t *cr,
 		const PvRenderContext render_context,
-		int goffset, // use detection
 		const PvElement *element);
 
 #ifdef include_ET_TEST

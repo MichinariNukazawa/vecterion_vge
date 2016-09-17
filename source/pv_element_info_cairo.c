@@ -42,7 +42,6 @@ void _pv_renderer_draw_extent_from_crect(cairo_t *cr, const PvRect rect)
 bool _pv_element_bezier_command_path(
 		cairo_t *cr,
 		const PvRenderContext render_context,
-		int gpx_offset, // use detection
 		const PvElement *element)
 {
 	const PvElementBezierData *data = element->data;
@@ -55,11 +54,6 @@ bool _pv_element_bezier_command_path(
 	if((data->anchor_points_num) <= 0){
 		return true;
 	}
-
-	// ** draw property is element or focus element
-	double offset = (gpx_offset * (1.0 / render_context.scale));
-	double width = 2.0 + offset;
-	cairo_set_line_width(cr, width);
 
 	// ** path stroking
 	double first_ap_x = 0, first_ap_y = 0, second_ap_x = 0, second_ap_y = 0;

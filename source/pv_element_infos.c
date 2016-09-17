@@ -509,12 +509,15 @@ static bool _pv_element_bezier_draw(
 	if(!_pv_element_bezier_command_path(
 				cr,
 				render_context,
-				0,
 				element))
 	{
 		pv_error("");
 		return false;
 	}
+
+	double d_width = 4.0; //!< @todo from element.data
+	double c_width = d_width * render_context.scale;
+	cairo_set_line_width(cr, c_width);
 
 	PvRect crect_extent = _pv_renderer_get_rect_extent_from_cr(cr);
 
@@ -616,12 +619,15 @@ static bool _pv_element_bezier_is_touch_element(
 	if(!_pv_element_bezier_command_path(
 				cr,
 				render_context,
-				offset,
 				element))
 	{
 		pv_error("");
 		return false;
 	}
+
+	double d_width = 4.0; //!< @todo from element.data
+	double c_width = (d_width * render_context.scale) + offset;
+	cairo_set_line_width(cr, c_width);
 
 	// PvRect crect_extent = _pv_renderer_get_rect_extent_from_cr(cr);
 	*is_touch = cairo_in_stroke(cr, gx, gy);
