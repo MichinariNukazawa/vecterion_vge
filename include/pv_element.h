@@ -9,6 +9,8 @@
 #include <gdk/gdk.h>
 #include <stdbool.h>
 #include "pv_element_general.h"
+#include "pv_color.h"
+
 
 
 struct PvElement;
@@ -16,6 +18,8 @@ typedef struct PvElement PvElement;
 struct PvElement{
 	PvElement *parent;
 	PvElement **childs; // I know "children".
+
+	PvColorPair color_pair;
 
 	PvElementKind kind;
 	// kind固有の情報を格納した型のオブジェクト
@@ -116,6 +120,8 @@ void pv_element_bezier_anchor_point_set_handle(PvAnchorPoint *ap,
  *		if rise error return value is not specitication.(ex. {0,0})
  */
 PvPoint pv_anchor_point_get_handle(const PvAnchorPoint ap, PvAnchorPointIndex ap_index);
+
+bool pv_element_kind_is_viewable_object(PvElementKind kind);
 
 void pv_element_debug_print(const PvElement *element);
 

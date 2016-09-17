@@ -2,6 +2,8 @@
 #define include_ET_ERROR_H
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
 
 // Caution: depend gcc
 #define et_bug(fmt, ...)  \

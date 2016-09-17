@@ -1,10 +1,11 @@
 #include "pv_element_info_cairo.h"
 
 #include "pv_error.h"
+#include "pv_color.h"
 
-void _pv_render_workingcolor_cairo_set_source_rgb(cairo_t *cr)
+void _pv_render_workingcolor_cairo_set_source_rgba(cairo_t *cr)
 {
-	cairo_set_source_rgb (cr, 0.2, 0.4, 0.9);
+	cairo_set_source_rgba (cr, 0.2, 0.4, 0.9, 1.0);
 }
 
 void debug_print_path(cairo_t *cr)
@@ -56,12 +57,11 @@ bool _pv_element_bezier_command_path(
 	}
 
 	// ** draw property is element or focus element
-	cairo_set_source_rgb (cr, 0.1, 0.1, 0.1);
 	double offset = (gpx_offset * (1.0 / render_context.scale));
 	double width = 2.0 + offset;
 	cairo_set_line_width(cr, width);
 
-	// ** stroke
+	// ** path stroking
 	double first_ap_x = 0, first_ap_y = 0, second_ap_x = 0, second_ap_y = 0;
 	for(int i = 0; i < data->anchor_points_num; i++){
 		double x = anchor_points[i].points[PvAnchorPointIndex_Point].x;

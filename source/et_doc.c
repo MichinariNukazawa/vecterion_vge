@@ -155,6 +155,8 @@ static int _et_doc_get_num_slot_change_infos(
 
 bool et_doc_signal_update(EtDoc *self)
 {
+	// @todo check document change.
+
 	int num = _et_doc_get_num_slot_change_infos(self->slot_change_infos);
 	if(0 == num){
 		et_error("");

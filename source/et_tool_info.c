@@ -8,6 +8,7 @@
 #include "et_doc.h"
 #include "et_doc_manager.h"
 #include "et_etaion.h"
+#include "et_color_panel.h"
 
 static int _et_tool_info_touch_offset = 6;
 
@@ -281,6 +282,8 @@ static bool _et_tool_bezier_add_point(EtDoc *doc, PvElement **_element, double x
 			et_error("");
 			return false;
 		}
+
+		element->color_pair = et_color_panel_get_color_pair();
 	}
 
 	PvAnchorPoint anchor_point = {

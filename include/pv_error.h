@@ -2,6 +2,8 @@
 #define include_PV_ERROR_H
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
 
 // CAUTION: depend gcc
 #define pv_bug(fmt, ...)  \

@@ -311,6 +311,52 @@ static bool _pv_io_set_vg_from_xmlnode_svg(PvVg *vg, xmlNode *xmlnode_svg)
 	return true;
 }
 
+PvColor _pv_io_get_pv_color_from_svg_str_rgba(const char *str)
+{
+	PvColor color = PvColor_None;
+
+	int ret;
+	unsigned int r, g, b;
+	double a;
+	if(4 != (ret = sscanf(str, " rgba(%3u,%3u,%3u,%lf)", &r, &g, &b, &a))){
+		pv_warning("%d '%s'", ret, str);
+		goto error;
+	}
+	pv_debug(" rgba(%u,%u,%u,%f)", r, g, b, a);
+	bool ok = (pv_color_set_parameter(&color, PvColorParameterIx_R, (double)r)
+		&& pv_color_set_parameter(&color, PvColorParameterIx_G, (double)g)
+		&& pv_color_set_parameter(&color, PvColorParameterIx_B, (double)b)
+		&& pv_color_set_parameter(&color, PvColorParameterIx_O, (double)a * 100.0)
+		);
+	if(!ok){
+		pv_warning("'%s'", str);
+		goto error;
+	}
+
+error:
+	return color;
+}
+
+PvColorPair _pv_io_get_pv_color_pair_from_xmlnode_simple(const xmlNode *xmlnode)
+{
+	PvColorPair color_pair = PvColorPair_None;
+	xmlChar *xc_fill = xmlGetProp(xmlnode, BAD_CAST "fill");
+	if(NULL != xc_fill){
+		color_pair.colors[PvColorPairGround_BackGround]
+			= _pv_io_get_pv_color_from_svg_str_rgba((char *)xc_fill);
+	}
+	xmlFree(xc_fill);
+
+	xmlChar *xc_stroke = xmlGetProp(xmlnode, BAD_CAST "stroke");
+	if(NULL != xc_stroke){
+		color_pair.colors[PvColorPairGround_ForGround]
+			= _pv_io_get_pv_color_from_svg_str_rgba((char *)xc_stroke);
+	}
+	xmlFree(xc_stroke);
+
+	return color_pair;
+}
+
 static bool _pv_io_element_from_svg_in_recursive_inline(PvElement *element_parent,
 		xmlNode *xmlnode,
 		gpointer data,
@@ -333,6 +379,8 @@ static bool _pv_io_element_from_svg_in_recursive_inline(PvElement *element_paren
 		pv_error("");
 		goto error;
 	}
+
+	element_current->color_pair = _pv_io_get_pv_color_pair_from_xmlnode_simple(xmlnode);
 
 	if(isDoChild){
 		for (xmlNode *cur_node = xmlnode->children; cur_node; cur_node = cur_node->next) {

@@ -20,6 +20,7 @@
 #include "et_layer_view.h"
 #include "et_tool_panel.h"
 #include "pv_io.h"
+#include "et_color_panel.h"
 
 const char *APP_NAME = "Etaion Vector Graphic Editor";
 GtkWindow *_main_window = NULL;
@@ -159,6 +160,20 @@ int main (int argc, char **argv){
 	GtkWidget *cancol_widget = et_canvas_collection_get_widget_frame();
 	gtk_paned_pack1 (GTK_PANED (hpaned), cancol_widget, TRUE, FALSE);
 
+
+	EtColorPanel *color_panel = et_color_panel_init();
+	if(NULL == color_panel){
+		et_bug("");
+		return -1;
+	}
+	if(0 > et_etaion_set_slot_change_state(
+				slot_et_color_panel_from_etaion_change_state, NULL)){
+		et_bug("");
+		return -1;
+	}
+	gtk_box_pack_start(GTK_BOX(box_dock_work),
+			et_color_panel_get_widget_frame(),
+			true, true, 3);
 
 	EtLayerView *layer_view = et_layer_view_init();
 	if(NULL == layer_view){
@@ -310,6 +325,11 @@ static EtDocId _open_doc_new(PvVg *vg_src)
 	}
 
 	if(!et_doc_add_slot_change(doc_id, et_layer_view_slot_from_doc_change, NULL)){
+		et_error("");
+		return -1;
+	}
+
+	if(!et_doc_add_slot_change(doc_id, slot_et_color_panel_from_doc_change, NULL)){
 		et_error("");
 		return -1;
 	}

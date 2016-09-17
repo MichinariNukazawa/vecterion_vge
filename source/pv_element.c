@@ -188,6 +188,8 @@ PvElement *pv_element_new(const PvElementKind kind)
 		return NULL;
 	}
 
+	self->color_pair = PvColorPair_Default;
+
 	self->kind = kind;
 	self->data = data;
 
@@ -208,6 +210,7 @@ static PvElement *_pv_element_copy_single(const PvElement *self)
 	}
 
 	new_element->kind = self->kind;
+	new_element->color_pair = self->color_pair;
 	new_element->parent = NULL;
 	new_element->childs = NULL;
 	new_element->data = NULL;
@@ -535,6 +538,11 @@ static bool _pv_element_is_diff_one(
 		return true;
 	}
 
+	if(!pv_color_pair_is_equal(element0->color_pair, element1->color_pair)){
+		data->is_diff = true;
+		return true;
+	}
+
 	int num0 = pv_general_get_parray_num((void **)element0->childs);
 	int num1 = pv_general_get_parray_num((void **)element1->childs);
 	if(num0 != num1){
@@ -776,6 +784,24 @@ PvPoint pv_anchor_point_get_handle(const PvAnchorPoint ap, PvAnchorPointIndex ap
 				PvPoint gp = {0,0};
 				return gp;
 			}
+	}
+}
+
+bool pv_element_kind_is_viewable_object(PvElementKind kind)
+{
+	switch(kind){
+		case PvElementKind_NotDefined:
+		case PvElementKind_Root:
+		case PvElementKind_Layer:
+		case PvElementKind_Group:
+		case PvElementKind_EndOfKind:
+			return false;
+		case PvElementKind_Bezier:
+		case PvElementKind_Raster:
+			return true;
+		default:
+			pv_bug("");
+			return false;
 	}
 }
 

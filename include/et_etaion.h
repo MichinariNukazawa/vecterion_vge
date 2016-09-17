@@ -20,8 +20,8 @@ struct EtEtaion{
 	EtState state;
 	EtToolId tool_id;
 
-	EtEtaionSlotChangeState slot_change_state;
-	gpointer slot_change_state_data;
+	EtEtaionSlotChangeState *slot_change_states;
+	gpointer *slot_change_state_datas;
 };
 
 EtEtaion *et_etaion_init();

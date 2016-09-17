@@ -21,6 +21,7 @@ bool pv_focus_clear_set_element(PvFocus *focus, PvElement *element);
 bool pv_focus_clear_to_parent_layer(PvFocus *focus);
 void pv_focus_free(PvFocus *focus);
 
+bool pv_focus_is_layer_root_null_from_element(const PvElement *element);
 // PvFocus pv_focus_get_nofocus();
 
 #ifdef include_ET_TEST

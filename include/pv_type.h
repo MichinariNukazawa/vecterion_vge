@@ -1,6 +1,8 @@
 #ifndef include_PV_TYPE_H
 #define include_PV_TYPE_H
 
+#include <stdbool.h>
+
 // http://stackoverflow.com/questions/7356523/linking-math-library-to-a-c90-code-using-gcc
 // http://www.sbin.org/doc/glibc/libc_19.html
 #ifndef M_PI
@@ -18,6 +20,8 @@ typedef struct PvRect{
 	double w;
 	double h;
 }PvRect;
+
+bool pv_rect_is_inside(PvRect, int x, int y);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

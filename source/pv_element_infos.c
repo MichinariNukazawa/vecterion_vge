@@ -5,6 +5,7 @@
 #include "pv_error.h"
 #include "pv_element_info_cairo.h"
 #include "pv_render_context.h"
+#include "pv_color.h"
 
 
 /* ****************
@@ -474,12 +475,21 @@ static int _pv_element_bezier_write_svg(
 		}
 	}
 
+	char *str_fg_color = pv_color_new_str_svg_rgba_simple(
+			element->color_pair.colors[PvColorPairGround_ForGround]);
+	assert(str_fg_color);
+	char *str_bg_color = pv_color_new_str_svg_rgba_simple(
+			element->color_pair.colors[PvColorPairGround_BackGround]);
+	assert(str_bg_color);
+
 	xmlNodePtr node = xmlNewNode(NULL, BAD_CAST "path");
-	xmlNewProp(node, BAD_CAST "fill", BAD_CAST "none");
-	xmlNewProp(node, BAD_CAST "stroke", BAD_CAST "black");
+	xmlNewProp(node, BAD_CAST "fill", BAD_CAST str_bg_color);
+	xmlNewProp(node, BAD_CAST "stroke", BAD_CAST str_fg_color);
 	xmlNewProp(node, BAD_CAST "stroke-width", BAD_CAST "1");
 	xmlNewProp(node, BAD_CAST "d", BAD_CAST str_current);
 
+	g_free(str_bg_color);
+	g_free(str_fg_color);
 	g_free(str_current);
 
 	xmlAddChild(target->xml_parent_node, node);
@@ -507,7 +517,19 @@ static bool _pv_element_bezier_draw(
 	}
 
 	PvRect crect_extent = _pv_renderer_get_rect_extent_from_cr(cr);
+
+	//! fill
+	PvCairoRgbaColor cc_f = pv_color_get_cairo_rgba(
+			element->color_pair.colors[PvColorPairGround_BackGround]);
+	cairo_set_source_rgba (cr, cc_f.r, cc_f.g, cc_f.b, cc_f.a);
+	cairo_fill_preserve(cr);
+	//! stroke
+	PvCairoRgbaColor cc_s = pv_color_get_cairo_rgba(
+			element->color_pair.colors[PvColorPairGround_ForGround]);
+	cairo_set_source_rgba (cr, cc_s.r, cc_s.g, cc_s.b, cc_s.a);
 	cairo_stroke(cr);
+	//cairo_stroke_preserve(cr);
+
 	if(render_context.is_extent_view && !render_context.is_focus){
 		_pv_renderer_draw_extent_from_crect(cr, crect_extent);
 	}
@@ -539,7 +561,7 @@ static bool _pv_element_bezier_draw_focusing(
 		gp_next.x *= render_context.scale;
 		gp_next.y *= render_context.scale;
 		cairo_set_line_width(cr, 1.0);
-		_pv_render_workingcolor_cairo_set_source_rgb(cr);
+		_pv_render_workingcolor_cairo_set_source_rgba(cr);
 		cairo_move_to(cr, gp_point.x, gp_point.y);
 		cairo_line_to(cr, gp_next.x, gp_next.y);
 		cairo_stroke(cr);
@@ -558,7 +580,7 @@ static bool _pv_element_bezier_draw_focusing(
 	gp_next.x *= render_context.scale;
 	gp_next.y *= render_context.scale;
 	cairo_set_line_width(cr, 1.0);
-	_pv_render_workingcolor_cairo_set_source_rgb(cr);
+	_pv_render_workingcolor_cairo_set_source_rgba(cr);
 	cairo_move_to(cr, gp_current.x, gp_current.y);
 	cairo_line_to(cr, gp_prev.x, gp_prev.y);
 	cairo_stroke(cr);
@@ -566,7 +588,7 @@ static bool _pv_element_bezier_draw_focusing(
 	cairo_line_to(cr, gp_next.x, gp_next.y);
 	cairo_stroke(cr);
 
-	_pv_render_workingcolor_cairo_set_source_rgb(cr);
+	_pv_render_workingcolor_cairo_set_source_rgba(cr);
 	cairo_arc (cr, gp_prev.x, gp_prev.y, 2.0, 0., 2 * M_PI);
 	cairo_arc (cr, gp_next.x, gp_next.y, 2.0, 0., 2 * M_PI);
 	cairo_fill (cr);
@@ -804,7 +826,7 @@ static bool _pv_element_raster_draw_focusing(
 
 	cairo_rectangle(cr, x, y, w, h);
 	cairo_set_line_width(cr, 1.0);
-	_pv_render_workingcolor_cairo_set_source_rgb(cr);
+	_pv_render_workingcolor_cairo_set_source_rgba(cr);
 	cairo_stroke(cr);
 
 	return true;

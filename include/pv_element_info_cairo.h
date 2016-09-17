@@ -8,7 +8,7 @@
 #include "pv_element.h"
 #include "pv_render_context.h"
 
-void _pv_render_workingcolor_cairo_set_source_rgb(cairo_t *cr);
+void _pv_render_workingcolor_cairo_set_source_rgba(cairo_t *cr);
 void debug_print_path(cairo_t *cr);
 PvRect _pv_renderer_get_rect_extent_from_cr(cairo_t *cr);
 void _pv_renderer_draw_extent_from_crect(cairo_t *cr, const PvRect rect);

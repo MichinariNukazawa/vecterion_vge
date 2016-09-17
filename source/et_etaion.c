@@ -26,8 +26,8 @@ EtEtaion *et_etaion_init()
 	}
 	self->tool_id = 0; // default tool.
 
-	self->slot_change_state = NULL;
-	self->slot_change_state_data = NULL;
+	self->slot_change_states = NULL;
+	self->slot_change_state_datas = NULL;
 	et_state_unfocus(&(self->state));
 
 	current_state = self;
@@ -37,11 +37,11 @@ EtEtaion *et_etaion_init()
 
 static void _signal_et_etaion_change_state(EtEtaion *self)
 {
-	if(NULL == self->slot_change_state){
-		return;
+	int num = pv_general_get_parray_num((void **)self->slot_change_states);
+	et_debug("%d", num);
+	for(int i = 0; i < num; i++){
+		self->slot_change_states[i](self->state, self->slot_change_state_datas[i]);
 	}
-
-	self->slot_change_state(self->state, self->slot_change_state_data);
 }
 
 bool et_etaion_set_current_doc_id(EtDocId doc_id)
@@ -219,13 +219,17 @@ int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data)
 		exit(-1);
 	}
 
-	if(NULL != self->slot_change_state){
-		et_bug("");
-		return -1;
-	}
-
-	self->slot_change_state = slot;
-	self->slot_change_state_data = data;
+	int num = pv_general_get_parray_num((void **)self->slot_change_states);
+	EtEtaionSlotChangeState *new_slots = realloc(self->slot_change_states,
+					sizeof(self->slot_change_states[0]) * (num + 2));
+	gpointer *new_datas = realloc(self->slot_change_state_datas,
+					sizeof(self->slot_change_state_datas[0]) * (num + 2));
+	new_slots[num] = slot;
+	new_slots[num + 1] = NULL;
+	new_datas[num] = data;
+	new_datas[num + 1] = NULL;
+	self->slot_change_states = new_slots;
+	self->slot_change_state_datas = new_datas;
 
 	return 1; // Todo: return callback id
 }
