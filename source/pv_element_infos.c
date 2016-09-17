@@ -553,6 +553,19 @@ static bool _pv_element_bezier_draw_focusing(
 		return false;
 	}
 
+	if(!_pv_element_bezier_command_path(
+				cr,
+				render_context,
+				element))
+	{
+		pv_error("");
+		return false;
+	}
+	double LINE_WIDTH_FOCUS = 1.0;
+	cairo_set_line_width(cr, LINE_WIDTH_FOCUS);
+	_pv_render_workingcolor_cairo_set_source_rgba(cr);
+	cairo_stroke(cr);
+
 	// ** prev anchor_point
 	if(1 < (data->anchor_points_num)){
 		int ix =  data->anchor_points_num - ((data->is_close) ? 1:2);
