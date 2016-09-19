@@ -643,7 +643,8 @@ static bool _pv_element_bezier_is_touch_element(
 	cairo_set_line_width(cr, c_width);
 
 	// PvRect crect_extent = _pv_renderer_get_rect_extent_from_cr(cr);
-	*is_touch = cairo_in_stroke(cr, gx, gy);
+	//! @fixme bug fill area not detection.(down below side in fill.)
+	*is_touch = cairo_in_stroke(cr, gx, gy) || cairo_in_fill(cr, gx, gy);
 
 	cairo_surface_destroy (surface);
 	cairo_destroy (cr);
