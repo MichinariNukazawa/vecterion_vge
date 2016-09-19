@@ -112,6 +112,14 @@ static bool _pv_element_notimplement_move_element(
 	return false;
 }
 
+static bool _pv_element_notimplement_move_anchor_point(
+		const PvElement *element,
+		const int index,
+		const PvPoint move)
+{
+	return true;
+}
+
 /* ****************
  * General
  **************** */
@@ -718,6 +726,73 @@ static bool _pv_element_bezier_move_element(
 	return true;
 }
 
+int _pv_element_zero_get_num_anchor_point(
+		const PvElement *element)
+{
+	return 0;
+}
+
+int _pv_element_bezier_get_num_anchor_point(
+		const PvElement *element)
+{
+	if(NULL == element || PvElementKind_Bezier != element->kind){
+		pv_error("%p", element);
+		return false;
+	}
+	PvElementBezierData *data = element->data;
+	if(NULL == data){
+		pv_error("");
+		return false;
+	}
+
+return data->anchor_points_num;
+}
+
+PvAnchorPoint *_pv_element_null_new_anchor_points(
+		const PvElement *element)
+{
+	return NULL;
+}
+
+PvAnchorPoint *_pv_element_bezier_new_anchor_points(
+		const PvElement *element)
+{
+	assert(element);
+	assert(PvElementKind_Bezier == element->kind);
+
+	PvElementBezierData *data = element->data;
+	assert(data);
+	assert(data->anchor_points);
+
+	PvAnchorPoint *new_anchor_points = NULL;
+	if(0 < data->anchor_points_num && NULL != data->anchor_points){
+		size_t size = data->anchor_points_num * sizeof(PvAnchorPoint);
+		new_anchor_points = malloc(size);
+		memcpy(new_anchor_points, data->anchor_points, size);
+	}
+
+return new_anchor_points;
+}
+
+static bool _pv_element_bezier_move_anchor_point(
+		const PvElement *element,
+		const int index,
+		const PvPoint move)
+{
+	int num = _pv_element_bezier_get_num_anchor_point(element);
+	if(num <= index){
+		pv_bug("%d %d", index, num);
+		return false;
+	}
+
+	PvElementBezierData *data = element->data;
+	assert(data);
+	data->anchor_points[index].points[PvAnchorPointIndex_Point].x += move.x;
+	data->anchor_points[index].points[PvAnchorPointIndex_Point].y += move.y;
+
+	return true;
+}
+
 /* ****************
  * Raster
  **************** */
@@ -955,6 +1030,9 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_touch_element		= _pv_element_notimplement_is_touch_element,
 		.func_is_diff_one		= _pv_element_notimplement_is_diff_one,
 		.func_move_element		= _pv_element_notimplement_move_element,
+		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
+		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
+		.func_move_anchor_point		= _pv_element_notimplement_move_anchor_point,
 	},
 	{PvElementKind_Root, "Root",
 		.func_new_data			= _pv_element_group_data_new,
@@ -966,6 +1044,9 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_touch_element		= _pv_element_group_is_touch_element,
 		.func_is_diff_one		= _pv_element_group_is_diff_one,
 		.func_move_element		= _pv_element_group_move_element,
+		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
+		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
+		.func_move_anchor_point		= _pv_element_notimplement_move_anchor_point,
 	},
 	{PvElementKind_Layer, "Layer",
 		.func_new_data			= _pv_element_group_data_new,
@@ -977,6 +1058,9 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_touch_element		= _pv_element_group_is_touch_element,
 		.func_is_diff_one		= _pv_element_group_is_diff_one,
 		.func_move_element		= _pv_element_group_move_element,
+		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
+		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
+		.func_move_anchor_point		= _pv_element_notimplement_move_anchor_point,
 	},
 	{PvElementKind_Group, "Group",
 		.func_new_data			= _pv_element_group_data_new,
@@ -988,6 +1072,9 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_touch_element		= _pv_element_group_is_touch_element,
 		.func_is_diff_one		= _pv_element_group_is_diff_one,
 		.func_move_element		= _pv_element_group_move_element,
+		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
+		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
+		.func_move_anchor_point		= _pv_element_notimplement_move_anchor_point,
 	},
 	{PvElementKind_Bezier, "Bezier",
 		.func_new_data			= _pv_element_bezier_data_new,
@@ -999,6 +1086,9 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_touch_element		= _pv_element_bezier_is_touch_element,
 		.func_is_diff_one		= _pv_element_bezier_is_diff_one,
 		.func_move_element		= _pv_element_bezier_move_element,
+		.func_get_num_anchor_point	= _pv_element_bezier_get_num_anchor_point,
+		.func_new_anchor_points		= _pv_element_bezier_new_anchor_points,
+		.func_move_anchor_point		= _pv_element_bezier_move_anchor_point,
 	},
 	{PvElementKind_Raster, "Raster",
 		.func_new_data			= _pv_element_raster_data_new,
@@ -1010,6 +1100,9 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_touch_element		= _pv_element_raster_is_touch_element,
 		.func_is_diff_one		= _pv_element_raster_is_diff_one,
 		.func_move_element		= _pv_element_raster_move_element,
+		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
+		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
+		.func_move_anchor_point		= _pv_element_notimplement_move_anchor_point,
 	},
 	/* 番兵 */
 	{PvElementKind_EndOfKind, "EndOfKind",
@@ -1022,6 +1115,9 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_touch_element		= _pv_element_notimplement_is_touch_element,
 		.func_is_diff_one		= _pv_element_notimplement_is_diff_one,
 		.func_move_element		= _pv_element_notimplement_move_element,
+		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
+		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
+		.func_move_anchor_point		= _pv_element_notimplement_move_anchor_point,
 	},
 };
 

@@ -31,6 +31,8 @@ PvFocus *pv_focus_new(const PvVg *vg)
 	self->elements[0] = vg->element_root->childs[0];
 	self->elements[1] = NULL;
 
+	self->index = -1;
+
 	return self;
 
 error:
@@ -167,7 +169,7 @@ PvElement *pv_focus_get_first_element_parent_layer(const PvFocus *focus)
 	return element;
 }
 
-bool pv_focus_clear_set_element(PvFocus *focus, PvElement *element)
+bool pv_focus_clear_set_element_index(PvFocus *focus, PvElement *element, int index)
 {
 	if(NULL == focus){
 		pv_error("");
@@ -187,8 +189,14 @@ bool pv_focus_clear_set_element(PvFocus *focus, PvElement *element)
 	new[0] = element;
 	new[1] = NULL;
 	focus->elements = new;
+	focus->index = index;
 
 	return true;
+}
+
+bool pv_focus_clear_set_element(PvFocus *focus, PvElement *element)
+{
+	return pv_focus_clear_set_element_index(focus, element, -1);
 }
 
 bool pv_focus_clear_to_parent_layer(PvFocus *focus)

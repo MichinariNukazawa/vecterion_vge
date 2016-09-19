@@ -47,6 +47,14 @@ typedef bool (*PvElementFuncMoveElement)(
 		const PvElement *element,
 		double gx,
 		double gy);
+typedef int (*PvElementFuncGetNumAnchorPoint)(
+		const PvElement *element);
+typedef PvAnchorPoint *(*PvElementFuncNewAnchorPoints)(
+		const PvElement *element);
+typedef bool (*PvElementFuncMoveAnchorPoint)(
+		const PvElement *element,
+		const int index,
+		const PvPoint move);
 
 typedef struct PvElementInfo{
 	PvElementKind kind;
@@ -60,6 +68,10 @@ typedef struct PvElementInfo{
 	PvElementFuncIsTouchElement	func_is_touch_element;
 	PvElementFuncIsDiffOne		func_is_diff_one;
 	PvElementFuncMoveElement	func_move_element;
+	PvElementFuncGetNumAnchorPoint	func_get_num_anchor_point;
+	PvElementFuncNewAnchorPoints	func_new_anchor_points;
+	PvElementFuncMoveAnchorPoint	func_move_anchor_point;
+
 }PvElementInfo;
 
 extern const PvElementInfo _pv_element_infos[];

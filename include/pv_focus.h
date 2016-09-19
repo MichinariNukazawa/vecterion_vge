@@ -8,6 +8,7 @@ struct PvFocus;
 typedef struct PvFocus PvFocus;
 struct PvFocus{
 	PvElement **elements;
+	int index;
 };
 
 PvFocus *pv_focus_new(const PvVg *vg);
@@ -18,6 +19,7 @@ bool pv_focus_remove_element(PvFocus *focus, PvElement *element);
 PvElement *pv_focus_get_first_element(const PvFocus *focus);
 PvElement *pv_focus_get_first_element_parent_layer(const PvFocus *focus);
 bool pv_focus_clear_set_element(PvFocus *focus, PvElement *element);
+bool pv_focus_clear_set_element_index(PvFocus *focus, PvElement *element, int index);
 bool pv_focus_clear_to_parent_layer(PvFocus *focus);
 void pv_focus_free(PvFocus *focus);
 

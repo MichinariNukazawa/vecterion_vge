@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 15.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="レイヤー_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
+	 y="0px" width="24px" height="24px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve">
+<symbol  id="新規シンボル" viewBox="-9 -15 16 30.933">
+	<polygon points="-8.128,5 -0.586,15.933 6.954,5 	"/>
+	<polygon points="2,-15 -3,-15 -3,7 2,7 	"/>
+	<polygon display="none" fill="none" points="-9,15 7,15 7,-15 -9,-15 	"/>
+</symbol>
+<use xlink:href="#新規シンボル"  width="16" height="30.933" id="XMLID_1_" x="-9" y="-15" transform="matrix(1 0 0 -1 41 17)" overflow="visible"/>
+<g>
+	<path d="M3.148,2.908l6.2,2.944L7.687,6.812l-1.039,0.6l0.6,1.04l7.598,13.161l-1.471,0.85L5.776,9.3l-0.6-1.039l-1.04,0.6
+		L2.599,9.749L3.148,2.908 M2.092,1.078L1.22,11.931L4.737,9.9l8.198,14.201l3.55-2.05l-8.198-14.2l3.641-2.102L2.092,1.078
+		L2.092,1.078z"/>
+</g>
+</svg>

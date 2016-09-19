@@ -10,7 +10,7 @@
 #include "et_etaion.h"
 #include "et_color_panel.h"
 
-static int _et_tool_info_touch_offset = 6;
+static int _et_tool_info_touch_offset = 16;
 
 static bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
 {
@@ -28,6 +28,7 @@ static bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
 
 typedef struct RecursiveDataGetFocus{
 	PvElement **p_element;
+	int *p_index;
 	PvPoint g_point;
 }RecursiveDataGetFocus;
 
@@ -42,6 +43,7 @@ static bool _et_tool_func_pv_element_recurse_get_focus_element(
 		et_bug("%p", elem_info);
 		goto error;
 	}
+
 	bool is_touch = false;
 	bool ret = elem_info->func_is_touch_element(
 			&is_touch,
@@ -414,6 +416,149 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 	return true;
 }
 
+	static bool
+_et_tool_func_pv_element_recurse_get_focus_element_index(
+		PvElement *element, gpointer data, int level)
+{
+	RecursiveDataGetFocus *_data = data;
+
+	const PvElementInfo *elem_info = pv_element_get_info_from_kind(element->kind);
+	assert(elem_info);
+	assert(elem_info->func_get_num_anchor_point);
+
+	int index = -1;
+	PvAnchorPoint *anchor_points = elem_info->func_new_anchor_points(element);
+
+	const PvElementBezierData *data_ = element->data;
+	assert(data_);
+	int num = data_->anchor_points_num;
+	for(int i = 0; i < num; i++){
+		PvAnchorPoint ap = anchor_points[i];
+		if(_et_etaion_is_bound_point(
+					_et_tool_info_touch_offset,
+					ap.points[PvAnchorPointIndex_Point],
+					_data->g_point))
+		{
+			index = i;
+		}
+	}
+	free(anchor_points);
+
+	if(0 <= index){
+		*(_data->p_index) = index;
+		*(_data->p_element) = element;
+		return false;
+	}
+
+	return true;
+}
+
+void _et_tool_focus_element_mouse_action_get_touch_anchor_point(
+		PvElement **_element,
+		int *p_index,
+		EtDocId doc_id,
+		PvPoint point)
+{
+	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
+	if(NULL == vg){
+		et_error("");
+		goto error;
+	}
+
+	RecursiveDataGetFocus rec_data = {
+		.p_element = _element,
+		.p_index = p_index,
+		.g_point = point,
+	};
+	PvElementRecursiveError error;
+	if(!pv_element_recursive_asc(vg->element_root,
+				_et_tool_func_pv_element_recurse_get_focus_element_index,
+				NULL,
+				&rec_data,
+				&error)){
+		et_error("level:%d", error.level);
+		goto error;
+	}
+
+	return;
+error:
+	return;
+}
+
+static bool _et_tool_info_move_anchor_points(EtDocId doc_id, EtMouseAction mouse_action)
+{
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	assert(focus);
+
+	int num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < num; i++){
+		const PvElementInfo *info = pv_element_get_info_from_kind(focus->elements[i]->kind);
+		assert(info);
+		assert(info->func_move_anchor_point);
+		info->func_move_anchor_point(focus->elements[i], focus->index, mouse_action.move);
+	}
+
+	return true;
+}
+
+static bool _et_tool_edit_anchor_point_mouse_action(
+		EtDocId doc_id, EtMouseAction mouse_action)
+{
+	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
+	if(NULL == doc){
+		et_error("");
+		return false;
+	}
+
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	if(NULL == focus){
+		et_error("");
+		return false;
+	}
+
+	switch(mouse_action.action){
+		case EtMouseAction_Down:
+			{
+				int index = -1;
+				PvElement *_element = NULL;
+				_et_tool_focus_element_mouse_action_get_touch_anchor_point(
+						&_element,
+						&index,
+						doc_id,
+						mouse_action.point);
+				if(index < 0){
+					pv_focus_clear_to_parent_layer(focus);
+				}else{
+					pv_focus_clear_set_element_index(focus, _element, index);
+				}
+			}
+			break;
+		case EtMouseAction_Move:
+			{
+				if(0 == (mouse_action.state & GDK_BUTTON1_MASK)){
+					break;
+				}
+
+				if(!_et_tool_info_move_anchor_points(doc_id, mouse_action)){
+					et_error("");
+					break;
+				}
+			}
+			break;
+		case EtMouseAction_Up:
+			{
+				et_doc_save_from_id(doc_id);
+			}
+			break;
+		case EtMouseAction_Unknown:
+		default:
+			et_bug("0x%x", mouse_action.action);
+			break;
+	}
+
+	return true;
+}
+
 EtToolInfo _et_tool_infos[] = {
 	{
 		.tool_id = 0, 
@@ -427,13 +572,23 @@ EtToolInfo _et_tool_infos[] = {
 	},
 	{
 		.tool_id = 1, 
-		.name = "Anchor Point",
+		.name = "Add Anchor Point",
 		.icon = NULL,
 		.icon_focus = NULL,
 		.cursor = NULL,
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_put_allow_24x24.svg",
 		.func_mouse_action = _et_tool_bezier_mouse_action,
+	},
+	{
+		.tool_id = 2,
+		.name = "Edit Anchor Point",
+		.icon = NULL,
+		.icon_focus = NULL,
+		.cursor = NULL,
+		.filepath_icon = NULL,
+		.filepath_cursor = "resource/tool/tool_anchor_point_edit_allow_24x24.svg",
+		.func_mouse_action = _et_tool_edit_anchor_point_mouse_action,
 	},
 };
 
