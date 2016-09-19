@@ -18,7 +18,7 @@ static bool _pv_renderer_is_group_kind(const PvElement *element)
 	}
 }
 
-static bool _pv_renderer_cairo_recersive(
+static bool _pv_renderer_cairo_recursive(
 		cairo_t *cr,
 		const PvElement *element,
 		const PvRenderOption render_option,
@@ -30,7 +30,7 @@ static bool _pv_renderer_cairo_recersive(
 	if(_pv_renderer_is_group_kind(element)){
 		int num = pv_general_get_parray_num((void **)element->childs);
 		for(int i = 0; i < num; i++){
-			if(!_pv_renderer_cairo_recersive(cr,
+			if(!_pv_renderer_cairo_recursive(cr,
 						element->childs[i],
 						render_option,
 						level)){
@@ -140,7 +140,7 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		.focus = focus,
 	};
 	int level = 0;
-	if(!_pv_renderer_cairo_recersive(cr, vg->element_root, render_option, &level)){
+	if(!_pv_renderer_cairo_recursive(cr, vg->element_root, render_option, &level)){
 		pv_error("");
 		return NULL;
 	}
@@ -150,7 +150,7 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		const PvElement *focus_element = focus->elements[i];
 		if(NULL != focus_element && !_pv_renderer_is_group_kind(focus_element)){
 			render_option.render_context.is_focus = true;
-			if(!_pv_renderer_cairo_recersive(cr, focus_element, render_option, &level)){
+			if(!_pv_renderer_cairo_recursive(cr, focus_element, render_option, &level)){
 				pv_error("");
 				return NULL;
 			}
