@@ -107,6 +107,7 @@ bool pv_element_raster_read_file(PvElement * const self,
  */
 bool pv_element_bezier_add_anchor_point(PvElement * const self,
 		const PvAnchorPoint anchor_point);
+int pv_element_bezier_get_num_anchor_point(const PvElement *self);
 
 /** @brief set handle from graphic point.
  * @param ap_index PvAnchorPointIndex_Point is next and mirror reverse handle prev.

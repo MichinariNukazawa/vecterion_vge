@@ -250,7 +250,8 @@ static bool _et_tool_focus_element_mouse_action(
 	return true;
 }
 
-static bool _et_tool_bezier_add_point(EtDoc *doc, PvElement **_element, double x, double y)
+/** @return new AnchorPoint index number. error:-1 */
+static int _et_tool_bezier_add_anchor_point(EtDoc *doc, PvElement **_element, double x, double y)
 {
 	bool is_new = true;
 	PvElement *element = *_element;
@@ -282,7 +283,7 @@ static bool _et_tool_bezier_add_point(EtDoc *doc, PvElement **_element, double x
 		element = pv_element_new(PvElementKind_Bezier);
 		if(NULL == element){
 			et_error("");
-			return false;
+			return -1;
 		}
 
 		element->color_pair = et_color_panel_get_color_pair();
@@ -293,7 +294,7 @@ static bool _et_tool_bezier_add_point(EtDoc *doc, PvElement **_element, double x
 	};
 	if(!pv_element_bezier_add_anchor_point(element, anchor_point)){
 		et_error("");
-		return false;
+		return -1;
 	}
 
 	if(is_new){
@@ -301,20 +302,20 @@ static bool _et_tool_bezier_add_point(EtDoc *doc, PvElement **_element, double x
 			parent = pv_vg_get_layer_top(et_doc_get_vg_ref(doc));
 			if(NULL == parent){
 				et_error("");
-				return false;
+				return -1;
 			}
 		}
 
 		if(!pv_element_append_child(parent, 
 					NULL, element)){
 			et_error("");
-			return false;
+			return -1;
 		}
 	}
 
 	*_element = element;
 
-	return true;
+	return (pv_element_bezier_get_num_anchor_point(*_element) - 1);
 }
 
 static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
@@ -360,6 +361,7 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 								// ** do close anchor_point
 								_data->is_close = true;
 								is_closed = true;
+								pv_focus_clear_set_element_index(focus, _element, 0);
 							}
 						}
 					}
@@ -367,12 +369,14 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 
 				// ** new anchor_point
 				if(!is_closed){
-					if(!_et_tool_bezier_add_point(doc, &_element,
-								mouse_action.point.x, mouse_action.point.y)){
+					int index = _et_tool_bezier_add_anchor_point(
+							doc, &_element,
+							mouse_action.point.x, mouse_action.point.y);
+					if(0 > index){
 						et_error("");
 						return false;
 					}else{
-						pv_focus_clear_set_element(focus, _element);
+						pv_focus_clear_set_element_index(focus, _element, index);
 					}
 				}
 

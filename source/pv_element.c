@@ -672,6 +672,16 @@ bool pv_element_bezier_add_anchor_point(PvElement * const self,
 	return true;
 }
 
+int pv_element_bezier_get_num_anchor_point(const PvElement *self)
+{
+	assert(self);
+	assert(self->data);
+	assert(PvElementKind_Bezier == self->kind);
+
+	PvElementBezierData *data = self->data;
+	return data->anchor_points_num;
+}
+
 bool pv_element_raster_read_file(PvElement * const self,
 		const char * const path)
 {
