@@ -100,7 +100,7 @@ static bool _et_tool_info_move(
 {
 	const int pxdiff = 3;
 
-	if(0 == (mouse_action.state & GDK_BUTTON1_MASK)){
+	if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
 		return true;
 	}
 
@@ -386,7 +386,7 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 			break;
 		case EtMouseAction_Move:
 			{
-				if(0 == (mouse_action.state & GDK_BUTTON1_MASK)){
+				if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
 					break;
 				}
 
@@ -539,7 +539,7 @@ static bool _et_tool_edit_anchor_point_mouse_action(
 			break;
 		case EtMouseAction_Move:
 			{
-				if(0 == (mouse_action.state & GDK_BUTTON1_MASK)){
+				if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
 					break;
 				}
 

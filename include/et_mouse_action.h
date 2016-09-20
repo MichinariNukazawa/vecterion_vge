@@ -20,6 +20,8 @@ typedef enum _EtMouseActionType{
 	EtMouseAction_Up,
 }EtMouseActionType;
 
+#define MOUSE_BUTTON_LEFT_MASK (GDK_BUTTON1_MASK)
+
 struct EtMouseAction;
 typedef struct EtMouseAction EtMouseAction;
 struct EtMouseAction{
