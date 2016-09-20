@@ -343,7 +343,7 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 
 				bool is_closed = false;
 				if(NULL != _element && PvElementKind_Bezier == _element->kind){
-					PvElementBezierData *_data =(PvElementBezierData *) _element->data;
+					PvElementBezierData *_data = (PvElementBezierData *) _element->data;
 					if(NULL == _data){
 						et_error("");
 						return false;
@@ -563,6 +563,163 @@ static bool _et_tool_edit_anchor_point_mouse_action(
 	return true;
 }
 
+/*! @return anchor points of focusing. Not focus:NULL. */
+PvAnchorPoint *_get_focus_anchor_point(const PvFocus *focus){
+	// ** get focusing AnchorPoint
+	int num = pv_general_get_parray_num((void **)focus->elements);
+	if(num < 1){
+		return NULL;
+	}
+	PvElement *element = focus->elements[0];
+	if(PvElementKind_Bezier != element->kind){
+		return NULL;
+	}
+	assert(element->data);
+	PvElementBezierData *data = element->data;
+	int num_ap = pv_element_bezier_get_num_anchor_point(element);
+	assert(focus->index < num_ap);
+	PvAnchorPoint *ap = &(data->anchor_points[focus->index]);
+
+	return ap;
+}
+
+/*! @return handle(PvAnchorPointHandle) not grub: -1 */
+int _edit_anchor_point_handle_bound_handle(PvAnchorPoint ap, EtMouseAction mouse_action)
+{
+	// ** grub handle.
+	PvPoint p_point = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
+	PvPoint p_prev = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandlePrev);
+	PvPoint p_next = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandleNext);
+
+	if(_et_etaion_is_bound_point(
+				_et_tool_info_touch_offset,
+				p_prev,
+				mouse_action.point))
+	{
+		return PvAnchorPointIndex_HandlePrev;
+	}
+	if(_et_etaion_is_bound_point(
+				_et_tool_info_touch_offset,
+				p_next,
+				mouse_action.point))
+	{
+		return PvAnchorPointIndex_HandleNext;
+	}
+	if(_et_etaion_is_bound_point(
+				_et_tool_info_touch_offset,
+				p_point,
+				mouse_action.point))
+	{
+		return PvAnchorPointIndex_Point;
+	}
+
+	return -1;
+}
+
+/*! @brief
+ * @return handle(PvAnchorPointHandle) not grub: -1 */
+static int _edit_anchor_point_handle_grub_focus(PvFocus *focus, EtMouseAction mouse_action)
+{
+	int handle = -1; //!< Handle not grub.
+
+	//! first check already focus AnchorPoint.
+	PvAnchorPoint *ap = _get_focus_anchor_point(focus);
+	if(NULL != ap){
+		handle = _edit_anchor_point_handle_bound_handle(*ap, mouse_action);
+		if(-1 != handle){
+			return handle;
+		}
+	}
+
+	//! change focus (to anchor points in already focus first element).
+	PvElementBezierData *data = (PvElementBezierData *) focus->elements[0]->data;
+	assert(data);
+	int num = pv_element_bezier_get_num_anchor_point(focus->elements[0]);
+	for(int i = 0; i < num; i++){
+		handle = _edit_anchor_point_handle_bound_handle(data->anchor_points[i], mouse_action);
+		if(-1 != handle){
+			// ** change focus.
+			pv_focus_clear_set_element_index(focus, focus->elements[0], i);
+			return handle;
+		}
+	}
+
+	return handle;
+}
+
+static bool _et_tool_edit_anchor_point_handle_mouse_action(
+		EtDocId doc_id, EtMouseAction mouse_action)
+{
+	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
+	if(NULL == doc){
+		et_error("");
+		return false;
+	}
+
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	if(NULL == focus){
+		et_error("");
+		return false;
+	}
+
+
+	// static PvAnchorPointIndex handle = PvAnchorPointIndex_Point; //!< Handle not grub.
+	static int handle = -1;
+	switch(mouse_action.action){
+		case EtMouseAction_Down:
+			{
+				handle = _edit_anchor_point_handle_grub_focus(focus, mouse_action);
+				PvAnchorPoint *ap = _get_focus_anchor_point(focus);
+				if(NULL != ap && PvAnchorPointIndex_Point == handle){
+					pv_element_bezier_anchor_point_set_handle(ap, PvAnchorPointIndex_Point,
+							mouse_action.point);
+				}
+			}
+			break;
+		case EtMouseAction_Move:
+			{
+				if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
+					break;
+				}
+
+				PvAnchorPoint *ap = _get_focus_anchor_point(focus);
+				if(NULL == ap){
+					break;
+				}
+
+				switch(handle){
+					case PvAnchorPointIndex_HandleNext:
+					case PvAnchorPointIndex_HandlePrev:
+						{
+							ap->points[handle].x = (mouse_action.point.x - ap->points[PvAnchorPointIndex_Point].x);
+							ap->points[handle].y = (mouse_action.point.y - ap->points[PvAnchorPointIndex_Point].y);
+						}
+						break;
+					case PvAnchorPointIndex_Point:
+						{
+							pv_element_bezier_anchor_point_set_handle(ap, PvAnchorPointIndex_Point,
+									mouse_action.point);
+						}
+						break;
+					default:
+						break;
+				}
+			}
+			break;
+		case EtMouseAction_Up:
+			{
+				et_doc_save_from_id(doc_id);
+			}
+			break;
+		case EtMouseAction_Unknown:
+		default:
+			et_bug("0x%x", mouse_action.action);
+			break;
+	}
+
+	return true;
+}
+
 EtToolInfo _et_tool_infos[] = {
 	{
 		.tool_id = 0, 
@@ -593,6 +750,16 @@ EtToolInfo _et_tool_infos[] = {
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_edit_allow_24x24.svg",
 		.func_mouse_action = _et_tool_edit_anchor_point_mouse_action,
+	},
+	{
+		.tool_id = 3,
+		.name = "Edit Anchor Point Handle",
+		.icon = NULL,
+		.icon_focus = NULL,
+		.cursor = NULL,
+		.filepath_icon = NULL,
+		.filepath_cursor = "resource/tool/tool_anchor_point_handle_allow_24x24.svg",
+		.func_mouse_action = _et_tool_edit_anchor_point_handle_mouse_action,
 	},
 };
 
