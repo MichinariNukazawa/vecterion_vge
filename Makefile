@@ -8,6 +8,7 @@ TARGET_NAME		= etaion_vector
 SOURCE_DIR		= source
 OBJECT_DIR		= object
 BUILD_DIR		= build
+MKDIR			= mkdir -p
 PKG_CONFIG	= pkg-config
 CFLAGS		= -W -Wall -Wextra
 CFLAGS		+= -MMD -MP -g -std=c11
@@ -23,12 +24,19 @@ CFLAGS		+= -Wunused -Wimplicit-function-declaration -Wincompatible-pointer-types
 			 -Wwrite-strings -Wunused-macros
 #CFLAGS		+= -Wmissing-declarations -Wcast-qual -Wconversion -Wno-sign-conversion
 # -Wswitch-enum -Wjump-misses-init
-INCLUDE		= -I./ -I./include
-INCLUDE		+= $(shell $(PKG_CONFIG) --libs --cflags gtk+-3.0)
-INCLUDE		+= $(shell xml2-config --cflags --libs)
+INCLUDE		= -I./include
+INCLUDE		+= -I./library/libxml2/win32/include/libxml2 -lxml2
 TARGET		= $(BUILD_DIR)/$(TARGET_NAME).exe
 
-SOURCES		= $(shell ls $(SOURCE_DIR)/*.c) 
+ifeq ($(OS),Windows_NT)
+INCLUDE			+= $(shell $(PKG_CONFIG) --libs --cflags gtk+-3.0)
+MKDIR			= mkdir
+CFLAGS			+= -DOS_Windows=1
+else
+INCLUDE			+= $(shell xml2-config --cflags --libs)
+endif
+
+SOURCES		= $(wildcard $(SOURCE_DIR)/*.c) 
 OBJECTS		= $(subst $(SOURCE_DIR),$(OBJECT_DIR), $(SOURCES:.c=.o))
 DEPENDS		= $(OBJECTS:.o=.d)
 
@@ -37,9 +45,11 @@ DEPENDS		= $(OBJECTS:.o=.d)
 all: $(TARGET)
 
 $(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.c
+	- $(MKDIR) $(OBJECT_DIR)
 	$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
 
 $(TARGET): $(OBJECTS)
+	- $(MKDIR) $(BUILD_DIR)
 	$(CC) $^ $(CFLAGS) $(INCLUDE) \
 		-o $(TARGET)
 
@@ -50,7 +60,8 @@ debug: $(TARGET)
 	gdb ./$(TARGET)
 
 clean:
-	$(RM) $(TARGET) $(OBJECT_DIR)/* $(BUILD_DIR)/*
+	$(RM) $(TARGET)
+	$(RM) $(OBJECT_DIR)/* $(BUILD_DIR)/*
 
 dist_clean:
 	$(MAKE) clean
@@ -67,4 +78,3 @@ test_clean:
 	$(MAKE) -f test/Makefile clean
 
 -include $(DEPENDS)
-
