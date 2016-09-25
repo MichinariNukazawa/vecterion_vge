@@ -189,6 +189,7 @@ PvElement *pv_element_new(const PvElementKind kind)
 	}
 
 	self->color_pair = PvColorPair_Default;
+	self->stroke = PvStroke_Default;
 
 	self->kind = kind;
 	self->data = data;
@@ -211,6 +212,7 @@ static PvElement *_pv_element_copy_single(const PvElement *self)
 
 	new_element->kind = self->kind;
 	new_element->color_pair = self->color_pair;
+	new_element->stroke = self->stroke;
 	new_element->parent = NULL;
 	new_element->childs = NULL;
 	new_element->data = NULL;
@@ -539,6 +541,11 @@ static bool _pv_element_is_diff_one(
 	}
 
 	if(!pv_color_pair_is_equal(element0->color_pair, element1->color_pair)){
+		data->is_diff = true;
+		return true;
+	}
+
+	if(!pv_stroke_is_equal(element0->stroke, element1->stroke)){
 		data->is_diff = true;
 		return true;
 	}

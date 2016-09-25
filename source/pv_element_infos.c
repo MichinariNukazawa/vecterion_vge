@@ -409,6 +409,15 @@ static char *_pv_element_bezier_new_str_from_anchor(const PvAnchorPoint ap_curre
 	return str;
 }
 
+static bool _node_add_stroke_props(xmlNodePtr node, PvStroke stroke)
+{
+	char *str = g_strdup_printf("%.3f", stroke.width);
+	xmlNewProp(node, BAD_CAST "stroke-width", BAD_CAST str);
+	g_free(str);
+
+	return true;
+}
+
 static int _pv_element_bezier_write_svg(
 		InfoTargetSvg *target,
 		const PvElement *element, const ConfWriteSvg *conf)
@@ -495,12 +504,13 @@ static int _pv_element_bezier_write_svg(
 	xmlNodePtr node = xmlNewNode(NULL, BAD_CAST "path");
 	xmlNewProp(node, BAD_CAST "fill", BAD_CAST str_bg_color);
 	xmlNewProp(node, BAD_CAST "stroke", BAD_CAST str_fg_color);
-	xmlNewProp(node, BAD_CAST "stroke-width", BAD_CAST "1");
 	xmlNewProp(node, BAD_CAST "d", BAD_CAST str_current);
 
 	g_free(str_bg_color);
 	g_free(str_fg_color);
 	g_free(str_current);
+
+	_node_add_stroke_props(node, element->stroke);
 
 	xmlAddChild(target->xml_parent_node, node);
 	//target->xml_parent_node = node;
@@ -525,8 +535,7 @@ static bool _pv_element_bezier_draw(
 		return false;
 	}
 
-	double d_width = 4.0; //!< @todo from element.data
-	double c_width = d_width * render_context.scale;
+	double c_width = element->stroke.width * render_context.scale;
 	cairo_set_line_width(cr, c_width);
 
 	PvRect crect_extent = _pv_renderer_get_rect_extent_from_cr(cr);
@@ -707,8 +716,7 @@ static bool _pv_element_bezier_is_touch_element(
 		return false;
 	}
 
-	double d_width = 4.0; //!< @todo from element.data
-	double c_width = (d_width * render_context.scale) + offset;
+	double c_width = (element->stroke.width * render_context.scale) + offset;
 	cairo_set_line_width(cr, c_width);
 
 	// PvRect crect_extent = _pv_renderer_get_rect_extent_from_cr(cr);

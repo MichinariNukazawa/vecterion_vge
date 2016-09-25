@@ -21,6 +21,7 @@
 #include "et_tool_panel.h"
 #include "pv_io.h"
 #include "et_color_panel.h"
+#include "et_stroke_panel.h"
 
 const char *APP_NAME = "Etaion Vector Graphic Editor";
 GtkWindow *_main_window = NULL;
@@ -173,6 +174,20 @@ int main (int argc, char **argv){
 	}
 	gtk_box_pack_start(GTK_BOX(box_dock_work),
 			et_color_panel_get_widget_frame(),
+			true, true, 3);
+
+	EtStrokePanel *stroke_panel = et_stroke_panel_init();
+	if(NULL == stroke_panel){
+		et_bug("");
+		return -1;
+	}
+	if(0 > et_etaion_set_slot_change_state(
+				slot_et_stroke_panel_from_etaion_change_state, NULL)){
+		et_bug("");
+		return -1;
+	}
+	gtk_box_pack_start(GTK_BOX(box_dock_work),
+			et_stroke_panel_get_widget_frame(),
 			true, true, 3);
 
 	EtLayerView *layer_view = et_layer_view_init();
@@ -330,6 +345,11 @@ static EtDocId _open_doc_new(PvVg *vg_src)
 	}
 
 	if(!et_doc_add_slot_change(doc_id, slot_et_color_panel_from_doc_change, NULL)){
+		et_error("");
+		return -1;
+	}
+
+	if(!et_doc_add_slot_change(doc_id, slot_et_stroke_panel_from_doc_change, NULL)){
 		et_error("");
 		return -1;
 	}

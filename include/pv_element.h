@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include "pv_element_general.h"
 #include "pv_color.h"
+#include "pv_stroke.h"
 
 
 
@@ -20,6 +21,7 @@ struct PvElement{
 	PvElement **childs; // I know "children".
 
 	PvColorPair color_pair;
+	PvStroke stroke;
 
 	PvElementKind kind;
 	// kind固有の情報を格納した型のオブジェクト
