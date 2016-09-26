@@ -415,6 +415,12 @@ static bool _node_add_stroke_props(xmlNodePtr node, PvStroke stroke)
 	xmlNewProp(node, BAD_CAST "stroke-width", BAD_CAST str);
 	g_free(str);
 
+	const PvStrokeLinecapInfo *linecap_info = get_stroke_linecap_info_from_id(stroke.linecap);
+	xmlNewProp(node, BAD_CAST "stroke-linecap", BAD_CAST linecap_info->name);
+
+	const PvStrokeLinejoinInfo *linejoin_info = get_stroke_linejoin_info_from_id(stroke.linejoin);
+	xmlNewProp(node, BAD_CAST "stroke-linejoin", BAD_CAST linejoin_info->name);
+
 	return true;
 }
 
@@ -546,6 +552,10 @@ static bool _pv_element_bezier_draw(
 	cairo_set_source_rgba (cr, cc_f.r, cc_f.g, cc_f.b, cc_f.a);
 	cairo_fill_preserve(cr);
 	//! stroke
+	const PvStrokeLinecapInfo *linecap_info = get_stroke_linecap_info_from_id(element->stroke.linecap);
+	cairo_set_line_cap (cr, linecap_info->cairo_value);
+	const PvStrokeLinejoinInfo *linejoin_info = get_stroke_linejoin_info_from_id(element->stroke.linejoin);
+	cairo_set_line_join (cr, linejoin_info->cairo_value);
 	PvCairoRgbaColor cc_s = pv_color_get_cairo_rgba(
 			element->color_pair.colors[PvColorPairGround_ForGround]);
 	cairo_set_source_rgba (cr, cc_s.r, cc_s.g, cc_s.b, cc_s.a);

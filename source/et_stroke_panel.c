@@ -13,6 +13,12 @@ struct EtStrokePanel{
 	GtkWidget *box_width;
 	GtkWidget *label_width;
 	GtkWidget *spin_width;
+	GtkWidget *box_linecap;
+	GtkWidget *label_linecap;
+	GtkWidget *combo_linecap;
+	GtkWidget *box_linejoin;
+	GtkWidget *label_linejoin;
+	GtkWidget *combo_linejoin;
 
 	//! PvStroke with focus elements is not compared.
 	bool is_multi;
@@ -23,6 +29,8 @@ struct EtStrokePanel{
 EtStrokePanel *stroke_panel = NULL;
 
 static void _cb_value_changed_stroke_width_spin(GtkSpinButton *spin_button, gpointer user_data);
+static void _cb_changed_linecap_with_combo(GtkComboBox *widget, gpointer user_data);
+static void _cb_changed_linejoin_with_combo(GtkComboBox *widget, gpointer user_data);
 
 static void _slot_change_doc_or_focus(EtDocId);
 
@@ -52,16 +60,72 @@ EtStrokePanel *et_stroke_panel_init()
 
 	self->box_width = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 	gtk_box_pack_start(GTK_BOX(self->box_stroke), self->box_width, false, true, 3);
-
-
-	self->spin_width = gtk_spin_button_new_with_range(0, 20000, 1);
 	self->label_width = gtk_label_new_with_mnemonic("width ");
-	gtk_spin_button_set_digits (GTK_SPIN_BUTTON(self->spin_width), 3);
 	gtk_box_pack_start(GTK_BOX(self->box_width), self->label_width, false, true, 3);
+	self->spin_width = gtk_spin_button_new_with_range(0, 20000, 1);
+	gtk_spin_button_set_digits (GTK_SPIN_BUTTON(self->spin_width), 3);
 	gtk_box_pack_start(GTK_BOX(self->box_width), self->spin_width, false, true, 3);
+
+	// ** linecap
+	{
+		self->box_linecap = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+		gtk_box_pack_start(GTK_BOX(self->box_stroke), self->box_linecap, false, true, 3);
+		self->label_linecap = gtk_label_new_with_mnemonic("linecap ");
+		gtk_box_pack_start(GTK_BOX(self->box_linecap), self->label_linecap, false, true, 3);
+		// self->combo_linecap = gtk_combo_box_new();
+	//	GtkListStore *liststore = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_INT);
+		GtkListStore *liststore = gtk_list_store_new(1, G_TYPE_STRING);
+		int num = get_num_stroke_linecap_infos();
+		for(int i = 0; i < num; i++){
+			const PvStrokeLinecapInfo *info = get_stroke_linecap_info_from_id(i);
+			gtk_list_store_insert_with_values(liststore, NULL, -1,
+							0, info->name,
+	//						1, info->linecap,
+							-1);
+		}
+		self->combo_linecap = gtk_combo_box_new_with_model(GTK_TREE_MODEL(liststore));
+		g_object_unref(liststore);
+		GtkCellRenderer *column = gtk_cell_renderer_text_new();
+		gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(self->combo_linecap), column, TRUE);
+		gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(self->combo_linecap), column,
+					"text", 0, NULL);
+		gtk_combo_box_set_active(GTK_COMBO_BOX(self->combo_linecap), 0);
+		gtk_box_pack_start(GTK_BOX(self->box_linecap), self->combo_linecap, false, true, 3);
+	}
+
+	// ** linejoin
+	{
+		self->box_linejoin = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+		gtk_box_pack_start(GTK_BOX(self->box_stroke), self->box_linejoin, false, true, 3);
+		self->label_linejoin = gtk_label_new_with_mnemonic("linejoin ");
+		gtk_box_pack_start(GTK_BOX(self->box_linejoin), self->label_linejoin, false, true, 3);
+		// self->combo_linejoin = gtk_combo_box_new();
+	//	GtkListStore *liststore = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_INT);
+		GtkListStore *liststore = gtk_list_store_new(1, G_TYPE_STRING);
+		int num = get_num_stroke_linejoin_infos();
+		for(int i = 0; i < num; i++){
+			const PvStrokeLinejoinInfo *info = get_stroke_linejoin_info_from_id(i);
+			gtk_list_store_insert_with_values(liststore, NULL, -1,
+							0, info->name,
+	//						1, info->linejoin,
+							-1);
+		}
+		self->combo_linejoin = gtk_combo_box_new_with_model(GTK_TREE_MODEL(liststore));
+		g_object_unref(liststore);
+		GtkCellRenderer *column = gtk_cell_renderer_text_new();
+		gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(self->combo_linejoin), column, TRUE);
+		gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(self->combo_linejoin), column,
+					"text", 0, NULL);
+		gtk_combo_box_set_active(GTK_COMBO_BOX(self->combo_linejoin), 0);
+		gtk_box_pack_start(GTK_BOX(self->box_linejoin), self->combo_linejoin, false, true, 3);
+	}
 
 	g_signal_connect(self->spin_width, "value-changed",
 			G_CALLBACK(_cb_value_changed_stroke_width_spin), NULL);
+	g_signal_connect(self->combo_linecap, "changed",
+			G_CALLBACK(_cb_changed_linecap_with_combo), NULL);
+	g_signal_connect(self->combo_linejoin, "changed",
+			G_CALLBACK(_cb_changed_linejoin_with_combo), NULL);
 
 	self->widget = self->box;
 	stroke_panel = self;
@@ -112,6 +176,26 @@ static void _cb_value_changed_stroke_width_spin(GtkSpinButton *spin_button, gpoi
 	_update_focus_elements_from_local();
 }
 
+static void _cb_changed_linecap_with_combo(GtkComboBox *widget, gpointer user_data)
+{
+	EtStrokePanel *self = stroke_panel;
+	assert(self);
+
+	self->stroke.linecap = gtk_combo_box_get_active(GTK_COMBO_BOX(self->combo_linecap));
+
+	_update_focus_elements_from_local();
+}
+
+static void _cb_changed_linejoin_with_combo(GtkComboBox *widget, gpointer user_data)
+{
+	EtStrokePanel *self = stroke_panel;
+	assert(self);
+
+	self->stroke.linejoin = gtk_combo_box_get_active(GTK_COMBO_BOX(self->combo_linejoin));
+
+	_update_focus_elements_from_local();
+}
+
 static void _slot_change_doc_or_focus(EtDocId doc_id)
 {
 	EtStrokePanel *self = stroke_panel;
@@ -157,6 +241,9 @@ static void _update_ui_from_local()
 	assert(self);
 
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(self->spin_width), self->stroke.width);
+	gtk_combo_box_set_active(GTK_COMBO_BOX(self->combo_linecap), self->stroke.linecap);
+	gtk_combo_box_set_active(GTK_COMBO_BOX(self->combo_linejoin), self->stroke.linejoin);
+
 	//! @todo is_multi (ui design)
 	gtk_label_set_text(GTK_LABEL(self->label_width), self->is_multi? "width *":"width  " );
 	gtk_label_set_use_underline (GTK_LABEL(self->label_width), self->is_multi);

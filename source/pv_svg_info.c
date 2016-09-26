@@ -177,6 +177,34 @@ static bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const ch
 	return true;
 }
 
+static bool _set_stroke_linecap_from_str(PvElement *element, const char *str)
+{
+	int num = get_num_stroke_linecap_infos();
+	for(int i = 0; i < num; i++){
+		const PvStrokeLinecapInfo *info = get_stroke_linecap_info_from_id(i);
+		if(0 == strcasecmp(str, info->name)){
+			element->stroke.linecap = info->linecap;
+			return true;
+		}
+	}
+
+	return true;
+}
+
+static bool _set_stroke_linejoin_from_str(PvElement *element, const char *str)
+{
+	int num = get_num_stroke_linejoin_infos();
+	for(int i = 0; i < num; i++){
+		const PvStrokeLinejoinInfo *info = get_stroke_linejoin_info_from_id(i);
+		if(0 == strcasecmp(str, info->name)){
+			element->stroke.linejoin = info->linejoin;
+			return true;
+		}
+	}
+
+	return true;
+}
+
 static PvElement *_pv_svg_path_new_element_from_svg(
 		PvElement *element_parent,
 		xmlNodePtr xmlnode,
@@ -191,7 +219,8 @@ static PvElement *_pv_svg_path_new_element_from_svg(
 		return NULL;
 	}
 
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "d");
+	xmlChar *value = NULL;
+	value = xmlGetProp(xmlnode, BAD_CAST "d");
 	if(NULL != value){
 		pv_debug("d='%s'", (char *)value);
 		if(!_pv_svg_path_set_anchor_points_from_str(element_new, (char*)value)){
@@ -202,6 +231,32 @@ static PvElement *_pv_svg_path_new_element_from_svg(
 		pv_element_debug_print(element_new);
 	}
 	xmlFree(value);
+
+	//! ** stroke-* attributes.
+	value = xmlGetProp(xmlnode, BAD_CAST "stroke-width");
+	if(NULL != value){
+		double width = 1.0;
+		int ret = sscanf((const char *)value, "%lf", &width);
+		pv_debug("stroke-width='%s' %d %.3f",
+				(char *)value, ret, width);
+		if(1 == ret){
+			element_new->stroke.width = width;
+		}
+	}
+	value = xmlGetProp(xmlnode, BAD_CAST "stroke-linecap");
+	if(NULL != value){
+		if(!_set_stroke_linecap_from_str(element_new, (char*)value)){
+			pv_error("");
+			return NULL;
+		}
+	}
+	value = xmlGetProp(xmlnode, BAD_CAST "stroke-linejoin");
+	if(NULL != value){
+		if(!_set_stroke_linejoin_from_str(element_new, (char*)value)){
+			pv_error("");
+			return NULL;
+		}
+	}
 
 	if(!pv_element_append_child(element_parent, NULL, element_new)){
 		pv_error("");
