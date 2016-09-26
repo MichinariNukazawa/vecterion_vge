@@ -25,11 +25,11 @@ CFLAGS		+= -Wunused -Wimplicit-function-declaration -Wincompatible-pointer-types
 #CFLAGS		+= -Wmissing-declarations -Wcast-qual -Wconversion -Wno-sign-conversion
 # -Wswitch-enum -Wjump-misses-init
 INCLUDE		= -I./include
-INCLUDE		+= -I./library/libxml2/win32/include/libxml2 -lxml2
 TARGET		= $(BUILD_DIR)/$(TARGET_NAME).exe
+INCLUDE			+= $(shell $(PKG_CONFIG) --libs --cflags gtk+-3.0)
 
 ifeq ($(OS),Windows_NT)
-INCLUDE			+= $(shell $(PKG_CONFIG) --libs --cflags gtk+-3.0)
+INCLUDE			+= -I./library/libxml2/win32/include/libxml2 -lxml2
 MKDIR			= mkdir
 CFLAGS			+= -DOS_Windows=1
 else
