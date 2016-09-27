@@ -14,8 +14,11 @@ typedef struct PvPoint{
 	double y;
 }PvPoint;
 
+PvPoint pv_point_add(PvPoint, PvPoint);
 PvPoint pv_point_sub(PvPoint, PvPoint);
+PvPoint pv_point_add_value(PvPoint, double);
 PvPoint pv_point_mul_value(PvPoint, double);
+PvPoint pv_point_div_value(PvPoint, double);
 
 typedef struct PvRect{
 	double x;

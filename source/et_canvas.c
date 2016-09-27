@@ -291,50 +291,10 @@ static bool _signal_et_canvas_mouse_action(
 }
 
 
-PvPoint PV_POINT_ADD(PvPoint p, PvPoint p_diff)
-{
-	PvPoint ret = {
-		.x = p.x + p_diff.x,
-		.y = p.y + p_diff.y,
-	};
-
-	return ret;
-}
-
-PvPoint PV_POINT_SUB(PvPoint p, PvPoint p_diff)
-{
-	PvPoint ret = {
-		.x = p.x - p_diff.x,
-		.y = p.y - p_diff.y,
-	};
-
-	return ret;
-}
-
-PvPoint PV_POINT_ADD_VALUE(PvPoint p, double diff)
-{
-	PvPoint ret = {
-		.x = p.x + diff,
-		.y = p.y + diff,
-	};
-
-	return ret;
-}
-
-PvPoint PV_POINT_DIVISION_VALUE(PvPoint p, double scale)
-{
-	PvPoint ret = {
-		.x = p.x / scale,
-		.y = p.y / scale
-	};
-
-	return ret;
-}
-
 PvPoint _et_canvas_dp_from_cwp(PvPoint cwp, PvRenderContext render_context)
 {
-	PvPoint cp = PV_POINT_ADD_VALUE(cwp, -1 * render_context.margin);
-	PvPoint dp = PV_POINT_DIVISION_VALUE(cp, render_context.scale);
+	PvPoint cp = pv_point_add_value(cwp, -1 * render_context.margin);
+	PvPoint dp = pv_point_div_value(cp, render_context.scale);
 
 	return dp;
 }
@@ -386,11 +346,11 @@ static gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpo
 
 	PvPoint cwp_prev =_et_canvas_previous_mouse_point;
 	PvPoint dp_prev = _et_canvas_dp_from_cwp(cwp_prev, self->render_context); 
-	PvPoint dp_move = PV_POINT_SUB(dp, dp_prev);
+	PvPoint dp_move = pv_point_sub(dp, dp_prev);
 
 	_et_canvas_previous_mouse_point = ep;
 
-	PvPoint ep_diff_down = PV_POINT_SUB(ep, _et_canvas_down_mouse_point);
+	PvPoint ep_diff_down = pv_point_sub(ep, _et_canvas_down_mouse_point);
 	PvPoint cwp_diff_down = ep_diff_down;
 
 	if(!_signal_et_canvas_mouse_action(
@@ -420,11 +380,11 @@ static gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpoi
 
 	PvPoint cwp_prev =_et_canvas_previous_mouse_point;
 	PvPoint dp_prev = _et_canvas_dp_from_cwp(cwp_prev, self->render_context); 
-	PvPoint dp_move = PV_POINT_SUB(dp, dp_prev);
+	PvPoint dp_move = pv_point_sub(dp, dp_prev);
 
 	_et_canvas_previous_mouse_point = ep;
 
-	PvPoint ep_diff_down = PV_POINT_SUB(ep, _et_canvas_down_mouse_point);
+	PvPoint ep_diff_down = pv_point_sub(ep, _et_canvas_down_mouse_point);
 	PvPoint cwp_diff_down = ep_diff_down;
 
 	if(!_signal_et_canvas_mouse_action(
