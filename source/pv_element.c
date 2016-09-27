@@ -732,36 +732,49 @@ const char *pv_element_get_name_from_kind(PvElementKind kind)
 	return info->name;
 }
 
-void pv_element_bezier_anchor_point_set_handle(PvAnchorPoint *ap,
-		PvAnchorPointIndex ap_index, PvPoint gpoint)
+void pv_element_bezier_anchor_point_set_handle_zero(
+		PvAnchorPoint *ap,
+		PvAnchorPointIndex ap_index)
 {
-	if(NULL == ap){
-		pv_error("");
-		return;
-	}
+	assert(ap);
 
 	switch(ap_index){
 		case PvAnchorPointIndex_Point:
-			ap->points[PvAnchorPointIndex_HandleNext].x
-				= gpoint.x - ap->points[PvAnchorPointIndex_Point].x;
-			ap->points[PvAnchorPointIndex_HandleNext].y
-				= gpoint.y - ap->points[PvAnchorPointIndex_Point].y;
-			ap->points[PvAnchorPointIndex_HandlePrev].x
-				= -1.0 * ap->points[PvAnchorPointIndex_HandleNext].x;
-			ap->points[PvAnchorPointIndex_HandlePrev].y
-				= -1.0 * ap->points[PvAnchorPointIndex_HandleNext].y;
+			ap->points[PvAnchorPointIndex_HandlePrev] = (PvPoint){0, 0};
+			ap->points[PvAnchorPointIndex_HandleNext] = (PvPoint){0, 0};
 			break;
 		case PvAnchorPointIndex_HandlePrev:
-			ap->points[PvAnchorPointIndex_HandlePrev].x
-				= gpoint.x - ap->points[PvAnchorPointIndex_Point].x;
-			ap->points[PvAnchorPointIndex_HandlePrev].y
-				= gpoint.y - ap->points[PvAnchorPointIndex_Point].y;
+			ap->points[PvAnchorPointIndex_HandlePrev] = (PvPoint){0, 0};
 			break;
 		case PvAnchorPointIndex_HandleNext:
-			ap->points[PvAnchorPointIndex_HandleNext].x
-				= gpoint.x - ap->points[PvAnchorPointIndex_Point].x;
-			ap->points[PvAnchorPointIndex_HandleNext].y
-				= gpoint.y - ap->points[PvAnchorPointIndex_Point].y;
+			ap->points[PvAnchorPointIndex_HandleNext] = (PvPoint){0, 0};
+			break;
+		default:
+			pv_bug("%d", ap_index);
+			return;
+	}
+}
+
+void pv_element_bezier_anchor_point_set_handle(PvAnchorPoint *ap,
+		PvAnchorPointIndex ap_index, PvPoint gpoint)
+{
+	assert(ap);
+
+	PvPoint p_handle = pv_point_sub(gpoint, ap->points[PvAnchorPointIndex_Point]);
+
+	switch(ap_index){
+		case PvAnchorPointIndex_Point:
+		{
+			PvPoint p_handle_r = pv_point_mul_value(p_handle, -1.0);
+			ap->points[PvAnchorPointIndex_HandleNext] = p_handle;
+			ap->points[PvAnchorPointIndex_HandlePrev] = p_handle_r;
+		}
+			break;
+		case PvAnchorPointIndex_HandlePrev:
+			ap->points[PvAnchorPointIndex_HandlePrev] = p_handle;
+			break;
+		case PvAnchorPointIndex_HandleNext:
+			ap->points[PvAnchorPointIndex_HandleNext] = p_handle;
 			break;
 		default:
 			pv_bug("%d", ap_index);

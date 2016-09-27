@@ -1,5 +1,6 @@
 #include "et_tool_info.h"
 
+#include <math.h>
 #include "et_error.h"
 #include "pv_element_general.h"
 #include "pv_element.h"
@@ -407,8 +408,21 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 				}else{
 					ap = &_data->anchor_points[_data->anchor_points_num - 1];
 				}
-				pv_element_bezier_anchor_point_set_handle(ap, PvAnchorPointIndex_Point,
-						mouse_action.point);
+
+				PvPoint p_ap = pv_anchor_point_get_handle(*ap, PvAnchorPointIndex_Point);
+				PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
+				if(fabs(p_diff.x) < _et_tool_info_touch_offset
+						&& fabs(p_diff.y) < _et_tool_info_touch_offset)
+				{
+					pv_element_bezier_anchor_point_set_handle_zero(
+							ap,
+							PvAnchorPointIndex_Point);
+				}else{
+					pv_element_bezier_anchor_point_set_handle(
+							ap,
+							PvAnchorPointIndex_Point,
+							mouse_action.point);
+				}
 			}
 			break;
 		case EtMouseAction_Unknown:
@@ -671,8 +685,9 @@ static bool _et_tool_edit_anchor_point_handle_mouse_action(
 				handle = _edit_anchor_point_handle_grub_focus(focus, mouse_action);
 				PvAnchorPoint *ap = _get_focus_anchor_point(focus);
 				if(NULL != ap && PvAnchorPointIndex_Point == handle){
-					pv_element_bezier_anchor_point_set_handle(ap, PvAnchorPointIndex_Point,
-							mouse_action.point);
+					pv_element_bezier_anchor_point_set_handle_zero(
+							ap,
+							PvAnchorPointIndex_Point);
 				}
 			}
 			break;
@@ -687,22 +702,19 @@ static bool _et_tool_edit_anchor_point_handle_mouse_action(
 					break;
 				}
 
-				switch(handle){
-					case PvAnchorPointIndex_HandleNext:
-					case PvAnchorPointIndex_HandlePrev:
-						{
-							ap->points[handle].x = (mouse_action.point.x - ap->points[PvAnchorPointIndex_Point].x);
-							ap->points[handle].y = (mouse_action.point.y - ap->points[PvAnchorPointIndex_Point].y);
-						}
-						break;
-					case PvAnchorPointIndex_Point:
-						{
-							pv_element_bezier_anchor_point_set_handle(ap, PvAnchorPointIndex_Point,
-									mouse_action.point);
-						}
-						break;
-					default:
-						break;
+				PvPoint p_ap = pv_anchor_point_get_handle(*ap, PvAnchorPointIndex_Point);
+				PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
+				if(fabs(p_diff.x) < _et_tool_info_touch_offset
+						&& fabs(p_diff.y) < _et_tool_info_touch_offset)
+				{
+					pv_element_bezier_anchor_point_set_handle_zero(
+							ap,
+							handle);
+				}else{
+					pv_element_bezier_anchor_point_set_handle(
+							ap,
+							handle,
+							mouse_action.point);
 				}
 			}
 			break;

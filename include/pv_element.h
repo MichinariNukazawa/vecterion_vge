@@ -111,6 +111,12 @@ bool pv_element_bezier_add_anchor_point(PvElement * const self,
 		const PvAnchorPoint anchor_point);
 int pv_element_bezier_get_num_anchor_point(const PvElement *self);
 
+/*! @brief handle set to zero.
+ *	@param ap_index read to ~_set_handle() function.
+ */
+void pv_element_bezier_anchor_point_set_handle_zero(
+		PvAnchorPoint *ap,
+		PvAnchorPointIndex ap_index);
 /** @brief set handle from graphic point.
  * @param ap_index PvAnchorPointIndex_Point is next and mirror reverse handle prev.
  */
