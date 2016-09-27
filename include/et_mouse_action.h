@@ -27,7 +27,8 @@ typedef struct EtMouseAction EtMouseAction;
 struct EtMouseAction{
 	EtMouseButtonType	button;
 	EtMouseActionType	action;
-	PvPoint			point;
+	PvPoint			raw;	//<! position
+	PvPoint			point;	//<! position (changed if *snap enabled)
 	// ** used in moving
 	PvPoint			move;		// mouse move difference previous.
 	PvPoint			diff_down;	// mouse move difference mouse down.

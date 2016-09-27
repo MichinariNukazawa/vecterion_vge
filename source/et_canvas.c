@@ -276,6 +276,7 @@ static bool _signal_et_canvas_mouse_action(
 	EtMouseAction _mouse_action = {
 		.button = mouse_button,
 		.action = mouse_action,
+		.raw = dp,
 		.point = dp,
 		.move = dp_move,
 		.diff_down = cwp_diff_down,

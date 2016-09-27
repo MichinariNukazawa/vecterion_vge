@@ -41,15 +41,16 @@ static EtDocId _open_doc_new_from_file(const char* filepath);
 
 
 
+static bool _slot_mouse_action(EtDocId, EtMouseAction);
+
+
+
 static gboolean in_worker_func(gpointer data)
 {
 	static int count = 0;
 	count++;
 	// Gtk control.
 	printf("work:%d\n", count);
-	char s[64];
-	snprintf(s, sizeof(s), "%d", count);
-	gtk_statusbar_push(GTK_STATUSBAR(self->status_bar), 1, s);
 
 	return G_SOURCE_REMOVE;
 }
@@ -132,7 +133,7 @@ int main (int argc, char **argv){
 
 	GtkWidget *statusbar = gtk_statusbar_new();
 	gtk_box_pack_start(GTK_BOX(vbox), statusbar, FALSE, TRUE, 0);
-	gtk_statusbar_push(GTK_STATUSBAR(statusbar), 1, "Hello World");
+	gtk_statusbar_push(GTK_STATUSBAR(statusbar), 1, "-,(-)");
 	self->status_bar = statusbar;
 
 	GtkWidget *hbox_left = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3);
@@ -216,8 +217,14 @@ int main (int argc, char **argv){
 		return -1;
 	}
 
-	if(!et_pointing_manager_set_slot_mouse_action(
+	if(!et_pointing_manager_add_slot_mouse_action(
 				et_etaion_slot_mouse_action)){
+		et_error("");
+		return -1;
+	}
+
+	if(!et_pointing_manager_add_slot_mouse_action(
+				_slot_mouse_action)){
 		et_error("");
 		return -1;
 	}
@@ -403,6 +410,9 @@ static void _pvui_app_set_style(){
 			"GtkDrawingArea {\n"
 			"   background-color: rgb(255, 255, 255);\n"
 			//"   background-color: rgb(0, 0, 0);\n"
+			"}\n"
+			"GtkStatusbar {\n"
+			"   font: monospace;\n"
 			"}\n"
 			"", -1, NULL);
 	g_object_unref (provider);
@@ -931,6 +941,21 @@ static bool _init_menu(GtkWidget *window, GtkWidget *box_root)
 
 	menuitem = _new_tree_of_help(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
+
+	return true;
+}
+
+static bool _slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
+{
+	assert(self);
+
+	char s[256];
+	snprintf(s, sizeof(s), "%7.2f,%7.2f(%6.1f,%6.1f)",
+			mouse_action.point.x,
+			mouse_action.point.y,
+			mouse_action.raw.x,
+			mouse_action.raw.y);
+	gtk_statusbar_push(GTK_STATUSBAR(self->status_bar), 1, s);
 
 	return true;
 }

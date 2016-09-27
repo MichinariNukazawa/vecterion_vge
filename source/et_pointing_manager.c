@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include "et_error.h"
+#include "pv_general.h"
 
 static EtPointingManager *pointing_manager = NULL;
 
@@ -18,27 +19,27 @@ EtPointingManager *et_pointing_manager_init()
 		return NULL;
 	}
 
-	self->slot_mouse_action = NULL;
+	self->slot_mouse_actions = NULL;
 
 	pointing_manager = self;
 
 	return self;
 }
 
-bool et_pointing_manager_set_slot_mouse_action(EtPointingManagerSlotMouseAction slot)
+bool et_pointing_manager_add_slot_mouse_action(EtPointingManagerSlotMouseAction slot)
 {
 	EtPointingManager *self = pointing_manager;
-	if(NULL == self){
-		et_bug("");
-		return false;
-	}
+	assert(self);
 
-	if(NULL != self->slot_mouse_action){
-		et_bug("");
-		return false;
-	}
+	int num = pv_general_get_parray_num((void *)self->slot_mouse_actions);
+	EtPointingManagerSlotMouseAction *new_array = realloc(
+			self->slot_mouse_actions,
+			sizeof(EtPointingManagerSlotMouseAction) * (num + 2));
+	assert(new_array);
+	new_array[num + 1] = NULL;
+	new_array[num + 0] = slot;
 
-	self->slot_mouse_action = slot;
+	self->slot_mouse_actions = new_array;
 
 	return true;
 }
@@ -46,18 +47,15 @@ bool et_pointing_manager_set_slot_mouse_action(EtPointingManagerSlotMouseAction 
 bool et_pointing_manager_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 {
 	EtPointingManager *self = pointing_manager;
-	if(NULL == self){
-		et_bug("");
-		return false;
-	}
-	if(NULL == self->slot_mouse_action){
-		et_bug("");
-		return false;
-	}
+	assert(self);
+	assert(self->slot_mouse_actions);
 
-	if(!self->slot_mouse_action(doc_id, mouse_action)){
-		et_error("");
-		return false;
+	int num = pv_general_get_parray_num((void *)self->slot_mouse_actions);
+	for(int i = 0; i < num; i++){
+		assert(self->slot_mouse_actions[i]);
+		if(!self->slot_mouse_actions[i](doc_id, mouse_action)){
+			et_error("");
+		}
 	}
 
 	return true;
