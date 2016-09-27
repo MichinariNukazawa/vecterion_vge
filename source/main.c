@@ -24,7 +24,14 @@
 #include "et_stroke_panel.h"
 
 const char *APP_NAME = "Etaion Vector Graphic Editor";
-GtkWindow *_main_window = NULL;
+
+typedef struct{
+	GtkWindow *window;
+	GtkWidget *status_bar;
+}EtWindow;
+
+static EtWindow window_;
+static EtWindow *self = &window_;
 
 static void _pvui_app_set_style();
 static bool _init_menu(GtkWidget *window, GtkWidget *box_root);
@@ -34,7 +41,6 @@ static EtDocId _open_doc_new_from_file(const char* filepath);
 
 
 
-GtkWidget *status_bar= NULL;
 static gboolean in_worker_func(gpointer data)
 {
 	static int count = 0;
@@ -43,7 +49,7 @@ static gboolean in_worker_func(gpointer data)
 	printf("work:%d\n", count);
 	char s[64];
 	snprintf(s, sizeof(s), "%d", count);
-	gtk_statusbar_push(GTK_STATUSBAR(status_bar), 1, s);
+	gtk_statusbar_push(GTK_STATUSBAR(self->status_bar), 1, s);
 
 	return G_SOURCE_REMOVE;
 }
@@ -104,7 +110,7 @@ int main (int argc, char **argv){
 	// ** window and container(box)s application base.
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_set_size_request (window, 900,700);
-	_main_window = GTK_WINDOW(window);
+	self->window = GTK_WINDOW(window);
 
 	GtkWidget *box_root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
 	gtk_container_add(GTK_CONTAINER(window), box_root);
@@ -127,7 +133,7 @@ int main (int argc, char **argv){
 	GtkWidget *statusbar = gtk_statusbar_new();
 	gtk_box_pack_start(GTK_BOX(vbox), statusbar, FALSE, TRUE, 0);
 	gtk_statusbar_push(GTK_STATUSBAR(statusbar), 1, "Hello World");
-	status_bar = statusbar;
+	self->status_bar = statusbar;
 
 	GtkWidget *hbox_left = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3);
 	gtk_box_pack_start(GTK_BOX(box1), hbox_left, false, false, 3);
@@ -520,7 +526,7 @@ static gboolean _cb_menu_file_save(gpointer data)
 		gint res;
 
 		dialog = gtk_file_chooser_dialog_new ("Save File",
-				_main_window,
+				self->window,
 				action,
 				_("_Cancel"),
 				GTK_RESPONSE_CANCEL,
