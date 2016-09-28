@@ -181,7 +181,7 @@ int main (int argc, char **argv){
 	}
 	gtk_box_pack_start(GTK_BOX(box_dock_work),
 			et_color_panel_get_widget_frame(),
-			true, true, 3);
+			false, false, 3);
 
 	EtStrokePanel *stroke_panel = et_stroke_panel_init();
 	if(NULL == stroke_panel){
@@ -195,7 +195,7 @@ int main (int argc, char **argv){
 	}
 	gtk_box_pack_start(GTK_BOX(box_dock_work),
 			et_stroke_panel_get_widget_frame(),
-			true, true, 3);
+			false, false, 3);
 
 	EtLayerView *layer_view = et_layer_view_init();
 	if(NULL == layer_view){
@@ -209,7 +209,7 @@ int main (int argc, char **argv){
 	}
 	gtk_box_pack_start(GTK_BOX(box_dock_work),
 			et_layer_view_get_widget_frame(),
-			true, true, 3);
+			false, true, 3);
 
 	EtPointingManager *pointing_manager = et_pointing_manager_init();
 	if(NULL == pointing_manager){
