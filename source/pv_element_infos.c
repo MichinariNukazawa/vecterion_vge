@@ -120,6 +120,14 @@ static bool _pv_element_notimplement_move_anchor_point(
 	return true;
 }
 
+static PvRect _pv_element_notimplement_get_rect_anchor_points(
+		const PvElement *element)
+{
+	return PvRect_Default;
+}
+
+
+
 /* ****************
  * General
  **************** */
@@ -872,6 +880,35 @@ static bool _pv_element_bezier_move_anchor_point(
 	return true;
 }
 
+static PvRect _pv_element_bezier_get_rect_anchor_points(
+		const PvElement *element)
+{
+	const PvElementBezierData *data = (PvElementBezierData *)element->data;
+
+	PvPoint min = (PvPoint){0, 0};
+	PvPoint max = (PvPoint){0, 0};
+	for(int i = 0; i < data->anchor_points_num; i++){
+		PvPoint p = data->anchor_points[i].points[PvAnchorPointIndex_Point];
+		if(0 == i){
+			min.x = p.x;
+			min.y = p.y;
+			max.x = p.x;
+			max.y = p.y;
+		}else{
+			min.x = (min.x < p.x)? min.x : p.x;
+			min.y = (min.y < p.y)? min.y : p.y;
+			max.x = (max.x > p.x)? max.x : p.x;
+			max.y = (max.y > p.y)? max.y : p.y;
+		}
+	}
+
+	PvRect rect = (PvRect){min.x, min.y, (max.x - min.x), (max.y - min.y)};
+
+	return rect;
+}
+
+
+
 /* ****************
  * Raster
  **************** */
@@ -1112,6 +1149,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
 		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
 		.func_move_anchor_point		= _pv_element_notimplement_move_anchor_point,
+		.func_get_rect_anchor_points	= _pv_element_notimplement_get_rect_anchor_points,
 	},
 	{PvElementKind_Root, "Root",
 		.func_new_data			= _pv_element_group_data_new,
@@ -1126,6 +1164,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
 		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
 		.func_move_anchor_point		= _pv_element_notimplement_move_anchor_point,
+		.func_get_rect_anchor_points			= _pv_element_notimplement_get_rect_anchor_points,
 	},
 	{PvElementKind_Layer, "Layer",
 		.func_new_data			= _pv_element_group_data_new,
@@ -1140,6 +1179,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
 		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
 		.func_move_anchor_point		= _pv_element_notimplement_move_anchor_point,
+		.func_get_rect_anchor_points			= _pv_element_notimplement_get_rect_anchor_points,
 	},
 	{PvElementKind_Group, "Group",
 		.func_new_data			= _pv_element_group_data_new,
@@ -1154,6 +1194,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
 		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
 		.func_move_anchor_point		= _pv_element_notimplement_move_anchor_point,
+		.func_get_rect_anchor_points			= _pv_element_notimplement_get_rect_anchor_points,
 	},
 	{PvElementKind_Bezier, "Bezier",
 		.func_new_data			= _pv_element_bezier_data_new,
@@ -1168,6 +1209,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_get_num_anchor_point	= _pv_element_bezier_get_num_anchor_point,
 		.func_new_anchor_points		= _pv_element_bezier_new_anchor_points,
 		.func_move_anchor_point		= _pv_element_bezier_move_anchor_point,
+		.func_get_rect_anchor_points			= _pv_element_bezier_get_rect_anchor_points,
 	},
 	{PvElementKind_Raster, "Raster",
 		.func_new_data			= _pv_element_raster_data_new,
@@ -1182,6 +1224,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
 		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
 		.func_move_anchor_point		= _pv_element_notimplement_move_anchor_point,
+		.func_get_rect_anchor_points			= _pv_element_notimplement_get_rect_anchor_points,
 	},
 	/* 番兵 */
 	{PvElementKind_EndOfKind, "EndOfKind",
@@ -1197,6 +1240,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
 		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
 		.func_move_anchor_point		= _pv_element_notimplement_move_anchor_point,
+		.func_get_rect_anchor_points			= _pv_element_notimplement_get_rect_anchor_points,
 	},
 };
 
