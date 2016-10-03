@@ -512,8 +512,8 @@ static bool _et_tool_info_move_anchor_points(EtDocId doc_id, EtMouseAction mouse
 	for(int i = 0; i < num; i++){
 		const PvElementInfo *info = pv_element_get_info_from_kind(focus->elements[i]->kind);
 		assert(info);
-		assert(info->func_move_anchor_point);
-		info->func_move_anchor_point(focus->elements[i], focus->index, mouse_action.move);
+		assert(info->func_move_anchor_point_point);
+		info->func_move_anchor_point_point(focus->elements[i], focus->index, mouse_action.move);
 	}
 
 	return true;

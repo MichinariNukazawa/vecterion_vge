@@ -51,7 +51,7 @@ typedef int (*PvElementFuncGetNumAnchorPoint)(
 		const PvElement *element);
 typedef PvAnchorPoint *(*PvElementFuncNewAnchorPoints)(
 		const PvElement *element);
-typedef bool (*PvElementFuncMoveAnchorPoint)(
+typedef bool (*PvElementFuncMoveAnchorPointPoint)(
 		const PvElement *element,
 		const int index,
 		const PvPoint move);
@@ -61,19 +61,19 @@ typedef PvRect (*PvElementFuncGetRect)(
 typedef struct PvElementInfo{
 	PvElementKind kind;
 	const char *name;
-	PvElementFuncNewData		func_new_data;
-	PvElementFuncDeleteData		func_delete_data;
-	PvElementFuncCopyNewData	func_copy_new_data;
-	PvElementFuncWriteSvg		func_write_svg;
-	PvElementFuncDraw		func_draw;
-	PvElementFuncDrawFocusing	func_draw_focusing;
-	PvElementFuncIsTouchElement	func_is_touch_element;
-	PvElementFuncIsDiffOne		func_is_diff_one;
-	PvElementFuncMoveElement	func_move_element;
-	PvElementFuncGetNumAnchorPoint	func_get_num_anchor_point;
-	PvElementFuncNewAnchorPoints	func_new_anchor_points;
-	PvElementFuncMoveAnchorPoint	func_move_anchor_point;
-	PvElementFuncGetRect		func_get_rect_anchor_points;
+	PvElementFuncNewData			func_new_data;
+	PvElementFuncDeleteData			func_delete_data;
+	PvElementFuncCopyNewData		func_copy_new_data;
+	PvElementFuncWriteSvg			func_write_svg;
+	PvElementFuncDraw			func_draw;
+	PvElementFuncDrawFocusing		func_draw_focusing;
+	PvElementFuncIsTouchElement		func_is_touch_element;
+	PvElementFuncIsDiffOne			func_is_diff_one;
+	PvElementFuncMoveElement		func_move_element;
+	PvElementFuncGetNumAnchorPoint		func_get_num_anchor_point;
+	PvElementFuncNewAnchorPoints		func_new_anchor_points;
+	PvElementFuncMoveAnchorPointPoint	func_move_anchor_point_point;
+	PvElementFuncGetRect			func_get_rect_anchor_points;
 
 }PvElementInfo;
 
