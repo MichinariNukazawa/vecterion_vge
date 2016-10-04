@@ -1,3 +1,6 @@
 
 /gtk+*
 /libxml2
+
+/googletest
+
