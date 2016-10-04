@@ -635,7 +635,7 @@ bool pv_element_is_diff_recursive(
 	PvElementIsDiffRecursiveData _data = {
 		.is_diff = false,
 	};
-	PvElementRecursiveError error = PvElementRecursiveError_default;
+	PvElementRecursiveError error = PvElementRecursiveError_Default;
 	int level = 0;
 	_pv_element_is_diff_recursive_inline(
 			element0,

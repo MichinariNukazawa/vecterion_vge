@@ -57,7 +57,7 @@ static PvElement *_pv_svg_g_new_element_from_svg(
 
 void pv_element_anchor_point_init(PvAnchorPoint *ap)
 {
-	*ap = PvAnchorPoint_default;
+	*ap = PvAnchorPoint_Default;
 }
 
 static const char *_pv_svg_read_args_from_str(double *args, int num_args, const char *str)

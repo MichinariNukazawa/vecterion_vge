@@ -22,7 +22,7 @@ typedef struct PvMatrix{
 	double x;
 	double y;
 }PvMatrix;
-static const PvMatrix PvMatrix_default = {
+static const PvMatrix PvMatrix_Default = {
 	.x = 0,
 	.y = 0,
 };
@@ -46,7 +46,7 @@ typedef struct PvAnchorPoint PvAnchorPoint;
 struct PvAnchorPoint{
 	PvPoint points[3];
 };
-static const PvAnchorPoint PvAnchorPoint_default = {
+static const PvAnchorPoint PvAnchorPoint_Default = {
 	.points = {{0,0}, {0,0}, {0,0}, },
 };
 

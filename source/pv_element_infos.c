@@ -724,7 +724,7 @@ static bool _pv_element_bezier_is_touch_element(
 		return false;
 	}
 
-	PvRenderContext render_context = PvRenderContext_default;
+	PvRenderContext render_context = PvRenderContext_Default;
 	if(!_pv_element_bezier_command_path(
 				cr,
 				render_context,
@@ -921,7 +921,7 @@ static gpointer _pv_element_raster_data_new()
 		exit(-1);
 	}
 
-	data->matrix = PvMatrix_default;
+	data->matrix = PvMatrix_Default;
 	data->path = NULL;
 	data->pixbuf = NULL;
 

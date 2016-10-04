@@ -41,7 +41,7 @@ typedef struct PvElementRecursiveError{
 	int level;
 	const PvElement *element;
 }PvElementRecursiveError;
-static const PvElementRecursiveError PvElementRecursiveError_default = {
+static const PvElementRecursiveError PvElementRecursiveError_Default = {
 	.is_error	= false,
 	.level		= 0,
 	.element	= NULL,

@@ -9,7 +9,7 @@ struct PvRenderContext{
 	double scale;
 	int margin;
 };
-static const PvRenderContext PvRenderContext_default = {
+static const PvRenderContext PvRenderContext_Default = {
 	.is_focus	= false,
 	.is_extent_view	= false,
 	.scale		= 1.0,
