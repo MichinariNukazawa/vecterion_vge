@@ -134,7 +134,7 @@ static bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const ch
 				if(0 < data->anchor_points_num){
 					PvAnchorPoint *ap_prev = &data->anchor_points[data->anchor_points_num - 1];
 					PvPoint gpoint_next = {args[0], args[1]};
-					pv_element_bezier_anchor_point_set_handle(ap_prev,
+					pv_anchor_point_set_handle(ap_prev,
 							PvAnchorPointIndex_HandleNext, gpoint_next);
 				}else{
 					// 'C' command on top?

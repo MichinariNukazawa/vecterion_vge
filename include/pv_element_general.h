@@ -7,6 +7,7 @@
 
 #include "pv_type.h"
 #include "pv_general.h"
+#include "pv_anchor_point.h"
 
 
 // ** 各 ElementKindのdata構造
@@ -33,21 +34,6 @@ struct PvElementRasterData{
 	PvMatrix matrix;
 	char *path;
 	GdkPixbuf *pixbuf;
-};
-
-typedef enum _PvAnchorPointIndex{
-	PvAnchorPointIndex_HandlePrev = 0,
-	PvAnchorPointIndex_Point = 1,
-	PvAnchorPointIndex_HandleNext = 2,
-}PvAnchorPointIndex;
-
-struct PvAnchorPoint;
-typedef struct PvAnchorPoint PvAnchorPoint;
-struct PvAnchorPoint{
-	PvPoint points[3];
-};
-static const PvAnchorPoint PvAnchorPoint_Default = {
-	.points = {{0,0}, {0,0}, {0,0}, },
 };
 
 struct PvElementBezierData;

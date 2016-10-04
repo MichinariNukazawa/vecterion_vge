@@ -111,25 +111,6 @@ bool pv_element_bezier_add_anchor_point(PvElement * const self,
 		const PvAnchorPoint anchor_point);
 int pv_element_bezier_get_num_anchor_point(const PvElement *self);
 
-/*! @brief handle set to zero.
- *	@param ap_index read to ~_set_handle() function.
- */
-void pv_element_bezier_anchor_point_set_handle_zero(
-		PvAnchorPoint *ap,
-		PvAnchorPointIndex ap_index);
-/** @brief set handle from graphic point.
- * @param ap_index PvAnchorPointIndex_Point is next and mirror reverse handle prev.
- */
-void pv_element_bezier_anchor_point_set_handle(PvAnchorPoint *ap,
-		PvAnchorPointIndex ap_index, PvPoint gpoint);
-
-/** @brief
- *
- * @return PvPoint to graphic point.
- *		if rise error return value is not specitication.(ex. {0,0})
- */
-PvPoint pv_anchor_point_get_handle(const PvAnchorPoint ap, PvAnchorPointIndex ap_index);
-
 bool pv_element_kind_is_viewable_object(PvElementKind kind);
 
 void pv_element_debug_print(const PvElement *element);
@@ -138,3 +119,4 @@ void pv_element_debug_print(const PvElement *element);
 #endif // include_ET_TEST
 
 #endif // include_PV_ELEMENT_H
+

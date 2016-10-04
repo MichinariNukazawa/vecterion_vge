@@ -414,11 +414,11 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 				if(fabs(p_diff.x) < _et_tool_info_touch_offset
 						&& fabs(p_diff.y) < _et_tool_info_touch_offset)
 				{
-					pv_element_bezier_anchor_point_set_handle_zero(
+					pv_anchor_point_set_handle_zero(
 							ap,
 							PvAnchorPointIndex_Point);
 				}else{
-					pv_element_bezier_anchor_point_set_handle(
+					pv_anchor_point_set_handle(
 							ap,
 							PvAnchorPointIndex_Point,
 							mouse_action.point);
@@ -685,7 +685,7 @@ static bool _et_tool_edit_anchor_point_handle_mouse_action(
 				handle = _edit_anchor_point_handle_grub_focus(focus, mouse_action);
 				PvAnchorPoint *ap = _get_focus_anchor_point(focus);
 				if(NULL != ap && PvAnchorPointIndex_Point == handle){
-					pv_element_bezier_anchor_point_set_handle_zero(
+					pv_anchor_point_set_handle_zero(
 							ap,
 							PvAnchorPointIndex_Point);
 				}
@@ -707,11 +707,11 @@ static bool _et_tool_edit_anchor_point_handle_mouse_action(
 				if(fabs(p_diff.x) < _et_tool_info_touch_offset
 						&& fabs(p_diff.y) < _et_tool_info_touch_offset)
 				{
-					pv_element_bezier_anchor_point_set_handle_zero(
+					pv_anchor_point_set_handle_zero(
 							ap,
 							handle);
 				}else{
-					pv_element_bezier_anchor_point_set_handle(
+					pv_anchor_point_set_handle(
 							ap,
 							handle,
 							mouse_action.point);
