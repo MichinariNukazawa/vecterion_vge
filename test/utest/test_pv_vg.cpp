@@ -108,8 +108,10 @@ TEST(Test, CopyAndDiff){
 		}
 		// TODO: fix this (from pv_io ?)
 		// PvElement *elem_layer = pv_vg_get_layer_top(vg_diff);
-		PvElement *elem_layer = vg->element_root->childs[1];
-		int num = pv_general_get_parray_num((void **)elem_layer->childs);
+		int num_ = pv_general_get_parray_num((void **)(vg->element_root->childs));
+		assert(1 == num_);
+		PvElement *elem_layer = vg->element_root->childs[0];
+		int num = pv_general_get_parray_num((void **)(elem_layer->childs));
 		if(num < 1){
 			FAIL();
 		}
@@ -126,8 +128,8 @@ TEST(Test, CopyAndDiff){
 		if(NULL == vg_diff){
 			FAIL();
 		}
-		PvElement *elem_layer = vg->element_root->childs[1];
-		int num = pv_general_get_parray_num((void **)elem_layer->childs);
+		PvElement *elem_layer = vg->element_root->childs[0];
+		int num = pv_general_get_parray_num((void **)(elem_layer->childs));
 		if(num < 1){
 			FAIL();
 		}

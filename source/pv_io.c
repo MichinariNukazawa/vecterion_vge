@@ -443,9 +443,6 @@ PvVg *pv_io_new_from_file(const char *filepath)
 		return NULL;
 	}
 
-	// remove default layer, when after read file.
-	PvElement *layer_top = pv_vg_get_layer_top(vg);
-
 	LIBXML_TEST_VERSION
 
 		xmlDoc *xml_doc = xmlReadFile(filepath, NULL, 0);
@@ -470,10 +467,10 @@ PvVg *pv_io_new_from_file(const char *filepath)
 	}
 	print_element_names(xmlnode_svg);
 
-	// remove default layer.
-	if(1 < pv_general_get_parray_num((void **)(vg->element_root->childs))){
-		assert(pv_element_remove_delete_recursive(layer_top));
-	}
+	// remove default layer, when after append element from raster image file.
+	assert(2 == pv_general_get_parray_num((void **)(vg->element_root->childs)));
+	assert(pv_element_remove_delete_recursive(vg->element_root->childs[0]));
+	assert(1 == pv_general_get_parray_num((void **)(vg->element_root->childs)));
 
 
 	xmlFreeDoc(xml_doc);
