@@ -23,6 +23,7 @@
 #include "et_color_panel.h"
 #include "et_stroke_panel.h"
 #include "et_position_panel.h"
+#include "et_snap_panel.h"
 
 const char *APP_NAME = "Etaion Vector Graphic Editor";
 
@@ -213,6 +214,17 @@ int main (int argc, char **argv){
 			et_position_panel_get_widget_frame(),
 			true, true, 3);
 
+	EtSnapPanel *snap_panel = et_snap_panel_init();
+	assert(snap_panel);
+	if(0 > et_etaion_set_slot_change_state(
+				slot_et_snap_panel_from_etaion_change_state, NULL)){
+		et_bug("");
+		return -1;
+	}
+	gtk_box_pack_start(GTK_BOX(box_underbar),
+			et_snap_panel_get_widget_frame(),
+			true, true, 3);
+
 	EtLayerView *layer_view = et_layer_view_init();
 	if(NULL == layer_view){
 		et_bug("");
@@ -384,6 +396,11 @@ static EtDocId _open_doc_new(PvVg *vg_src)
 	}
 
 	if(!et_doc_add_slot_change(doc_id, slot_et_position_panel_from_doc_change, NULL)){
+		et_error("");
+		return -1;
+	}
+
+	if(!et_doc_add_slot_change(doc_id, slot_et_snap_panel_from_doc_change, NULL)){
 		et_error("");
 		return -1;
 	}

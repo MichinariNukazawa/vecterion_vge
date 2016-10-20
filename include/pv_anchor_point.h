@@ -39,6 +39,9 @@ void pv_anchor_point_set_handle_zero(
 void pv_anchor_point_set_handle(PvAnchorPoint *ap,
 		PvAnchorPointIndex ap_index, PvPoint gpoint);
 
+void pv_anchor_point_set_point(PvAnchorPoint *ap, PvPoint point);
+void pv_anchor_point_move_point(PvAnchorPoint *ap, PvPoint move);
+
 /** @brief
  *
  * @return PvPoint to graphic point.

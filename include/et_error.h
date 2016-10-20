@@ -5,6 +5,15 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define et_assertf(hr, fmt, ...) \
+	do{ \
+		if(!(hr)){ \
+			fprintf(stderr, "assert: %s()[%d]: "fmt"\n", \
+					__func__, __LINE__, ## __VA_ARGS__); \
+			assert(hr); \
+		} \
+	}while(0);
+
 // Caution: depend gcc
 #define et_bug(fmt, ...)  \
 	fprintf(stderr, "BUG: %s()[%d]: "fmt"\n", __func__, __LINE__, ## __VA_ARGS__)

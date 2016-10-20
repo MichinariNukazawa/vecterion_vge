@@ -14,6 +14,8 @@ typedef struct PvPoint{
 	double y;
 }PvPoint;
 
+static const PvPoint PvPoint_Default = {0, 0};
+
 PvPoint pv_point_add(PvPoint, PvPoint);
 PvPoint pv_point_sub(PvPoint, PvPoint);
 PvPoint pv_point_add_value(PvPoint, double);

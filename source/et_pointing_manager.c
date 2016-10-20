@@ -1,8 +1,10 @@
 #include "et_pointing_manager.h"
 
 #include <stdlib.h>
+#include <math.h>
 #include "et_error.h"
 #include "pv_general.h"
+#include "et_snap_panel.h"
 
 static EtPointingManager *pointing_manager = NULL;
 
@@ -49,6 +51,14 @@ bool et_pointing_manager_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_a
 	EtPointingManager *self = pointing_manager;
 	assert(self);
 	assert(self->slot_mouse_actions);
+
+	//! snap
+	const EtSnap snap = et_snap_panel_get_snap();
+	mouse_action.snap = snap;
+	if(snap.is_snap_for_pixel){
+		mouse_action.point.x = round(mouse_action.point.x);
+		mouse_action.point.y = round(mouse_action.point.y);
+	}
 
 	int num = pv_general_get_parray_num((void *)self->slot_mouse_actions);
 	for(int i = 0; i < num; i++){

@@ -5,6 +5,7 @@
 #include <gdk/gdk.h>
 #include <stdbool.h>
 #include "pv_type.h"
+#include "et_snap.h"
 
 typedef enum _EtMouseButtonType{
 	EtMouseButton_Unknown,
@@ -33,6 +34,8 @@ struct EtMouseAction{
 	PvPoint			move;		// mouse move difference previous.
 	PvPoint			diff_down;	// mouse move difference mouse down.
 	GdkModifierType		state;		// mouse buttons state.
+
+	EtSnap			snap;
 };
 
 #ifdef include_ET_TEST

@@ -112,6 +112,36 @@ static bool _pv_element_notimplement_move_element(
 	return false;
 }
 
+static PvPoint _pv_element_notimplement_get_point(
+		const PvElement *element)
+{
+	return PvPoint_Default;
+}
+
+static void _pv_element_notimplement_set_point(
+		PvElement *element,
+		const PvPoint point)
+{
+	return;
+}
+
+static PvAnchorPoint _pv_element_notimplement_get_anchor_point(
+		const PvElement *element,
+		const int index)
+{
+	PvAnchorPoint ap = PvAnchorPoint_Default;
+
+	return ap;
+}
+
+static bool _pv_element_notimplement_set_anchor_point_point(
+		const PvElement *element,
+		const int index,
+		const PvPoint point)
+{
+	return true;
+}
+
 static bool _pv_element_notimplement_move_anchor_point(
 		const PvElement *element,
 		const int index,
@@ -790,6 +820,49 @@ static bool _pv_element_bezier_is_diff_one(
 	return true;
 }
 
+/*! @fixme get point left head. */
+static PvPoint _pv_element_bezier_get_point(
+		const PvElement *element)
+{
+	assert(element);
+	assert(element->data);
+	const PvElementBezierData *data = element->data;
+
+	PvPoint point = PvPoint_Default;
+	int num = data->anchor_points_num;
+	for(int i = 0; i < num; i++){
+		PvPoint a_point = pv_anchor_point_get_handle(data->anchor_points[i], PvAnchorPointIndex_Point);
+		if(0 == i){
+			point = a_point;
+		}else{
+			point.x = (point.x < a_point.x)? point.x : a_point.x;
+			point.y = (point.y < a_point.y)? point.y : a_point.y;
+		}
+	}
+
+	return point;
+}
+
+static void _pv_element_bezier_set_point(
+		PvElement *element,
+		const PvPoint point)
+{
+	assert(element);
+	assert(element->data);
+	PvElementBezierData *data = element->data;
+
+
+	PvPoint point_prev = _pv_element_bezier_get_point(element);
+	PvPoint move = pv_point_sub(point, point_prev);
+
+	int num = data->anchor_points_num;
+	for(int i = 0; i < num; i++){
+		pv_anchor_point_move_point(&(data->anchor_points[i]), move);
+	}
+
+	return;
+}
+
 static bool _pv_element_bezier_move_element(
 		const PvElement *element,
 		double gx,
@@ -861,19 +934,58 @@ PvAnchorPoint *_pv_element_bezier_new_anchor_points(
 	return new_anchor_points;
 }
 
+static PvAnchorPoint _pv_element_bezier_get_anchor_point(
+		const PvElement *element,
+		const int index)
+{
+	assert(element);
+	assert(PvElementKind_Bezier == element->kind);
+
+	PvElementBezierData *data = element->data;
+	assert(data);
+	assert(data->anchor_points);
+	assert(index < data->anchor_points_num);
+
+	return data->anchor_points[index];
+}
+
+static bool _pv_element_bezier_set_anchor_point_point(
+		const PvElement *element,
+		const int index,
+		const PvPoint point)
+{
+	assert(element);
+	assert(PvElementKind_Bezier == element->kind);
+
+	PvElementBezierData *data = element->data;
+	assert(data);
+	assert(data->anchor_points);
+	assert(index < data->anchor_points_num);
+
+	pv_anchor_point_set_point(
+			&(data->anchor_points[index]),
+			point);
+
+	return true;
+}
+
 static bool _pv_element_bezier_move_anchor_point(
 		const PvElement *element,
 		const int index,
 		const PvPoint move)
 {
+	assert(element);
+	assert(PvElementKind_Bezier == element->kind);
+
+	PvElementBezierData *data = element->data;
+	assert(data);
+
 	int num = _pv_element_bezier_get_num_anchor_point(element);
 	if(num <= index){
 		pv_bug("%d %d", index, num);
 		return false;
 	}
 
-	PvElementBezierData *data = element->data;
-	assert(data);
 	data->anchor_points[index].points[PvAnchorPointIndex_Point].x += move.x;
 	data->anchor_points[index].points[PvAnchorPointIndex_Point].y += move.y;
 
@@ -1111,6 +1223,33 @@ static bool _pv_element_raster_is_diff_one(
 	return true;
 }
 
+static PvPoint _pv_element_raster_get_point(
+		const PvElement *element)
+{
+	assert(element);
+	assert(element->data);
+	const PvElementRasterData *data = element->data;
+
+	PvPoint ret = {
+		.x = data->matrix.x,
+		.y = data->matrix.y,
+	};
+
+	return ret;
+}
+
+static void _pv_element_raster_set_point(
+		PvElement *element,
+		const PvPoint point)
+{
+	assert(element);
+	assert(element->data);
+	PvElementRasterData *data = element->data;
+
+	data->matrix.x = point.x;
+	data->matrix.y = point.y;
+}
+
 static bool _pv_element_raster_move_element(
 		const PvElement *element,
 		double gx,
@@ -1131,6 +1270,91 @@ static bool _pv_element_raster_move_element(
 
 	return true;
 }
+
+static PvAnchorPoint _pv_element_raster_get_anchor_point(
+		const PvElement *element,
+		const int index)
+{
+	assert(element);
+	assert(PvElementKind_Raster == element->kind);
+
+	PvElementRasterData *data = element->data;
+	assert(data);
+
+	PvAnchorPoint ap = PvAnchorPoint_Default;
+	PvPoint point = {
+		.x = data->matrix.x,
+		.y = data->matrix.y,
+	};
+	pv_anchor_point_set_handle(&ap, PvAnchorPointIndex_Point, point);
+
+	return ap;
+}
+
+static bool _pv_element_raster_set_anchor_point_point(
+		const PvElement *element,
+		const int index,
+		const PvPoint point)
+{
+	assert(element);
+	assert(PvElementKind_Raster == element->kind);
+
+	PvElementRasterData *data = element->data;
+	assert(data);
+
+	data->matrix.x = point.x;
+	data->matrix.y = point.y;
+
+	return true;
+}
+
+static bool _pv_element_raster_move_anchor_point(
+		const PvElement *element,
+		const int index,
+		const PvPoint move)
+{
+	assert(element);
+	assert(PvElementKind_Raster == element->kind);
+
+	PvElementRasterData *data = element->data;
+	assert(data);
+
+	switch(index){
+		case 0:
+			{
+				data->matrix.x += move.x;
+				data->matrix.y += move.y;
+			}
+			break;
+		default:
+			{
+				pv_debug("Not implement.");
+				return true;
+			}
+			break;
+	}
+
+	return true;
+}
+
+static PvRect _pv_element_raster_get_rect_anchor_points(
+		const PvElement *element)
+{
+	assert(element);
+	assert(PvElementKind_Raster == element->kind);
+
+	PvElementRasterData *data = element->data;
+	assert(data);
+
+	PvRect rect = PvRect_Default;
+	rect.x = data->matrix.x;
+	rect.y = data->matrix.y;
+	rect.w = gdk_pixbuf_get_width(data->pixbuf);
+	rect.h = gdk_pixbuf_get_height(data->pixbuf);
+
+	return rect;
+}
+
 /* ****************
  * ElementInfo配列の定義
  **************** */
@@ -1145,9 +1369,13 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw_focusing		= _pv_element_notimplement_draw,
 		.func_is_touch_element		= _pv_element_notimplement_is_touch_element,
 		.func_is_diff_one		= _pv_element_notimplement_is_diff_one,
+		.func_get_point			= _pv_element_notimplement_get_point,
+		.func_set_point			= _pv_element_notimplement_set_point,
 		.func_move_element		= _pv_element_notimplement_move_element,
 		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
 		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
+		.func_get_anchor_point		= _pv_element_notimplement_get_anchor_point,
+		.func_set_anchor_point_point	= _pv_element_notimplement_set_anchor_point_point,
 		.func_move_anchor_point_point	= _pv_element_notimplement_move_anchor_point,
 		.func_get_rect_anchor_points	= _pv_element_notimplement_get_rect_anchor_points,
 	},
@@ -1160,9 +1388,13 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw_focusing		= _pv_element_group_draw,
 		.func_is_touch_element		= _pv_element_group_is_touch_element,
 		.func_is_diff_one		= _pv_element_group_is_diff_one,
+		.func_get_point			= _pv_element_notimplement_get_point,
+		.func_set_point			= _pv_element_notimplement_set_point,
 		.func_move_element		= _pv_element_group_move_element,
 		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
 		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
+		.func_get_anchor_point		= _pv_element_notimplement_get_anchor_point,
+		.func_set_anchor_point_point	= _pv_element_notimplement_set_anchor_point_point,
 		.func_move_anchor_point_point	= _pv_element_notimplement_move_anchor_point,
 		.func_get_rect_anchor_points	= _pv_element_notimplement_get_rect_anchor_points,
 	},
@@ -1175,9 +1407,13 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw_focusing		= _pv_element_group_draw,
 		.func_is_touch_element		= _pv_element_group_is_touch_element,
 		.func_is_diff_one		= _pv_element_group_is_diff_one,
+		.func_get_point			= _pv_element_notimplement_get_point,
+		.func_set_point			= _pv_element_notimplement_set_point,
 		.func_move_element		= _pv_element_group_move_element,
 		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
 		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
+		.func_get_anchor_point		= _pv_element_notimplement_get_anchor_point,
+		.func_set_anchor_point_point	= _pv_element_notimplement_set_anchor_point_point,
 		.func_move_anchor_point_point	= _pv_element_notimplement_move_anchor_point,
 		.func_get_rect_anchor_points	= _pv_element_notimplement_get_rect_anchor_points,
 	},
@@ -1190,9 +1426,13 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw_focusing		= _pv_element_group_draw,
 		.func_is_touch_element		= _pv_element_group_is_touch_element,
 		.func_is_diff_one		= _pv_element_group_is_diff_one,
+		.func_get_point			= _pv_element_notimplement_get_point,
+		.func_set_point			= _pv_element_notimplement_set_point,
 		.func_move_element		= _pv_element_group_move_element,
 		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
 		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
+		.func_get_anchor_point		= _pv_element_notimplement_get_anchor_point,
+		.func_set_anchor_point_point	= _pv_element_notimplement_set_anchor_point_point,
 		.func_move_anchor_point_point	= _pv_element_notimplement_move_anchor_point,
 		.func_get_rect_anchor_points	= _pv_element_notimplement_get_rect_anchor_points,
 	},
@@ -1205,9 +1445,13 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw_focusing		= _pv_element_bezier_draw_focusing,
 		.func_is_touch_element		= _pv_element_bezier_is_touch_element,
 		.func_is_diff_one		= _pv_element_bezier_is_diff_one,
+		.func_get_point			= _pv_element_bezier_get_point,
+		.func_set_point			= _pv_element_bezier_set_point,
 		.func_move_element		= _pv_element_bezier_move_element,
 		.func_get_num_anchor_point	= _pv_element_bezier_get_num_anchor_point,
 		.func_new_anchor_points		= _pv_element_bezier_new_anchor_points,
+		.func_get_anchor_point		= _pv_element_bezier_get_anchor_point,
+		.func_set_anchor_point_point	= _pv_element_bezier_set_anchor_point_point,
 		.func_move_anchor_point_point	= _pv_element_bezier_move_anchor_point,
 		.func_get_rect_anchor_points	= _pv_element_bezier_get_rect_anchor_points,
 	},
@@ -1220,11 +1464,15 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw_focusing		= _pv_element_raster_draw_focusing,
 		.func_is_touch_element		= _pv_element_raster_is_touch_element,
 		.func_is_diff_one		= _pv_element_raster_is_diff_one,
+		.func_get_point			= _pv_element_raster_get_point,
+		.func_set_point			= _pv_element_raster_set_point,
 		.func_move_element		= _pv_element_raster_move_element,
 		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
 		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
-		.func_move_anchor_point_point	= _pv_element_notimplement_move_anchor_point,
-		.func_get_rect_anchor_points	= _pv_element_notimplement_get_rect_anchor_points,
+		.func_get_anchor_point		= _pv_element_raster_get_anchor_point,
+		.func_set_anchor_point_point	= _pv_element_raster_set_anchor_point_point,
+		.func_move_anchor_point_point	= _pv_element_raster_move_anchor_point,
+		.func_get_rect_anchor_points	= _pv_element_raster_get_rect_anchor_points,
 	},
 	/* 番兵 */
 	{PvElementKind_EndOfKind, "EndOfKind",
@@ -1236,9 +1484,13 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw_focusing		= _pv_element_notimplement_draw,
 		.func_is_touch_element		= _pv_element_notimplement_is_touch_element,
 		.func_is_diff_one		= _pv_element_notimplement_is_diff_one,
+		.func_get_point			= _pv_element_notimplement_get_point,
+		.func_set_point			= _pv_element_notimplement_set_point,
 		.func_move_element		= _pv_element_notimplement_move_element,
 		.func_get_num_anchor_point	= _pv_element_zero_get_num_anchor_point,
 		.func_new_anchor_points		= _pv_element_null_new_anchor_points,
+		.func_get_anchor_point		= _pv_element_notimplement_get_anchor_point,
+		.func_set_anchor_point_point	= _pv_element_notimplement_set_anchor_point_point,
 		.func_move_anchor_point_point	= _pv_element_notimplement_move_anchor_point,
 		.func_get_rect_anchor_points	= _pv_element_notimplement_get_rect_anchor_points,
 	},

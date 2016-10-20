@@ -124,15 +124,27 @@ static bool _et_tool_info_move(
 		PvElement *focus_element = elements[i];
 
 		const PvElementInfo *info = pv_element_get_info_from_kind(focus_element->kind);
-		if(NULL == info || NULL == info->func_move_element){
-			et_bug("%p", info);
-			return false;
-		}
+		et_assertf(info, "%d", focus_element->kind);
+		et_assertf(info->func_move_element, "%d", focus_element->kind);
 
-		if(!info->func_move_element(focus_element,
-					move.x, move.y)){
-			et_error("");
-			return false;
+		if(0 == i){
+			if(is_move_of_down){
+				PvPoint point_prev = info->func_get_point(focus_element);
+				info->func_move_element(focus_element, move.x, move.y);
+				if(mouse_action.snap.is_snap_for_pixel){
+					{
+						PvPoint point_snap = info->func_get_point(focus_element);
+						point_snap.x = round(point_snap.x),
+						point_snap.y = round(point_snap.y),
+						info->func_set_point(focus_element, point_snap);
+					}
+					PvPoint point_dst = info->func_get_point(focus_element);
+					move = pv_point_sub(point_dst, point_prev);
+				}
+			}
+
+		}else{
+			info->func_move_element(focus_element, move.x, move.y);
 		}
 	}
 
@@ -508,12 +520,25 @@ static bool _et_tool_info_move_anchor_points(EtDocId doc_id, EtMouseAction mouse
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	assert(focus);
 
+	/*! current focusing AnchorPoint (0 == index) direct set mouse position.
+	 * else sub focusing AnchorPoints position is move difference
+	 *		from current focusing AnchorPoint
+	 */
+	PvPoint move = PvPoint_Default;
 	int num = pv_general_get_parray_num((void **)focus->elements);
 	for(int i = 0; i < num; i++){
 		const PvElementInfo *info = pv_element_get_info_from_kind(focus->elements[i]->kind);
 		assert(info);
-		assert(info->func_move_anchor_point_point);
-		info->func_move_anchor_point_point(focus->elements[i], focus->index, mouse_action.move);
+		if(0 == i){
+			assert(info->func_get_anchor_point);
+			PvAnchorPoint prev = info->func_get_anchor_point(focus->elements[i], focus->index);
+			move = pv_point_sub(mouse_action.point, prev.points[PvAnchorPointIndex_Point]);
+			assert(info->func_set_anchor_point_point);
+			info->func_set_anchor_point_point(focus->elements[i], focus->index, mouse_action.point);
+		}else{
+			assert(info->func_move_anchor_point_point);
+			info->func_move_anchor_point_point(focus->elements[i], focus->index, move);
+		}
 	}
 
 	return true;
