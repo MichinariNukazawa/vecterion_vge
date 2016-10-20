@@ -27,6 +27,26 @@ struct EtToolPanel{
 
 static void _cb_et_tool_panel_clicked_button(GtkWidget *toggle_button, gpointer data);
 static bool _et_tool_panel_set_current_tool_id(EtToolPanel *self, EtToolId tool_id);
+static bool _change_cursor_icon_from_tool_id(EtToolPanel *self, EtToolId tool_id);
+
+static gboolean _cb_widget_draw(
+		GtkWidget *widget,
+		cairo_t *cr,
+		gpointer user_data)
+{
+	static bool is_first = true;
+	if(is_first){
+		EtToolPanel *self = _et_tool_panel;
+		assert(self);
+
+		bool ret = _change_cursor_icon_from_tool_id(self, et_etaion_get_tool_id());
+		if(ret){
+			is_first = false;
+		}
+	}
+
+	return FALSE;
+}
 
 static bool _signal_et_tool_panel_change(EtToolPanel *self, EtToolId tool_id)
 {
@@ -121,6 +141,9 @@ EtToolPanel *et_tool_panel_init()
 	gtk_widget_set_name (GTK_WIDGET(self->toolpanel), "toolpanel");
 	gtk_widget_set_size_request(self->toolpanel, 20, 20);
 
+	g_signal_connect(GTK_WIDGET(self->widget), "draw",
+			G_CALLBACK(_cb_widget_draw), NULL);
+
 	gtk_box_pack_start(GTK_BOX(self->box), self->toolpanel,
 			false, false, 3);
 
@@ -206,6 +229,31 @@ static GtkWidget *_et_tool_panel_get_tool_button_from_id(
 	return NULL;
 }
 
+static bool _change_cursor_icon_from_tool_id(EtToolPanel *self, EtToolId tool_id)
+{
+	if(tool_id < 0){
+		et_assertf(false, "%d", tool_id);
+	}
+
+	GdkWindow *window = gtk_widget_get_parent_window(self->widget);
+	if(!window){
+		et_debug("GdkWindow not grub");
+		return false;
+	}else{
+		GdkCursor* cursor = gdk_cursor_new_from_pixbuf(
+				gdk_display_get_default(),
+				self->tools[tool_id]->icon_unfocus,
+				0, 0);
+		if(!cursor){
+			et_error("%d", tool_id);
+			return false;
+		}else{
+			gdk_window_set_cursor(window, cursor);
+			return true;
+		}
+	}
+}
+
 static bool _et_tool_panel_set_current_tool_from_button(
 		EtToolPanel *self, const GtkWidget *button)
 {
@@ -232,6 +280,8 @@ static bool _et_tool_panel_set_current_tool_from_button(
 			gtk_button_set_image(GTK_BUTTON(tool->button), icon);
 		}
 	}
+
+	_change_cursor_icon_from_tool_id(self, tool_id);
 
 	return true;
 }
