@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 #include "et_error.h"
-#include "pv_element_infos.h"
+#include "pv_element_info.h"
 #include "et_doc.h"
 #include "et_etaion.h"
 

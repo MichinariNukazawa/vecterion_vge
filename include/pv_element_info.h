@@ -93,7 +93,7 @@ typedef struct PvElementInfo{
 
 }PvElementInfo;
 
-extern const PvElementInfo _pv_element_infos[];
+extern const PvElementInfo _pv_element_info[];
 
 const PvElementInfo *pv_element_get_info_from_kind(PvElementKind kind);
 

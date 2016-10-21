@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pv_error.h"
-#include "pv_element_infos.h"
+#include "pv_element_info.h"
 
 static bool _pv_element_delete_single(PvElement *self);
 

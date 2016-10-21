@@ -3,7 +3,7 @@
 #include <math.h>
 #include "pv_error.h"
 #include "pv_render_option.h"
-#include "pv_element_infos.h"
+#include "pv_element_info.h"
 
 static bool _pv_renderer_is_group_kind(const PvElement *element)
 {

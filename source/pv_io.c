@@ -5,7 +5,7 @@
 #include <string.h>
 #include "pv_error.h"
 #include "pv_element_general.h"
-#include "pv_element_infos.h"
+#include "pv_element_info.h"
 #include "pv_svg_info.h"
 
 typedef struct{

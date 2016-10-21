@@ -1,4 +1,4 @@
-#include "pv_element_infos.h"
+#include "pv_element_info.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -1359,7 +1359,7 @@ static PvRect _pv_element_raster_get_rect_anchor_points(
  * ElementInfo配列の定義
  **************** */
 
-const PvElementInfo _pv_element_infos[] = {
+const PvElementInfo _pv_element_info[] = {
 	{PvElementKind_NotDefined, "NotDefined",
 		.func_new_data			= _pv_element_error_return_null_new,
 		.func_delete_data		= _pv_element_error_return_null_delete,
@@ -1510,10 +1510,10 @@ const PvElementInfo *pv_element_get_info_from_kind(PvElementKind kind)
 		return NULL;
 	}
 
-	int num = sizeof(_pv_element_infos) / sizeof(PvElementInfo);
+	int num = sizeof(_pv_element_info) / sizeof(PvElementInfo);
 	for(int i = 0; i < num; i++){
-		if(kind == _pv_element_infos[i].kind){
-			return &_pv_element_infos[i];
+		if(kind == _pv_element_info[i].kind){
+			return &_pv_element_info[i];
 		}
 	}
 
