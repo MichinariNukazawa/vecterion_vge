@@ -188,7 +188,7 @@ static void _slot_change_doc_or_focus(EtDocId doc_id)
 		}
 
 		const PvElementInfo *info = pv_element_get_info_from_kind(focus->elements[i]->kind);
-		PvRect rect_ = info->func_get_rect_anchor_points(focus->elements[i]);
+		PvRect rect_ = info->func_get_rect_by_anchor_points(focus->elements[i]);
 
 		if(is_first){
 			is_first = false;

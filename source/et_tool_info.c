@@ -129,16 +129,16 @@ static bool _et_tool_info_move(
 
 		if(0 == i){
 			if(is_move_of_down){
-				PvPoint point_prev = info->func_get_point(focus_element);
+				PvPoint point_prev = info->func_get_point_by_anchor_points(focus_element);
 				info->func_move_element(focus_element, move.x, move.y);
 				if(mouse_action.snap.is_snap_for_pixel){
 					{
-						PvPoint point_snap = info->func_get_point(focus_element);
+						PvPoint point_snap = info->func_get_point_by_anchor_points(focus_element);
 						point_snap.x = round(point_snap.x),
 						point_snap.y = round(point_snap.y),
-						info->func_set_point(focus_element, point_snap);
+						info->func_set_point_by_anchor_points(focus_element, point_snap);
 					}
-					PvPoint point_dst = info->func_get_point(focus_element);
+					PvPoint point_dst = info->func_get_point_by_anchor_points(focus_element);
 					move = pv_point_sub(point_dst, point_prev);
 				}
 			}
