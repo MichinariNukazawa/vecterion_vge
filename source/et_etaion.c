@@ -99,7 +99,10 @@ bool et_etaion_set_is_extent_view(bool is_extent_view)
 }
 
 bool et_etaion_get_is_extent_view(){
-	return _et_etaion_is_extent_view;
+	EtEtaion *self = current_state;
+	assert(self);
+
+	return _et_etaion_is_extent_view || (EtToolId_FocusElement == self->tool_id);
 }
 
 EtToolId et_etaion_get_tool_id()

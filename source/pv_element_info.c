@@ -636,14 +636,6 @@ static bool _pv_element_bezier_draw(
 	pv_assert(_pv_element_bezier_draw_inline(cr, render_context, element));
 	cairo_new_path(cr);
 
-	//! get extent area
-	if(render_context.is_extent_view && ! render_context.is_focus){
-		PvRect rect_extent = _pv_element_bezier_get_rect_by_draw(element);
-		PvRect crect_extent = pv_rect_mul_value(rect_extent, render_context.scale);
-
-		_pv_renderer_draw_extent_from_crect(cr, crect_extent);
-	}
-
 	return true;
 }
 
@@ -773,6 +765,14 @@ static bool _pv_element_bezier_draw_focusing(
 		PvElementPointKind kind = ((i == focus->index)?
 				PvElementPointKind_Selected : PvElementPointKind_Normal);
 		_pv_element_bezier_draw_point(cr, gp, kind);
+	}
+
+	// ** extent
+	if(render_context.is_extent_view){
+		PvRect rect_extent = _pv_element_bezier_get_rect_by_draw(element);
+		PvRect crect_extent = pv_rect_mul_value(rect_extent, render_context.scale);
+
+		_pv_renderer_draw_extent_from_crect(cr, crect_extent);
 	}
 
 	return true;

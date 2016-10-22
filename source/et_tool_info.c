@@ -759,7 +759,7 @@ static bool _et_tool_edit_anchor_point_handle_mouse_action(
 
 EtToolInfo _et_tool_infos[] = {
 	{
-		.tool_id = 0, 
+		.tool_id = EtToolId_FocusElement, 
 		.name = "Focus Element",
 		.icon = NULL,
 		.icon_focus = NULL,

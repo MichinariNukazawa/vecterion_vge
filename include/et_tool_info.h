@@ -10,6 +10,11 @@
 
 typedef int EtToolId;
 
+enum{
+	EtToolId_FocusElement = 0,
+};
+
+
 typedef bool (*EtToolFuncMouseAction)(EtDocId doc_id, EtMouseAction mouse_action);
 
 typedef struct EtToolInfo{
