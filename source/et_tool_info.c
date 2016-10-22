@@ -11,6 +11,67 @@
 #include "et_etaion.h"
 #include "et_color_panel.h"
 
+
+EtToolInfo _et_tool_infos[];
+
+
+bool _et_tool_info_is_init = false; // check initialized tools
+
+static EtToolInfo *_et_tool_get_info_from_id(EtToolId tool_id);
+
+static GdkPixbuf *_et_tool_info_conv_pixbuf(GdkPixbuf *pb_src)
+{
+
+	double w = gdk_pixbuf_get_width(pb_src);
+	double h = gdk_pixbuf_get_height(pb_src);
+	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
+	et_assert(surface);
+	cairo_t *cr = cairo_create (surface);
+	et_assert(cr);
+
+	gdk_cairo_set_source_pixbuf (cr, pb_src, 0, 0);
+	cairo_paint (cr);
+
+	int T = 3;
+	cairo_rectangle (cr, T, T, w- T, h - T);
+	cairo_set_source_rgba (cr, 0.7, 0, 0, 0.3);
+	cairo_fill (cr);
+
+	GdkPixbuf *pb = gdk_pixbuf_get_from_surface(surface, 0, 0, w, h);
+	et_assert(pb);
+
+	cairo_surface_destroy (surface);
+	cairo_destroy (cr);
+
+	return pb;
+}
+
+bool et_tool_info_init()
+{
+	et_assert(false == _et_tool_info_is_init);
+
+	int num_tool = et_tool_get_num();
+	et_debug("tool_num:%d", num_tool);
+	for(int tool_id = 0; tool_id < num_tool; tool_id++){
+		EtToolInfo *info = _et_tool_get_info_from_id(tool_id);
+		et_assertf(info, "%d", tool_id);
+
+		// ** make image(cursor,icons)
+		GError *error = NULL;
+		info->cursor = gdk_pixbuf_new_from_file(info->filepath_cursor, &error);
+		et_assertf(info->cursor, "%s", error->message);
+
+		info->icon = info->cursor;
+		info->icon_focus = _et_tool_info_conv_pixbuf(info->icon);
+	}
+
+	_et_tool_info_is_init = true;
+
+	return true;
+}
+
+
+
 static int _et_tool_info_touch_offset = 16;
 
 static bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
@@ -135,8 +196,8 @@ static bool _et_tool_info_move(
 					{
 						PvPoint point_snap = info->func_get_point_by_anchor_points(focus_element);
 						point_snap.x = round(point_snap.x),
-						point_snap.y = round(point_snap.y),
-						info->func_set_point_by_anchor_points(focus_element, point_snap);
+							point_snap.y = round(point_snap.y),
+							info->func_set_point_by_anchor_points(focus_element, point_snap);
 					}
 					PvPoint point_dst = info->func_get_point_by_anchor_points(focus_element);
 					move = pv_point_sub(point_dst, point_prev);
@@ -803,5 +864,23 @@ EtToolInfo _et_tool_infos[] = {
 int et_tool_get_num()
 {
 	return sizeof(_et_tool_infos) / sizeof(EtToolInfo);
+}
+
+static EtToolInfo *_et_tool_get_info_from_id(EtToolId tool_id)
+{
+	int num_tool = et_tool_get_num();
+	if(tool_id < 0 || num_tool <= tool_id){
+		et_error("");
+		return NULL;
+	}
+
+	return &_et_tool_infos[tool_id];
+}
+
+const EtToolInfo *et_tool_get_info_from_id(EtToolId tool_id)
+{
+	et_assert(_et_tool_info_is_init);
+
+	return _et_tool_get_info_from_id(tool_id);
 }
 

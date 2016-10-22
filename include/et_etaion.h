@@ -9,7 +9,7 @@
 #include "et_key_action.h"
 #include "pv_element.h"
 #include "et_state.h"
-#include "et_tool.h"
+#include "et_tool_id.h"
 
 struct EtEtaion;
 typedef struct EtEtaion EtEtaion;

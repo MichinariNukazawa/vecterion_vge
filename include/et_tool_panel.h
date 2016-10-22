@@ -7,7 +7,7 @@
 #include "et_doc.h"
 #include "pv_render_context.h"
 #include "et_state.h"
-#include "et_tool.h"
+#include "et_tool_id.h"
 
 struct EtToolPanel;
 typedef struct EtToolPanel EtToolPanel;

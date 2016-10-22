@@ -4,6 +4,7 @@
 #include "et_error.h"
 #include "pv_element_general.h"
 #include "et_etaion.h"
+#include "et_tool_info.h"
 
 static EtToolPanel *_et_tool_panel = NULL;
 

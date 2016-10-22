@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "et_error.h"
 #include "et_doc_manager.h"
+#include "et_tool_info.h"
 #include "et_tool_panel.h"
 
 EtEtaion *current_state = NULL;

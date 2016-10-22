@@ -18,6 +18,7 @@
 #include "et_doc_manager.h"
 #include "et_etaion.h"
 #include "et_layer_view.h"
+#include "et_tool_info.h"
 #include "et_tool_panel.h"
 #include "pv_io.h"
 #include "et_color_panel.h"
@@ -87,7 +88,7 @@ int main (int argc, char **argv){
 
 
 	// ** The etaion core modules initialize.
-	if(!et_tool_init()){
+	if(!et_tool_info_init()){
 		et_bug("");
 		return -1;
 	}

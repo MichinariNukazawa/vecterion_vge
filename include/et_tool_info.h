@@ -4,15 +4,10 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <stdbool.h>
-#include "et_tool.h"
+#include "et_tool_id.h"
 #include "et_doc_id.h"
 #include "et_mouse_action.h"
 
-typedef int EtToolId;
-
-enum{
-	EtToolId_FocusElement = 0,
-};
 
 
 typedef bool (*EtToolFuncMouseAction)(EtDocId doc_id, EtMouseAction mouse_action);
@@ -30,8 +25,7 @@ typedef struct EtToolInfo{
 	EtToolFuncMouseAction		func_mouse_action;
 }EtToolInfo;
 
-extern EtToolInfo _et_tool_infos[];
-
+bool et_tool_info_init();
 int et_tool_get_num();
 const EtToolInfo *et_tool_get_info_from_id(EtToolId tool_id);
 
