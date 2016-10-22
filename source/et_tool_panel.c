@@ -12,6 +12,8 @@ typedef struct EtToolPanelItem{
 	GdkPixbuf *icon_focus;
 	GdkPixbuf *icon_unfocus;
 	GtkWidget *button;
+
+	GdkCursor *mouse_cursor;
 }EtToolPanelItem;
 
 struct EtToolPanel{
@@ -87,6 +89,8 @@ static bool _et_tool_panel_add_tool(EtToolPanel *self, const EtToolInfo *info)
 		return false;
 	}
 	item->tool_id = info->tool_id;
+
+	item->mouse_cursor = NULL; //!< delay new_cursor when after enable window and first use.
 
 	item->icon_unfocus = info->icon;
 	item->icon_focus = info->icon_focus;
@@ -240,17 +244,16 @@ static bool _change_cursor_icon_from_tool_id(EtToolPanel *self, EtToolId tool_id
 		et_debug("GdkWindow not grub");
 		return false;
 	}else{
-		GdkCursor* cursor = gdk_cursor_new_from_pixbuf(
-				gdk_display_get_default(),
-				self->tools[tool_id]->icon_unfocus,
-				0, 0);
-		if(!cursor){
-			et_error("%d", tool_id);
-			return false;
-		}else{
-			gdk_window_set_cursor(window, cursor);
-			return true;
+		if(!self->tools[tool_id]->mouse_cursor){
+			self->tools[tool_id]->mouse_cursor = gdk_cursor_new_from_pixbuf(
+					gdk_display_get_default(),
+					self->tools[tool_id]->icon_unfocus,
+					0, 0);
 		}
+
+		et_assert(self->tools[tool_id]->mouse_cursor);
+		gdk_window_set_cursor(window, self->tools[tool_id]->mouse_cursor);
+		return true;
 	}
 }
 

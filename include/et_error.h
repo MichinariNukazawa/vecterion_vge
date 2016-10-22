@@ -5,10 +5,18 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define et_assert(hr) \
+	do{ \
+		if(!(hr)){ \
+			fprintf(stderr, "et_assert: %s()[%d]:'%s'\n", __func__, __LINE__, #hr); \
+			assert(hr); \
+		} \
+	}while(0);
+
 #define et_assertf(hr, fmt, ...) \
 	do{ \
 		if(!(hr)){ \
-			fprintf(stderr, "assert: %s()[%d]: "fmt"\n", \
+			fprintf(stderr, "et_assertf: %s()[%d]: "fmt"\n", \
 					__func__, __LINE__, ## __VA_ARGS__); \
 			assert(hr); \
 		} \
