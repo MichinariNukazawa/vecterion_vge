@@ -582,8 +582,6 @@ static bool _pv_element_bezier_draw(
 	double c_width = element->stroke.width * render_context.scale;
 	cairo_set_line_width(cr, c_width);
 
-	PvRect crect_extent = _pv_renderer_get_rect_extent_from_cr(cr);
-
 	//! fill
 	PvCairoRgbaColor cc_f = pv_color_get_cairo_rgba(
 			element->color_pair.colors[PvColorPairGround_BackGround]);
@@ -597,12 +595,16 @@ static bool _pv_element_bezier_draw(
 	PvCairoRgbaColor cc_s = pv_color_get_cairo_rgba(
 			element->color_pair.colors[PvColorPairGround_ForGround]);
 	cairo_set_source_rgba (cr, cc_s.r, cc_s.g, cc_s.b, cc_s.a);
-	cairo_stroke(cr);
-	//cairo_stroke_preserve(cr);
+	cairo_stroke_preserve(cr);
 
+	//! get extent area
 	if(render_context.is_extent_view && !render_context.is_focus){
+		PvRect crect_extent = _pv_renderer_get_rect_extent_from_cr(cr);
+		cairo_new_path(cr);
 		_pv_renderer_draw_extent_from_crect(cr, crect_extent);
 	}
+
+	cairo_new_path(cr);
 
 	return true;
 }
