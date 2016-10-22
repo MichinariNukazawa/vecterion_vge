@@ -32,10 +32,11 @@ static GdkPixbuf *_et_tool_info_conv_pixbuf(GdkPixbuf *pb_src)
 	gdk_cairo_set_source_pixbuf (cr, pb_src, 0, 0);
 	cairo_paint (cr);
 
-	int T = 3;
-	cairo_rectangle (cr, T, T, w- T, h - T);
+	int T = 0;
+	cairo_rectangle (cr, T, T, w - (T * 2), h - (T * 2));
 	cairo_set_source_rgba (cr, 0.7, 0, 0, 0.3);
-	cairo_fill (cr);
+	cairo_set_line_width (cr, 2.0);
+	cairo_stroke (cr);
 
 	GdkPixbuf *pb = gdk_pixbuf_get_from_surface(surface, 0, 0, w, h);
 	et_assert(pb);
