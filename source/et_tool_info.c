@@ -732,11 +732,13 @@ static int _edit_anchor_point_handle_grub_focus(PvFocus *focus, EtMouseAction mo
 	}
 
 	//! change focus (to anchor points in already focus first element).
-	PvElementBezierData *data = (PvElementBezierData *) focus->elements[0]->data;
-	assert(data);
-	int num = pv_element_bezier_get_num_anchor_point(focus->elements[0]);
+	const PvElementInfo *info = pv_element_get_info_from_kind(focus->elements[0]->kind);
+	et_assertf(info, "%d", focus->elements[0]->kind);
+
+	int num = info->func_get_num_anchor_point(focus->elements[0]);
 	for(int i = 0; i < num; i++){
-		handle = _edit_anchor_point_handle_bound_handle(data->anchor_points[i], mouse_action);
+		const PvAnchorPoint ap_ = info->func_get_anchor_point(focus->elements[0], i);
+		handle = _edit_anchor_point_handle_bound_handle(ap_, mouse_action);
 		if(-1 != handle){
 			// ** change focus.
 			pv_focus_clear_set_element_index(focus, focus->elements[0], i);
