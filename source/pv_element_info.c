@@ -713,6 +713,9 @@ static void _pv_element_bezier_draw_anchor_handle(
 	}
 }
 
+static PvRect _pv_element_bezier_get_rect_by_anchor_points(
+		const PvElement *element);
+
 static bool _pv_element_bezier_draw_focusing(
 		cairo_t *cr,
 		const PvRenderOption render_option,
@@ -769,7 +772,7 @@ static bool _pv_element_bezier_draw_focusing(
 
 	// ** extent
 	if(render_context.is_extent_view){
-		PvRect rect_extent = _pv_element_bezier_get_rect_by_draw(element);
+		PvRect rect_extent = _pv_element_bezier_get_rect_by_anchor_points(element);
 		PvRect crect_extent = pv_rect_mul_value(rect_extent, render_context.scale);
 
 		_pv_renderer_draw_extent_from_crect(cr, crect_extent);
