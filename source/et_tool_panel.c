@@ -10,8 +10,6 @@ static EtToolPanel *_et_tool_panel = NULL;
 
 typedef struct EtToolPanelItem{
 	EtToolId tool_id;
-	GdkPixbuf *icon_focus;
-	GdkPixbuf *icon_unfocus;
 	GtkWidget *button;
 
 	GdkCursor *mouse_cursor;
@@ -92,13 +90,6 @@ static bool _et_tool_panel_add_tool(EtToolPanel *self, const EtToolInfo *info)
 	item->tool_id = info->tool_id;
 
 	item->mouse_cursor = NULL; //!< delay new_cursor when after enable window and first use.
-
-	item->icon_unfocus = info->icon;
-	item->icon_focus = info->icon_focus;
-	if(NULL == item->icon_unfocus || NULL == item->icon_unfocus){
-		et_critical("");
-		return false;
-	}
 
 	GtkWidget *toggle_button = gtk_button_new();
 	GtkWidget *icon = gtk_image_new_from_pixbuf(info->icon);
@@ -246,9 +237,12 @@ static bool _change_cursor_icon_from_tool_id(EtToolPanel *self, EtToolId tool_id
 		return false;
 	}else{
 		if(!self->tools[tool_id]->mouse_cursor){
+			const EtToolInfo *info = et_tool_get_info_from_id(tool_id);
+			et_assertf(info, "%d", tool_id);
+
 			self->tools[tool_id]->mouse_cursor = gdk_cursor_new_from_pixbuf(
 					gdk_display_get_default(),
-					self->tools[tool_id]->icon_unfocus,
+					info->cursor,
 					0, 0);
 		}
 
@@ -275,13 +269,16 @@ static bool _et_tool_panel_set_current_tool_from_button(
 
 	int num_tool = pv_general_get_parray_num((void **)self->tools);
 	for(int i = 0; i < num_tool; i++){
-		EtToolPanelItem *tool = self->tools[i];
-		if(tool->button == button){
-			GtkWidget *icon = gtk_image_new_from_pixbuf(tool->icon_focus);
-			gtk_button_set_image(GTK_BUTTON(tool->button), icon);
+		EtToolPanelItem *item = self->tools[i];
+		const EtToolInfo *info = et_tool_get_info_from_id(item->tool_id);
+		et_assertf(info, "%d", item->tool_id);
+
+		if(item->button == button){
+			GtkWidget *icon = gtk_image_new_from_pixbuf(info->icon_focus);
+			gtk_button_set_image(GTK_BUTTON(item->button), icon);
 		}else{
-			GtkWidget *icon = gtk_image_new_from_pixbuf(tool->icon_unfocus);
-			gtk_button_set_image(GTK_BUTTON(tool->button), icon);
+			GtkWidget *icon = gtk_image_new_from_pixbuf(info->icon);
+			gtk_button_set_image(GTK_BUTTON(item->button), icon);
 		}
 	}
 
