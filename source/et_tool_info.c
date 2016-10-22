@@ -663,7 +663,10 @@ static bool _et_tool_edit_anchor_point_mouse_action(
 	return true;
 }
 
-/*! @return anchor points of focusing. Not focus:NULL. */
+/*! 
+ * @fixme implement and usable only to PvElementKind_Bezier
+ * @return anchor points of focusing. Not focus:NULL.
+ */
 PvAnchorPoint *_get_focus_anchor_point(const PvFocus *focus){
 	// ** get focusing AnchorPoint
 	int num = pv_general_get_parray_num((void **)focus->elements);
