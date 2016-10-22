@@ -79,3 +79,15 @@ PvPoint pv_point_div_value(PvPoint p, double scale)
 	return ret;
 }
 
+PvRect pv_rect_mul_value(PvRect r, double value)
+{
+	PvRect ret = {
+		.x = r.x * value,
+		.y = r.y * value,
+		.w = r.w * value,
+		.h = r.h * value,
+	};
+
+	return ret;
+}
+

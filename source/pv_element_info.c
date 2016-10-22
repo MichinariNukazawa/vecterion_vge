@@ -8,6 +8,22 @@
 #include "pv_color.h"
 
 
+
+static PvRect _get_rect_extent_from_cr(cairo_t *cr)
+{
+	double x1, y1, x2, y2;
+	cairo_stroke_extents(cr, &x1, &y1, &x2, &y2);
+	PvRect rect = {0,0,0,0};
+	rect.x = x1;
+	rect.y = y1;
+	rect.w = x2 - x1;
+	rect.h = y2 - y1;
+
+	return rect;
+}
+
+
+
 /* ****************
  * null functions. (ex. use method not implement)
  **************** */
@@ -154,6 +170,12 @@ static bool _pv_element_notimpl_move_anchor_point(
 }
 
 static PvRect _pv_element_notimpl_get_rect_by_anchor_points(
+		const PvElement *element)
+{
+	return PvRect_Default;
+}
+
+static PvRect _pv_element_notimpl_get_rect_by_draw(
 		const PvElement *element)
 {
 	return PvRect_Default;
@@ -566,21 +588,15 @@ static int _pv_element_bezier_write_svg(
 	return 0;
 }
 
-static bool _pv_element_bezier_draw(
+static PvRect _pv_element_bezier_get_rect_by_draw(
+		const PvElement *element);
+
+static bool _pv_element_bezier_draw_inline(
 		cairo_t *cr,
-		const PvRenderOption render_option,
+		const PvRenderContext render_context,
 		const PvElement *element)
 {
-	const PvRenderContext render_context = render_option.render_context;
-
-	if(!_pv_element_bezier_command_path(
-				cr,
-				render_context,
-				element))
-	{
-		pv_error("");
-		return false;
-	}
+	pv_assert(_pv_element_bezier_command_path(cr, render_context, element));
 
 	double c_width = element->stroke.width * render_context.scale;
 	cairo_set_line_width(cr, c_width);
@@ -600,14 +616,33 @@ static bool _pv_element_bezier_draw(
 	cairo_set_source_rgba (cr, cc_s.r, cc_s.g, cc_s.b, cc_s.a);
 	cairo_stroke_preserve(cr);
 
+	return true;
+}
+
+static void _pv_renderer_draw_extent_from_crect(cairo_t *cr, PvRect rect)
+{
+	cairo_rectangle (cr, rect.x, rect.y, rect.w, rect.h);
+	_pv_render_workingcolor_cairo_set_source_rgba(cr);
+	cairo_set_line_width(cr, 1.0);
+	cairo_stroke(cr);
+}
+
+static bool _pv_element_bezier_draw(
+		cairo_t *cr,
+		const PvRenderOption render_option,
+		const PvElement *element)
+{
+	const PvRenderContext render_context = render_option.render_context;
+	pv_assert(_pv_element_bezier_draw_inline(cr, render_context, element));
+	cairo_new_path(cr);
+
 	//! get extent area
-	if(render_context.is_extent_view && !render_context.is_focus){
-		PvRect crect_extent = _pv_renderer_get_rect_extent_from_cr(cr);
-		cairo_new_path(cr);
+	if(render_context.is_extent_view && ! render_context.is_focus){
+		PvRect rect_extent = _pv_element_bezier_get_rect_by_draw(element);
+		PvRect crect_extent = pv_rect_mul_value(rect_extent, render_context.scale);
+
 		_pv_renderer_draw_extent_from_crect(cr, crect_extent);
 	}
-
-	cairo_new_path(cr);
 
 	return true;
 }
@@ -753,26 +788,16 @@ static bool _pv_element_bezier_is_touch_element(
 	*is_touch = false;
 
 	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1,1);
+	pv_assert(surface);
 	cairo_t *cr = cairo_create (surface);
-	if(NULL == cr){
-		pv_error("");
-		return false;
-	}
+	pv_assert(cr);
 
 	PvRenderContext render_context = PvRenderContext_Default;
-	if(!_pv_element_bezier_command_path(
-				cr,
-				render_context,
-				element))
-	{
-		pv_error("");
-		return false;
-	}
+	pv_assert(_pv_element_bezier_command_path(cr, render_context, element));
 
 	double c_width = (element->stroke.width * render_context.scale) + offset;
 	cairo_set_line_width(cr, c_width);
 
-	// PvRect crect_extent = _pv_renderer_get_rect_extent_from_cr(cr);
 	//! @fixme bug fill area not detection.(down below side in fill.)
 	*is_touch = cairo_in_stroke(cr, gx, gy) || cairo_in_fill(cr, gx, gy);
 
@@ -1020,6 +1045,27 @@ static PvRect _pv_element_bezier_get_rect_by_anchor_points(
 	}
 
 	PvRect rect = (PvRect){min.x, min.y, (max.x - min.x), (max.y - min.y)};
+
+	return rect;
+}
+
+static PvRect _pv_element_bezier_get_rect_by_draw(
+		const PvElement *element)
+{
+	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1,1);
+	pv_assert(surface);
+	cairo_t *cr = cairo_create (surface);
+	pv_assert(cr);
+
+	PvRenderContext render_context = PvRenderContext_Default;
+	pv_assert(_pv_element_bezier_draw_inline(cr, render_context, element));
+
+	cairo_set_line_width(cr, element->stroke.width);
+
+	PvRect rect = _get_rect_extent_from_cr(cr);
+
+	cairo_surface_destroy (surface);
+	cairo_destroy (cr);
 
 	return rect;
 }
@@ -1383,6 +1429,7 @@ const PvElementInfo _pv_element_info[] = {
 		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
 		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
 		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
 	},
 	{PvElementKind_Root, "Root",
 		.func_new_data				= _pv_element_group_new_data,
@@ -1402,6 +1449,7 @@ const PvElementInfo _pv_element_info[] = {
 		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
 		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
 		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
 	},
 	{PvElementKind_Layer, "Layer",
 		.func_new_data				= _pv_element_group_new_data,
@@ -1421,6 +1469,7 @@ const PvElementInfo _pv_element_info[] = {
 		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
 		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
 		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
 	},
 	{PvElementKind_Group, "Group",
 		.func_new_data				= _pv_element_group_new_data,
@@ -1440,6 +1489,7 @@ const PvElementInfo _pv_element_info[] = {
 		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
 		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
 		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
 	},
 	{PvElementKind_Bezier, "Bezier",
 		.func_new_data				= _pv_element_bezier_new_data,
@@ -1459,6 +1509,7 @@ const PvElementInfo _pv_element_info[] = {
 		.func_set_anchor_point_point		= _pv_element_bezier_set_anchor_point_point,
 		.func_move_anchor_point_point		= _pv_element_bezier_move_anchor_point,
 		.func_get_rect_by_anchor_points		= _pv_element_bezier_get_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _pv_element_bezier_get_rect_by_draw,
 	},
 	{PvElementKind_Raster, "Raster",
 		.func_new_data				= _pv_element_raster_new_data,
@@ -1478,6 +1529,7 @@ const PvElementInfo _pv_element_info[] = {
 		.func_set_anchor_point_point		= _pv_element_raster_set_anchor_point_point,
 		.func_move_anchor_point_point		= _pv_element_raster_move_anchor_point,
 		.func_get_rect_by_anchor_points		= _pv_element_raster_get_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
 	},
 	/* 番兵 */
 	{PvElementKind_EndOfKind, "EndOfKind",
@@ -1498,6 +1550,7 @@ const PvElementInfo _pv_element_info[] = {
 		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
 		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
 		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
 	},
 };
 

@@ -5,6 +5,14 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define pv_assert(hr) \
+	do{ \
+		if(!(hr)){ \
+			fprintf(stderr, "pv assert: %s()[%d]:'%s'\n", __func__, __LINE__, #hr); \
+			assert(hr); \
+		} \
+	}while(0);
+
 // CAUTION: depend gcc
 #define pv_bug(fmt, ...)  \
 	fprintf(stderr, "BUG: %s()[%d]: "fmt"\n", __func__, __LINE__, ## __VA_ARGS__)
