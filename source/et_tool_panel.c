@@ -11,8 +11,6 @@ static EtToolPanel *_et_tool_panel = NULL;
 typedef struct EtToolPanelItem{
 	EtToolId tool_id;
 	GtkWidget *button;
-
-	GdkCursor *mouse_cursor;
 }EtToolPanelItem;
 
 struct EtToolPanel{
@@ -88,13 +86,6 @@ static bool _et_tool_panel_add_tool(EtToolPanel *self, const EtToolInfo *info)
 		return false;
 	}
 	item->tool_id = info->tool_id;
-
-	assert(gdk_display_get_default());
-	item->mouse_cursor = gdk_cursor_new_from_pixbuf(
-			gdk_display_get_default(),
-			info->icon_cursor,
-			0, 0);
-	assert(item->mouse_cursor);
 
 	GtkWidget *toggle_button = gtk_button_new();
 	GtkWidget *icon = gtk_image_new_from_pixbuf(info->icon);
@@ -241,7 +232,9 @@ static bool _change_cursor_icon_from_tool_id(EtToolPanel *self, EtToolId tool_id
 		et_debug("GdkWindow not grub");
 		return false;
 	}else{
-		gdk_window_set_cursor(window, self->tools[tool_id]->mouse_cursor);
+		const EtToolInfo *info = et_tool_get_info_from_id(tool_id);
+		et_assertf(info, "%d", tool_id);
+		gdk_window_set_cursor(window, info->mouse_cursor);
 		return true;
 	}
 }

@@ -23,6 +23,8 @@ typedef struct EtToolInfo{
 	const char *filepath_cursor;
 
 	EtToolFuncMouseAction		func_mouse_action;
+
+	GdkCursor *mouse_cursor;
 }EtToolInfo;
 
 bool et_tool_info_init();

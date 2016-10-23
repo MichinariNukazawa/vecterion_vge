@@ -60,10 +60,18 @@ bool et_tool_info_init()
 		// ** make image(cursor,icons)
 		GError *error = NULL;
 		info->icon_cursor = gdk_pixbuf_new_from_file(info->filepath_cursor, &error);
-		et_assertf(info->icon_cursor, "%s", error->message);
+		et_assertf(info->icon_cursor, "%d, %s", tool_id, error->message);
 
 		info->icon = info->icon_cursor;
 		info->icon_focus = _et_tool_info_conv_pixbuf(info->icon);
+
+		// ** mouse cursor
+		assert(gdk_display_get_default());
+		info->mouse_cursor = gdk_cursor_new_from_pixbuf(
+				gdk_display_get_default(),
+				info->icon_cursor,
+				0, 0);
+		et_assertf(info->mouse_cursor, "%d", tool_id);
 	}
 
 	_et_tool_info_is_init = true;
@@ -834,6 +842,7 @@ EtToolInfo _et_tool_infos[] = {
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_element_allow_24x24.svg",
 		.func_mouse_action = _et_tool_focus_element_mouse_action,
+		.mouse_cursor = NULL,
 	},
 	{
 		.tool_id = 1, 
@@ -844,6 +853,7 @@ EtToolInfo _et_tool_infos[] = {
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_put_allow_24x24.svg",
 		.func_mouse_action = _et_tool_bezier_mouse_action,
+		.mouse_cursor = NULL,
 	},
 	{
 		.tool_id = 2,
@@ -854,6 +864,7 @@ EtToolInfo _et_tool_infos[] = {
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_edit_allow_24x24.svg",
 		.func_mouse_action = _et_tool_edit_anchor_point_mouse_action,
+		.mouse_cursor = NULL,
 	},
 	{
 		.tool_id = 3,
@@ -864,6 +875,7 @@ EtToolInfo _et_tool_infos[] = {
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_handle_allow_24x24.svg",
 		.func_mouse_action = _et_tool_edit_anchor_point_handle_mouse_action,
+		.mouse_cursor = NULL,
 	},
 };
 
