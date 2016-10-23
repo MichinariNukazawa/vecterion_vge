@@ -3,11 +3,6 @@
 #include "pv_error.h"
 #include "pv_color.h"
 
-void _pv_render_workingcolor_cairo_set_source_rgba(cairo_t *cr)
-{
-	cairo_set_source_rgba (cr, 0.2, 0.4, 0.9, 1.0);
-}
-
 void debug_print_path(cairo_t *cr)
 {
 	double x1, y1, x2, y2;

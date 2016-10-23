@@ -7,8 +7,8 @@
 #include "pv_type.h"
 #include "pv_element.h"
 #include "pv_render_context.h"
+#include "pv_cairo.h"
 
-void _pv_render_workingcolor_cairo_set_source_rgba(cairo_t *cr);
 void debug_print_path(cairo_t *cr);
 bool _pv_element_bezier_command_path(
 		cairo_t *cr,

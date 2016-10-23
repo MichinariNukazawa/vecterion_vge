@@ -4,6 +4,8 @@
 #include "pv_error.h"
 #include "pv_render_option.h"
 #include "pv_element_info.h"
+#include "pv_cairo.h"
+
 
 static bool _pv_renderer_is_group_kind(const PvElement *element)
 {
@@ -145,6 +147,7 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		return NULL;
 	}
 
+	PvRect rect_extent = PvRect_Default;
 	int num = pv_general_get_parray_num((void **)focus->elements);
 	for(int i = 0; i < num; i++){
 		const PvElement *focus_element = focus->elements[i];
@@ -155,6 +158,20 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 				return NULL;
 			}
 		}
+
+		const PvElementInfo *info = pv_element_get_info_from_kind(focus_element->kind);
+		if(0 == i){
+			rect_extent = info->func_get_rect_by_anchor_points(focus_element);
+		}else{
+			PvRect r = info->func_get_rect_by_anchor_points(focus_element);
+			rect_extent = pv_rect_expand(rect_extent, r);
+		}
+	}
+	if(0 != num){
+		rect_extent = pv_rect_mul_value(rect_extent, render_context.scale);
+		pv_cairo_set_source_rgba_workingcolor(cr);
+		cairo_rectangle (cr, rect_extent.x, rect_extent.y, rect_extent.w, rect_extent.h);
+		cairo_stroke(cr);
 	}
 
 

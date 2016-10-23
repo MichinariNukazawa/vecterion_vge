@@ -622,7 +622,7 @@ static bool _pv_element_bezier_draw_inline(
 static void _pv_renderer_draw_extent_from_crect(cairo_t *cr, PvRect rect)
 {
 	cairo_rectangle (cr, rect.x, rect.y, rect.w, rect.h);
-	_pv_render_workingcolor_cairo_set_source_rgba(cr);
+	pv_cairo_set_source_rgba_workingcolor(cr);
 	cairo_set_line_width(cr, 1.0);
 	cairo_stroke(cr);
 }
@@ -651,11 +651,11 @@ static void _pv_element_bezier_draw_point(cairo_t *cr, PvPoint gp, PvElementPoin
 
 	cairo_set_source_rgba (cr, 1, 1, 1, 1.0); // white
 	if(PvElementPointKind_Selected == kind){
-		_pv_render_workingcolor_cairo_set_source_rgba(cr);
+		pv_cairo_set_source_rgba_workingcolor(cr);
 	}
 	cairo_fill_preserve (cr);
 
-	_pv_render_workingcolor_cairo_set_source_rgba(cr);
+	pv_cairo_set_source_rgba_workingcolor(cr);
 	cairo_set_line_width(cr, 0.75);
 	cairo_stroke (cr);
 }
@@ -677,13 +677,13 @@ static void _pv_element_bezier_draw_anchor_handle(
 	if(0 == ofs_index){
 		// ** current anchor_point
 		cairo_set_line_width(cr, 1.0);
-		_pv_render_workingcolor_cairo_set_source_rgba(cr);
+		pv_cairo_set_source_rgba_workingcolor(cr);
 		cairo_move_to(cr, gp_current.x, gp_current.y);
 		cairo_line_to(cr, gp_prev.x, gp_prev.y);
 		cairo_stroke(cr);
 
 		cairo_set_line_width(cr, 1.0);
-		_pv_render_workingcolor_cairo_set_source_rgba(cr);
+		pv_cairo_set_source_rgba_workingcolor(cr);
 		cairo_move_to(cr, gp_current.x, gp_current.y);
 		cairo_line_to(cr, gp_next.x, gp_next.y);
 		cairo_stroke(cr);
@@ -693,7 +693,7 @@ static void _pv_element_bezier_draw_anchor_handle(
 	} else if(-1 == ofs_index) {
 		// ** prev anchor_point
 		cairo_set_line_width(cr, 1.0);
-		_pv_render_workingcolor_cairo_set_source_rgba(cr);
+		pv_cairo_set_source_rgba_workingcolor(cr);
 		cairo_move_to(cr, gp_current.x, gp_current.y);
 		cairo_line_to(cr, gp_next.x, gp_next.y);
 		cairo_stroke(cr);
@@ -702,7 +702,7 @@ static void _pv_element_bezier_draw_anchor_handle(
 	}else if(1 == ofs_index){
 		// ** next anchor_point
 		cairo_set_line_width(cr, 1.0);
-		_pv_render_workingcolor_cairo_set_source_rgba(cr);
+		pv_cairo_set_source_rgba_workingcolor(cr);
 		cairo_move_to(cr, gp_current.x, gp_current.y);
 		cairo_line_to(cr, gp_prev.x, gp_prev.y);
 		cairo_stroke(cr);
@@ -741,7 +741,7 @@ static bool _pv_element_bezier_draw_focusing(
 	}
 	double LINE_WIDTH_FOCUS = 1.0;
 	cairo_set_line_width(cr, LINE_WIDTH_FOCUS);
-	_pv_render_workingcolor_cairo_set_source_rgba(cr);
+	pv_cairo_set_source_rgba_workingcolor(cr);
 	cairo_stroke(cr);
 
 	// ** anchor points
@@ -1203,7 +1203,7 @@ static bool _pv_element_raster_draw_focusing(
 
 	cairo_rectangle(cr, x, y, w, h);
 	cairo_set_line_width(cr, 1.0);
-	_pv_render_workingcolor_cairo_set_source_rgba(cr);
+	pv_cairo_set_source_rgba_workingcolor(cr);
 	cairo_stroke(cr);
 
 	return true;
