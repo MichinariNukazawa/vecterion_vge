@@ -23,8 +23,8 @@ PvRect pv_rect_expand(PvRect rect0, PvRect rect1)
 	double y1 = rect1.y + rect1.h;
 	double x = (x0 > x1)? x0 : x1;
 	double y = (y0 > y1)? y0 : y1;
-	ret.w = ret.x - x;
-	ret.h = ret.y - y;
+	ret.w = x - ret.x;
+	ret.h = y - ret.y;
 
 	return ret;
 }
