@@ -59,10 +59,10 @@ bool et_tool_info_init()
 
 		// ** make image(cursor,icons)
 		GError *error = NULL;
-		info->cursor = gdk_pixbuf_new_from_file(info->filepath_cursor, &error);
-		et_assertf(info->cursor, "%s", error->message);
+		info->icon_cursor = gdk_pixbuf_new_from_file(info->filepath_cursor, &error);
+		et_assertf(info->icon_cursor, "%s", error->message);
 
-		info->icon = info->cursor;
+		info->icon = info->icon_cursor;
 		info->icon_focus = _et_tool_info_conv_pixbuf(info->icon);
 	}
 
@@ -830,7 +830,7 @@ EtToolInfo _et_tool_infos[] = {
 		.name = "Focus Element",
 		.icon = NULL,
 		.icon_focus = NULL,
-		.cursor = NULL,
+		.icon_cursor = NULL,
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_element_allow_24x24.svg",
 		.func_mouse_action = _et_tool_focus_element_mouse_action,
@@ -840,7 +840,7 @@ EtToolInfo _et_tool_infos[] = {
 		.name = "Add Anchor Point",
 		.icon = NULL,
 		.icon_focus = NULL,
-		.cursor = NULL,
+		.icon_cursor = NULL,
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_put_allow_24x24.svg",
 		.func_mouse_action = _et_tool_bezier_mouse_action,
@@ -850,7 +850,7 @@ EtToolInfo _et_tool_infos[] = {
 		.name = "Edit Anchor Point",
 		.icon = NULL,
 		.icon_focus = NULL,
-		.cursor = NULL,
+		.icon_cursor = NULL,
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_edit_allow_24x24.svg",
 		.func_mouse_action = _et_tool_edit_anchor_point_mouse_action,
@@ -860,7 +860,7 @@ EtToolInfo _et_tool_infos[] = {
 		.name = "Edit Anchor Point Handle",
 		.icon = NULL,
 		.icon_focus = NULL,
-		.cursor = NULL,
+		.icon_cursor = NULL,
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_handle_allow_24x24.svg",
 		.func_mouse_action = _et_tool_edit_anchor_point_handle_mouse_action,

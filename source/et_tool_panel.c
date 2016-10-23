@@ -92,7 +92,7 @@ static bool _et_tool_panel_add_tool(EtToolPanel *self, const EtToolInfo *info)
 	assert(gdk_display_get_default());
 	item->mouse_cursor = gdk_cursor_new_from_pixbuf(
 			gdk_display_get_default(),
-			info->cursor,
+			info->icon_cursor,
 			0, 0);
 	assert(item->mouse_cursor);
 

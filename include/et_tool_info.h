@@ -17,7 +17,7 @@ typedef struct EtToolInfo{
 	const char *name;
 	GdkPixbuf *icon;
 	GdkPixbuf *icon_focus;
-	GdkPixbuf *cursor;
+	GdkPixbuf *icon_cursor;
 
 	const char *filepath_icon;
 	const char *filepath_cursor;
