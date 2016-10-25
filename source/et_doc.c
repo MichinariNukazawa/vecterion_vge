@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "et_error.h"
 #include "et_doc_manager.h"
-#include "et_doc_history.h"
+#include "et_doc_history_hive.h"
 
 struct EtDocSlotChangeInfo;
 typedef struct EtDocSlotChangeInfo EtDocSlotChangeInfo;
@@ -17,7 +17,7 @@ typedef struct EtDoc{
 	EtDocId id;
 	const char *filepath;
 
-	EtDocHistory *hist;
+	EtDocHistoryHive *history_hive;
 
 	EtDocSlotChangeInfo *slot_change_infos;
 }EtDoc;
@@ -60,8 +60,8 @@ EtDoc *et_doc_new_from_vg(const PvVg *vg)
 
 	self->filepath = NULL;
 
-	self->hist = et_doc_history_new(vg);
-	if(NULL == self->hist){
+	self->history_hive = et_doc_history_hive_new(vg);
+	if(NULL == self->history_hive){
 		et_error("");
 		return NULL;
 	}
@@ -129,7 +129,7 @@ PvVg *et_doc_get_vg_ref(EtDoc *self)
 		return NULL;
 	}
 
-	EtDocHistoryItem *hist_item = et_doc_history_get_from_relative(self->hist, 0);
+	EtDocHistory *hist_item = et_doc_history_get_from_relative(self->history_hive, 0);
 	if(NULL == hist_item){
 		et_bug("");
 		return NULL;
@@ -195,7 +195,7 @@ bool et_doc_set_image_from_file(EtDoc *self, const char *filepath)
 		return false;
 	}
 
-	EtDocHistoryItem *hist_item = et_doc_history_get_from_relative(self->hist, 0);
+	EtDocHistory *hist_item = et_doc_history_get_from_relative(self->history_hive, 0);
 	if(NULL == hist_item){
 		et_bug("");
 		return NULL;
@@ -249,7 +249,7 @@ PvFocus *et_doc_get_focus_ref_from_id(EtDocId id)
 		goto error;
 	}
 
-	EtDocHistoryItem *hist_item = et_doc_history_get_from_relative(self->hist, 0);
+	EtDocHistory *hist_item = et_doc_history_get_from_relative(self->history_hive, 0);
 	if(NULL == hist_item){
 		et_bug("");
 		goto error;
@@ -271,13 +271,13 @@ bool et_doc_save_from_id(EtDocId doc_id)
 	}
 
 	// ** check exist difference
-	if(0 < et_doc_history_get_num_undo(doc->hist)){
-		EtDocHistoryItem *hist_now = et_doc_history_get_from_relative(doc->hist, 0);
+	if(0 < et_doc_history_hive_get_num_undo(doc->history_hive)){
+		EtDocHistory *hist_now = et_doc_history_get_from_relative(doc->history_hive, 0);
 		if(NULL == hist_now || NULL == hist_now->vg){
 			et_bug("%p", hist_now);
 			return false;
 		}
-		EtDocHistoryItem *hist_prev = et_doc_history_get_from_relative(doc->hist, -1);
+		EtDocHistory *hist_prev = et_doc_history_get_from_relative(doc->history_hive, -1);
 		if(NULL == hist_prev || NULL == hist_prev->vg){
 			et_bug("%p", hist_prev);
 			return false;
@@ -288,7 +288,7 @@ bool et_doc_save_from_id(EtDocId doc_id)
 	}
 
 	// ** save
-	if(!et_doc_history_save_with_focus(doc->hist)){
+	if(!et_doc_history_hive_save_with_focus(doc->history_hive)){
 		et_error("");
 		return false;
 	}
@@ -306,7 +306,7 @@ bool et_doc_undo_from_id(EtDocId doc_id)
 		return false;
 	}
 
-	if(!et_doc_history_undo(doc->hist)){
+	if(!et_doc_history_hive_undo(doc->history_hive)){
 		et_error("");
 		return false;
 	}
@@ -324,7 +324,7 @@ bool et_doc_redo_from_id(EtDocId doc_id)
 		return false;
 	}
 
-	if(!et_doc_history_redo(doc->hist)){
+	if(!et_doc_history_hive_redo(doc->history_hive)){
 		et_error("");
 		return false;
 	}

@@ -3,7 +3,7 @@
 
 extern "C"
 {
-#include "et_doc_history.h"
+#include "et_doc_history_hive.h"
 }
 
 TEST(Test, Test){
@@ -15,10 +15,10 @@ TEST(Test, History){
 	if(NULL == vg){
 		FAIL();
 	}
-	EtDocHistory *hist;
-	hist = et_doc_history_new(NULL);
+	EtDocHistoryHive *hist;
+	hist = et_doc_history_hive_new(NULL);
 	ASSERT_TRUE(NULL == hist);
-	hist = et_doc_history_new(vg);
+	hist = et_doc_history_hive_new(vg);
 	ASSERT_TRUE(NULL != hist);
 }
 
@@ -27,20 +27,20 @@ TEST(test, hist_start){
 	if(NULL == vg){
 		FAIL();
 	}
-	EtDocHistory *hist;
-	hist = et_doc_history_new(vg);
+	EtDocHistoryHive *hist;
+	hist = et_doc_history_hive_new(vg);
 	if(NULL == hist){
 		FAIL();
 	}
 
 	// ** 初期状態のチェック
 	int num;
-	num = et_doc_history_get_num_undo(hist);
+	num = et_doc_history_hive_get_num_undo(hist);
 	ASSERT_EQ(0, num);
-	num = et_doc_history_get_num_redo(hist);
+	num = et_doc_history_hive_get_num_redo(hist);
 	ASSERT_EQ(0, num);
 
-	EtDocHistoryItem *item = NULL;
+	EtDocHistory *item = NULL;
 	item = et_doc_history_get_from_relative(hist, 0);
 	ASSERT_TRUE(NULL != item);
 	ASSERT_TRUE(!pv_vg_is_diff(vg, item->vg)); // check equal
@@ -51,24 +51,24 @@ TEST(test, hist_start){
 	ASSERT_TRUE(NULL == item);
 
 	bool ret;
-	ret = et_doc_history_undo(hist);
+	ret = et_doc_history_hive_undo(hist);
 	ASSERT_FALSE(ret);
-	ret = et_doc_history_redo(hist);
+	ret = et_doc_history_hive_redo(hist);
 	ASSERT_FALSE(ret);
 
 	item = et_doc_history_get_from_relative(hist, 0);
 	ASSERT_TRUE(NULL != item);
 	ASSERT_TRUE(!pv_vg_is_diff(vg, item->vg)); // check equal
 
-	num = et_doc_history_get_num_undo(hist);
+	num = et_doc_history_hive_get_num_undo(hist);
 	ASSERT_EQ(0, num);
-	num = et_doc_history_get_num_redo(hist);
+	num = et_doc_history_hive_get_num_redo(hist);
 	ASSERT_EQ(0, num);
 }
 
 class MyTest : public ::testing::Test {
 	protected:
-		void make_hist_from_vg_src(EtDocHistory **hist_ret, const PvVg *vg_src)
+		void make_hist_from_vg_src(EtDocHistoryHive **hist_ret, const PvVg *vg_src)
 		{
 			*hist_ret = NULL;
 
@@ -79,8 +79,8 @@ class MyTest : public ::testing::Test {
 			if(FALSE != pv_vg_is_diff(vg_src, vg)){
 				FAIL();
 			}
-			EtDocHistory *hist = NULL;
-			hist = et_doc_history_new(vg);
+			EtDocHistoryHive *hist = NULL;
+			hist = et_doc_history_hive_new(vg);
 			if(NULL == hist){
 				FAIL();
 			}
@@ -90,12 +90,12 @@ class MyTest : public ::testing::Test {
 		}
 
 		void make_hist_with_diff_from_vg_src(
-				EtDocHistory **hist_ret, const PvVg *vg_src)
+				EtDocHistoryHive **hist_ret, const PvVg *vg_src)
 		{
 			*hist_ret = NULL;
 
-			EtDocHistoryItem *item = NULL;
-			EtDocHistory *hist = NULL;
+			EtDocHistory *item = NULL;
+			EtDocHistoryHive *hist = NULL;
 
 			make_hist_from_vg_src(&hist, vg_src);
 			if(NULL == hist){
@@ -120,18 +120,18 @@ class MyTest : public ::testing::Test {
 			return;
 		}
 
-		void make_hist_with_redo(EtDocHistory **hist_ret, const PvVg *vg_src)
+		void make_hist_with_redo(EtDocHistoryHive **hist_ret, const PvVg *vg_src)
 		{
-			EtDocHistoryItem *item = NULL;
+			EtDocHistory *item = NULL;
 
-			EtDocHistory *hist = NULL;
+			EtDocHistoryHive *hist = NULL;
 			make_hist_with_diff_from_vg_src(&hist, vg_src);
 			if(NULL == hist){
 				FAIL();
 			}
 			// ** save
 			bool ret;
-			ret = et_doc_history_save_with_focus(hist);
+			ret = et_doc_history_hive_save_with_focus(hist);
 			if(TRUE != ret){
 				FAIL();
 			}
@@ -141,7 +141,7 @@ class MyTest : public ::testing::Test {
 				FAIL();
 			}
 			// ** undo
-			ret = et_doc_history_undo(hist);
+			ret = et_doc_history_hive_undo(hist);
 			item = et_doc_history_get_from_relative(hist, 0);
 			if(NULL == item){
 				FAIL();
@@ -151,11 +151,11 @@ class MyTest : public ::testing::Test {
 			return;
 		}
 
-		void do_hist_save_change(bool *ret, EtDocHistory *hist)
+		void do_hist_save_change(bool *ret, EtDocHistoryHive *hist)
 		{
 			*ret = false;
 
-			EtDocHistoryItem *item = NULL;
+			EtDocHistory *item = NULL;
 			item = et_doc_history_get_from_relative(hist, 0);
 			if(NULL == item){
 				FAIL();
@@ -165,13 +165,13 @@ class MyTest : public ::testing::Test {
 			if(!pv_element_append_child(elem, NULL, elem_new)){
 				FAIL();
 			}
-			ASSERT_TRUE(et_doc_history_save_with_focus(hist));
+			ASSERT_TRUE(et_doc_history_hive_save_with_focus(hist));
 
 			*ret = true;
 			return;
 		}
 
-		void do_hist_save_changed_loop(bool *ret, EtDocHistory *hist, int num_limit)
+		void do_hist_save_changed_loop(bool *ret, EtDocHistoryHive *hist, int num_limit)
 		{
 			*ret = false;
 
@@ -202,7 +202,7 @@ TEST_F(MyTest, hist_change){
 
 	// ** change
 	{
-		EtDocHistory *hist = NULL;
+		EtDocHistoryHive *hist = NULL;
 		make_hist_with_diff_from_vg_src(&hist, vg_src);
 		if(NULL == hist){
 			FAIL();
@@ -211,32 +211,32 @@ TEST_F(MyTest, hist_change){
 
 	// ** change (undo)
 	{
-		EtDocHistoryItem *item = NULL;
+		EtDocHistory *item = NULL;
 
-		EtDocHistory *hist = NULL;
+		EtDocHistoryHive *hist = NULL;
 		make_hist_from_vg_src(&hist, vg_src);
 		if(NULL == hist){
 			FAIL();
 		}
 		// ** undo
 		bool ret;
-		ret = et_doc_history_undo(hist);
+		ret = et_doc_history_hive_undo(hist);
 		ASSERT_FALSE(ret);
 		item = et_doc_history_get_from_relative(hist, 0);
 		ASSERT_TRUE(NULL != item);
 		ASSERT_TRUE(NULL != item->vg);
 		ASSERT_FALSE(pv_vg_is_diff(vg_src, item->vg));
-		et_doc_history_debug_print(hist);
-		ASSERT_EQ(0, et_doc_history_get_num_undo(hist));
-		ASSERT_EQ(0, et_doc_history_get_num_redo(hist));
+		et_doc_history_hive_debug_print(hist);
+		ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_redo(hist));
 	}
 
 	// ** change (undo+diff)
 	// ** difference stacking to history when undo.
 	{
-		EtDocHistoryItem *item = NULL;
+		EtDocHistory *item = NULL;
 
-		EtDocHistory *hist = NULL;
+		EtDocHistoryHive *hist = NULL;
 		make_hist_with_diff_from_vg_src(&hist, vg_src);
 		if(NULL == hist){
 			FAIL();
@@ -247,36 +247,36 @@ TEST_F(MyTest, hist_change){
 			FAIL();
 		}
 		// ** undo
-		ASSERT_TRUE(et_doc_history_undo(hist));
+		ASSERT_TRUE(et_doc_history_hive_undo(hist));
 		item = et_doc_history_get_from_relative(hist, 0);
 		ASSERT_TRUE(NULL != item);
-		ASSERT_EQ(0, et_doc_history_get_num_undo(hist));
-		ASSERT_EQ(1, et_doc_history_get_num_redo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
+		ASSERT_EQ(1, et_doc_history_hive_get_num_redo(hist));
 		ASSERT_TRUE(pv_vg_is_diff(vg1, item->vg));
 		ASSERT_FALSE(pv_vg_is_diff(vg_src, item->vg));
-		ASSERT_FALSE(et_doc_history_undo(hist));
+		ASSERT_FALSE(et_doc_history_hive_undo(hist));
 		// ** redo
-		ASSERT_TRUE(et_doc_history_redo(hist));
+		ASSERT_TRUE(et_doc_history_hive_redo(hist));
 		item = et_doc_history_get_from_relative(hist, 0);
 		ASSERT_TRUE(NULL != item);
-		ASSERT_EQ(1, et_doc_history_get_num_undo(hist));
-		ASSERT_EQ(0, et_doc_history_get_num_redo(hist));
+		ASSERT_EQ(1, et_doc_history_hive_get_num_undo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_redo(hist));
 		ASSERT_FALSE(pv_vg_is_diff(vg1, item->vg));
 		ASSERT_TRUE(pv_vg_is_diff(vg_src, item->vg));
 	}
 
 	// ** change (save)
 	{
-		EtDocHistoryItem *item = NULL;
+		EtDocHistory *item = NULL;
 
-		EtDocHistory *hist = NULL;
+		EtDocHistoryHive *hist = NULL;
 		make_hist_with_diff_from_vg_src(&hist, vg_src);
 		if(NULL == hist){
 			FAIL();
 		}
 		// ** save
 		bool ret;
-		ret = et_doc_history_save_with_focus(hist);
+		ret = et_doc_history_hive_save_with_focus(hist);
 		ASSERT_TRUE(ret);
 		item = et_doc_history_get_from_relative(hist, 0);
 		ASSERT_TRUE(NULL != item);
@@ -286,10 +286,10 @@ TEST_F(MyTest, hist_change){
 		ASSERT_TRUE(NULL != item);
 		ASSERT_TRUE(NULL != item->vg);
 		ASSERT_FALSE(pv_vg_is_diff(vg_src, item->vg));
-		ASSERT_EQ(1, et_doc_history_get_num_undo(hist));
-		ASSERT_EQ(0, et_doc_history_get_num_redo(hist));
+		ASSERT_EQ(1, et_doc_history_hive_get_num_undo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_redo(hist));
 		// ** save skip because nothing change
-		ret = et_doc_history_save_with_focus(hist);
+		ret = et_doc_history_hive_save_with_focus(hist);
 		ASSERT_TRUE(ret);
 		item = et_doc_history_get_from_relative(hist, 0);
 		ASSERT_TRUE(NULL != item);
@@ -299,22 +299,22 @@ TEST_F(MyTest, hist_change){
 		ASSERT_TRUE(NULL != item);
 		ASSERT_TRUE(NULL != item->vg);
 		ASSERT_FALSE(pv_vg_is_diff(vg_src, item->vg));
-		ASSERT_EQ(1, et_doc_history_get_num_undo(hist));
-		ASSERT_EQ(0, et_doc_history_get_num_redo(hist));
+		ASSERT_EQ(1, et_doc_history_hive_get_num_undo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_redo(hist));
 	}
 
 	// ** change (save -> undo -> redo)
 	{
-		EtDocHistoryItem *item = NULL;
+		EtDocHistory *item = NULL;
 
-		EtDocHistory *hist = NULL;
+		EtDocHistoryHive *hist = NULL;
 		make_hist_with_diff_from_vg_src(&hist, vg_src);
 		if(NULL == hist){
 			FAIL();
 		}
 		// ** save
 		bool ret;
-		ret = et_doc_history_save_with_focus(hist);
+		ret = et_doc_history_hive_save_with_focus(hist);
 		if(TRUE != ret){
 			FAIL();
 		}
@@ -324,71 +324,71 @@ TEST_F(MyTest, hist_change){
 			FAIL();
 		}
 		// ** undo
-		ret = et_doc_history_undo(hist);
+		ret = et_doc_history_hive_undo(hist);
 		item = et_doc_history_get_from_relative(hist, 0);
 		ASSERT_TRUE(NULL != item);
 		ASSERT_TRUE(NULL != item->vg);
 		ASSERT_FALSE(pv_vg_is_diff(vg_src, item->vg));
-		ASSERT_EQ(0, et_doc_history_get_num_undo(hist));
-		ASSERT_EQ(1, et_doc_history_get_num_redo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
+		ASSERT_EQ(1, et_doc_history_hive_get_num_redo(hist));
 		// ** redo
-		ret = et_doc_history_redo(hist);
+		ret = et_doc_history_hive_redo(hist);
 		item = et_doc_history_get_from_relative(hist, 0);
 		ASSERT_TRUE(NULL != item);
 		ASSERT_TRUE(NULL != item->vg);
 		ASSERT_TRUE(pv_vg_is_diff(vg_src, item->vg));
 		ASSERT_FALSE(pv_vg_is_diff(vg_at_save, item->vg));
-		ASSERT_EQ(1, et_doc_history_get_num_undo(hist));
-		ASSERT_EQ(0, et_doc_history_get_num_redo(hist));
+		ASSERT_EQ(1, et_doc_history_hive_get_num_undo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_redo(hist));
 		// ** re process
 		// ** undo
-		ret = et_doc_history_undo(hist);
+		ret = et_doc_history_hive_undo(hist);
 		item = et_doc_history_get_from_relative(hist, 0);
 		ASSERT_TRUE(NULL != item);
 		ASSERT_TRUE(NULL != item->vg);
 		ASSERT_FALSE(pv_vg_is_diff(vg_src, item->vg));
-		ASSERT_EQ(0, et_doc_history_get_num_undo(hist));
-		ASSERT_EQ(1, et_doc_history_get_num_redo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
+		ASSERT_EQ(1, et_doc_history_hive_get_num_redo(hist));
 		// ** redo
-		ret = et_doc_history_redo(hist);
+		ret = et_doc_history_hive_redo(hist);
 		item = et_doc_history_get_from_relative(hist, 0);
 		ASSERT_TRUE(NULL != item);
 		ASSERT_TRUE(NULL != item->vg);
 		ASSERT_TRUE(pv_vg_is_diff(vg_src, item->vg));
 		ASSERT_FALSE(pv_vg_is_diff(vg_at_save, item->vg));
-		ASSERT_EQ(1, et_doc_history_get_num_undo(hist));
-		ASSERT_EQ(0, et_doc_history_get_num_redo(hist));
+		ASSERT_EQ(1, et_doc_history_hive_get_num_undo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_redo(hist));
 	}
 
 	// ** save skip because no change.
 	{
-		EtDocHistoryItem *item = NULL;
-		EtDocHistory *hist = et_doc_history_new(vg_src);
+		EtDocHistory *item = NULL;
+		EtDocHistoryHive *hist = et_doc_history_hive_new(vg_src);
 		if(NULL == hist){
 			FAIL();
 		}
 
-		ASSERT_TRUE(et_doc_history_save_with_focus(hist));
+		ASSERT_TRUE(et_doc_history_hive_save_with_focus(hist));
 		item = et_doc_history_get_from_relative(hist, 0);
 		ASSERT_TRUE(NULL != item);
 		ASSERT_FALSE(pv_vg_is_diff(vg_src, item->vg));
-		ASSERT_EQ(0, et_doc_history_get_num_undo(hist));
-		ASSERT_EQ(0, et_doc_history_get_num_redo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_redo(hist));
 	}
 
 	// ** save when drop redo.
 	{
 		// ** stacked redo history.
-		EtDocHistory *hist = NULL;
+		EtDocHistoryHive *hist = NULL;
 		make_hist_with_redo(&hist, vg_src);
 		if(NULL == hist){
 			FAIL();
 		}
-		if(1 != et_doc_history_get_num_redo(hist)){
+		if(1 != et_doc_history_hive_get_num_redo(hist)){
 			FAIL();
 		}
 		// ** change (drop redo)
-		EtDocHistoryItem *item = NULL;
+		EtDocHistory *item = NULL;
 		item = et_doc_history_get_from_relative(hist, 0);
 		if(NULL == item || pv_vg_is_diff(vg_src, item->vg)){
 			FAIL();
@@ -398,16 +398,16 @@ TEST_F(MyTest, hist_change){
 		if(!pv_element_append_child(elem, NULL, elem_new)){
 			FAIL();
 		}
-		ASSERT_EQ(0,et_doc_history_get_num_redo(hist));
+		ASSERT_EQ(0,et_doc_history_hive_get_num_redo(hist));
 	}
 
 	// ** undo limit and limit over.
 	const int num_history = 128;
 	const int num_limit = num_history - 1;
 	{
-		EtDocHistoryItem *item = NULL;
+		EtDocHistory *item = NULL;
 
-		EtDocHistory *hist = NULL;
+		EtDocHistoryHive *hist = NULL;
 		make_hist_with_diff_from_vg_src(&hist, vg_src);
 		if(NULL == hist){
 			FAIL();
@@ -421,7 +421,7 @@ TEST_F(MyTest, hist_change){
 		}
 		// ** undo history full
 		for(int i = 0; i < num_limit; i++){
-			ASSERT_TRUE(et_doc_history_undo(hist));
+			ASSERT_TRUE(et_doc_history_hive_undo(hist));
 		}
 
 		item = et_doc_history_get_from_relative(hist, 0);
@@ -429,15 +429,15 @@ TEST_F(MyTest, hist_change){
 			FAIL();
 		}
 		ASSERT_FALSE(pv_vg_is_diff(vg_src, item->vg));
-		ASSERT_EQ(0, et_doc_history_get_num_undo(hist));
-		ASSERT_EQ(num_limit, et_doc_history_get_num_redo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
+		ASSERT_EQ(num_limit, et_doc_history_hive_get_num_redo(hist));
 	}
 
 	// ** limit over
 	{
-		EtDocHistoryItem *item = NULL;
+		EtDocHistory *item = NULL;
 
-		EtDocHistory *hist = NULL;
+		EtDocHistoryHive *hist = NULL;
 		make_hist_with_diff_from_vg_src(&hist, vg_src);
 		if(NULL == hist){
 			FAIL();
@@ -461,7 +461,7 @@ TEST_F(MyTest, hist_change){
 		}
 		// ** undo history full
 		for(int i = 0; i < num_limit; i++){
-			ASSERT_TRUE(et_doc_history_undo(hist));
+			ASSERT_TRUE(et_doc_history_hive_undo(hist));
 		}
 		item = et_doc_history_get_from_relative(hist, 0);
 		ASSERT_TRUE(NULL != item);
@@ -469,7 +469,7 @@ TEST_F(MyTest, hist_change){
 		ASSERT_FALSE(pv_vg_is_diff(vg1, item->vg));
 		printf("**\n");
 		// ** over undo
-		ASSERT_FALSE(et_doc_history_undo(hist));
+		ASSERT_FALSE(et_doc_history_hive_undo(hist));
 		item = et_doc_history_get_from_relative(hist, 0);
 		ASSERT_TRUE(NULL != item);
 		ASSERT_TRUE(pv_vg_is_diff(vg_src, item->vg));

@@ -1,19 +1,19 @@
-#include "et_doc_history.h"
+#include "et_doc_history_hive.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include "et_error.h"
 
-const int _et_doc_history_num_history = 128;
+const int _et_doc_history_hive_num_history = 128;
 
-EtDocHistory *et_doc_history_new(const PvVg *vg)
+EtDocHistoryHive *et_doc_history_hive_new(const PvVg *vg)
 {
 	if(NULL == vg){
 		et_bug("");
 		return NULL;
 	}
 
-	EtDocHistory *this = (EtDocHistory *)malloc(sizeof(EtDocHistory));
+	EtDocHistoryHive *this = (EtDocHistoryHive *)malloc(sizeof(EtDocHistoryHive));
 	if(NULL == this){
 		et_critical("");
 		return NULL;
@@ -22,9 +22,9 @@ EtDocHistory *et_doc_history_new(const PvVg *vg)
 	this->ix_current = 0;
 	this->ix_redo = 0;
 	this->ix_undo = 0;
-	this->num_history = _et_doc_history_num_history;
+	this->num_history = _et_doc_history_hive_num_history;
 
-	this->hists = (EtDocHistoryItem *)malloc(sizeof(EtDocHistoryItem) * this->num_history);
+	this->hists = (EtDocHistory *)malloc(sizeof(EtDocHistory) * this->num_history);
 	if(NULL == this->hists){
 		et_critical("");
 		return NULL;
@@ -65,8 +65,8 @@ EtDocHistory *et_doc_history_new(const PvVg *vg)
 /** @brief
  * @return is nusefe (index history enable is not check.)
  */
-static int _et_doc_history_get_index_from_relative(
-		const EtDocHistory *hist,
+static int _et_doc_history_hive_get_index_from_relative(
+		const EtDocHistoryHive *hist,
 		int ix_base,
 		int relative,
 		int max)
@@ -94,7 +94,7 @@ static int _et_doc_history_get_index_from_relative(
 	return ix;
 }
 
-static bool _et_doc_history_is_extent_enable(EtDocHistory *hist, int ix)
+static bool _et_doc_history_hive_is_extent_enable(EtDocHistoryHive *hist, int ix)
 {
 	if(!(0 <= ix && ix < hist->num_history)){
 		return false;
@@ -113,7 +113,7 @@ static bool _et_doc_history_is_extent_enable(EtDocHistory *hist, int ix)
 	return true;
 }
 
-EtDocHistoryItem *et_doc_history_get_from_relative(EtDocHistory *hist, int relative)
+EtDocHistory *et_doc_history_get_from_relative(EtDocHistoryHive *hist, int relative)
 {
 	// et_debug("curr:%d rel:%d", hist->ix_current, relative);
 
@@ -121,13 +121,13 @@ EtDocHistoryItem *et_doc_history_get_from_relative(EtDocHistory *hist, int relat
 		return &(hist->hist_work);
 	}
 
-	int ix = _et_doc_history_get_index_from_relative(
+	int ix = _et_doc_history_hive_get_index_from_relative(
 			hist,
 			hist->ix_current,
 			relative,
 			hist->num_history);
 
-	if(! _et_doc_history_is_extent_enable(hist, ix)){
+	if(! _et_doc_history_hive_is_extent_enable(hist, ix)){
 		goto error;
 	}
 
@@ -140,7 +140,7 @@ error:
 	return NULL;
 }
 
-static int et_doc_history_element_get_index(const PvElement *element)
+static int et_doc_history_hive_element_get_index(const PvElement *element)
 {
 	PvElement *parent = element->parent;
 	if(NULL == parent){
@@ -156,7 +156,7 @@ static int et_doc_history_element_get_index(const PvElement *element)
 	return -1;
 }
 
-static int *et_doc_history_element_get_indexes(const PvElement *element)
+static int *et_doc_history_hive_element_get_indexes(const PvElement *element)
 {
 	if(NULL == element){
 		// et_warning("");
@@ -167,7 +167,7 @@ static int *et_doc_history_element_get_indexes(const PvElement *element)
 	int *indexes = NULL;
 	const PvElement *_element = element;
 	while(NULL != _element->parent){
-		int ix = et_doc_history_element_get_index(_element);
+		int ix = et_doc_history_hive_element_get_index(_element);
 		if(ix < 0){
 			et_error("");
 			goto error;
@@ -224,7 +224,7 @@ static PvElement *et_doc_element_get_tree_from_indexes(
 	return _element;
 }
 
-static PvFocus *_et_doc_history_copy_focus_by_vg(const PvFocus *focus_src, const PvVg *vg_dst)
+static PvFocus *_et_doc_history_hive_copy_focus_by_vg(const PvFocus *focus_src, const PvVg *vg_dst)
 {
 	PvFocus *focus_dst = pv_focus_new(vg_dst);
 	if(NULL == focus_dst){
@@ -237,7 +237,7 @@ static PvFocus *_et_doc_history_copy_focus_by_vg(const PvFocus *focus_src, const
 	const PvElement *focus_element = pv_focus_get_first_element(focus_src);
 	if(NULL != focus_element){
 		// ** get focus path(index's)
-		indexes = et_doc_history_element_get_indexes(
+		indexes = et_doc_history_hive_element_get_indexes(
 				focus_element);
 		if(NULL == indexes){
 			et_error("");
@@ -258,7 +258,7 @@ error:
 	return NULL;
 }
 
-static void _et_doc_hist_free_history(EtDocHistory *hist, int ix)
+static void _et_doc_hist_free_history(EtDocHistoryHive *hist, int ix)
 {
 	pv_vg_free(hist->hists[ix].vg);
 	pv_focus_free(hist->hists[ix].focus);
@@ -266,7 +266,7 @@ static void _et_doc_hist_free_history(EtDocHistory *hist, int ix)
 	hist->hists[ix].focus = NULL;
 }
 
-static bool _et_doc_hist_free_redo_all(EtDocHistory *hist)
+static bool _et_doc_hist_free_redo_all(EtDocHistoryHive *hist)
 {
 	if(hist->ix_redo < hist->ix_current){
 		for(; 0 <= hist->ix_redo; (hist->ix_redo)--){
@@ -281,7 +281,7 @@ static bool _et_doc_hist_free_redo_all(EtDocHistory *hist)
 	return true;
 }
 
-static bool _et_doc_hist_free_history_next(EtDocHistory *hist)
+static bool _et_doc_hist_free_history_next(EtDocHistoryHive *hist)
 {
 	// ** このあと、current == redo 前提で記述する
 	if(hist->ix_current != hist->ix_redo){
@@ -293,18 +293,18 @@ static bool _et_doc_hist_free_history_next(EtDocHistory *hist)
 		}
 	}
 
-	int ix = _et_doc_history_get_index_from_relative(
+	int ix = _et_doc_history_hive_get_index_from_relative(
 			hist,
 			hist->ix_current,
 			1,
 			hist->num_history);
 
-	if(! _et_doc_history_is_extent_enable(hist, ix)){
+	if(! _et_doc_history_hive_is_extent_enable(hist, ix)){
 		return true;
 	}
 
 	_et_doc_hist_free_history(hist, ix);
-	int ix2 = _et_doc_history_get_index_from_relative(
+	int ix2 = _et_doc_history_hive_get_index_from_relative(
 			hist,
 			ix,
 			1,
@@ -318,9 +318,9 @@ static bool _et_doc_hist_free_history_next(EtDocHistory *hist)
 	return true;
 }
 
-static bool _et_doc_history_copy_hist(
-		EtDocHistoryItem *item_dst,
-		const EtDocHistoryItem *item_src)
+static bool _et_doc_history_hive_copy_hist(
+		EtDocHistory *item_dst,
+		const EtDocHistory *item_src)
 {
 	if(NULL == item_dst){
 		et_bug("");
@@ -342,7 +342,7 @@ static bool _et_doc_history_copy_hist(
 		return false;
 	}
 	// ** restructed focus.
-	PvFocus *focus_new = _et_doc_history_copy_focus_by_vg(
+	PvFocus *focus_new = _et_doc_history_hive_copy_focus_by_vg(
 			item_src->focus,
 			vg_new);
 	if(NULL == focus_new){
@@ -360,13 +360,13 @@ static bool _et_doc_history_copy_hist(
 	return true;
 }
 
-bool et_doc_history_save_with_focus(EtDocHistory *hist)
+bool et_doc_history_hive_save_with_focus(EtDocHistoryHive *hist)
 {
 	et_debug("undo:%3d, curr:%3d, redo:%3d, num:%3d",
 			hist->ix_undo, hist->ix_current, hist->ix_redo,
 			hist->num_history);
 
-	int ix = _et_doc_history_get_index_from_relative(
+	int ix = _et_doc_history_hive_get_index_from_relative(
 			NULL,
 			hist->ix_current,
 			1,
@@ -388,7 +388,7 @@ bool et_doc_history_save_with_focus(EtDocHistory *hist)
 		return false;
 	}
 
-	if(!_et_doc_history_copy_hist(&(hist->hists[ix]), &(hist->hist_work))){
+	if(!_et_doc_history_hive_copy_hist(&(hist->hists[ix]), &(hist->hist_work))){
 		et_debug("");
 		return false;
 	}
@@ -401,37 +401,37 @@ bool et_doc_history_save_with_focus(EtDocHistory *hist)
 }
 
 /* @brief (存在するならば)currentを1つ過去にずらす */
-bool et_doc_history_undo(EtDocHistory *hist)
+bool et_doc_history_hive_undo(EtDocHistoryHive *hist)
 {
 	et_debug("undo:%3d, curr:%3d, redo:%3d, num:%3d",
 			hist->ix_undo, hist->ix_current, hist->ix_redo,
 			hist->num_history);
 
-	if(0 >= et_doc_history_get_num_undo(hist)){
+	if(0 >= et_doc_history_hive_get_num_undo(hist)){
 		et_debug("undo history is empty.");
 		return false;
 	}
 
 	// ** 変更があればそれをsaveしておく
 	if(TRUE == pv_vg_is_diff(hist->hist_work.vg, hist->hists[hist->ix_current].vg)){
-		if(!et_doc_history_save_with_focus(hist)){
+		if(!et_doc_history_hive_save_with_focus(hist)){
 			et_debug("");
 			return false;
 		}
 	}
 
-	int ix = _et_doc_history_get_index_from_relative(
+	int ix = _et_doc_history_hive_get_index_from_relative(
 			hist,
 			hist->ix_current,
 			-1,
 			hist->num_history);
-	if(!_et_doc_history_is_extent_enable(hist, ix)){
+	if(!_et_doc_history_hive_is_extent_enable(hist, ix)){
 		et_error("%d", ix);
 		return false;
 	}
 	hist->ix_current = ix;
 
-	if(!_et_doc_history_copy_hist(&(hist->hist_work), &(hist->hists[ix]))){
+	if(!_et_doc_history_hive_copy_hist(&(hist->hist_work), &(hist->hists[ix]))){
 		et_error("%d", ix);
 		return false;
 	}
@@ -440,29 +440,29 @@ bool et_doc_history_undo(EtDocHistory *hist)
 }
 
 /* @brief (存在するならば)currentを1つ未来にずらす */
-bool et_doc_history_redo(EtDocHistory *hist)
+bool et_doc_history_hive_redo(EtDocHistoryHive *hist)
 {
 	et_debug("undo:%3d, curr:%3d, redo:%3d, num:%3d",
 			hist->ix_undo, hist->ix_current, hist->ix_redo,
 			hist->num_history);
 
-	if(et_doc_history_get_num_redo(hist) <= 0){
+	if(et_doc_history_hive_get_num_redo(hist) <= 0){
 		et_debug("redo history is empty.");
 		return false;
 	}
 
-	int ix = _et_doc_history_get_index_from_relative(
+	int ix = _et_doc_history_hive_get_index_from_relative(
 			hist,
 			hist->ix_current,
 			1,
 			hist->num_history);
-	if(!_et_doc_history_is_extent_enable(hist, ix)){
+	if(!_et_doc_history_hive_is_extent_enable(hist, ix)){
 		et_error("%d", ix);
 		return false;
 	}
 	hist->ix_current = ix;
 
-	if(!_et_doc_history_copy_hist(&(hist->hist_work), &(hist->hists[ix]))){
+	if(!_et_doc_history_hive_copy_hist(&(hist->hist_work), &(hist->hists[ix]))){
 		et_error("%d", ix);
 		return false;
 	}
@@ -470,7 +470,7 @@ bool et_doc_history_redo(EtDocHistory *hist)
 	return true;
 }
 
-int et_doc_history_get_num_undo(EtDocHistory *hist)
+int et_doc_history_hive_get_num_undo(EtDocHistoryHive *hist)
 {
 	int num = hist->ix_current - hist->ix_undo;
 	if(num < 0){
@@ -484,7 +484,7 @@ int et_doc_history_get_num_undo(EtDocHistory *hist)
 	return num;
 }
 
-int et_doc_history_get_num_redo(EtDocHistory *hist)
+int et_doc_history_hive_get_num_redo(EtDocHistoryHive *hist)
 {
 	// ** check hist_work change.
 	if(pv_vg_is_diff(hist->hist_work.vg, hist->hists[hist->ix_current].vg)){
@@ -499,7 +499,7 @@ int et_doc_history_get_num_redo(EtDocHistory *hist)
 	return num;
 }
 
-void et_doc_history_debug_print(const EtDocHistory *hist)
+void et_doc_history_hive_debug_print(const EtDocHistoryHive *hist)
 {
 	et_debug("undo:%3d, curr:%3d, redo:%3d, num:%3d",
 			hist->ix_undo, hist->ix_current, hist->ix_redo,
