@@ -665,8 +665,8 @@ static void _pv_element_bezier_draw_anchor_handle(
 		int ofs_index, PvRenderContext render_context)
 {
 	PvPoint gp_current = ap.points[PvAnchorPointIndex_Point];
-	PvPoint gp_prev = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandlePrev);
-	PvPoint gp_next = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandleNext);
+	PvPoint gp_prev = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_HandlePrev);
+	PvPoint gp_next = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_HandleNext);
 	gp_current.x *= render_context.scale;
 	gp_current.y *= render_context.scale;
 	gp_prev.x *= render_context.scale;
@@ -864,7 +864,7 @@ static PvPoint _pv_element_bezier_get_point_by_anchor_points(
 	PvPoint point = PvPoint_Default;
 	int num = data->anchor_points_num;
 	for(int i = 0; i < num; i++){
-		PvPoint a_point = pv_anchor_point_get_handle(data->anchor_points[i], PvAnchorPointIndex_Point);
+		PvPoint a_point = pv_anchor_point_get_handle(&(data->anchor_points[i]), PvAnchorPointIndex_Point);
 		if(0 == i){
 			point = a_point;
 		}else{

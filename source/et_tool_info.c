@@ -491,7 +491,7 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 					ap = &_data->anchor_points[_data->anchor_points_num - 1];
 				}
 
-				PvPoint p_ap = pv_anchor_point_get_handle(*ap, PvAnchorPointIndex_Point);
+				PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
 				PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
 				if(fabs(p_diff.x) < _et_tool_info_touch_offset
 						&& fabs(p_diff.y) < _et_tool_info_touch_offset)
@@ -699,9 +699,9 @@ PvAnchorPoint *_get_focus_anchor_point(const PvFocus *focus){
 int _edit_anchor_point_handle_bound_handle(PvAnchorPoint ap, EtMouseAction mouse_action)
 {
 	// ** grub handle.
-	PvPoint p_point = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
-	PvPoint p_prev = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandlePrev);
-	PvPoint p_next = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandleNext);
+	PvPoint p_point = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_Point);
+	PvPoint p_prev = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_HandlePrev);
+	PvPoint p_next = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_HandleNext);
 
 	if(_et_etaion_is_bound_point(
 				_et_tool_info_touch_offset,
@@ -802,7 +802,7 @@ static bool _et_tool_edit_anchor_point_handle_mouse_action(
 					break;
 				}
 
-				PvPoint p_ap = pv_anchor_point_get_handle(*ap, PvAnchorPointIndex_Point);
+				PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
 				PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
 				if(fabs(p_diff.x) < _et_tool_info_touch_offset
 						&& fabs(p_diff.y) < _et_tool_info_touch_offset)

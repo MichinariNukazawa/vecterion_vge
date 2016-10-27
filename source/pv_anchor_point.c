@@ -64,31 +64,31 @@ void pv_anchor_point_move_point(PvAnchorPoint *ap, PvPoint move)
 	ap->points[PvAnchorPointIndex_Point] = pv_point_add(ap->points[PvAnchorPointIndex_Point], move);
 }
 
-PvPoint pv_anchor_point_get_handle(const PvAnchorPoint ap, PvAnchorPointIndex ap_index)
+PvPoint pv_anchor_point_get_handle(const PvAnchorPoint *ap, PvAnchorPointIndex ap_index)
 {
 	switch(ap_index){
 		case PvAnchorPointIndex_HandlePrev:
 			{
 				PvPoint gp = {
-					ap.points[PvAnchorPointIndex_HandlePrev].x
-						+ ap.points[PvAnchorPointIndex_Point].x,
-					ap.points[PvAnchorPointIndex_HandlePrev].y
-						+ ap.points[PvAnchorPointIndex_Point].y};
+					ap->points[PvAnchorPointIndex_HandlePrev].x
+						+ ap->points[PvAnchorPointIndex_Point].x,
+					ap->points[PvAnchorPointIndex_HandlePrev].y
+						+ ap->points[PvAnchorPointIndex_Point].y};
 				return gp;
 			}
 			break;
 		case PvAnchorPointIndex_HandleNext:
 			{
 				PvPoint gp = {
-					ap.points[PvAnchorPointIndex_HandleNext].x
-						+ ap.points[PvAnchorPointIndex_Point].x,
-					ap.points[PvAnchorPointIndex_HandleNext].y
-						+ ap.points[PvAnchorPointIndex_Point].y};
+					ap->points[PvAnchorPointIndex_HandleNext].x
+						+ ap->points[PvAnchorPointIndex_Point].x,
+					ap->points[PvAnchorPointIndex_HandleNext].y
+						+ ap->points[PvAnchorPointIndex_Point].y};
 				return gp;
 			}
 			break;
 		case PvAnchorPointIndex_Point:
-			return ap.points[PvAnchorPointIndex_Point];
+			return ap->points[PvAnchorPointIndex_Point];
 			break;
 		default:
 			{

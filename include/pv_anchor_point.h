@@ -47,7 +47,7 @@ void pv_anchor_point_move_point(PvAnchorPoint *ap, PvPoint move);
  * @return PvPoint to graphic point.
  *		if rise error return value is not specitication.(ex. {0,0})
  */
-PvPoint pv_anchor_point_get_handle(const PvAnchorPoint ap, PvAnchorPointIndex ap_index);
+PvPoint pv_anchor_point_get_handle(const PvAnchorPoint *ap, PvAnchorPointIndex ap_index);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST
