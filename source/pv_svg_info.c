@@ -310,21 +310,22 @@ const PvSvgInfo _pv_svg_infos[] = {
 	},
 	/* Unknown (or not implement) tag */
 	{
-		.tagname = NULL,
+		.tagname = "==tag-unknown==",
 		.func_new_element_from_svg = _pv_svg_unknown_new_element_from_svg,
 	},
 };
 
+
 const PvSvgInfo *pv_svg_get_svg_info_from_tagname(const char *tagname)
 {
-	const PvSvgInfo *info = &_pv_svg_infos[0];
-	for(int i = 0; NULL != info->tagname; i++){
+	int num = sizeof(_pv_svg_infos) / sizeof(_pv_svg_infos[0]);
+	for(int i = 0; i < num; i++){
+		const PvSvgInfo *info = &_pv_svg_infos[i];
 		if(0 == strcasecmp(tagname, info->tagname)){
 			return info;
 		}
-		info = &_pv_svg_infos[i];
 	}
 
-	return info;
+	return &_pv_svg_infos[num - 1];
 }
 
