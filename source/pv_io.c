@@ -3,6 +3,8 @@
 #include <libxml/encoding.h>
 #include <libxml/xmlwriter.h>
 #include <string.h>
+#include <ctype.h>
+#include <errno.h>
 #include "pv_error.h"
 #include "pv_element_general.h"
 #include "pv_element_info.h"
@@ -181,18 +183,20 @@ bool pv_io_write_file_svg_from_vg(PvVg *vg, const char *path)
 	return true;
 }
 
-static void print_element_names(xmlNode * a_node)
-{
-	xmlNode *cur_node = NULL;
+/*
+   static void print_element_names(xmlNode * a_node)
+   {
+   xmlNode *cur_node = NULL;
 
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
-		if (cur_node->type == XML_ELEMENT_NODE) {
-			printf("node type: Element, name: %s", cur_node->name);
-		}
+   for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+   if (cur_node->type == XML_ELEMENT_NODE) {
+   pv_debug("node type: Element, name: %s(%d)", cur_node->name, cur_node->line);
+   }
 
-		print_element_names(cur_node->children);
-	}
-}
+   print_element_names(cur_node->children);
+   }
+   }
+ */
 
 static bool _pv_io_get_svg_from_xml(xmlNode **xmlnode_svg, xmlNode *xmlnode)
 {
@@ -311,56 +315,291 @@ static bool _pv_io_set_vg_from_xmlnode_svg(PvVg *vg, xmlNode *xmlnode_svg)
 	return true;
 }
 
-PvColor _pv_io_get_pv_color_from_svg_str_rgba(const char *str)
+bool _pv_io_get_pv_color_from_svg_str_rgba(PvColor *ret_color, const char *str)
 {
 	PvColor color = PvColor_None;
 
 	int ret;
-	unsigned int r, g, b;
-	double a;
-	if(4 != (ret = sscanf(str, " rgba(%3u,%3u,%3u,%lf)", &r, &g, &b, &a))){
-		pv_warning("%d '%s'", ret, str);
-		goto error;
+	unsigned int r = 0, g = 0, b = 0;
+	double a = 100.0;
+	if(4 == (ret = sscanf(str, " rgba(%3u,%3u,%3u,%lf)", &r, &g, &b, &a))){
+		goto match;
 	}
-	pv_debug(" rgba(%u,%u,%u,%f)", r, g, b, a);
-	bool ok = (pv_color_set_parameter(&color, PvColorParameterIx_R, (double)r)
-		&& pv_color_set_parameter(&color, PvColorParameterIx_G, (double)g)
-		&& pv_color_set_parameter(&color, PvColorParameterIx_B, (double)b)
-		&& pv_color_set_parameter(&color, PvColorParameterIx_O, (double)a * 100.0)
-		);
-	if(!ok){
-		pv_warning("'%s'", str);
-		goto error;
+
+	char strv[9];
+	if(1 == (ret = sscanf(str, " #%8[0-9A-Fa-f]", strv))){
+		for(int i = 0; i < (int)strlen(strv); i++){
+			strv[i] = (char)tolower(strv[i]);
+		}
+		switch(strlen(strv)){
+			case 3:
+				{
+					if(3 != sscanf(strv, "%1x%1x%1x", &r, &g, &b)){
+						pv_warning("'%s'", str);
+						goto error;
+					}
+					a = 1.0;
+
+					goto match;
+				}
+				break;
+			case 4:
+				{
+					unsigned int a_x = 0;
+					if(4 != sscanf(strv, "%1x%1x%1x%1x", &r, &g, &b, &a_x)){
+						pv_warning("'%s'", str);
+						goto error;
+					}
+					a = ((double)a_x / ((int)0xF));
+
+					goto match;
+				}
+				break;
+			case 6:
+				{
+					if(3 != sscanf(strv, "%2x%2x%2x", &r, &g, &b)){
+						pv_warning("'%s'", str);
+						goto error;
+					}
+					a = 1.0;
+
+					goto match;
+				}
+				break;
+			case 8:
+				{
+					unsigned int a_x = 0;
+					if(4 != sscanf(strv, "%2x%2x%2x%2x", &r, &g, &b, &a_x)){
+						pv_warning("'%s'", str);
+						goto error;
+					}
+					a = ((double)a_x / ((int)0xFF));
+
+					goto match;
+				}
+				break;
+			default:
+				goto error;
+				pv_warning("'%s'", str);
+		}
 	}
+
+	if(NULL != strstr(str, "none")){
+		*ret_color = PvColor_None;
+		return true;
+	}
+
+	goto error;
+
+match:
+	{
+		// pv_debug(" rgba(%u,%u,%u,%f)", r, g, b, a);
+		bool ok = (pv_color_set_parameter(&color, PvColorParameterIx_R, (double)r)
+				&& pv_color_set_parameter(&color, PvColorParameterIx_G, (double)g)
+				&& pv_color_set_parameter(&color, PvColorParameterIx_B, (double)b)
+				&& pv_color_set_parameter(&color, PvColorParameterIx_O, (double)a * 100.0)
+			  );
+		if(!ok){
+			pv_warning("'%s'", str);
+			goto error;
+		}
+	}
+
+	*ret_color = color;
+	return true;
 
 error:
-	return color;
+	pv_warning("'%s'", str);
+
+	*ret_color = PvColor_None;
+	return false;
 }
 
-PvColorPair _pv_io_get_pv_color_pair_from_xmlnode_simple(const xmlNode *xmlnode)
+typedef struct{
+	char *key;
+	char *value;
+}PvCssStrMap;
+
+static void _free_css_str_maps(PvCssStrMap *map)
 {
-	PvColorPair color_pair = PvColorPair_None;
+	if(NULL == map){
+		return;
+	}
+
+	for(int i = 0; NULL != map[i].key; i++){
+		free(map[i].key);
+		free(map[i].value);
+	}
+	free(map);
+}
+
+static PvCssStrMap *_new_css_str_maps_from_str(const char *style_str)
+{
+	const char *head = style_str;
+
+	int num = 0;
+	PvCssStrMap *map = NULL;
+	map = realloc(map, sizeof(PvCssStrMap) * (num + 1));
+	map[num - 0].key = NULL;
+	map[num - 0].value = NULL;
+
+	while(NULL != head && '\0' != *head){
+
+		char *skey;
+		char *svalue;
+		if(2 != sscanf(head, " %m[^:;] : %m[^;]", &skey, &svalue)){
+			break;
+		}
+		num++;
+
+		map = realloc(map, sizeof(PvCssStrMap) * (num + 1));
+		pv_assert(map);
+
+		map[num - 0].key = NULL;
+		map[num - 0].value = NULL;
+		map[num - 1].key = skey;
+		map[num - 1].value = svalue;
+
+		head = strchr(head, ';');
+		if(NULL == head){
+			break;
+		}
+		if(';' == *head){
+			head++;
+		}
+	}
+
+	return map;
+}
+
+
+/*! @brief get the value string by key from the string of SVG style attribute css liked.
+ * @return match: cstr from g_strdup_*() / not match:NULL
+ */
+/*
+static char *_strdup_cssvaluestr(const char *style_str, const char *key_str)
+{
+	const char *head = style_str;
+	while('\0' != *head){
+		char *ret = NULL;
+
+		char *skey;
+		char *svalue;
+		if(2 == sscanf(head, " %m[^:;] : %m[^;]", &skey, &svalue)){
+			if(0 == strncmp(skey, key_str, strlen(key_str))){
+				ret = g_strdup(svalue);
+			}
+
+			free(skey);
+			free(svalue);
+		}
+
+		if(NULL == ret){
+			head = strchr(head, ';');
+			if(NULL == head){
+				return NULL;
+			}
+			if(';' == *head){
+				head++;
+			}
+		}else{
+			return ret;
+		}
+	}
+
+	return NULL;
+}
+*/
+static double _get_double_from_str(const char *str)
+{
+	char *endptr = NULL;
+
+	errno = 0;    /* To distinguish success/failure after call */
+	double val = strtod(str, &endptr);
+	if(0 != errno || str == endptr){
+		pv_warning("%s", str);
+		return 0.0;
+	}
+
+	return val;
+}
+
+
+// PvColorPair _pv_io_get_pv_color_pair_from_xmlnode_simple(const xmlNode *xmlnode)
+ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, const xmlNode *xmlnode)
+{
+	PvColorPair color_pair = conf->color_pair;
+	double stroke_width = conf->stroke_width;
+
 	xmlChar *xc_fill = xmlGetProp(xmlnode, BAD_CAST "fill");
 	if(NULL != xc_fill){
-		color_pair.colors[PvColorPairGround_BackGround]
-			= _pv_io_get_pv_color_from_svg_str_rgba((char *)xc_fill);
+		PvColor color;
+		if(!_pv_io_get_pv_color_from_svg_str_rgba(&color, (char *)xc_fill)){
+			pv_warning("'%s'(%d)", (char *)xc_fill, xmlnode->line);
+		}else{
+			color_pair.colors[PvColorPairGround_BackGround] = color;
+		}
 	}
 	xmlFree(xc_fill);
 
 	xmlChar *xc_stroke = xmlGetProp(xmlnode, BAD_CAST "stroke");
 	if(NULL != xc_stroke){
-		color_pair.colors[PvColorPairGround_ForGround]
-			= _pv_io_get_pv_color_from_svg_str_rgba((char *)xc_stroke);
+		PvColor color;
+		if(!_pv_io_get_pv_color_from_svg_str_rgba(&color, (char *)xc_stroke)){
+			pv_warning("'%s'(%d)", (char *)xc_stroke, xmlnode->line);
+		}else{
+			color_pair.colors[PvColorPairGround_ForGround] = color;
+		}
 	}
 	xmlFree(xc_stroke);
 
-	return color_pair;
+	xmlChar *xc_stroke_width = xmlGetProp(xmlnode, BAD_CAST "stroke-width");
+	if(NULL != xc_stroke_width){
+		stroke_width = _get_double_from_str((char *)xc_stroke_width);
+	}
+	xmlFree(xc_stroke_width);
+
+	xmlChar *xc_style = xmlGetProp(xmlnode, BAD_CAST "style");
+	PvCssStrMap *css_str_maps = _new_css_str_maps_from_str((char *)xc_style);
+	for(int i = 0; NULL != css_str_maps[i].key; i++){
+		char *str = g_strdup(css_str_maps[i].value);
+		if(0 == strcmp("fill", css_str_maps[i].key)){
+			PvColor color;
+			if(!_pv_io_get_pv_color_from_svg_str_rgba(&color, str)){
+				pv_warning("'%s'(%d)", (char *)xc_style, xmlnode->line);
+			}else{
+				color_pair.colors[PvColorPairGround_BackGround] = color;
+			}
+		}else if(0 == strcmp("stroke", css_str_maps[i].key)){
+			PvColor color;
+			if(!_pv_io_get_pv_color_from_svg_str_rgba(&color, str)){
+				pv_warning("'%s'(%d)", (char *)xc_style, xmlnode->line);
+			}else{
+				color_pair.colors[PvColorPairGround_ForGround] = color;
+			}
+		}else if(0 == strcmp("stroke-width", css_str_maps[i].key)){
+			stroke_width = _get_double_from_str(str);
+		}else{
+			pv_warning("unknown css style key: '%s'(%d)'%s':'%s'(%d)",
+					(char *)xc_style, xmlnode->line,
+					css_str_maps[i].key, css_str_maps[i].value, i);
+		}
+		g_free(str);
+	}
+	_free_css_str_maps(css_str_maps);
+	xmlFree(xc_style);
+
+	ConfReadSvg dst_conf = *conf;
+	dst_conf.color_pair = color_pair;
+	dst_conf.stroke_width = stroke_width;
+
+	return dst_conf;
 }
 
 static bool _pv_io_element_from_svg_in_recursive_inline(PvElement *element_parent,
 		xmlNode *xmlnode,
 		gpointer data,
-		const ConfReadSvg *conf)
+		ConfReadSvg *conf)
 {
 	const PvSvgInfo *svg_info = pv_svg_get_svg_info_from_tagname((char *)xmlnode->name);
 	if(NULL == svg_info){
@@ -380,7 +619,14 @@ static bool _pv_io_element_from_svg_in_recursive_inline(PvElement *element_paren
 		goto error;
 	}
 
-	element_current->color_pair = _pv_io_get_pv_color_pair_from_xmlnode_simple(xmlnode);
+	// element_current->color_pair = _pv_io_get_pv_color_pair_from_xmlnode_simple(xmlnode);
+	if(0 == strcmp("g", svg_info->tagname)){
+		conf->color_pair = PvColorPair_TransparentBlack;
+		conf->stroke_width = 1.0;
+	}
+	*conf = _overwrite_conf_read_svg_from_xmlnode(conf, xmlnode);
+	element_current->color_pair = conf->color_pair;
+	element_current->stroke.width = conf->stroke_width;
 
 	if(isDoChild){
 		for (xmlNode *cur_node = xmlnode->children; cur_node; cur_node = cur_node->next) {
@@ -402,7 +648,7 @@ error:
 
 static bool _pv_io_pvvg_from_svg_element_recurseve(PvVg *vg,
 		xmlNodePtr xml_svg, 
-		const ConfReadSvg *conf)
+		ConfReadSvg *conf)
 {
 	if(NULL == vg){
 		pv_bug("");
@@ -460,12 +706,12 @@ PvVg *pv_io_new_from_file(const char *filepath)
 		pv_error("");
 		goto error;
 	}
-	ConfReadSvg conf;
+	ConfReadSvg conf = ConfReadSvg_Default;
 	if(!_pv_io_pvvg_from_svg_element_recurseve(vg, xmlnode_svg, &conf)){
 		pv_error("");
 		return false;
 	}
-	print_element_names(xmlnode_svg);
+	// print_element_names(xmlnode_svg);
 
 	// remove default layer, when after append element from raster image file.
 	assert(2 == pv_general_get_parray_num((void **)(vg->element_root->childs)));

@@ -57,6 +57,10 @@ static const PvColorPair PvColorPair_Black = {
 	{{{0, 0, 0, 100,}}, {{0, 0, 0, 100,}},},
 };
 
+static const PvColorPair PvColorPair_TransparentBlack = {
+	{{{0, 0, 0, 0,}}, {{0, 0, 0, 0,}},},
+};
+
 typedef struct{
 	PvColorParameterIx ix;
 	const char *name;

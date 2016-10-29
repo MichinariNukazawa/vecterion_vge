@@ -9,8 +9,14 @@
 #include "pv_element.h"
 
 typedef struct{
-	int dummy;
+	double stroke_width;
+	PvColorPair color_pair;
 }ConfReadSvg;
+
+static const ConfReadSvg ConfReadSvg_Default = {
+	1.0,
+	{ {{{0, 0, 0, 100,}}, {{255, 255, 255, 100,}},}, },
+};
 
 /** @brief
  * @return PvElement* element_current

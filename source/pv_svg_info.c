@@ -222,13 +222,13 @@ static PvElement *_pv_svg_path_new_element_from_svg(
 	xmlChar *value = NULL;
 	value = xmlGetProp(xmlnode, BAD_CAST "d");
 	if(NULL != value){
-		pv_debug("d='%s'", (char *)value);
+		// pv_debug("d='%s'", (char *)value);
 		if(!_pv_svg_path_set_anchor_points_from_str(element_new, (char*)value)){
 			pv_error("");
 			return NULL;
 		}
 
-		pv_element_debug_print(element_new);
+		// pv_element_debug_print(element_new);
 	}
 	xmlFree(value);
 
@@ -266,6 +266,18 @@ static PvElement *_pv_svg_path_new_element_from_svg(
 	return element_new;
 }
 
+static PvElement *_pv_svg_text_new_element_from_svg(
+		PvElement *element_parent,
+		xmlNodePtr xmlnode,
+		bool *isDoChild,
+		gpointer data,
+		const ConfReadSvg *conf
+		)
+{
+	// nop
+	return element_parent;
+}
+
 static PvElement *_pv_svg_unknown_new_element_from_svg(
 		PvElement *element_parent,
 		xmlNodePtr xmlnode,
@@ -274,7 +286,7 @@ static PvElement *_pv_svg_unknown_new_element_from_svg(
 		const ConfReadSvg *conf
 		)
 {
-	pv_warning("Not implement:'%s'", xmlnode->name);
+	pv_warning("Not implement:'%s'(%d)", xmlnode->name, xmlnode->line);
 
 	return element_parent;
 }
@@ -291,6 +303,10 @@ const PvSvgInfo _pv_svg_infos[] = {
 	{
 		.tagname = "path",
 		.func_new_element_from_svg = _pv_svg_path_new_element_from_svg,
+	},
+	{
+		.tagname = "text",
+		.func_new_element_from_svg = _pv_svg_text_new_element_from_svg,
 	},
 	/* Unknown (or not implement) tag */
 	{
