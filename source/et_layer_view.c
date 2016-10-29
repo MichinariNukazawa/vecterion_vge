@@ -234,7 +234,7 @@ static bool _et_layer_view_draw(EtLayerView *self)
 
 	EtLayerViewElementData **elementDatas = self->elementDatas;
 
-	char buf[10240];
+	char buf[102400]; //! @fixme static length.
 	buf[0] = '\0';
 	int num = pv_general_get_parray_num((void **)elementDatas);
 	const PvElement *focus_element = pv_focus_get_first_element(focus);
@@ -280,7 +280,7 @@ static bool _et_layer_view_draw(EtLayerView *self)
 				debug_pointer,
 				((data->name)?"":data->name));
 
-		strncat(buf, str_tmp, (sizeof(buf) - 1));
+		strncat(buf, str_tmp, (sizeof(buf) - 1) - strlen(buf));
 		buf[sizeof(buf)-1] = '\0';
 		if(!(strlen(buf) < (sizeof(buf) - 2))){
 			et_warning("%lu/%lu\n", strlen(buf), sizeof(buf));
