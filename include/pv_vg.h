@@ -17,6 +17,9 @@ struct PvVg{
 	PvElement *element_root;
 };
 
+static const unsigned int PVVG_PX_SIZE_MIN = 100;
+static const unsigned int PVVG_PX_SIZE_MAX = 20000;
+
 /** @brief pointer arrayの内容数を返す
  * (実長さは番兵のNULL終端があるため、return+1)
  */

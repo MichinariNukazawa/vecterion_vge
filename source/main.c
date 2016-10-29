@@ -330,6 +330,8 @@ static bool _debug_init()
 		return false;
 	}
 
+	et_doc_save_from_id(doc_id);
+
 	if(!et_doc_signal_update_from_id(doc_id)){
 		et_error("");
 		return false;
@@ -469,6 +471,8 @@ static gboolean _cb_menu_file_new(gpointer data)
 	}
 	vg->rect.x = 0;
 	vg->rect.y = 0;
+	vg->rect.w = 1200;
+	vg->rect.h = 800;
 
 	GtkWidget *dialog;
 	GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
@@ -483,12 +487,12 @@ static gboolean _cb_menu_file_new(gpointer data)
 
 	GtkWidget *hbox_w = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 	GtkWidget *hbox_h = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
-	GtkWidget *spin_w = gtk_spin_button_new_with_range(0, 20000, 100);
-	GtkWidget *spin_h = gtk_spin_button_new_with_range(0, 20000, 100);
+	GtkWidget *spin_w = gtk_spin_button_new_with_range(0, PVVG_PX_SIZE_MAX, PVVG_PX_SIZE_MIN);
+	GtkWidget *spin_h = gtk_spin_button_new_with_range(0, PVVG_PX_SIZE_MAX, PVVG_PX_SIZE_MIN);
 	GtkWidget *label_w = gtk_label_new_with_mnemonic("width ");
 	GtkWidget *label_h = gtk_label_new_with_mnemonic("height");
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_w), 1200);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_h), 600);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_w), vg->rect.w);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_h), vg->rect.h);
 	GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
 	gtk_box_pack_start(GTK_BOX(hbox_w), label_w, true, true, 0);
 	gtk_box_pack_start(GTK_BOX(hbox_h), label_h, true, true, 1);
@@ -655,6 +659,70 @@ static void _cb_menu_view_extent(GtkCheckMenuItem *menuitem, gpointer user_data)
 	if(!et_etaion_set_is_extent_view(gtk_check_menu_item_get_active(menuitem))){
 		et_error("");
 	}
+}
+
+static bool _cb_menu_document_resize (GtkMenuItem *menuitem, gpointer user_data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// Todo: Nothing document.
+		et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
+	if(NULL == vg){
+		et_debug("%d", doc_id);
+		return false;
+	}
+
+	GtkWidget *dialog;
+	GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
+	dialog = gtk_dialog_new_with_buttons ("Resize Document",
+			NULL,
+			flags,
+			"_OK",
+			GTK_RESPONSE_ACCEPT,
+			"_Cancel",
+			GTK_RESPONSE_REJECT,
+			NULL);
+
+	GtkWidget *hbox_w = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+	GtkWidget *hbox_h = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+	GtkWidget *spin_w = gtk_spin_button_new_with_range(0, PVVG_PX_SIZE_MAX, PVVG_PX_SIZE_MIN);
+	GtkWidget *spin_h = gtk_spin_button_new_with_range(0, PVVG_PX_SIZE_MAX, PVVG_PX_SIZE_MIN);
+	GtkWidget *label_w = gtk_label_new_with_mnemonic("width ");
+	GtkWidget *label_h = gtk_label_new_with_mnemonic("height");
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_w), vg->rect.w);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_h), vg->rect.h);
+	GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+	gtk_box_pack_start(GTK_BOX(hbox_w), label_w, true, true, 0);
+	gtk_box_pack_start(GTK_BOX(hbox_h), label_h, true, true, 1);
+	gtk_box_pack_end(GTK_BOX(hbox_w), spin_w, true, true, 0);
+	gtk_box_pack_end(GTK_BOX(hbox_h), spin_h, true, true, 1);
+	gtk_box_pack_start(GTK_BOX(content), hbox_w, true, true, 0);
+	gtk_box_pack_start(GTK_BOX(content), hbox_h, true, true, 1);
+	gtk_widget_show_all(dialog);
+
+	gint result = gtk_dialog_run (GTK_DIALOG (dialog));
+	switch (result)
+	{
+		case GTK_RESPONSE_ACCEPT:
+			{
+				vg->rect.w = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_w));
+				vg->rect.h = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_h));
+			}
+			break;
+		default:
+			et_debug("Cancel");
+			break;
+	}
+	gtk_widget_destroy (dialog);
+
+	et_doc_save_from_id(doc_id);
+	et_doc_signal_update_from_id(doc_id);
+
+	return false;
 }
 
 static bool _pv_element_is_exist_from_elements(const PvElement *element, PvElement **elements)
@@ -932,6 +1000,27 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_view(GtkAccelGroup *accel_group)
 	return menuitem_root;
 }
 
+static GtkWidget *_pv_get_menuitem_new_tree_of_document(GtkAccelGroup *accel_group)
+{
+	GtkWidget *menuitem_root;
+	GtkWidget *menuitem;
+	GtkWidget *menu;
+
+	menuitem_root = gtk_menu_item_new_with_mnemonic ("_Document");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
+
+	menu = gtk_menu_new ();
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
+
+	// ** Accel to "Document > Resize Document
+	menuitem = gtk_menu_item_new_with_mnemonic ("_Resize Document");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_document_resize), NULL);
+
+	return menuitem_root;
+}
+
 static GtkWidget *_new_tree_of_help(GtkAccelGroup *accel_group){
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
@@ -976,6 +1065,9 @@ static bool _init_menu(GtkWidget *window, GtkWidget *box_root)
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	menuitem = _pv_get_menuitem_new_tree_of_view(accel_group);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
+
+	menuitem = _pv_get_menuitem_new_tree_of_document(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	menuitem = _new_tree_of_help(accel_group);
