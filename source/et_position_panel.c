@@ -78,6 +78,20 @@ EtPositionPanel *position_panel = NULL;
 
 static void _cb_value_changed_positions_spin(GtkSpinButton *spin_button, gpointer user_data);
 
+static gboolean _cb_test(
+		GtkWidget *widget, GdkEventButton *event, gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		//! when start app.
+		et_debug("doc is noting. %d", doc_id);
+		return false;
+	}
+
+	et_doc_save_from_id(doc_id);
+	return false;
+}
+
 static void _slot_change_doc_or_focus(EtDocId);
 
 static void _update_ui_from_local();
@@ -111,6 +125,9 @@ EtPositionPanel *et_position_panel_init()
 
 		g_signal_connect(self->spin_positions[i], "value-changed",
 				G_CALLBACK(_cb_value_changed_positions_spin), (void *)info);
+
+		g_signal_connect(self->spin_positions[i], "button-release-event",
+				G_CALLBACK(_cb_test), (void *)info);
 	}
 
 	self->widget = self->box;
@@ -161,7 +178,6 @@ static void _cb_value_changed_positions_spin(GtkSpinButton *spin_button, gpointe
 	PvPosition prev = self->position;
 	self->position.p[info->index] = gtk_spin_button_get_value(GTK_SPIN_BUTTON(self->spin_positions[info->index]));
 	self->position_diff = _pv_position_sub(self->position, prev);
-
 
 	_update_focus_elements_from_local();
 }
@@ -242,7 +258,6 @@ static void _update_focus_elements_from_local()
 	}
 
 	et_doc_signal_update_from_id(doc_id);
-	et_doc_save_from_id(doc_id);
 }
 
 static PvPosition _pv_position_sub(PvPosition p0, PvPosition p1)
