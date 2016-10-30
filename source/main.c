@@ -5,7 +5,15 @@
 
 #include <stdbool.h>
 #include <stdatomic.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <getopt.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "et_error.h"
 #include "et_define.h"
@@ -38,7 +46,7 @@ static EtWindow *self = &window_;
 
 static void _pvui_app_set_style();
 static bool _init_menu(GtkWidget *window, GtkWidget *box_root);
-static bool _debug_init();
+// static bool _debug_init();
 static EtDocId _open_doc_new(PvVg *pv_src);
 static EtDocId _open_doc_new_from_file(const char* filepath);
 
@@ -83,9 +91,158 @@ static gboolean _cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer u
 	return FALSE;
 }
 
+typedef struct{
+	const char *input_filepath;
+	const char *output_filepath;
+}EtArgs;
+
+EtArgs EtArgs_Default = {
+	NULL,
+	NULL,
+};
+
+typedef struct{
+	const char *extension;
+}PvOutputFileFormat;
+
+static const PvOutputFileFormat output_file_formats[] = {
+	{"jpg"},
+	{"png"},
+	{"svg"},
+};
+
+static size_t get_num_output_file_formats()
+{
+	return sizeof(output_file_formats) / sizeof(output_file_formats[0]);
+}
+
+static void usage()
+{
+	fprintf(stderr,
+			"usage: %s [-i input_filepath [-o output_filepath]]\n"
+			" -i input_filepath		open file.\n"
+			" 				default if svg format is extract pvvg structure in memory.\n"
+			" -o output_filepath		output file and exit this app.\n"
+			" 				depend -i option.\n"
+			" 				file format from filename extension.\n",
+			"etaion"
+	       );
+	fprintf(stderr, "output_filepath format(extension):\n");
+
+	for(int i = 0; i < (int)get_num_output_file_formats(); i++){
+		fprintf(stderr, "	'%s'\n", output_file_formats[i].extension);
+	}
+}
+
+static bool et_args(EtArgs *args, int argc, char **argv)
+{
+	extern char *optarg;
+	extern int optind, opterr, optopt;
+
+	int opt;
+	while (-1 != (opt = getopt(argc, argv, "i:o:h"))) {
+		switch (opt) {
+			case 'i':
+				args->input_filepath = optarg;
+				break;
+			case 'o':
+				args->output_filepath = optarg;
+				break;
+			case 'h':
+				usage();
+				exit(EXIT_SUCCESS);
+				break;
+			case '?':
+				et_error("'%c'", (char)optopt);
+				usage();
+				exit(EXIT_FAILURE);
+				break;
+			default:
+				et_error("");
+				return false;
+		}
+	}
+
+	if(NULL != args->input_filepath){
+		// ** exist input_filepath
+		struct stat sb;
+
+		errno = 0;
+		if(-1 == stat(args->input_filepath, &sb)){
+			fprintf(stderr, "input_filepath is not exist or other. %m:'%s'",
+					args->input_filepath);
+			return false;
+		}
+		if(! S_ISREG(sb.st_mode)){
+			fprintf(stderr, "input_filepath is not normal file.:'%s'",
+					args->input_filepath);
+			et_error("");
+			return false;
+		}
+
+		//! @todo check input_filepath format?
+	}
+
+
+	bool ret = true;
+	if(NULL != args->output_filepath){
+		et_error("output_filepath is not implement.");
+		exit(EXIT_FAILURE);
+
+		struct stat sb;
+
+		// ** output need input
+		if(NULL == args->input_filepath && NULL != args->output_filepath){
+			fprintf(stderr, "output_filepath depend input_filepath.");
+			return false;
+		}
+		// ** output_filepath is normal file if exist
+		if((0 == stat(args->output_filepath, &sb)) && (! S_ISREG(sb.st_mode))){
+			fprintf(stderr, "output_filepath is not normal file. 0x%08x:'%s'",
+					sb.st_mode, args->output_filepath);
+			return false;
+		}
+
+		// ** output_filepath filetype from extension
+		char *ext;
+		if(NULL == (ext = strrchr(args->input_filepath, '.'))){
+			fprintf(stderr, "input_filepath is invalid file type.:'%s'",
+					args->input_filepath);
+			return false;
+		}
+		ext++;
+		bool is_match = false;
+		for(int i = 0; i < (int)get_num_output_file_formats(); i++){
+			if(0 == strcmp(output_file_formats[i].extension, ext)){
+				is_match = true;
+				break;
+			}
+		}
+		if(!is_match){
+			fprintf(stderr, "input_filepath is invalid file type.:'%s'",
+					args->input_filepath);
+			return false;
+		}
+
+		// ** check output directory exist
+		char *output_dirpath = g_path_get_dirname(args->output_filepath);
+		if((-1 == stat(output_dirpath, &sb)) || (! S_ISDIR(sb.st_mode))){
+			fprintf(stderr, "output_filepath directory is not exist. '%s'",
+					args->output_filepath);
+			ret = false;
+		}
+		g_free(output_dirpath);
+	}
+
+	return ret;
+}
+
 int main (int argc, char **argv){
 	gtk_init(&argc, &argv);
 
+	EtArgs args_ = EtArgs_Default;
+	EtArgs *args = &args_;
+	et_args(args, argc, argv);
 
 	// ** The etaion core modules initialize.
 	if(!et_tool_info_init()){
@@ -281,12 +438,16 @@ int main (int argc, char **argv){
 	}
 
 
-
-	if(!_debug_init()){
-		et_error("");
-		return -1;
+	if(NULL != args->input_filepath){
+		EtDocId doc_id = _open_doc_new_from_file(args->input_filepath);
+		if(doc_id < 0){
+			et_error("");
+			fprintf(stderr, "input_filepath can't open. :'%s'\n", args->input_filepath);
+			usage();
+			return -1;
+		}
+		et_debug("input_filepath success open.:'%s'", args->input_filepath);
 	}
-
 
 
 	GThread* thread;
@@ -306,6 +467,7 @@ int main (int argc, char **argv){
 	return 0;
 }
 
+/*
 static bool _debug_init()
 {
 	EtDocId doc_id = _open_doc_new(NULL);
@@ -339,6 +501,7 @@ static bool _debug_init()
 
 	return true;
 }
+*/
 
 static EtDocId _open_doc_new_from_file(const char* filepath)
 {

@@ -60,7 +60,7 @@ $(TARGET) : $(OBJECTS)
 		-o $(TARGET)
 
 run : $(TARGET)
-	./$(TARGET)
+	./$(TARGET) -i ./library/23.svg
 
 gdb : $(TARGET)
 	gdb ./$(TARGET)
