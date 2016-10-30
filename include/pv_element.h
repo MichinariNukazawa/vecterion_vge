@@ -49,6 +49,7 @@ static const PvElementRecursiveError PvElementRecursiveError_Default = {
 
 
 PvElement *pv_element_new(const PvElementKind kind);
+void pv_element_delete(PvElement *);
 /** @brief 
  * copy element_tree parent is NULL.
  */

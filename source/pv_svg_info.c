@@ -225,7 +225,7 @@ static PvElement *_pv_svg_path_new_element_from_svg(
 		// pv_debug("d='%s'", (char *)value);
 		if(!_pv_svg_path_set_anchor_points_from_str(element_new, (char*)value)){
 			pv_error("");
-			return NULL;
+			goto failed;
 		}
 
 		// pv_element_debug_print(element_new);
@@ -237,9 +237,11 @@ static PvElement *_pv_svg_path_new_element_from_svg(
 	if(NULL != value){
 		double width = 1.0;
 		int ret = sscanf((const char *)value, "%lf", &width);
-		pv_debug("stroke-width='%s' %d %.3f",
-				(char *)value, ret, width);
-		if(1 == ret){
+		if(1 != ret){
+			pv_warning("stroke-width='%s' %d %.3f",
+					(char *)value, ret, width);
+			goto failed;
+		}else{
 			element_new->stroke.width = width;
 		}
 	}
@@ -247,14 +249,14 @@ static PvElement *_pv_svg_path_new_element_from_svg(
 	if(NULL != value){
 		if(!_set_stroke_linecap_from_str(element_new, (char*)value)){
 			pv_error("");
-			return NULL;
+			goto failed;
 		}
 	}
 	value = xmlGetProp(xmlnode, BAD_CAST "stroke-linejoin");
 	if(NULL != value){
 		if(!_set_stroke_linejoin_from_str(element_new, (char*)value)){
 			pv_error("");
-			return NULL;
+			goto failed;
 		}
 	}
 
@@ -264,6 +266,11 @@ static PvElement *_pv_svg_path_new_element_from_svg(
 	}
 
 	return element_new;
+
+failed:
+	pv_element_delete(element_new);
+
+	return NULL;
 }
 
 static PvElement *_pv_svg_text_new_element_from_svg(

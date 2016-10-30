@@ -714,9 +714,10 @@ PvVg *pv_io_new_from_file(const char *filepath)
 	// print_element_names(xmlnode_svg);
 
 	// remove default layer, when after append element from raster image file.
-	assert(2 == pv_general_get_parray_num((void **)(vg->element_root->childs)));
+	int num = pv_general_get_parray_num((void **)(vg->element_root->childs));
+	pv_assertf(2 <= num, "%d", num);
 	assert(pv_element_remove_delete_recursive(vg->element_root->childs[0]));
-	assert(1 == pv_general_get_parray_num((void **)(vg->element_root->childs)));
+	assert((num - 1) == pv_general_get_parray_num((void **)(vg->element_root->childs)));
 
 
 	xmlFreeDoc(xml_doc);

@@ -197,6 +197,17 @@ PvElement *pv_element_new(const PvElementKind kind)
 	return self;
 }
 
+void pv_element_delete(PvElement *element)
+{
+	pv_assert(element);
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	pv_assert(info);
+	pv_assert(element->data);
+	info->func_delete_data(element->data);
+
+	free(element);
+}
+
 static PvElement *_pv_element_copy_single(const PvElement *self)
 {
 	if(NULL == self){
