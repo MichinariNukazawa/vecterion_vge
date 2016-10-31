@@ -49,6 +49,7 @@ static bool _init_menu(GtkWidget *window, GtkWidget *box_root);
 // static bool _debug_init();
 static EtDocId _open_doc_new(PvVg *pv_src);
 static EtDocId _open_doc_new_from_file(const char* filepath);
+static bool _save_file_from_doc_id(const char *filepath, EtDocId doc_id);
 
 
 
@@ -109,6 +110,7 @@ static const PvOutputFileFormat output_file_formats[] = {
 	{"jpg"},
 	{"png"},
 	{"svg"},
+	{"bmp"},
 };
 
 static size_t get_num_output_file_formats()
@@ -154,8 +156,7 @@ static bool et_args(EtArgs *args, int argc, char **argv)
 				break;
 			case '?':
 				et_error("'%c'", (char)optopt);
-				usage();
-				exit(EXIT_FAILURE);
+				return false;
 				break;
 			default:
 				et_error("");
@@ -186,9 +187,6 @@ static bool et_args(EtArgs *args, int argc, char **argv)
 
 	bool ret = true;
 	if(NULL != args->output_filepath){
-		et_error("output_filepath is not implement.");
-		exit(EXIT_FAILURE);
-
 		struct stat sb;
 
 		// ** output need input
@@ -242,7 +240,10 @@ int main (int argc, char **argv){
 
 	EtArgs args_ = EtArgs_Default;
 	EtArgs *args = &args_;
-	et_args(args, argc, argv);
+	if(!et_args(args, argc, argv)){
+		usage();
+		exit(EXIT_SUCCESS);
+	}
 
 	// ** The etaion core modules initialize.
 	if(!et_tool_info_init()){
@@ -444,9 +445,45 @@ int main (int argc, char **argv){
 			et_error("");
 			fprintf(stderr, "input_filepath can't open. :'%s'\n", args->input_filepath);
 			usage();
-			return -1;
+			exit(EXIT_FAILURE);
 		}
 		et_debug("input_filepath success open.:'%s'", args->input_filepath);
+
+		if(NULL != args->output_filepath){
+			char *ext;
+			if(NULL == (ext = strrchr(args->output_filepath, '.'))){
+				et_error("");
+				usage();
+				exit(EXIT_FAILURE);
+			}
+			ext++;
+			bool is_match = false;
+			for(int i = 0; i < (int)get_num_output_file_formats(); i++){
+				if(0 == strcmp(output_file_formats[i].extension, ext)){
+					is_match = true;
+
+					if(0 == strcmp("svg", ext)){
+						if(!_save_file_from_doc_id(args->output_filepath, doc_id)){
+							et_error("");
+							usage();
+							exit(EXIT_FAILURE);
+						}
+					}else{
+						et_error("not implement. :%s", ext);
+						usage();
+						exit(EXIT_FAILURE);
+					}
+
+					break;
+				}
+			}
+			if(!is_match){
+				et_error("not match. :%s", ext);
+				usage();
+				exit(EXIT_FAILURE);
+			}
+			exit (EXIT_SUCCESS);
+		}
 	}
 
 
@@ -468,40 +505,40 @@ int main (int argc, char **argv){
 }
 
 /*
-static bool _debug_init()
-{
-	EtDocId doc_id = _open_doc_new(NULL);
-	if(0 > doc_id){
-		et_error("");
-		return -1;
-	}
+   static bool _debug_init()
+   {
+   EtDocId doc_id = _open_doc_new(NULL);
+   if(0 > doc_id){
+   et_error("");
+   return -1;
+   }
 
-	PvVg *vg = et_doc_get_vg_ref(et_doc_manager_get_doc_from_id(doc_id));
-	if(NULL == vg){
-		et_error("");
-		return -1;
-	}
-	vg->rect.w = 600;
-	vg->rect.h = 500;
+   PvVg *vg = et_doc_get_vg_ref(et_doc_manager_get_doc_from_id(doc_id));
+   if(NULL == vg){
+   et_error("");
+   return -1;
+   }
+   vg->rect.w = 600;
+   vg->rect.h = 500;
 
-	// ** (開発デバッグ用)ドキュメントにsvgを貼り付ける
-	const char *pathImageFile = NULL;
-	pathImageFile = "./library/23.svg";
-	if(!et_doc_set_image_from_file(et_doc_manager_get_doc_from_id(doc_id), pathImageFile)){
-		et_error("");
-		return false;
-	}
-
-	et_doc_save_from_id(doc_id);
-
-	if(!et_doc_signal_update_from_id(doc_id)){
-		et_error("");
-		return false;
-	}
-
-	return true;
+// ** (開発デバッグ用)ドキュメントにsvgを貼り付ける
+const char *pathImageFile = NULL;
+pathImageFile = "./library/23.svg";
+if(!et_doc_set_image_from_file(et_doc_manager_get_doc_from_id(doc_id), pathImageFile)){
+et_error("");
+return false;
 }
-*/
+
+et_doc_save_from_id(doc_id);
+
+if(!et_doc_signal_update_from_id(doc_id)){
+et_error("");
+return false;
+}
+
+return true;
+}
+ */
 
 static EtDocId _open_doc_new_from_file(const char* filepath)
 {
