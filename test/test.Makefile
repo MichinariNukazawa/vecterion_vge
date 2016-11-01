@@ -32,8 +32,8 @@ TEST_COMMAND := true $(foreach TEST_TARGET,$(TEST_TARGETS), && $(TEST_TARGET))
 
 
 
-.PHONY : test test_run test_clean
-test : test_run
+.PHONY : test argtest_run unittest_run test_clean
+test : argtest_run unittest_run
 
 $(TEST_OBJECT_DIR)/%.o : $(TEST_SOURCE_DIR)/%.cpp
 	$(MKDIR_P) $(dir $@)
@@ -49,8 +49,18 @@ $(TEST_BUILD_DIR)/test_%.exe : $(TEST_OBJECT_DIR)/test_%.o $(TEST_O_OBJECTS)
 		$(GTEST_LIBS) \
 		-o $@
 
-test_run : $(TEST_TARGETS)
+unittest_run : $(TEST_TARGETS)
 	$(TEST_COMMAND)
+
+
+
+ARGTEST_OUTPUT=$(OBJECT_DIR)/argtest_output.svg
+argtest_run : $(TARGET)
+	$(RM) $(ARGTEST_OUTPUT)
+	./$(TARGET) -i library/23.svg -o $(ARGTEST_OUTPUT)
+	[ -s $(ARGTEST_OUTPUT) ] # file is not zero size
+
+
 
 test_clean :
 	$(RM) $(TEST_TARGETS)
