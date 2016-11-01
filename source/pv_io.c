@@ -102,7 +102,7 @@ static bool _pv_io_svg_from_pvvg_element_recurseve(
 		.conf = conf,
 	};
 	PvElementRecursiveError error;
-	if(!pv_element_recursive_desc(element_root,
+	if(!pv_element_recursive_asc(element_root,
 				_pv_io_svg_from_element_in_recursive_before,
 				_pv_io_svg_from_element_in_recursive_after,
 				&data, &error)){
