@@ -4,6 +4,9 @@
 #include "pv_render_context.h"
 #include "pv_focus.h"
 
+/*!
+ * @param focus: NULL is disable focusing decorations(ex. frame line of select elements).
+ */
 GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		const PvRenderContext render_context,
 		const PvFocus *focus);

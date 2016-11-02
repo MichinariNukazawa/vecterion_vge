@@ -85,20 +85,39 @@ static bool _pv_renderer_cairo_background(cairo_t *cr,
 	cairo_rectangle (cr, 0, 0, w_size, h_size);
 	cairo_clip(cr);
 
-	// ** fill background white
-	cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
-	cairo_rectangle (cr, 0, 0, w_size, h_size);
-	cairo_fill (cr);
-	cairo_set_source_rgb (cr, 0.6, 0.6, 0.6);
+	switch(render_context.background_kind){
+		case PvBackgroundKind_Transparent:
+			break;
+		case PvBackgroundKind_White:
+			{
+				// ** fill background white
+				cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+				cairo_rectangle (cr, 0, 0, w_size, h_size);
+				cairo_fill (cr);
+			}
+			break;
 
-	// ** draw checkboard
-	int unit = 16;
-	for(int y = 0; y < h_size; y += unit){
-		for(int x = 0 + (((y/unit) % 2) * unit); x < w_size; x += (unit * 2)){
-			cairo_rectangle (cr, x, y, unit, unit);
-		}
+		case PvBackgroundKind_Checkboard:
+			{
+				// ** fill background white
+				cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+				cairo_rectangle (cr, 0, 0, w_size, h_size);
+				cairo_fill (cr);
+
+				// ** draw checkboard
+				cairo_set_source_rgba (cr, 0.6, 0.6, 0.6, 1.0);
+				int unit = 16;
+				for(int y = 0; y < h_size; y += unit){
+					for(int x = 0 + (((y/unit) % 2) * unit); x < w_size; x += (unit * 2)){
+						cairo_rectangle (cr, x, y, unit, unit);
+					}
+				}
+				cairo_fill (cr);
+			}
+			break;
+		default:
+			pv_bug("%d", render_context.background_kind);
 	}
-	cairo_fill (cr);
 
 	// clear clipping
 	cairo_restore(cr);
@@ -122,8 +141,7 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		return NULL;
 	}
 
-	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
-			width, height);
+	cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
 	if(NULL == surface){
 		pv_bug("");
 		return NULL;
@@ -147,31 +165,33 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		return NULL;
 	}
 
-	PvRect rect_extent = PvRect_Default;
-	int num = pv_general_get_parray_num((void **)focus->elements);
-	for(int i = 0; i < num; i++){
-		const PvElement *focus_element = focus->elements[i];
-		if(NULL != focus_element && !_pv_renderer_is_group_kind(focus_element)){
-			render_option.render_context.is_focus = true;
-			if(!_pv_renderer_cairo_recursive(cr, focus_element, render_option, &level)){
-				pv_error("");
-				return NULL;
+	if(NULL != focus){
+		PvRect rect_extent = PvRect_Default;
+		int num = pv_general_get_parray_num((void **)focus->elements);
+		for(int i = 0; i < num; i++){
+			const PvElement *focus_element = focus->elements[i];
+			if(NULL != focus_element && !_pv_renderer_is_group_kind(focus_element)){
+				render_option.render_context.is_focus = true;
+				if(!_pv_renderer_cairo_recursive(cr, focus_element, render_option, &level)){
+					pv_error("");
+					return NULL;
+				}
+			}
+
+			const PvElementInfo *info = pv_element_get_info_from_kind(focus_element->kind);
+			if(0 == i){
+				rect_extent = info->func_get_rect_by_anchor_points(focus_element);
+			}else{
+				PvRect r = info->func_get_rect_by_anchor_points(focus_element);
+				rect_extent = pv_rect_expand(rect_extent, r);
 			}
 		}
-
-		const PvElementInfo *info = pv_element_get_info_from_kind(focus_element->kind);
-		if(0 == i){
-			rect_extent = info->func_get_rect_by_anchor_points(focus_element);
-		}else{
-			PvRect r = info->func_get_rect_by_anchor_points(focus_element);
-			rect_extent = pv_rect_expand(rect_extent, r);
+		if(0 != num){
+			rect_extent = pv_rect_mul_value(rect_extent, render_context.scale);
+			pv_cairo_set_source_rgba_workingcolor(cr);
+			cairo_rectangle (cr, rect_extent.x, rect_extent.y, rect_extent.w, rect_extent.h);
+			cairo_stroke(cr);
 		}
-	}
-	if(0 != num){
-		rect_extent = pv_rect_mul_value(rect_extent, render_context.scale);
-		pv_cairo_set_source_rgba_workingcolor(cr);
-		cairo_rectangle (cr, rect_extent.x, rect_extent.y, rect_extent.w, rect_extent.h);
-		cairo_stroke(cr);
 	}
 
 

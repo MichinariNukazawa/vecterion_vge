@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <getopt.h>
+#include <strings.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -29,6 +30,7 @@
 #include "et_tool_info.h"
 #include "et_tool_panel.h"
 #include "pv_io.h"
+#include "pv_renderer.h"
 #include "et_color_panel.h"
 #include "et_stroke_panel.h"
 #include "et_position_panel.h"
@@ -102,20 +104,41 @@ EtArgs EtArgs_Default = {
 	NULL,
 };
 
+typedef enum{
+	FormatKind_JPEG,
+	FormatKind_PNG,
+	FormatKind_OTHER,
+}FormatKind;
+
 typedef struct{
+	FormatKind kind;
 	const char *extension;
+	const char *gdk_file_type;	//!< gdk_pixbuf_save_*() type
+	bool has_alpha;
 }PvOutputFileFormat;
 
 static const PvOutputFileFormat output_file_formats[] = {
-	{"jpg"},
-	{"png"},
-	{"svg"},
-	{"bmp"},
+	{FormatKind_JPEG,	"jpg", "jpeg", false,},
+	{FormatKind_JPEG,	"jpeg", "jpeg", false,},
+	{FormatKind_PNG,	"png", "png", true,},
+	{FormatKind_OTHER,	"svg", "svg", true,},
+	{FormatKind_OTHER,	"bmp", "bmp", false,},
 };
 
 static size_t get_num_output_file_formats()
 {
 	return sizeof(output_file_formats) / sizeof(output_file_formats[0]);
+}
+
+static const PvOutputFileFormat *get_output_file_format_from_extension(const char *extension)
+{
+	for(int i = 0; i < (int)get_num_output_file_formats(); i++){
+		if(0 == strcasecmp(extension, output_file_formats[i].extension)){
+			return &(output_file_formats[i]);
+		}
+	}
+
+	return NULL;
 }
 
 static void usage()
@@ -457,31 +480,76 @@ int main (int argc, char **argv){
 				exit(EXIT_FAILURE);
 			}
 			ext++;
-			bool is_match = false;
-			for(int i = 0; i < (int)get_num_output_file_formats(); i++){
-				if(0 == strcmp(output_file_formats[i].extension, ext)){
-					is_match = true;
 
-					if(0 == strcmp("svg", ext)){
-						if(!_save_file_from_doc_id(args->output_filepath, doc_id)){
-							et_error("");
-							usage();
-							exit(EXIT_FAILURE);
-						}
-					}else{
-						et_error("not implement. :%s", ext);
-						usage();
-						exit(EXIT_FAILURE);
-					}
-
-					break;
-				}
-			}
-			if(!is_match){
-				et_error("not match. :%s", ext);
+			const PvOutputFileFormat *format = get_output_file_format_from_extension(ext);
+			if(!format){
+				et_error("extension not match. :%s", ext);
 				usage();
 				exit(EXIT_FAILURE);
 			}
+
+			if(0 == strcmp("svg", ext)){
+				if(!_save_file_from_doc_id(args->output_filepath, doc_id)){
+					et_error("");
+					usage();
+					exit(EXIT_FAILURE);
+				}
+			}else{
+				PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
+				if(!vg){
+					et_error("");
+					usage();
+					exit(EXIT_FAILURE);
+				}
+				PvRenderContext render_context = PvRenderContext_Default;
+				if(format->has_alpha){
+					render_context.background_kind = PvBackgroundKind_Transparent;
+				}else{
+					render_context.background_kind = PvBackgroundKind_White;
+				}
+				GdkPixbuf *pixbuf = pv_renderer_pixbuf_from_vg(vg, render_context, NULL);
+				if(!pixbuf){
+					et_error("");
+					usage();
+					exit(EXIT_FAILURE);
+				}
+
+				bool ret = true;
+				GError *error = NULL;
+				switch(format->kind){
+					case FormatKind_JPEG:
+						ret = gdk_pixbuf_save(
+								pixbuf,
+								args->output_filepath,
+								format->gdk_file_type,
+								&error,
+								"quality", "100", NULL);
+						break;
+					case FormatKind_PNG:
+						ret = gdk_pixbuf_save(
+								pixbuf,
+								args->output_filepath,
+								format->gdk_file_type,
+								&error,
+								"compression", "0", NULL);
+						break;
+					default:
+						ret = gdk_pixbuf_save(
+								pixbuf,
+								args->output_filepath,
+								format->gdk_file_type,
+								&error,
+								NULL);
+						break;
+				}
+
+				if(!ret){
+					et_error("not implement. :%s", ext);
+					usage();
+					exit(EXIT_FAILURE);
+				}
+			}
+
 			exit (EXIT_SUCCESS);
 		}
 	}

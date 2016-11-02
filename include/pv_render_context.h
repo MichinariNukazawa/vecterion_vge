@@ -1,6 +1,12 @@
 #ifndef include_PV_RENDER_CONTEXT_H
 #define include_PV_RENDER_CONTEXT_H
 
+typedef enum{
+	PvBackgroundKind_Transparent,
+	PvBackgroundKind_White,
+	PvBackgroundKind_Checkboard,
+}PvBackgroundKind;
+
 struct PvRenderContext;
 typedef struct PvRenderContext PvRenderContext;
 struct PvRenderContext{
@@ -8,12 +14,14 @@ struct PvRenderContext{
 	bool is_extent_view;
 	double scale;
 	int margin;
+	PvBackgroundKind background_kind;
 };
 static const PvRenderContext PvRenderContext_Default = {
 	.is_focus	= false,
 	.is_extent_view	= false,
 	.scale		= 1.0,
 	.margin		= 0,
+	.background_kind = PvBackgroundKind_Checkboard,
 };
 
 #ifdef include_ET_TEST

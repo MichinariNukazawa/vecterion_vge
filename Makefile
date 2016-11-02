@@ -68,7 +68,7 @@ gdb : $(TARGET)
 clean :
 	$(RM) $(TARGET)
 	$(RM) $(OBJECTS)
-	$(RM) $(OBJECT_DIR)/* $(BUILD_DIR)/*
+	$(RM) -r $(OBJECT_DIR) $(BUILD_DIR)
 
 dist_clean :
 	$(MAKE) clean

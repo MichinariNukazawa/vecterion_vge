@@ -33,7 +33,7 @@ TEST_COMMAND := true $(foreach TEST_TARGET,$(TEST_TARGETS), && $(TEST_TARGET))
 
 
 .PHONY : test argtest_run unittest_run test_clean
-test : argtest_run unittest_run
+test : unittest_run argtest_run
 
 $(TEST_OBJECT_DIR)/%.o : $(TEST_SOURCE_DIR)/%.cpp
 	$(MKDIR_P) $(dir $@)
@@ -54,12 +54,9 @@ unittest_run : $(TEST_TARGETS)
 
 
 
-ARGTEST_OUTPUT=$(OBJECT_DIR)/argtest_output.svg
+ARGTEST_OUTPUT_BASE := $(OBJECT_DIR)/argtest/argtest_output
 argtest_run : $(TARGET)
-	$(RM) $(ARGTEST_OUTPUT)
-	./$(TARGET) -i library/23.svg -o $(ARGTEST_OUTPUT)
-	[ -s $(ARGTEST_OUTPUT) ] # file is not zero size
-
+	bash test/argtest.sh $(TARGET) library/23.svg $(ARGTEST_OUTPUT_BASE)
 
 
 test_clean :
