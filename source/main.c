@@ -504,42 +504,6 @@ int main (int argc, char **argv){
 	return 0;
 }
 
-/*
-   static bool _debug_init()
-   {
-   EtDocId doc_id = _open_doc_new(NULL);
-   if(0 > doc_id){
-   et_error("");
-   return -1;
-   }
-
-   PvVg *vg = et_doc_get_vg_ref(et_doc_manager_get_doc_from_id(doc_id));
-   if(NULL == vg){
-   et_error("");
-   return -1;
-   }
-   vg->rect.w = 600;
-   vg->rect.h = 500;
-
-// ** (開発デバッグ用)ドキュメントにsvgを貼り付ける
-const char *pathImageFile = NULL;
-pathImageFile = "./library/23.svg";
-if(!et_doc_set_image_from_file(et_doc_manager_get_doc_from_id(doc_id), pathImageFile)){
-et_error("");
-return false;
-}
-
-et_doc_save_from_id(doc_id);
-
-if(!et_doc_signal_update_from_id(doc_id)){
-et_error("");
-return false;
-}
-
-return true;
-}
- */
-
 static EtDocId _open_doc_new_from_file(const char* filepath)
 {
 	et_debug("filepath:'%s'", (NULL == filepath)? "NULL":filepath);
