@@ -113,7 +113,7 @@ typedef enum{
 typedef struct{
 	FormatKind kind;
 	const char *extension;
-	const char *gdk_file_type;	//!< gdk_pixbuf_save_*() type
+	const char *gdk_file_type;	//!< gdk_pixbuf_save_*() type(ex."jpeg") or other(ex. "svg")
 	bool has_alpha;
 }PvOutputFileFormat;
 
@@ -139,6 +139,23 @@ static const PvOutputFileFormat *get_output_file_format_from_extension(const cha
 	}
 
 	return NULL;
+}
+
+static const PvOutputFileFormat *get_output_file_format_from_filepath(const char *filepath)
+{
+	if(NULL == filepath){
+		et_error("");
+		return false;
+	}
+
+	char *ext;
+	if(NULL == (ext = strrchr(filepath, '.'))){
+		et_error("");
+		return NULL;
+	}
+	ext++;
+
+	return get_output_file_format_from_extension(ext);
 }
 
 static void usage()
@@ -257,6 +274,82 @@ static bool et_args(EtArgs *args, int argc, char **argv)
 
 	return ret;
 }
+
+
+static bool _output_file(const char *filepath, EtDocId doc_id)
+{
+	if(NULL == filepath){
+		et_error("");
+		return false;
+	}
+
+	const PvOutputFileFormat *format = get_output_file_format_from_filepath(filepath);
+	if(!format){
+		et_error("");
+		return false;
+	}
+
+	if(0 == strcmp("svg", format->gdk_file_type)){
+		if(!_save_file_from_doc_id(filepath, doc_id)){
+			et_error("");
+			return false;
+		}
+	}else{
+		PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
+		if(!vg){
+			et_error("");
+			return false;
+		}
+		PvRenderContext render_context = PvRenderContext_Default;
+		if(format->has_alpha){
+			render_context.background_kind = PvBackgroundKind_Transparent;
+		}else{
+			render_context.background_kind = PvBackgroundKind_White;
+		}
+		GdkPixbuf *pixbuf = pv_renderer_pixbuf_from_vg(vg, render_context, NULL);
+		if(!pixbuf){
+			et_error("");
+			return false;
+		}
+
+		bool ret = true;
+		GError *error = NULL;
+		switch(format->kind){
+			case FormatKind_JPEG:
+				ret = gdk_pixbuf_save(
+						pixbuf,
+						filepath,
+						format->gdk_file_type,
+						&error,
+						"quality", "100", NULL);
+				break;
+			case FormatKind_PNG:
+				ret = gdk_pixbuf_save(
+						pixbuf,
+						filepath,
+						format->gdk_file_type,
+						&error,
+						"compression", "0", NULL);
+				break;
+			default:
+				ret = gdk_pixbuf_save(
+						pixbuf,
+						filepath,
+						format->gdk_file_type,
+						&error,
+						NULL);
+				break;
+		}
+
+		if(!ret){
+			et_error("error:'%s','%s'", filepath, error->message);
+			return false;
+		}
+	}
+
+	return true;
+}
+
 
 int main (int argc, char **argv){
 	gtk_init(&argc, &argv);
@@ -473,83 +566,11 @@ int main (int argc, char **argv){
 		et_debug("input_filepath success open.:'%s'", args->input_filepath);
 
 		if(NULL != args->output_filepath){
-			char *ext;
-			if(NULL == (ext = strrchr(args->output_filepath, '.'))){
-				et_error("");
+			if(!_output_file(args->output_filepath, doc_id)){
+				et_error("not implement. :%s", args->output_filepath);
 				usage();
 				exit(EXIT_FAILURE);
 			}
-			ext++;
-
-			const PvOutputFileFormat *format = get_output_file_format_from_extension(ext);
-			if(!format){
-				et_error("extension not match. :%s", ext);
-				usage();
-				exit(EXIT_FAILURE);
-			}
-
-			if(0 == strcmp("svg", ext)){
-				if(!_save_file_from_doc_id(args->output_filepath, doc_id)){
-					et_error("");
-					usage();
-					exit(EXIT_FAILURE);
-				}
-			}else{
-				PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
-				if(!vg){
-					et_error("");
-					usage();
-					exit(EXIT_FAILURE);
-				}
-				PvRenderContext render_context = PvRenderContext_Default;
-				if(format->has_alpha){
-					render_context.background_kind = PvBackgroundKind_Transparent;
-				}else{
-					render_context.background_kind = PvBackgroundKind_White;
-				}
-				GdkPixbuf *pixbuf = pv_renderer_pixbuf_from_vg(vg, render_context, NULL);
-				if(!pixbuf){
-					et_error("");
-					usage();
-					exit(EXIT_FAILURE);
-				}
-
-				bool ret = true;
-				GError *error = NULL;
-				switch(format->kind){
-					case FormatKind_JPEG:
-						ret = gdk_pixbuf_save(
-								pixbuf,
-								args->output_filepath,
-								format->gdk_file_type,
-								&error,
-								"quality", "100", NULL);
-						break;
-					case FormatKind_PNG:
-						ret = gdk_pixbuf_save(
-								pixbuf,
-								args->output_filepath,
-								format->gdk_file_type,
-								&error,
-								"compression", "0", NULL);
-						break;
-					default:
-						ret = gdk_pixbuf_save(
-								pixbuf,
-								args->output_filepath,
-								format->gdk_file_type,
-								&error,
-								NULL);
-						break;
-				}
-
-				if(!ret){
-					et_error("not implement. :%s", ext);
-					usage();
-					exit(EXIT_FAILURE);
-				}
-			}
-
 			exit (EXIT_SUCCESS);
 		}
 	}
@@ -788,6 +809,44 @@ error:
 	return false;
 }
 
+/*! @return Acceps:new string of filepath(need g_free()). Cancel:NULL */
+char *_save_dialog_run(const char *dialog_title, const char *accept_button_title, const char *default_filepath)
+{
+	GtkWidget *dialog;
+	GtkFileChooser *chooser;
+	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
+
+	dialog = gtk_file_chooser_dialog_new (dialog_title,
+			self->window,
+			action,
+			_("_Cancel"),
+			GTK_RESPONSE_CANCEL,
+			accept_button_title,
+			GTK_RESPONSE_ACCEPT,
+			NULL);
+	chooser = GTK_FILE_CHOOSER (dialog);
+
+	gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
+
+	//! @todo need this reordering? and this conditions is right?
+	if(NULL == strchr(default_filepath, '/')){
+		gtk_file_chooser_set_current_name (chooser, default_filepath);
+	}else{
+		gtk_file_chooser_set_uri (chooser, default_filepath);
+	}
+
+	char *filepath = NULL;
+	gint res = gtk_dialog_run (GTK_DIALOG (dialog));
+	if (res == GTK_RESPONSE_ACCEPT)
+	{
+		filepath = gtk_file_chooser_get_filename (chooser);
+	}
+
+	gtk_widget_destroy (dialog);
+
+	return filepath;
+}
+
 static gboolean _cb_menu_file_save(gpointer data)
 {
 
@@ -805,33 +864,7 @@ static gboolean _cb_menu_file_save(gpointer data)
 	}
 
 	if(NULL == filepath){
-		GtkWidget *dialog;
-		GtkFileChooser *chooser;
-		GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
-		gint res;
-
-		dialog = gtk_file_chooser_dialog_new ("Save File",
-				self->window,
-				action,
-				_("_Cancel"),
-				GTK_RESPONSE_CANCEL,
-				_("_Save"),
-				GTK_RESPONSE_ACCEPT,
-				NULL);
-		chooser = GTK_FILE_CHOOSER (dialog);
-
-		gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
-
-		gtk_file_chooser_set_current_name (chooser,
-				_("Untitled_document.svg"));
-
-		res = gtk_dialog_run (GTK_DIALOG (dialog));
-		if (res == GTK_RESPONSE_ACCEPT)
-		{
-			filepath = gtk_file_chooser_get_filename (chooser);
-		}
-
-		gtk_widget_destroy (dialog);
+		filepath = _save_dialog_run("Save File", _("_Save"), _("untitled_document.svg"));
 	}
 
 	if(NULL != filepath){
@@ -849,6 +882,51 @@ static gboolean _cb_menu_file_save(gpointer data)
 
 error:
 	g_free (filepath);
+	return false;
+}
+
+static gboolean _cb_menu_file_export(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// Todo: Nothing document.
+		et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	char *filepath = NULL;
+
+	char *filepath_prev = NULL;
+	if(!et_doc_get_filepath(&filepath_prev, doc_id)){
+		et_error("");
+		goto finally;
+	}
+
+	if(NULL == filepath_prev){
+		filepath_prev = g_strdup(_("untitled_document.png"));
+	}
+	filepath = _save_dialog_run("Export File", _("_Export"), filepath_prev);
+	if(NULL == filepath){
+		// cancel
+		goto finally;
+	}
+
+	if(!_output_file(filepath, doc_id)){
+		//! @todo error_dialog
+		et_error("");
+		goto finally;
+	}
+
+	et_debug("Export:'%s'", filepath);
+
+finally:
+	if(NULL != filepath_prev){
+		g_free(filepath_prev);
+	}
+	if(NULL != filepath){
+		g_free(filepath);
+	}
+
 	return false;
 }
 
@@ -1193,6 +1271,14 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_save), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_s, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+
+	// ** "/_File/_Export (Ctrl+Shift+E)"
+	menuitem = gtk_menu_item_new_with_label ("_Export");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_export), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_e, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
 	/*
 	   menuitem = gtk_menu_item_new_with_label ("Save As");
