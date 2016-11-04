@@ -35,6 +35,7 @@
 #include "et_stroke_panel.h"
 #include "et_position_panel.h"
 #include "et_snap_panel.h"
+#include "pv_file_format.h"
 
 const char *APP_NAME = "Etaion Vector Graphic Editor";
 
@@ -104,60 +105,6 @@ EtArgs EtArgs_Default = {
 	NULL,
 };
 
-typedef enum{
-	FormatKind_JPEG,
-	FormatKind_PNG,
-	FormatKind_OTHER,
-}FormatKind;
-
-typedef struct{
-	FormatKind kind;
-	const char *extension;
-	const char *gdk_file_type;	//!< gdk_pixbuf_save_*() type(ex."jpeg") or other(ex. "svg")
-	bool has_alpha;
-}PvOutputFileFormat;
-
-static const PvOutputFileFormat output_file_formats[] = {
-	{FormatKind_JPEG,	"jpg", "jpeg", false,},
-	{FormatKind_JPEG,	"jpeg", "jpeg", false,},
-	{FormatKind_PNG,	"png", "png", true,},
-	{FormatKind_OTHER,	"svg", "svg", true,},
-	{FormatKind_OTHER,	"bmp", "bmp", false,},
-};
-
-static size_t get_num_output_file_formats()
-{
-	return sizeof(output_file_formats) / sizeof(output_file_formats[0]);
-}
-
-static const PvOutputFileFormat *get_output_file_format_from_extension(const char *extension)
-{
-	for(int i = 0; i < (int)get_num_output_file_formats(); i++){
-		if(0 == strcasecmp(extension, output_file_formats[i].extension)){
-			return &(output_file_formats[i]);
-		}
-	}
-
-	return NULL;
-}
-
-static const PvOutputFileFormat *get_output_file_format_from_filepath(const char *filepath)
-{
-	if(NULL == filepath){
-		et_error("");
-		return false;
-	}
-
-	char *ext;
-	if(NULL == (ext = strrchr(filepath, '.'))){
-		et_error("");
-		return NULL;
-	}
-	ext++;
-
-	return get_output_file_format_from_extension(ext);
-}
-
 static void usage()
 {
 	fprintf(stderr,
@@ -171,8 +118,9 @@ static void usage()
 	       );
 	fprintf(stderr, "output_filepath format(extension):\n");
 
-	for(int i = 0; i < (int)get_num_output_file_formats(); i++){
-		fprintf(stderr, "	'%s'\n", output_file_formats[i].extension);
+	for(int i = 0; i < (int)get_num_file_formats(); i++){
+		const PvFileFormat *format = get_file_format_from_index(i);
+		fprintf(stderr, "	'%s'\n", format->extension);
 	}
 }
 
@@ -222,6 +170,12 @@ static bool et_args(EtArgs *args, int argc, char **argv)
 		}
 
 		//! @todo check input_filepath format?
+		const PvFileFormat *format = get_file_format_from_filepath(args->input_filepath);
+		if(!format){
+			fprintf(stderr, "input_filepath is invalid file type.:'%s'",
+					args->input_filepath);
+			return false;
+		}
 	}
 
 
@@ -242,23 +196,10 @@ static bool et_args(EtArgs *args, int argc, char **argv)
 		}
 
 		// ** output_filepath filetype from extension
-		char *ext;
-		if(NULL == (ext = strrchr(args->input_filepath, '.'))){
-			fprintf(stderr, "input_filepath is invalid file type.:'%s'",
-					args->input_filepath);
-			return false;
-		}
-		ext++;
-		bool is_match = false;
-		for(int i = 0; i < (int)get_num_output_file_formats(); i++){
-			if(0 == strcmp(output_file_formats[i].extension, ext)){
-				is_match = true;
-				break;
-			}
-		}
-		if(!is_match){
-			fprintf(stderr, "input_filepath is invalid file type.:'%s'",
-					args->input_filepath);
+		const PvFileFormat *format = get_file_format_from_filepath(args->output_filepath);
+		if(!format){
+			fprintf(stderr, "output_filepath is invalid file type.:'%s'",
+					args->output_filepath);
 			return false;
 		}
 
@@ -283,7 +224,7 @@ static bool _output_file(const char *filepath, EtDocId doc_id)
 		return false;
 	}
 
-	const PvOutputFileFormat *format = get_output_file_format_from_filepath(filepath);
+	const PvFileFormat *format = get_file_format_from_filepath(filepath);
 	if(!format){
 		et_error("");
 		return false;
@@ -315,7 +256,7 @@ static bool _output_file(const char *filepath, EtDocId doc_id)
 		bool ret = true;
 		GError *error = NULL;
 		switch(format->kind){
-			case FormatKind_JPEG:
+			case PvFormatKind_JPEG:
 				ret = gdk_pixbuf_save(
 						pixbuf,
 						filepath,
@@ -323,7 +264,7 @@ static bool _output_file(const char *filepath, EtDocId doc_id)
 						&error,
 						"quality", "100", NULL);
 				break;
-			case FormatKind_PNG:
+			case PvFormatKind_PNG:
 				ret = gdk_pixbuf_save(
 						pixbuf,
 						filepath,
@@ -614,8 +555,11 @@ static EtDocId _open_doc_new_from_file(const char* filepath)
 		return -1;
 	}
 
-	pv_vg_free(vg_src);
+	if(!et_doc_set_filepath(doc_id, filepath)){
+		et_bug("");
+	}
 
+	pv_vg_free(vg_src);
 	et_doc_signal_update_from_id(doc_id);
 
 	return doc_id;
@@ -812,11 +756,10 @@ error:
 /*! @return Acceps:new string of filepath(need g_free()). Cancel:NULL */
 char *_save_dialog_run(const char *dialog_title, const char *accept_button_title, const char *default_filepath)
 {
-	GtkWidget *dialog;
-	GtkFileChooser *chooser;
-	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
+	et_assert(default_filepath);
 
-	dialog = gtk_file_chooser_dialog_new (dialog_title,
+	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
+	GtkWidget *dialog = gtk_file_chooser_dialog_new (dialog_title,
 			self->window,
 			action,
 			_("_Cancel"),
@@ -824,15 +767,18 @@ char *_save_dialog_run(const char *dialog_title, const char *accept_button_title
 			accept_button_title,
 			GTK_RESPONSE_ACCEPT,
 			NULL);
-	chooser = GTK_FILE_CHOOSER (dialog);
+	GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
 
 	gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
 
 	//! @todo need this reordering? and this conditions is right?
-	if(NULL == strchr(default_filepath, '/')){
-		gtk_file_chooser_set_current_name (chooser, default_filepath);
-	}else{
-		gtk_file_chooser_set_uri (chooser, default_filepath);
+	gtk_file_chooser_set_current_name (chooser, default_filepath);
+	char *filename = strrchr(default_filepath, '/');
+	if(NULL != filename){
+		gtk_file_chooser_set_current_folder (chooser, default_filepath);
+		filename++;
+		gtk_file_chooser_set_current_name (chooser, filename);
+		//gtk_file_chooser_set_filename (chooser, default_filepath);
 	}
 
 	char *filepath = NULL;
@@ -865,6 +811,13 @@ static gboolean _cb_menu_file_save(gpointer data)
 
 	if(NULL == filepath){
 		filepath = _save_dialog_run("Save File", _("_Save"), _("untitled_document.svg"));
+	}else{
+		const PvFileFormat *format = get_file_format_from_filepath(filepath);
+		if(NULL == format || false == format->is_native){
+			char *next_filepath = pv_file_format_change_new_extension_from_filepath(filepath, "svg");
+			g_free(filepath);
+			filepath = next_filepath;
+		}
 	}
 
 	if(NULL != filepath){
@@ -879,6 +832,8 @@ static gboolean _cb_menu_file_save(gpointer data)
 			goto error;
 		}
 	}
+
+	et_debug("Save:'%s'", filepath);
 
 error:
 	g_free (filepath);
@@ -896,16 +851,22 @@ static gboolean _cb_menu_file_export(gpointer data)
 
 	char *filepath = NULL;
 
-	char *filepath_prev = NULL;
-	if(!et_doc_get_filepath(&filepath_prev, doc_id)){
+	char *prev_filepath = NULL;
+	if(!et_doc_get_filepath(&prev_filepath, doc_id)){
 		et_error("");
 		goto finally;
 	}
 
-	if(NULL == filepath_prev){
-		filepath_prev = g_strdup(_("untitled_document.png"));
+	const PvFileFormat *format = get_file_format_from_filepath(filepath);
+	if(NULL == format || true == format->is_native){
+		char *next_filepath = pv_file_format_change_new_extension_from_filepath(prev_filepath, "png");
+		g_free(prev_filepath);
+		prev_filepath = next_filepath;
 	}
-	filepath = _save_dialog_run("Export File", _("_Export"), filepath_prev);
+
+	et_debug("%s", prev_filepath);
+
+	filepath = _save_dialog_run("Export File", _("_Export"), prev_filepath);
 	if(NULL == filepath){
 		// cancel
 		goto finally;
@@ -920,8 +881,8 @@ static gboolean _cb_menu_file_export(gpointer data)
 	et_debug("Export:'%s'", filepath);
 
 finally:
-	if(NULL != filepath_prev){
-		g_free(filepath_prev);
+	if(NULL != prev_filepath){
+		g_free(prev_filepath);
 	}
 	if(NULL != filepath){
 		g_free(filepath);
