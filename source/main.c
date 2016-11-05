@@ -177,7 +177,7 @@ static bool et_args(EtArgs *args, int argc, char **argv)
 			return false;
 		}
 
-		//! @todo check input_filepath format?
+		// ** check input_filepath format from extension
 		const PvFileFormat *format = get_file_format_from_filepath(args->input_filepath);
 		if(!format){
 			fprintf(stderr, "input_filepath is invalid file type.:'%s'",
