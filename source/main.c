@@ -52,7 +52,8 @@ static bool _init_menu(GtkWidget *window, GtkWidget *box_root);
 // static bool _debug_init();
 static EtDocId _open_doc_new(PvVg *pv_src);
 static EtDocId _open_doc_new_from_file(const char* filepath);
-static bool _save_file_from_doc_id(const char *filepath, EtDocId doc_id);
+static bool _output_file_from_doc_id(const char *filepath, EtDocId doc_id);
+static bool _output_svg_from_doc_id(const char *filepath, EtDocId doc_id);
 
 
 
@@ -224,80 +225,6 @@ static bool et_args(EtArgs *args, int argc, char **argv)
 	return ret;
 }
 
-
-static bool _output_file(const char *filepath, EtDocId doc_id)
-{
-	if(NULL == filepath){
-		et_error("");
-		return false;
-	}
-
-	const PvFileFormat *format = get_file_format_from_filepath(filepath);
-	if(!format){
-		et_error("");
-		return false;
-	}
-
-	if(0 == strcmp("svg", format->gdk_file_type)){
-		if(!_save_file_from_doc_id(filepath, doc_id)){
-			et_error("");
-			return false;
-		}
-	}else{
-		PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
-		if(!vg){
-			et_error("");
-			return false;
-		}
-		PvRenderContext render_context = PvRenderContext_Default;
-		if(format->has_alpha){
-			render_context.background_kind = PvBackgroundKind_Transparent;
-		}else{
-			render_context.background_kind = PvBackgroundKind_White;
-		}
-		GdkPixbuf *pixbuf = pv_renderer_pixbuf_from_vg(vg, render_context, NULL);
-		if(!pixbuf){
-			et_error("");
-			return false;
-		}
-
-		bool ret = true;
-		GError *error = NULL;
-		switch(format->kind){
-			case PvFormatKind_JPEG:
-				ret = gdk_pixbuf_save(
-						pixbuf,
-						filepath,
-						format->gdk_file_type,
-						&error,
-						"quality", "100", NULL);
-				break;
-			case PvFormatKind_PNG:
-				ret = gdk_pixbuf_save(
-						pixbuf,
-						filepath,
-						format->gdk_file_type,
-						&error,
-						"compression", "0", NULL);
-				break;
-			default:
-				ret = gdk_pixbuf_save(
-						pixbuf,
-						filepath,
-						format->gdk_file_type,
-						&error,
-						NULL);
-				break;
-		}
-
-		if(!ret){
-			et_error("error:'%s','%s'", filepath, error->message);
-			return false;
-		}
-	}
-
-	return true;
-}
 
 
 int main (int argc, char **argv){
@@ -515,8 +442,8 @@ int main (int argc, char **argv){
 		et_debug("input_filepath success open.:'%s'", args->input_filepath);
 
 		if(NULL != args->output_filepath){
-			if(!_output_file(args->output_filepath, doc_id)){
-				et_error("not implement. :%s", args->output_filepath);
+			if(!_output_file_from_doc_id(args->output_filepath, doc_id)){
+				et_error("output_filepath not success.:%s", args->output_filepath);
 				usage();
 				exit(EXIT_FAILURE);
 			}
@@ -730,7 +657,81 @@ static gboolean _cb_menu_file_new(gpointer data)
 	return false;
 }
 
-static bool _save_file_from_doc_id(const char *filepath, EtDocId doc_id)
+static bool _output_file_from_doc_id(const char *filepath, EtDocId doc_id)
+{
+	if(NULL == filepath){
+		et_error("");
+		return false;
+	}
+
+	const PvFileFormat *format = get_file_format_from_filepath(filepath);
+	if(!format){
+		et_error("");
+		return false;
+	}
+
+	if(0 == strcmp("svg", format->gdk_file_type)){
+		if(!_output_svg_from_doc_id(filepath, doc_id)){
+			et_error("");
+			return false;
+		}
+	}else{
+		PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
+		if(!vg){
+			et_error("");
+			return false;
+		}
+		PvRenderContext render_context = PvRenderContext_Default;
+		if(format->has_alpha){
+			render_context.background_kind = PvBackgroundKind_Transparent;
+		}else{
+			render_context.background_kind = PvBackgroundKind_White;
+		}
+		GdkPixbuf *pixbuf = pv_renderer_pixbuf_from_vg(vg, render_context, NULL);
+		if(!pixbuf){
+			et_error("");
+			return false;
+		}
+
+		bool ret = true;
+		GError *error = NULL;
+		switch(format->kind){
+			case PvFormatKind_JPEG:
+				ret = gdk_pixbuf_save(
+						pixbuf,
+						filepath,
+						format->gdk_file_type,
+						&error,
+						"quality", "100", NULL);
+				break;
+			case PvFormatKind_PNG:
+				ret = gdk_pixbuf_save(
+						pixbuf,
+						filepath,
+						format->gdk_file_type,
+						&error,
+						"compression", "0", NULL);
+				break;
+			default:
+				ret = gdk_pixbuf_save(
+						pixbuf,
+						filepath,
+						format->gdk_file_type,
+						&error,
+						NULL);
+				break;
+		}
+
+		if(!ret){
+			et_error("error:'%s','%s'", filepath, error->message);
+			return false;
+		}
+	}
+
+	return true;
+}
+
+static bool _output_svg_from_doc_id(const char *filepath, EtDocId doc_id)
 {
 	if(NULL == filepath){
 		et_bug("");
@@ -779,14 +780,13 @@ char *_save_dialog_run(const char *dialog_title, const char *accept_button_title
 
 	gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
 
-	//! @todo need this reordering? and this conditions is right?
-	gtk_file_chooser_set_current_name (chooser, default_filepath);
 	char *filename = strrchr(default_filepath, '/');
-	if(NULL != filename){
+	if(NULL == filename){
+		gtk_file_chooser_set_current_name (chooser, default_filepath);
+	}else{
 		gtk_file_chooser_set_current_folder (chooser, default_filepath);
 		filename++;
 		gtk_file_chooser_set_current_name (chooser, filename);
-		//gtk_file_chooser_set_filename (chooser, default_filepath);
 	}
 
 	char *filepath = NULL;
@@ -803,7 +803,6 @@ char *_save_dialog_run(const char *dialog_title, const char *accept_button_title
 
 static gboolean _cb_menu_file_save(gpointer data)
 {
-
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		_show_error_dialog("Save:nothing document.");
@@ -814,12 +813,11 @@ static gboolean _cb_menu_file_save(gpointer data)
 	char *filepath = NULL;
 	if(!et_doc_get_filepath(&filepath, doc_id)){
 		_show_error_dialog("Save:internal error.");
-		goto error;
+		goto finally;
 	}
 
-	if(NULL == filepath){
-		filepath = _save_dialog_run("Save File", _("_Save"), _("untitled_document.svg"));
-	}else{
+	if(NULL != filepath){
+		// ** change to default extension
 		const PvFileFormat *format = get_file_format_from_filepath(filepath);
 		if(NULL == format || false == format->is_native){
 			char *next_filepath = pv_file_format_change_new_extension_from_filepath(filepath, "svg");
@@ -829,22 +827,38 @@ static gboolean _cb_menu_file_save(gpointer data)
 	}
 
 	if(NULL == filepath){
-		et_debug("Cancel");
+		// ** user select filepath
+		filepath = _save_dialog_run("Save File", _("_Save"), _("untitled_document.svg"));
+
+		if(NULL == filepath){
+			et_debug("Cancel");
+			goto finally;
+		}
+	}
+
+	// ** check extension
+	const PvFileFormat *format = get_file_format_from_filepath(filepath);
+	if(NULL == format || false == format->is_native){
+		_show_error_dialog("Save:can not native format(please use Export).'%s'", filepath);
+		goto finally;
 	}
 
 	if(!et_doc_set_filepath(doc_id, filepath)){
 		_show_error_dialog("Save:'%s'", filepath);
-		goto error;
+		goto finally;
 	}
-	if(!_save_file_from_doc_id(filepath, doc_id)){
+	if(!_output_svg_from_doc_id(filepath, doc_id)){
 		_show_error_dialog("Save:'%s'", filepath);
-		goto error;
+		goto finally;
 	}
 
 	et_debug("Save:'%s'", filepath);
 
-error:
-	g_free (filepath);
+finally:
+	if(NULL != filepath){
+		g_free (filepath);
+	}
+
 	return false;
 }
 
@@ -879,7 +893,7 @@ static gboolean _cb_menu_file_export(gpointer data)
 		goto finally;
 	}
 
-	if(!_output_file(filepath, doc_id)){
+	if(!_output_file_from_doc_id(filepath, doc_id)){
 		_show_error_dialog("Export:'%s'", filepath);
 		goto finally;
 	}
