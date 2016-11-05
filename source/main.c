@@ -762,8 +762,28 @@ error:
 	return false;
 }
 
+static char *_get_dirpath_from_filepath(const char *filepath)
+{
+	if(NULL == filepath){
+		return NULL;
+	}
+
+	char *dirpath = g_strdup(filepath);
+	et_assert(dirpath);
+
+	char *sep = strrchr(dirpath, '/');
+	if(NULL == sep){
+		g_free(dirpath);
+		return NULL;
+	}
+	
+	*sep = '\0';
+
+	return dirpath;
+}
+
 /*! @return Acceps:new string of filepath(need g_free()). Cancel:NULL */
-char *_save_dialog_run(const char *dialog_title, const char *accept_button_title, const char *default_filepath)
+static char *_save_dialog_run(const char *dialog_title, const char *accept_button_title, const char *default_filepath)
 {
 	et_assert(default_filepath);
 
@@ -784,7 +804,11 @@ char *_save_dialog_run(const char *dialog_title, const char *accept_button_title
 	if(NULL == filename){
 		gtk_file_chooser_set_current_name (chooser, default_filepath);
 	}else{
-		gtk_file_chooser_set_current_folder (chooser, default_filepath);
+		char *dirpath = _get_dirpath_from_filepath(default_filepath);
+		if(NULL != dirpath){
+			gtk_file_chooser_set_current_folder (chooser, dirpath);
+			g_free(dirpath);
+		}
 		filename++;
 		gtk_file_chooser_set_current_name (chooser, filename);
 	}
@@ -855,6 +879,71 @@ static gboolean _cb_menu_file_save(gpointer data)
 	et_debug("Save:'%s'", filepath);
 
 finally:
+	if(NULL != filepath){
+		g_free (filepath);
+	}
+
+	return false;
+}
+
+static gboolean _cb_menu_file_save_as(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		_show_error_dialog("Save:nothing document.");
+		et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	char *filepath = NULL;
+	char *src_filepath = NULL;
+	if(!et_doc_get_filepath(&src_filepath, doc_id)){
+		_show_error_dialog("Save:internal error.");
+		goto finally;
+	}
+
+	if(NULL != src_filepath){
+		// ** change to default extension
+		const PvFileFormat *format = get_file_format_from_filepath(src_filepath);
+		if(NULL == format || false == format->is_native){
+			char *next_filepath = pv_file_format_change_new_extension_from_filepath(src_filepath, "svg");
+			g_free(src_filepath);
+			src_filepath = next_filepath;
+		}
+	}
+
+	char *tmp_filepath = ((src_filepath)? src_filepath : _("untitled_document.svg"));
+	// ** user select filepath
+	filepath = _save_dialog_run("Save File", _("_Save"), tmp_filepath);
+
+	if(NULL == filepath){
+		et_debug("Cancel");
+		goto finally;
+	}
+
+	// ** check extension
+	const PvFileFormat *format = get_file_format_from_filepath(filepath);
+	if(NULL == format || false == format->is_native){
+		_show_error_dialog("Save:can not native format(please use Export).'%s'", filepath);
+		goto finally;
+	}
+
+	if(!_output_svg_from_doc_id(filepath, doc_id)){
+		_show_error_dialog("Save:'%s'", filepath);
+		goto finally;
+	}
+	EtDocId dst_doc_id = _open_doc_new_from_file(filepath);
+	if(dst_doc_id < 0){
+		_show_error_dialog("Save:'%s'", filepath);
+		goto finally;
+	}
+
+	et_debug("Save:'%s'", filepath);
+
+finally:
+	if(NULL != src_filepath){
+		g_free (src_filepath);
+	}
 	if(NULL != filepath){
 		g_free (filepath);
 	}
@@ -1264,6 +1353,14 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_save), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_s, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+
+	// ** "/_File/Save _As (Ctrl+Shift+S)"
+	menuitem = gtk_menu_item_new_with_label ("Save _As");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_save_as), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_s, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
 	// ** "/_File/_Export (Ctrl+Shift+E)"
 	menuitem = gtk_menu_item_new_with_label ("_Export");
