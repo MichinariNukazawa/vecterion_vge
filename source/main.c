@@ -58,6 +58,14 @@ static bool _save_file_from_doc_id(const char *filepath, EtDocId doc_id);
 
 static bool _slot_mouse_action(EtDocId, EtMouseAction);
 
+#define _show_error_dialog(fmt, ...) \
+	do{ \
+		et_error(""fmt"", ## __VA_ARGS__); \
+		char *message = g_strdup_printf(""fmt"", ## __VA_ARGS__ ); \
+		_show_error_dialog_impl(message); \
+		g_free(message); \
+	}while(0)
+static void _show_error_dialog_impl(const char *message);
 
 
 static gboolean in_worker_func(gpointer data)
@@ -798,14 +806,14 @@ static gboolean _cb_menu_file_save(gpointer data)
 
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
-		// Todo: Nothing document.
+		_show_error_dialog("Save:nothing document.");
 		et_bug("%d\n", doc_id);
 		return false;
 	}
 
 	char *filepath = NULL;
 	if(!et_doc_get_filepath(&filepath, doc_id)){
-		et_error("");
+		_show_error_dialog("Save:internal error.");
 		goto error;
 	}
 
@@ -820,17 +828,17 @@ static gboolean _cb_menu_file_save(gpointer data)
 		}
 	}
 
-	if(NULL != filepath){
-		if(!et_doc_set_filepath(doc_id, filepath)){
-			// TODO: error dialog.
-			et_error("");
-			goto error;
-		}
-		if(!_save_file_from_doc_id(filepath, doc_id)){
-			// TODO: error dialog.
-			et_error("");
-			goto error;
-		}
+	if(NULL == filepath){
+		et_debug("Cancel");
+	}
+
+	if(!et_doc_set_filepath(doc_id, filepath)){
+		_show_error_dialog("Save:'%s'", filepath);
+		goto error;
+	}
+	if(!_save_file_from_doc_id(filepath, doc_id)){
+		_show_error_dialog("Save:'%s'", filepath);
+		goto error;
 	}
 
 	et_debug("Save:'%s'", filepath);
@@ -844,7 +852,7 @@ static gboolean _cb_menu_file_export(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
-		// Todo: Nothing document.
+		_show_error_dialog("Export:nothing document.");
 		et_bug("%d\n", doc_id);
 		return false;
 	}
@@ -853,7 +861,7 @@ static gboolean _cb_menu_file_export(gpointer data)
 
 	char *prev_filepath = NULL;
 	if(!et_doc_get_filepath(&prev_filepath, doc_id)){
-		et_error("");
+		_show_error_dialog("Export:internal error.");
 		goto finally;
 	}
 
@@ -864,17 +872,15 @@ static gboolean _cb_menu_file_export(gpointer data)
 		prev_filepath = next_filepath;
 	}
 
-	et_debug("%s", prev_filepath);
-
 	filepath = _save_dialog_run("Export File", _("_Export"), prev_filepath);
 	if(NULL == filepath){
 		// cancel
+		et_debug("Cancel:%s", prev_filepath);
 		goto finally;
 	}
 
 	if(!_output_file(filepath, doc_id)){
-		//! @todo error_dialog
-		et_error("");
+		_show_error_dialog("Export:'%s'", filepath);
 		goto finally;
 	}
 
@@ -912,8 +918,7 @@ static gboolean _cb_menu_file_open(gpointer data)
 		GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
 		filename = gtk_file_chooser_get_filename (chooser);
 		if(!_open_doc_new_from_file(filename)){
-			// TODO: warning dialog.
-			et_debug("file not open:'%s'", filename);
+			_show_error_dialog("Open:open error.:'%s'", filename);
 		}
 		g_free (filename);
 	}
@@ -936,13 +941,14 @@ static bool _cb_menu_document_resize (GtkMenuItem *menuitem, gpointer user_data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
-		// Todo: Nothing document.
+		_show_error_dialog("Resize:nothing document.");
 		et_bug("%d\n", doc_id);
 		return false;
 	}
 
 	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
 	if(NULL == vg){
+		_show_error_dialog("Resize:internal error.");
 		et_debug("%d", doc_id);
 		return false;
 	}
@@ -993,6 +999,8 @@ static bool _cb_menu_document_resize (GtkMenuItem *menuitem, gpointer user_data)
 	et_doc_save_from_id(doc_id);
 	et_doc_signal_update_from_id(doc_id);
 
+	et_debug("Resize");
+
 	return false;
 }
 
@@ -1036,19 +1044,21 @@ static void _cb_menu_select_all (GtkMenuItem *menuitem, gpointer user_data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
-		// Todo: Nothing document.
+		_show_error_dialog("Select All:nothing document.");
 		et_bug("%d\n", doc_id);
 		return;
 	}
 
 	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
 	if(NULL == vg){
+		_show_error_dialog("Select All:internal error.");
 		et_debug("%d", doc_id);
 		return;
 	}
 
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	if(NULL == focus){
+		_show_error_dialog("Select All:internal error.");
 		et_bug("");
 		return;
 	}
@@ -1063,6 +1073,7 @@ static void _cb_menu_select_all (GtkMenuItem *menuitem, gpointer user_data)
 				&func_safr_data_pack,
 				&error))
 	{
+		_show_error_dialog("Select All:internal error.");
 		et_error("level:%d", error.level);
 		return;
 	}
@@ -1074,18 +1085,20 @@ static void _cb_menu_select_none (GtkMenuItem *menuitem, gpointer user_data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
-		// Todo: Nothing document.
+		_show_error_dialog("Select:nothing document.");
 		et_bug("%d\n", doc_id);
 		return;
 	}
 
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	if(NULL == focus){
+		_show_error_dialog("Select:internal error.");
 		et_bug("");
 		return;
 	}
 
 	if(!pv_focus_clear_to_parent_layer(focus)){
+		_show_error_dialog("Select:internal error.");
 		et_error("");
 		return;
 	}
@@ -1097,19 +1110,21 @@ static void _cb_menu_select_invert (GtkMenuItem *menuitem, gpointer user_data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
-		// Todo: Nothing document.
+		_show_error_dialog("Select Invert:nothing document.");
 		et_bug("%d\n", doc_id);
 		return;
 	}
 
 	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
 	if(NULL == vg){
+		_show_error_dialog("Select Invert:internal error.");
 		et_debug("%d", doc_id);
 		return;
 	}
 
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	if(NULL == focus){
+		_show_error_dialog("Select Invert:internal error.");
 		et_bug("");
 		return;
 	}
@@ -1117,12 +1132,14 @@ static void _cb_menu_select_invert (GtkMenuItem *menuitem, gpointer user_data)
 	int num = pv_general_get_parray_num((void **)focus->elements);
 	PvElement **elements_prefocus = malloc(sizeof(PvElement *) * (num + 1));
 	if(NULL == elements_prefocus){
+		_show_error_dialog("Select Invert:internal error.");
 		et_bug("");
 		return;
 	}
 	memcpy(elements_prefocus, focus->elements, sizeof(PvElement *) * (num + 1));
 
 	if(!pv_focus_clear_to_parent_layer(focus)){
+		_show_error_dialog("Select Invert:internal error.");
 		et_error("");
 		goto finally;
 	}
@@ -1138,6 +1155,7 @@ static void _cb_menu_select_invert (GtkMenuItem *menuitem, gpointer user_data)
 				&func_safr_data_pack,
 				&error))
 	{
+		_show_error_dialog("Select Invert:internal error.");
 		et_error("level:%d", error.level);
 		goto finally;
 	}
@@ -1368,5 +1386,23 @@ static bool _slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 	gtk_statusbar_push(GTK_STATUSBAR(self->status_bar), 1, s);
 
 	return true;
+}
+
+static void _show_error_dialog_impl(const char *message)
+{
+	et_assert(message);
+
+	GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+	GtkWidget *dialog = gtk_message_dialog_new (
+			window_.window,
+			flags,
+			GTK_MESSAGE_ERROR,
+			GTK_BUTTONS_CLOSE,
+			"%s",
+			message);
+	gtk_dialog_run (GTK_DIALOG (dialog));
+	gtk_widget_destroy (dialog);
+
+	return;
 }
 
