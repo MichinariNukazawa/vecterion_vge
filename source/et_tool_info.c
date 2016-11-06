@@ -19,7 +19,7 @@ bool _et_tool_info_is_init = false; // check initialized tools
 
 static EtToolInfo *_et_tool_get_info_from_id(EtToolId tool_id);
 
-static GdkPixbuf *_et_tool_info_conv_pixbuf(GdkPixbuf *pb_src)
+static GdkPixbuf *_conv_new_icon_focus(GdkPixbuf *pb_src)
 {
 
 	double w = gdk_pixbuf_get_width(pb_src);
@@ -63,7 +63,7 @@ bool et_tool_info_init()
 		et_assertf(info->icon_cursor, "%d, %s", tool_id, error->message);
 
 		info->icon = info->icon_cursor;
-		info->icon_focus = _et_tool_info_conv_pixbuf(info->icon);
+		info->icon_focus = _conv_new_icon_focus(info->icon);
 
 		// ** mouse cursor
 		assert(gdk_display_get_default());
@@ -81,7 +81,7 @@ bool et_tool_info_init()
 
 
 
-static int _et_tool_info_touch_offset = 16;
+static int _px_sensitive = 16;
 
 static bool _et_etaion_is_bound_point(int radius, PvPoint p1, PvPoint p2)
 {
@@ -103,28 +103,25 @@ typedef struct RecursiveDataGetFocus{
 	PvPoint g_point;
 }RecursiveDataGetFocus;
 
-static bool _et_tool_func_pv_element_recurse_get_focus_element(
+static bool _get_touch_element(
 		PvElement *element, gpointer data, int level)
 {
 	RecursiveDataGetFocus *_data = data;
 	PvElement **p_element = _data->p_element;
 
-	const PvElementInfo *elem_info = pv_element_get_info_from_kind(element->kind);
-	if(NULL == elem_info || NULL == elem_info->func_is_touch_element){
-		et_bug("%p", elem_info);
-		goto error;
-	}
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	et_assertf(info, "%d", element->kind);
 
 	bool is_touch = false;
-	bool ret = elem_info->func_is_touch_element(
+	bool ret = info->func_is_touch_element(
 			&is_touch,
 			element,
-			_et_tool_info_touch_offset,
+			_px_sensitive,
 			_data->g_point.x,
 			_data->g_point.y);
 	if(!ret){
 		et_error("");
-		goto error;
+		return false;
 	}
 	if(is_touch){
 		// ** detect is stop search.
@@ -133,8 +130,6 @@ static bool _et_tool_func_pv_element_recurse_get_focus_element(
 	}
 
 	return true;
-error:
-	return false;
 }
 
 static bool _et_tool_focus_element_mouse_action_get_focus_element(
@@ -154,7 +149,7 @@ static bool _et_tool_focus_element_mouse_action_get_focus_element(
 	};
 	PvElementRecursiveError error;
 	if(!pv_element_recursive_asc(vg->element_root,
-				_et_tool_func_pv_element_recurse_get_focus_element,
+				_get_touch_element,
 				NULL,
 				&rec_data,
 				&error)){
@@ -437,7 +432,7 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 					}else{
 						if(0 < _data->anchor_points_num){
 							if(_et_etaion_is_bound_point(
-										_et_tool_info_touch_offset,
+										_px_sensitive,
 										_data->anchor_points[0].points[PvAnchorPointIndex_Point],
 										mouse_action.point)
 							  ){
@@ -493,8 +488,8 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 
 				PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
 				PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
-				if(fabs(p_diff.x) < _et_tool_info_touch_offset
-						&& fabs(p_diff.y) < _et_tool_info_touch_offset)
+				if(fabs(p_diff.x) < _px_sensitive
+						&& fabs(p_diff.y) < _px_sensitive)
 				{
 					pv_anchor_point_set_handle_zero(
 							ap,
@@ -516,18 +511,17 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 	return true;
 }
 
-	static bool
-_et_tool_func_pv_element_recurse_get_focus_element_index(
+static bool _get_touch_element_and_index(
 		PvElement *element, gpointer data, int level)
 {
 	RecursiveDataGetFocus *_data = data;
 
-	const PvElementInfo *elem_info = pv_element_get_info_from_kind(element->kind);
-	assert(elem_info);
-	assert(elem_info->func_get_num_anchor_point);
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	assert(info);
+	assert(info->func_get_num_anchor_point);
 
 	int index = -1;
-	PvAnchorPoint *anchor_points = elem_info->func_new_anchor_points(element);
+	PvAnchorPoint *anchor_points = info->func_new_anchor_points(element);
 
 	const PvElementBezierData *data_ = element->data;
 	assert(data_);
@@ -535,7 +529,7 @@ _et_tool_func_pv_element_recurse_get_focus_element_index(
 	for(int i = 0; i < num; i++){
 		PvAnchorPoint ap = anchor_points[i];
 		if(_et_etaion_is_bound_point(
-					_et_tool_info_touch_offset,
+					_px_sensitive,
 					ap.points[PvAnchorPointIndex_Point],
 					_data->g_point))
 		{
@@ -572,7 +566,7 @@ void _et_tool_focus_element_mouse_action_get_touch_anchor_point(
 	};
 	PvElementRecursiveError error;
 	if(!pv_element_recursive_asc(vg->element_root,
-				_et_tool_func_pv_element_recurse_get_focus_element_index,
+				_get_touch_element_and_index,
 				NULL,
 				&rec_data,
 				&error)){
@@ -704,21 +698,21 @@ int _edit_anchor_point_handle_bound_handle(PvAnchorPoint ap, EtMouseAction mouse
 	PvPoint p_next = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_HandleNext);
 
 	if(_et_etaion_is_bound_point(
-				_et_tool_info_touch_offset,
+				_px_sensitive,
 				p_prev,
 				mouse_action.point))
 	{
 		return PvAnchorPointIndex_HandlePrev;
 	}
 	if(_et_etaion_is_bound_point(
-				_et_tool_info_touch_offset,
+				_px_sensitive,
 				p_next,
 				mouse_action.point))
 	{
 		return PvAnchorPointIndex_HandleNext;
 	}
 	if(_et_etaion_is_bound_point(
-				_et_tool_info_touch_offset,
+				_px_sensitive,
 				p_point,
 				mouse_action.point))
 	{
@@ -804,8 +798,8 @@ static bool _et_tool_edit_anchor_point_handle_mouse_action(
 
 				PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
 				PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
-				if(fabs(p_diff.x) < _et_tool_info_touch_offset
-						&& fabs(p_diff.y) < _et_tool_info_touch_offset)
+				if(fabs(p_diff.x) < _px_sensitive
+						&& fabs(p_diff.y) < _px_sensitive)
 				{
 					pv_anchor_point_set_handle_zero(
 							ap,
