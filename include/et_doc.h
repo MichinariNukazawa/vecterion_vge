@@ -19,6 +19,7 @@ typedef void (*EtDocSlotChange)(EtDoc *doc, gpointer data);
 EtDoc *et_doc_new();
 EtDoc *et_doc_new_from_vg(const PvVg *vg);
 EtDocId et_doc_get_id(EtDoc *self);
+char *et_doc_get_new_filename_from_id(EtDocId doc_id);
 bool et_doc_get_filepath(char **filepath, EtDocId doc_id);
 bool et_doc_set_filepath(EtDocId doc_id, const char *filepath);
 PvVg *et_doc_get_vg_ref(EtDoc *self);

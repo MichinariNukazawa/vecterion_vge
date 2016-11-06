@@ -184,44 +184,68 @@ EtThumbnail *et_canvas_collection_get_thumbnail()
 	return self->thumbnail;
 }
 
+static EtCanvasCollectionCollect *_get_collect_from_doc_id(EtDocId doc_id)
+{
+	EtCanvasCollection *self = _canvas_collection;
+	et_assert(self);
+
+	for(int i = 0; i < self->num_collects; i++){
+		EtCanvasCollectionCollect *collect = &(self->collects[i]);
+		if(doc_id == collect->doc_id){
+			return collect;
+		}
+	}
+
+	return NULL;
+}
+
+static void _slot_et_canvas_collection_from_doc_change(EtDoc *doc, gpointer data)
+{
+	EtCanvasCollection *self = _canvas_collection;
+	et_assert(self);
+
+	// ** document name to tab
+	EtDocId doc_id = et_doc_get_id(doc);
+
+	EtCanvasCollectionCollect *collect = _get_collect_from_doc_id(doc_id);
+	et_assertf(collect, "%d", doc_id);
+
+	char *src_str_title = et_doc_get_new_filename_from_id(doc_id);
+	const char *str_title = ((src_str_title) ? src_str_title : "(untitled)");
+
+	int num = pv_general_get_parray_num((void **)collect->canvases);
+	for(int i = 0; i < num; i++){
+		GtkWidget *canvas_frame = et_canvas_get_widget_frame(collect->canvases[i]);
+		et_assertf(canvas_frame, "%d %d", doc_id, i);
+		GtkWidget *label = gtk_notebook_get_tab_label(GTK_NOTEBOOK(self->widget_tab), canvas_frame);
+		et_assertf(label, "%d %d", doc_id, i);
+		gtk_label_set_text(GTK_LABEL(label), str_title);
+	}
+
+	if(NULL != src_str_title){
+		g_free(src_str_title);
+	}
+}
+
 EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 {
 	EtCanvasCollection *self = _canvas_collection;
-	if(NULL == self){
-		et_bug("");
-		return NULL;
-	}
+	et_assert(self);
 
 	// ** canvas new and setup.
 	EtCanvas *canvas = et_canvas_new_from_doc_id(doc_id);
-	if(NULL == canvas){
-		et_error("");
-		return false;
-	}
+	et_assertf(canvas, "%d", doc_id);
 
-	int id1 = et_doc_add_slot_change(doc_id,
-			slot_et_canvas_from_doc_change, canvas);
-	if(id1 < 0){
-		et_error("");
-		return false;
-	}
+	int id1 = et_doc_add_slot_change(doc_id, slot_et_canvas_from_doc_change, canvas);
+	et_assertf(0 <= id1, "%d %d", doc_id, id1);
 
-
-	int id = et_canvas_set_slot_change(canvas,
-			slot_et_renderer_from_canvas_change, NULL);
-	if(id < 0){
-		et_error("");
-		return NULL;
-	}
+	int id = et_canvas_set_slot_change(canvas, slot_et_renderer_from_canvas_change, NULL);
+	et_assertf(0 <= id, "%d %d", doc_id, id);
 
 	GtkWidget *canvas_frame1 = et_canvas_get_widget_frame(canvas);
-	if(NULL == canvas_frame1){
-		et_bug("");
-		return NULL;
-	}
+	et_assertf(canvas_frame1, "%d", doc_id);
 
-	if(0 > et_canvas_set_slot_mouse_action(canvas,
-				et_pointing_manager_slot_mouse_action, NULL)){
+	if(0 > et_canvas_set_slot_mouse_action(canvas, et_pointing_manager_slot_mouse_action, NULL)){
 		et_error("");
 		return NULL;
 	}
@@ -231,12 +255,8 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 		et_bug("");
 		return false;
 	}
-	int id2 = et_doc_add_slot_change(doc_id,
-			slot_et_canvas_from_doc_change, canvas_thumbnail);
-	if(id2 < 0){
-		et_error("");
-		return false;
-	}
+	int id2 = et_doc_add_slot_change(doc_id, slot_et_canvas_from_doc_change, canvas_thumbnail);
+	et_assertf(0 <= id2, "%d %d", doc_id, id2);
 
 	if(!et_doc_signal_update_from_id(doc_id)){
 		et_error("");
@@ -268,12 +288,19 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 
 	self->collects = new;
 
-	int ix = gtk_notebook_append_page_menu(
-			GTK_NOTEBOOK(self->widget_tab), canvas_frame1, NULL, NULL);
+	char *title = et_doc_get_new_filename_from_id(doc_id);
+	GtkWidget *tab_label = gtk_label_new(((title) ? title : "(untitled)"));
+	if(NULL != title){
+		g_free(title);
+	}
+	int ix = gtk_notebook_append_page(GTK_NOTEBOOK(self->widget_tab), canvas_frame1, tab_label);
 	if(ix < 0){
 		et_error("");
 		return NULL;
 	}
+
+	int id0 = et_doc_add_slot_change(doc_id, _slot_et_canvas_collection_from_doc_change, NULL);
+	et_assertf(0 <= id0, "%d %d", doc_id, id0)
 
 	return canvas;
 }

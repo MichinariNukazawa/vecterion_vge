@@ -1,6 +1,7 @@
 #include "et_doc.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include "et_error.h"
 #include "et_doc_manager.h"
 #include "et_doc_history_hive.h"
@@ -87,13 +88,28 @@ EtDocId et_doc_get_id(EtDoc *self)
 	return self->id;
 }
 
+char *et_doc_get_new_filename_from_id(EtDocId doc_id)
+{
+	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
+	et_assertf(self, "%d", doc_id);
+
+	if(NULL == self->filepath){
+		return NULL;
+	}
+
+	char *sep = strrchr(self->filepath, '/');
+	if(NULL == sep){
+		return NULL;
+	}
+
+	sep++;
+	return g_strdup(sep);
+}
+
 bool et_doc_get_filepath(char **filepath, EtDocId doc_id)
 {
 	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
-	if(NULL == self){
-		et_error("");
-		return false;
-	}
+	et_assertf(self, "%d", doc_id);
 
 	*filepath = g_strdup(self->filepath);
 	return true;
@@ -108,7 +124,10 @@ bool et_doc_set_filepath(EtDocId doc_id, const char *filepath)
 	}
 
 	self->filepath = g_strdup(filepath);
-	return true;
+
+	et_debug("%s", ((self->filepath) ? self->filepath : "(null)"));
+
+	return et_doc_signal_update(self);
 }
 
 PvVg *et_doc_get_vg_ref_from_id(EtDocId doc_id)
