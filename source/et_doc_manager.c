@@ -2,6 +2,20 @@
 
 #include <stdlib.h>
 #include "et_error.h"
+#include "pv_general.h"
+
+
+struct EtDocNode;
+typedef struct EtDocNode EtDocNode;
+
+struct EtDocNode{
+	EtDoc *doc;
+};
+
+struct EtDocManager{
+	EtDocNode **doc_nodes;
+};
+
 
 EtDocManager *doc_manager = NULL;
 
@@ -20,7 +34,7 @@ EtDocManager *et_doc_manager_init()
 		return NULL;
 	}
 
-	self->doc_nodes[0].doc = NULL;
+	self->doc_nodes = NULL;
 
 	doc_manager = self;
 
@@ -43,38 +57,21 @@ EtDocId et_doc_manager_new_doc_from_vg(const PvVg *vg)
 	return et_doc_get_id(doc);
 }
 
-static int _et_doc_manager_get_num_doc_node(EtDocNode *doc_nodes)
-{
-	int i = 0;
-	while(NULL != doc_nodes[i].doc){
-		i++;
-	}
-
-	// Todo: fix freescale
-	if(14 < i){
-		et_fixme("");
-		i = 14;
-	}
-
-	return i;
-}
-
 static bool _et_doc_manager_add_doc(EtDoc *doc)
 {
 	EtDocManager *self = doc_manager;
-	if(NULL == self){
-		et_bug("");
-		return false;
-	}
+	et_assert(self);
 
-	if(NULL == self->doc_nodes){
-		et_bug("");
-		return false;
-	}
+	EtDocNode *node = malloc(sizeof(EtDocNode));
+	et_assert(node);
+	node->doc = doc;
 
-	int num = _et_doc_manager_get_num_doc_node(self->doc_nodes);
-	self->doc_nodes[num + 1].doc = NULL;
-	self->doc_nodes[num].doc = doc;
+	int num = pv_general_get_parray_num((void **)self->doc_nodes);
+	EtDocNode **new_nodes = realloc(self->doc_nodes, sizeof(EtDocNode *) * (num + 2));
+	et_assert(new_nodes);
+	new_nodes[num + 1] = NULL;
+	new_nodes[num + 0] = node;
+	self->doc_nodes = new_nodes;
 
 	return true;
 }
@@ -87,12 +84,11 @@ EtDoc *et_doc_manager_get_doc_from_id(const EtDocId doc_id)
 		return NULL;
 	}
 
-	int i = 0;
-	while(NULL != self->doc_nodes[i].doc){
-		if(doc_id == et_doc_get_id(self->doc_nodes[i].doc)){
-			return self->doc_nodes[i].doc;
+	size_t num = pv_general_get_parray_num((void **)self->doc_nodes);
+	for(int i = 0; i < (int)num; i++){
+		if(doc_id == et_doc_get_id(self->doc_nodes[i]->doc)){
+			return self->doc_nodes[i]->doc;
 		}
-		i++;
 	}
 
 	return NULL;
