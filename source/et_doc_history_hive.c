@@ -6,6 +6,23 @@
 
 const int _et_doc_history_hive_num_history = 128;
 
+/*! @return is nusefe (index history enable is not check.) */
+static int _et_doc_history_hive_get_index_from_relative(
+		const EtDocHistoryHive *hist,
+		int ix_base,
+		int relative,
+		int max);
+static bool _et_doc_history_hive_is_extent_enable(EtDocHistoryHive *hist, int ix);
+static int _element_get_index(const PvElement *element);
+static int *_element_get_indexes(const PvElement *element);
+static PvElement *_et_doc_element_get_tree_from_indexes(PvElement *element_root, const int *indexes);
+static PvFocus *_et_doc_history_hive_copy_focus_by_vg(const PvFocus *focus_src, const PvVg *vg_dst);
+static void _et_doc_hist_free_history(EtDocHistoryHive *hist, int ix);
+static bool _et_doc_hist_free_redo_all(EtDocHistoryHive *hist);
+static bool _et_doc_hist_free_history_next(EtDocHistoryHive *hist);
+static bool _et_doc_history_hive_copy_hist(EtDocHistory *item_dst, const EtDocHistory *item_src);
+
+
 EtDocHistoryHive *et_doc_history_hive_new(const PvVg *vg)
 {
 	if(NULL == vg){
@@ -62,57 +79,6 @@ EtDocHistoryHive *et_doc_history_hive_new(const PvVg *vg)
 	return this;
 }
 
-/** @brief
- * @return is nusefe (index history enable is not check.)
- */
-static int _et_doc_history_hive_get_index_from_relative(
-		const EtDocHistoryHive *hist,
-		int ix_base,
-		int relative,
-		int max)
-{
-	if(0 == max){
-		et_bug("");
-		return 0;
-	}
-
-	if((NULL != hist) && (relative < 0)){
-		if(pv_vg_is_diff(hist->hist_work.vg, hist->hists[hist->ix_current].vg))
-		{
-			relative += 1;
-		}
-	}
-
-	int ix = ix_base + relative;
-	while(max <= ix){
-		ix -= max;
-	}
-	while(ix < 0){
-		ix += max;
-	}
-
-	return ix;
-}
-
-static bool _et_doc_history_hive_is_extent_enable(EtDocHistoryHive *hist, int ix)
-{
-	if(!(0 <= ix && ix < hist->num_history)){
-		return false;
-	}
-
-	if(hist->ix_undo <= hist->ix_redo){
-		if(!(hist->ix_undo <= ix && ix <= hist->ix_redo)){
-			return false;
-		}
-	}else{
-		if(!(ix <= hist->ix_redo || hist->ix_undo <= ix)){
-			return false;
-		}
-	}
-
-	return true;
-}
-
 EtDocHistory *et_doc_history_get_from_relative(EtDocHistoryHive *hist, int relative)
 {
 	// et_debug("curr:%d rel:%d", hist->ix_current, relative);
@@ -138,226 +104,6 @@ error:
 			hist->ix_undo, hist->ix_current, hist->ix_redo,
 			hist->num_history);
 	return NULL;
-}
-
-static int et_doc_history_hive_element_get_index(const PvElement *element)
-{
-	PvElement *parent = element->parent;
-	if(NULL == parent){
-		et_error("");
-		return -1;
-	}
-	for(int i = 0; NULL != parent->childs[i]; i++){
-		if(element == parent->childs[i]){
-			return i;
-		}
-	}
-
-	return -1;
-}
-
-static int *et_doc_history_hive_element_get_indexes(const PvElement *element)
-{
-	if(NULL == element){
-		// et_warning("");
-		return NULL;
-	}
-
-	int level = 0;
-	int *indexes = NULL;
-	const PvElement *_element = element;
-	while(NULL != _element->parent){
-		int ix = et_doc_history_hive_element_get_index(_element);
-		if(ix < 0){
-			et_error("");
-			goto error;
-		}
-		int *new = realloc(indexes, sizeof(int) * (level + 2));
-		if(NULL == new){
-			et_error("");
-			goto error;
-		}else{
-			memmove(&new[1], &new[0], sizeof(int) * (level + 1));
-			indexes = new;
-		}
-
-		indexes[level + 1] = -1;
-		indexes[0] = ix;
-		level++;
-
-		_element = _element->parent;
-	}
-
-	return indexes;
-error:
-	free(indexes);
-	return NULL;
-}
-
-static PvElement *et_doc_element_get_tree_from_indexes(
-		PvElement *element_root,
-		const int *indexes)
-{
-
-	if(NULL == indexes){
-		// NULL indexes is fine.
-		return NULL;
-	}
-
-	for(int level = 0; 0 <= indexes[level]; level++){
-		printf("%d,", indexes[level]);
-	}
-	printf("\n");
-
-	PvElement *_element = element_root;
-	for(int level = 0; 0 <= indexes[level]; level++){
-		int num = pv_general_get_parray_num((void **)_element->childs);
-		if(!(indexes[level] < num)){
-			et_warning("level:%d ix:%d num:%d",
-					level, indexes[level], num);
-			return NULL;
-		}
-
-		_element = _element->childs[indexes[level]];
-	}
-
-	return _element;
-}
-
-static PvFocus *_et_doc_history_hive_copy_focus_by_vg(const PvFocus *focus_src, const PvVg *vg_dst)
-{
-	PvFocus *focus_dst = pv_focus_new(vg_dst);
-	if(NULL == focus_dst){
-		et_error("");
-		return NULL;
-	}
-
-	// search focus element.
-	int *indexes = NULL;
-	const PvElement *focus_element = pv_focus_get_first_element(focus_src);
-	if(NULL != focus_element){
-		// ** get focus path(index's)
-		indexes = et_doc_history_hive_element_get_indexes(
-				focus_element);
-		if(NULL == indexes){
-			et_error("");
-			goto error;
-		}
-
-		PvElement *elem = et_doc_element_get_tree_from_indexes(
-				vg_dst->element_root,
-				indexes);
-		pv_focus_clear_set_element(focus_dst, elem);
-	}
-
-	free(indexes);
-	return focus_dst;
-error:
-	pv_focus_free(focus_dst);
-	free(indexes);
-	return NULL;
-}
-
-static void _et_doc_hist_free_history(EtDocHistoryHive *hist, int ix)
-{
-	pv_vg_free(hist->hists[ix].vg);
-	pv_focus_free(hist->hists[ix].focus);
-	hist->hists[ix].vg = NULL;
-	hist->hists[ix].focus = NULL;
-}
-
-static bool _et_doc_hist_free_redo_all(EtDocHistoryHive *hist)
-{
-	if(hist->ix_redo < hist->ix_current){
-		for(; 0 <= hist->ix_redo; (hist->ix_redo)--){
-			_et_doc_hist_free_history(hist, hist->ix_redo);
-		}
-		hist->ix_redo = hist->num_history - 1;
-	}
-	for(;hist->ix_current < hist->ix_redo; (hist->ix_redo)--){
-		_et_doc_hist_free_history(hist, hist->ix_redo);
-	}
-
-	return true;
-}
-
-static bool _et_doc_hist_free_history_next(EtDocHistoryHive *hist)
-{
-	// ** このあと、current == redo 前提で記述する
-	if(hist->ix_current != hist->ix_redo){
-		// reodがあるならば、削除して続行
-		et_bug("");
-		if(!_et_doc_hist_free_redo_all(hist)){
-			et_error("");
-			return false;
-		}
-	}
-
-	int ix = _et_doc_history_hive_get_index_from_relative(
-			hist,
-			hist->ix_current,
-			1,
-			hist->num_history);
-
-	if(! _et_doc_history_hive_is_extent_enable(hist, ix)){
-		return true;
-	}
-
-	_et_doc_hist_free_history(hist, ix);
-	int ix2 = _et_doc_history_hive_get_index_from_relative(
-			hist,
-			ix,
-			1,
-			hist->num_history);
-	hist->ix_undo = ix2;
-
-	return true;
-
-
-	// TODO: not implement.
-	return true;
-}
-
-static bool _et_doc_history_hive_copy_hist(
-		EtDocHistory *item_dst,
-		const EtDocHistory *item_src)
-{
-	if(NULL == item_dst){
-		et_bug("");
-		return false;
-	}
-	if(NULL == item_src){
-		et_bug("");
-		return false;
-	}
-	if(NULL == item_src->vg){
-		et_bug("");
-		return false;
-	}
-
-	// ** copy vg
-	PvVg *vg_new = pv_vg_copy_new(item_src->vg);
-	if(NULL == vg_new){
-		et_error("");
-		return false;
-	}
-	// ** restructed focus.
-	PvFocus *focus_new = _et_doc_history_hive_copy_focus_by_vg(
-			item_src->focus,
-			vg_new);
-	if(NULL == focus_new){
-		et_error("");
-		return false;
-	}
-
-	if(NULL != item_dst->vg){
-		pv_vg_free(item_dst->vg);
-		pv_focus_free(item_dst->focus);
-	}
-	item_dst->vg = vg_new;
-	item_dst->focus = focus_new;
-
-	return true;
 }
 
 bool et_doc_history_hive_save_with_focus(EtDocHistoryHive *hist)
@@ -504,5 +250,270 @@ void et_doc_history_hive_debug_print(const EtDocHistoryHive *hist)
 	et_debug("undo:%3d, curr:%3d, redo:%3d, num:%3d",
 			hist->ix_undo, hist->ix_current, hist->ix_redo,
 			hist->num_history);
+}
+
+
+static int _element_get_index(const PvElement *element)
+{
+	PvElement *parent = element->parent;
+	if(NULL == parent){
+		et_error("");
+		return -1;
+	}
+	for(int i = 0; NULL != parent->childs[i]; i++){
+		if(element == parent->childs[i]){
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+static int *_element_get_indexes(const PvElement *element)
+{
+	if(NULL == element){
+		// et_warning("");
+		return NULL;
+	}
+
+	int level = 0;
+	int *indexes = NULL;
+	const PvElement *_element = element;
+	while(NULL != _element->parent){
+		int ix = _element_get_index(_element);
+		if(ix < 0){
+			et_error("");
+			goto error;
+		}
+		int *new = realloc(indexes, sizeof(int) * (level + 2));
+		if(NULL == new){
+			et_error("");
+			goto error;
+		}else{
+			memmove(&new[1], &new[0], sizeof(int) * (level + 1));
+			indexes = new;
+		}
+
+		indexes[level + 1] = -1;
+		indexes[0] = ix;
+		level++;
+
+		_element = _element->parent;
+	}
+
+	return indexes;
+error:
+	free(indexes);
+	return NULL;
+}
+
+static int _et_doc_history_hive_get_index_from_relative(
+		const EtDocHistoryHive *hist,
+		int ix_base,
+		int relative,
+		int max)
+{
+	if(0 == max){
+		et_bug("");
+		return 0;
+	}
+
+	if((NULL != hist) && (relative < 0)){
+		if(pv_vg_is_diff(hist->hist_work.vg, hist->hists[hist->ix_current].vg))
+		{
+			relative += 1;
+		}
+	}
+
+	int ix = ix_base + relative;
+	while(max <= ix){
+		ix -= max;
+	}
+	while(ix < 0){
+		ix += max;
+	}
+
+	return ix;
+}
+
+static bool _et_doc_history_hive_is_extent_enable(EtDocHistoryHive *hist, int ix)
+{
+	if(!(0 <= ix && ix < hist->num_history)){
+		return false;
+	}
+
+	if(hist->ix_undo <= hist->ix_redo){
+		if(!(hist->ix_undo <= ix && ix <= hist->ix_redo)){
+			return false;
+		}
+	}else{
+		if(!(ix <= hist->ix_redo || hist->ix_undo <= ix)){
+			return false;
+		}
+	}
+
+	return true;
+}
+
+static PvElement *_et_doc_element_get_tree_from_indexes(PvElement *element_root, const int *indexes)
+{
+
+	if(NULL == indexes){
+		// NULL indexes is fine.
+		return NULL;
+	}
+
+	for(int level = 0; 0 <= indexes[level]; level++){
+		printf("%d,", indexes[level]);
+	}
+	printf("\n");
+
+	PvElement *_element = element_root;
+	for(int level = 0; 0 <= indexes[level]; level++){
+		int num = pv_general_get_parray_num((void **)_element->childs);
+		if(!(indexes[level] < num)){
+			et_warning("level:%d ix:%d num:%d",
+					level, indexes[level], num);
+			return NULL;
+		}
+
+		_element = _element->childs[indexes[level]];
+	}
+
+	return _element;
+}
+
+static PvFocus *_et_doc_history_hive_copy_focus_by_vg(const PvFocus *focus_src, const PvVg *vg_dst)
+{
+	PvFocus *focus_dst = pv_focus_new(vg_dst);
+	if(NULL == focus_dst){
+		et_error("");
+		return NULL;
+	}
+
+	// search focus element.
+	int *indexes = NULL;
+	const PvElement *focus_element = pv_focus_get_first_element(focus_src);
+	if(NULL != focus_element){
+		// ** get focus path(index's)
+		indexes = _element_get_indexes(
+				focus_element);
+		if(NULL == indexes){
+			et_error("");
+			goto error;
+		}
+
+		PvElement *elem = _et_doc_element_get_tree_from_indexes(
+				vg_dst->element_root,
+				indexes);
+		pv_focus_clear_set_element(focus_dst, elem);
+	}
+
+	free(indexes);
+	return focus_dst;
+error:
+	pv_focus_free(focus_dst);
+	free(indexes);
+	return NULL;
+}
+
+static void _et_doc_hist_free_history(EtDocHistoryHive *hist, int ix)
+{
+	pv_vg_free(hist->hists[ix].vg);
+	pv_focus_free(hist->hists[ix].focus);
+	hist->hists[ix].vg = NULL;
+	hist->hists[ix].focus = NULL;
+}
+
+static bool _et_doc_hist_free_redo_all(EtDocHistoryHive *hist)
+{
+	if(hist->ix_redo < hist->ix_current){
+		for(; 0 <= hist->ix_redo; (hist->ix_redo)--){
+			_et_doc_hist_free_history(hist, hist->ix_redo);
+		}
+		hist->ix_redo = hist->num_history - 1;
+	}
+	for(;hist->ix_current < hist->ix_redo; (hist->ix_redo)--){
+		_et_doc_hist_free_history(hist, hist->ix_redo);
+	}
+
+	return true;
+}
+
+static bool _et_doc_hist_free_history_next(EtDocHistoryHive *hist)
+{
+	// ** このあと、current == redo 前提で記述する
+	if(hist->ix_current != hist->ix_redo){
+		// reodがあるならば、削除して続行
+		et_bug("");
+		if(!_et_doc_hist_free_redo_all(hist)){
+			et_error("");
+			return false;
+		}
+	}
+
+	int ix = _et_doc_history_hive_get_index_from_relative(
+			hist,
+			hist->ix_current,
+			1,
+			hist->num_history);
+
+	if(! _et_doc_history_hive_is_extent_enable(hist, ix)){
+		return true;
+	}
+
+	_et_doc_hist_free_history(hist, ix);
+	int ix2 = _et_doc_history_hive_get_index_from_relative(
+			hist,
+			ix,
+			1,
+			hist->num_history);
+	hist->ix_undo = ix2;
+
+	return true;
+
+
+	// TODO: not implement.
+	return true;
+}
+
+static bool _et_doc_history_hive_copy_hist(EtDocHistory *item_dst, const EtDocHistory *item_src)
+{
+	if(NULL == item_dst){
+		et_bug("");
+		return false;
+	}
+	if(NULL == item_src){
+		et_bug("");
+		return false;
+	}
+	if(NULL == item_src->vg){
+		et_bug("");
+		return false;
+	}
+
+	// ** copy vg
+	PvVg *vg_new = pv_vg_copy_new(item_src->vg);
+	if(NULL == vg_new){
+		et_error("");
+		return false;
+	}
+	// ** restructed focus.
+	PvFocus *focus_new = _et_doc_history_hive_copy_focus_by_vg(
+			item_src->focus,
+			vg_new);
+	if(NULL == focus_new){
+		et_error("");
+		return false;
+	}
+
+	if(NULL != item_dst->vg){
+		pv_vg_free(item_dst->vg);
+		pv_focus_free(item_dst->focus);
+	}
+	item_dst->vg = vg_new;
+	item_dst->focus = focus_new;
+
+	return true;
 }
 
