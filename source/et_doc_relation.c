@@ -66,11 +66,11 @@ EtDocId open_doc_new(PvVg *vg_src)
 	return doc_id;
 }
 
-void close_doc_from_id(EtDocId doc_id, GtkWidget *widget)
+bool close_doc_from_id(EtDocId doc_id, GtkWidget *widget)
 {
 	if(doc_id < 0){
 		et_bug("");
-		return;
+		return false;
 	}
 
 	if(!et_doc_is_saved_from_id(doc_id)){
@@ -82,7 +82,7 @@ void close_doc_from_id(EtDocId doc_id, GtkWidget *widget)
 						gtk_widget_get_toplevel(widget),
 						"Close", "Close now?", "Close")){
 				// Cancel
-				return;
+				return false;
 			}
 		}
 	}
@@ -97,6 +97,8 @@ void close_doc_from_id(EtDocId doc_id, GtkWidget *widget)
 
 	et_debug("%d %d", doc_id, next_doc_id);
 	et_debug("Closed :%d", doc_id);
+
+	return true;
 }
 
 static bool _confirm_dialog_run(

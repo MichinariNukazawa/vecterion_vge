@@ -105,6 +105,16 @@ static gboolean _cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer u
 	return FALSE;
 }
 
+static bool _gui_quit();
+
+static gboolean _cb_delete_event(GtkWidget *widget,
+		GdkEvent  *event,
+		gpointer   user_data)
+{
+	return !_gui_quit();
+}
+
+
 typedef struct{
 	const char *input_filepath;
 	const char *output_filepath;
@@ -278,7 +288,7 @@ int main (int argc, char **argv){
 	g_signal_connect(G_OBJECT(window), "key-press-event",
 			G_CALLBACK(_cb_key_press), NULL);
 	g_signal_connect(window, "delete-event",
-			G_CALLBACK(gtk_main_quit), NULL);
+			G_CALLBACK(_cb_delete_event), NULL);
 
 	GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
 	gtk_container_add(GTK_CONTAINER(box_root), vbox);
@@ -733,7 +743,7 @@ static char *_get_dirpath_from_filepath(const char *filepath)
 		g_free(dirpath);
 		return NULL;
 	}
-	
+
 	*sep = '\0';
 
 	return dirpath;
@@ -973,6 +983,29 @@ static gboolean _cb_menu_file_close(gpointer data)
 	close_doc_from_id(doc_id, window_.status_bar);
 
 	return false;
+}
+
+static gboolean _cb_menu_file_quit(gpointer data)
+{
+	_gui_quit();
+	return FALSE;
+}
+
+static bool _gui_quit()
+{
+	EtDocId doc_id = -1;
+	while(-1 != (doc_id = et_etaion_get_current_doc_id())){
+		if(!close_doc_from_id(doc_id, window_.status_bar)){
+			// Cancel
+			et_debug("Quit: canceled.");
+			return false;
+		}
+	}
+
+	et_debug("Quit");
+	gtk_main_quit();
+
+	return true;
 }
 
 static gboolean _cb_menu_file_open(gpointer data)
@@ -1353,11 +1386,13 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_w, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
 
-	menuitem = gtk_menu_item_new_with_label ("_Quit");
+	// ** "/_File/_Quit (Ctrl+Q)"
 	menuitem = gtk_menu_item_new_with_label ("_Quit");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(gtk_main_quit), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_quit), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_q, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
 
 	return menuitem_root;
 }
