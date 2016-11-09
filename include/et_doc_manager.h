@@ -12,6 +12,7 @@ typedef struct EtDocManager EtDocManager;
 
 EtDocManager *et_doc_manager_init();
 EtDocId et_doc_manager_new_doc_from_vg(const PvVg *vg);
+void et_doc_manager_delete_doc_from_id(EtDocId);
 EtDoc *et_doc_manager_get_doc_from_id(const EtDocId doc_id);
 
 #ifdef include_ET_TEST

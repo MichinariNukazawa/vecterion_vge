@@ -19,7 +19,9 @@ typedef struct EtDocHistoryHive{
 }EtDocHistoryHive;
 
 EtDocHistoryHive *et_doc_history_hive_new(const PvVg *vg);
+void et_doc_history_hive_free(EtDocHistoryHive *);
 EtDocHistory *et_doc_history_get_from_relative(EtDocHistoryHive *hist, int relative);
+EtDocHistory *et_doc_history_hive_get_current(EtDocHistoryHive *hist);
 bool et_doc_history_hive_save_with_focus(EtDocHistoryHive *hist);
 bool et_doc_history_hive_undo(EtDocHistoryHive *hist);
 bool et_doc_history_hive_redo(EtDocHistoryHive *hist);

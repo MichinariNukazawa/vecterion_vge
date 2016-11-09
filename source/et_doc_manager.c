@@ -1,6 +1,7 @@
 #include "et_doc_manager.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include "et_error.h"
 #include "pv_general.h"
 
@@ -20,6 +21,7 @@ struct EtDocManager{
 EtDocManager *doc_manager = NULL;
 
 static bool _et_doc_manager_add_doc(EtDoc *doc);
+static int _et_doc_manager_get_doc_node_index_from_id(EtDocId doc_id);
 
 EtDocManager *et_doc_manager_init()
 {
@@ -57,6 +59,37 @@ EtDocId et_doc_manager_new_doc_from_vg(const PvVg *vg)
 	return et_doc_get_id(doc);
 }
 
+void et_doc_manager_delete_doc_from_id(EtDocId doc_id)
+{
+	EtDocManager *self = doc_manager;
+	et_assert(self);
+
+	int index = _et_doc_manager_get_doc_node_index_from_id(doc_id);
+	et_assertf(0 <= index, "%d", doc_id);
+
+	EtDocNode *node = self->doc_nodes[index];
+
+	int num = pv_general_get_parray_num((void **)self->doc_nodes);
+	memmove(&(self->doc_nodes[index]), &(self->doc_nodes[index + 1]),
+			sizeof(EtDocNode *) * (num - index));
+	et_assert((num - 1) == pv_general_get_parray_num((void **)self->doc_nodes));
+
+	et_doc_delete(node->doc);
+}
+
+EtDoc *et_doc_manager_get_doc_from_id(EtDocId doc_id)
+{
+	EtDocManager *self = doc_manager;
+	et_assert(self);
+
+	int index = _et_doc_manager_get_doc_node_index_from_id(doc_id);
+	if(index < 0){
+		return NULL;
+	}
+
+	return self->doc_nodes[index]->doc;
+}
+
 static bool _et_doc_manager_add_doc(EtDoc *doc)
 {
 	EtDocManager *self = doc_manager;
@@ -76,21 +109,18 @@ static bool _et_doc_manager_add_doc(EtDoc *doc)
 	return true;
 }
 
-EtDoc *et_doc_manager_get_doc_from_id(const EtDocId doc_id)
+static int _et_doc_manager_get_doc_node_index_from_id(EtDocId doc_id)
 {
 	EtDocManager *self = doc_manager;
-	if(NULL == self){
-		et_bug("");
-		return NULL;
-	}
+	et_assert(self);
 
 	size_t num = pv_general_get_parray_num((void **)self->doc_nodes);
 	for(int i = 0; i < (int)num; i++){
 		if(doc_id == et_doc_get_id(self->doc_nodes[i]->doc)){
-			return self->doc_nodes[i]->doc;
+			return i;
 		}
 	}
 
-	return NULL;
+	return -1;
 }
 

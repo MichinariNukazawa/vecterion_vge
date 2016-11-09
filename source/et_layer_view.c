@@ -141,7 +141,7 @@ EtLayerView *et_layer_view_init()
 
 	self->text = gtk_text_view_new();
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (self->text));
-	gtk_text_buffer_set_text (buffer, "default scale", -1);
+	gtk_text_buffer_set_text (buffer, "<Nothing document>", -1);
 	gtk_text_view_set_editable (GTK_TEXT_VIEW(self->text), false);
 #ifndef OS_Windows
 	gtk_text_view_set_monospace (GTK_TEXT_VIEW(self->text), TRUE);
@@ -226,69 +226,74 @@ static bool _et_layer_view_draw(EtLayerView *self)
 		return false;
 	}
 
-	const PvFocus *focus = et_doc_get_focus_ref_from_id(self->doc_id);
-	if(NULL == focus){
-		et_error("");
-		return false;
-	}
-
-	EtLayerViewElementData **elementDatas = self->elementDatas;
-
 	char buf[102400]; //! @fixme static length.
-	buf[0] = '\0';
-	int num = pv_general_get_parray_num((void **)elementDatas);
-	const PvElement *focus_element = pv_focus_get_first_element(focus);
-	for(int i = 0; i < num; i++){
-		EtLayerViewElementData *data = elementDatas[i];
+	const PvElement *focus_element = NULL;
+	if(self->doc_id < 0){
+		strcpy(buf, "<None>");
+	}else{
 
-		if(0 == i){
-			// skip root element.
-			if(PvElementKind_Root != data->element->kind){
-				et_bug("%d\n", data->element->kind);
-			}
-			continue;
-		}else{
-			if(PvElementKind_Root == data->element->kind){
-				et_bug("%d\n", i);
+		const PvFocus *focus = et_doc_get_focus_ref_from_id(self->doc_id);
+		if(NULL == focus){
+			et_error("");
+			return false;
+		}
+
+		EtLayerViewElementData **elementDatas = self->elementDatas;
+
+		buf[0] = '\0';
+		int num = pv_general_get_parray_num((void **)elementDatas);
+		focus_element = pv_focus_get_first_element(focus);
+		for(int i = 0; i < num; i++){
+			EtLayerViewElementData *data = elementDatas[i];
+
+			if(0 == i){
+				// skip root element.
+				if(PvElementKind_Root != data->element->kind){
+					et_bug("%d\n", data->element->kind);
+				}
 				continue;
+			}else{
+				if(PvElementKind_Root == data->element->kind){
+					et_bug("%d\n", i);
+					continue;
+				}
 			}
-		}
 
-		unsigned long debug_pointer = 0;
-		memcpy(&debug_pointer, &data->element, sizeof(unsigned long));
+			unsigned long debug_pointer = 0;
+			memcpy(&debug_pointer, &data->element, sizeof(unsigned long));
 
-		char str_head[128];
-		str_head[0] = '\0';
-		for(int t = 0; t < data->level; t++){
-			str_head[t] = '_';
-			str_head[t + 1] = '\0';
-			if(!(t < ((int)sizeof(str_head) - 2))){
-				break;
+			char str_head[128];
+			str_head[0] = '\0';
+			for(int t = 0; t < data->level; t++){
+				str_head[t] = '_';
+				str_head[t + 1] = '\0';
+				if(!(t < ((int)sizeof(str_head) - 2))){
+					break;
+				}
 			}
-		}
-		const char *kind_name = pv_element_get_name_from_kind(data->kind);
-		if(NULL == kind_name){
-			kind_name = "";
-		}
-		char str_tmp[128];
-		snprintf(str_tmp, sizeof(str_tmp),
-				"%s%c:%s\t:%08lx '%s'\n",
-				str_head,
-				((focus_element == data->element)? '>':'_'),
-				//data->level,
-				kind_name,
-				debug_pointer,
-				((data->name)?"":data->name));
+			const char *kind_name = pv_element_get_name_from_kind(data->kind);
+			if(NULL == kind_name){
+				kind_name = "";
+			}
+			char str_tmp[128];
+			snprintf(str_tmp, sizeof(str_tmp),
+					"%s%c:%s\t:%08lx '%s'\n",
+					str_head,
+					((focus_element == data->element)? '>':'_'),
+					//data->level,
+					kind_name,
+					debug_pointer,
+					((data->name)?"":data->name));
 
-		strncat(buf, str_tmp, (sizeof(buf) - 1) - strlen(buf));
-		buf[sizeof(buf)-1] = '\0';
-		if(!(strlen(buf) < (sizeof(buf) - 2))){
-			et_warning("%lu/%lu\n", strlen(buf), sizeof(buf));
+			strncat(buf, str_tmp, (sizeof(buf) - 1) - strlen(buf));
+			buf[sizeof(buf)-1] = '\0';
+			if(!(strlen(buf) < (sizeof(buf) - 2))){
+				et_warning("%lu/%lu\n", strlen(buf), sizeof(buf));
+			}
 		}
 	}
 
-	GtkTextBuffer *buffer = gtk_text_view_get_buffer(
-			GTK_TEXT_VIEW (self->text));
+	GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->text));
 	gtk_text_buffer_set_text (buffer, buf, -1);
 
 	// ターゲット状態でlayer_ctrlsのbutton状態を変更する
@@ -308,27 +313,33 @@ static bool _et_layer_view_update_doc_tree()
 		exit(-1);
 	}
 
-	EtDoc *doc = et_doc_manager_get_doc_from_id(self->doc_id);
-	if(NULL == doc){
-		et_error("");
-		return false;
-	}
-
-	PvVg *vg = et_doc_get_vg_ref(doc);
-	if(NULL == vg){
-		et_error("");
-		return false;
-	}
-
 	EtLayerViewRltDataPack func_rlt_data_pack = {
 		.datas = NULL
 	};
-	PvElementRecursiveError error;
-	if(!pv_element_recursive_desc_before(vg->element_root,
-				_et_layer_view_read_layer_tree, &func_rlt_data_pack,
-				&error)){
-		et_error("level:%d", error.level);
-		return false;
+
+	if(self->doc_id < 0){
+		// nop
+	}else{
+
+		EtDoc *doc = et_doc_manager_get_doc_from_id(self->doc_id);
+		if(NULL == doc){
+			et_error("");
+			return false;
+		}
+
+		PvVg *vg = et_doc_get_vg_ref(doc);
+		if(NULL == vg){
+			et_error("");
+			return false;
+		}
+
+		PvElementRecursiveError error;
+		if(!pv_element_recursive_desc_before(vg->element_root,
+					_et_layer_view_read_layer_tree, &func_rlt_data_pack,
+					&error)){
+			et_error("level:%d", error.level);
+			return false;
+		}
 	}
 
 	EtLayerViewElementData **before = self->elementDatas;

@@ -208,6 +208,10 @@ static void _slot_change_doc_or_focus(EtDocId doc_id)
 		return;
 	}
 
+	if(doc_id < 0){
+		return;
+	}
+
 	//! read stroke pair from focus element. update stroke pair.
 	self->is_multi = false;
 	PvStroke stroke = self->stroke;

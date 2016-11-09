@@ -152,6 +152,10 @@ void _slot_change_doc_or_focus(EtDocId doc_id)
 		return;
 	}
 
+	if(doc_id < 0){
+		return;
+	}
+
 	//! read color pair from focus element. update color pair.
 	self->is_multi_colors[PvColorPairGround_ForGround] = false;
 	self->is_multi_colors[PvColorPairGround_BackGround] = false;

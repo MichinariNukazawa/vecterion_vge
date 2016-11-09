@@ -78,7 +78,7 @@ EtPositionPanel *position_panel = NULL;
 
 static void _cb_value_changed_positions_spin(GtkSpinButton *spin_button, gpointer user_data);
 
-static gboolean _cb_test(
+static gboolean _cb_button_release_event_spin_positions(
 		GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
@@ -127,7 +127,7 @@ EtPositionPanel *et_position_panel_init()
 				G_CALLBACK(_cb_value_changed_positions_spin), (void *)info);
 
 		g_signal_connect(self->spin_positions[i], "button-release-event",
-				G_CALLBACK(_cb_test), (void *)info);
+				G_CALLBACK(_cb_button_release_event_spin_positions), (void *)info);
 	}
 
 	self->widget = self->box;
@@ -191,6 +191,10 @@ static void _slot_change_doc_or_focus(EtDocId doc_id)
 	if(doc_id != et_etaion_get_current_doc_id()){
 		//! @fixme one happen call this line, because unknown.
 		et_bug("");
+		return;
+	}
+
+	if(doc_id < 0){
 		return;
 	}
 

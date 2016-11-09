@@ -1,11 +1,13 @@
 #include "et_canvas_collection.h"
 
+#include <glib/gi18n.h>
 #include <stdlib.h>
 #include "et_error.h"
 #include "et_etaion.h"
 #include "et_doc.h"
 #include "et_renderer.h"
 #include "et_pointing_manager.h"
+#include "et_doc_relation.h"
 
 static EtCanvasCollection *_canvas_collection = NULL;
 
@@ -14,6 +16,7 @@ typedef struct EtCanvasCollectionCollect EtCanvasCollectionCollect;
 struct EtCanvasCollectionCollect{
 	EtDocId doc_id;
 	EtCanvas **canvases;
+	GtkWidget *tab_label;
 };
 
 struct EtCanvasCollection{
@@ -26,7 +29,7 @@ struct EtCanvasCollection{
 
 
 static EtDocId _et_canvas_collection_get_doc_id_from_canvas_frame(GtkWidget *canvas_frame);
-static EtCanvasCollectionCollect *_get_collect_from_doc_id(EtDocId doc_id);
+static int _get_collect_index_from_doc_id(EtDocId doc_id);
 static void _slot_et_canvas_collection_from_doc_change(EtDoc *doc, gpointer data);
 
 static gboolean _cb_notebook_change_current_page(
@@ -41,6 +44,7 @@ static void _cb_notebook_page_added(
 		guint        page_num,
 		gpointer     user_data);
 
+static void _cb_close_canvas_clicked_button(GtkWidget *button, gpointer data);
 
 EtCanvasCollection *et_canvas_collection_init()
 {
@@ -116,7 +120,7 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 	EtCanvasCollection *self = _canvas_collection;
 	et_assert(self);
 
-	// ** canvas new and setup.
+	// ** new canvas, and setup.
 	EtCanvas *canvas = et_canvas_new_from_doc_id(doc_id);
 	et_assertf(canvas, "%d", doc_id);
 
@@ -144,13 +148,8 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 	bool ret1 = et_doc_signal_update_from_id(doc_id);
 	et_assertf(ret1, "%d", doc_id);
 
-	// ** add collects.
+	// ** new collect
 	// TODO: search doc_id in collects alreary.
-	size_t num_collects = pv_general_get_parray_num((void **)self->collects);
-	EtCanvasCollectionCollect **new_collects = realloc(self->collects,
-			sizeof(EtCanvasCollectionCollect *) * (num_collects + 2));
-	et_assert(new_collects);
-
 	EtCanvasCollectionCollect *new_collect = malloc(sizeof(EtCanvasCollectionCollect));
 	et_assert(new_collect);
 
@@ -163,26 +162,102 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 
 	new_collect->doc_id = doc_id;
 
+	// ** add collects
+	size_t num_collects = pv_general_get_parray_num((void **)self->collects);
+	EtCanvasCollectionCollect **new_collects = realloc(self->collects,
+			sizeof(EtCanvasCollectionCollect *) * (num_collects + 2));
+	et_assert(new_collects);
+
 	new_collects[num_collects + 1] = NULL;
 	new_collects[num_collects + 0] = new_collect;
 
 	self->collects = new_collects;
 
+	// ** add on notebook
+	GtkWidget *tab_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 	char *title = et_doc_get_new_filename_from_id(doc_id);
-	GtkWidget *tab_label = gtk_label_new(((title) ? title : "(untitled)"));
+	new_collect->tab_label = gtk_label_new(((title) ? title : "(untitled)"));
 	if(NULL != title){
 		g_free(title);
 	}
-	int ix = gtk_notebook_append_page(GTK_NOTEBOOK(self->widget_tab), canvas_frame, tab_label);
+	GtkWidget *tab_button = gtk_button_new_with_label("[x]");
+	gtk_box_pack_start(GTK_BOX(tab_hbox), new_collect->tab_label, true, true, 0);
+	gtk_box_pack_start(GTK_BOX(tab_hbox), tab_button, true, true, 0);
+	gtk_widget_show_all(tab_hbox);
+
+	int ix = gtk_notebook_append_page(GTK_NOTEBOOK(self->widget_tab), canvas_frame, tab_hbox);
 	if(ix < 0){
 		et_error("");
 		return NULL;
 	}
 
+	g_signal_connect(tab_button, "clicked",
+			G_CALLBACK(_cb_close_canvas_clicked_button), canvas_frame);
+
 	int id0 = et_doc_add_slot_change(doc_id, _slot_et_canvas_collection_from_doc_change, NULL);
 	et_assertf(0 <= id0, "%d %d", doc_id, id0)
 
-	return canvas;
+		return canvas;
+}
+
+EtDocId et_canvas_collection_get_other_doc_id(EtDocId doc_id)
+{
+	EtCanvasCollection *self = _canvas_collection;
+	et_assert(self);
+
+	et_assert(0 <= doc_id);
+
+	size_t num_collects = pv_general_get_parray_num((void **)self->collects);
+	if(num_collects <= 1){
+		return -1;
+	}else{
+		for(int index = 0; num_collects; index++){
+			if(doc_id == self->collects[index]->doc_id){
+				if(index == ((int)num_collects - 1)){
+					return self->collects[index - 1]->doc_id;
+				}else{
+					return self->collects[index + 1]->doc_id;
+				}
+			}
+		}
+	}
+
+	et_assert(false);
+}
+
+void et_canvas_collection_delete_canvases_from_doc_id(EtDocId doc_id)
+{
+	EtCanvasCollection *self = _canvas_collection;
+	et_assert(self);
+
+	//! @todo remove or stop signal from EtDoc
+
+	// ** thumbnail
+	EtCanvas *canvas_thumbnail = et_thumbnail_get_canvas(self->thumbnail);
+	et_assert(et_canvas_set_doc_id(canvas_thumbnail, -1));
+
+	// ** delete collects.
+	int index_collect = _get_collect_index_from_doc_id(doc_id);
+	et_assertf(0 <= index_collect, "%d", doc_id);
+
+	EtCanvasCollectionCollect *collect = self->collects[index_collect];
+	et_assertf(collect, "%d", doc_id);
+
+	int num_canvases = pv_general_get_parray_num((void **)collect->canvases);
+	for(int i = 0; i < (int)num_canvases; i++){
+		GtkWidget *canvas_frame = et_canvas_get_widget_frame(collect->canvases[i]);
+		et_assertf(canvas_frame, "%d %d %d", doc_id, i, num_canvases);
+		gtk_notebook_detach_tab(GTK_NOTEBOOK(self->widget_tab), canvas_frame);
+
+		et_canvas_delete(collect->canvases[i]);
+	}
+
+	// remove collect from collects
+	size_t num_collects = pv_general_get_parray_num((void **)self->collects);
+	memmove(&(self->collects[index_collect]), &(self->collects[index_collect + 1]),
+			sizeof(EtCanvasCollectionCollect *) * (num_collects - index_collect));
+	et_assert(((int)num_collects - 1) == pv_general_get_parray_num((void **)self->collects));
+	free(collect);
 }
 
 
@@ -233,6 +308,7 @@ static gboolean _cb_notebook_change_current_page(
 		et_error("");
 		goto error;
 	}
+	et_debug("%d", doc_id);
 
 	// ** change Thumbnail doc_id
 	EtCanvasCollection *self = _canvas_collection;
@@ -274,20 +350,19 @@ static void _cb_notebook_page_added(
 }
 
 
-static EtCanvasCollectionCollect *_get_collect_from_doc_id(EtDocId doc_id)
+static int _get_collect_index_from_doc_id(EtDocId doc_id)
 {
 	EtCanvasCollection *self = _canvas_collection;
 	et_assert(self);
 
 	size_t num_collects = pv_general_get_parray_num((void **)self->collects);
 	for(int i = 0; i < (int)num_collects; i++){
-		EtCanvasCollectionCollect *collect = self->collects[i];
-		if(doc_id == collect->doc_id){
-			return collect;
+		if(doc_id == self->collects[i]->doc_id){
+			return i;
 		}
 	}
 
-	return NULL;
+	return -1;
 }
 
 static void _slot_et_canvas_collection_from_doc_change(EtDoc *doc, gpointer data)
@@ -298,23 +373,41 @@ static void _slot_et_canvas_collection_from_doc_change(EtDoc *doc, gpointer data
 	// ** document name to tab
 	EtDocId doc_id = et_doc_get_id(doc);
 
-	EtCanvasCollectionCollect *collect = _get_collect_from_doc_id(doc_id);
+	int index_collect = _get_collect_index_from_doc_id(doc_id);
+	et_assertf(0 <= index_collect, "%d", doc_id);
+
+	EtCanvasCollectionCollect *collect = self->collects[index_collect];
 	et_assertf(collect, "%d", doc_id);
 
 	char *src_str_title = et_doc_get_new_filename_from_id(doc_id);
-	const char *str_title = ((src_str_title) ? src_str_title : "(untitled)");
+	const char *str_title = g_strdup_printf("%c%s",
+			((et_doc_is_saved_from_id(doc_id)) ? ' ' : '*'),
+			((src_str_title) ? src_str_title : "(untitled)"));
 
 	int num = pv_general_get_parray_num((void **)collect->canvases);
 	for(int i = 0; i < num; i++){
-		GtkWidget *canvas_frame = et_canvas_get_widget_frame(collect->canvases[i]);
-		et_assertf(canvas_frame, "%d %d", doc_id, i);
-		GtkWidget *label = gtk_notebook_get_tab_label(GTK_NOTEBOOK(self->widget_tab), canvas_frame);
-		et_assertf(label, "%d %d", doc_id, i);
-		gtk_label_set_text(GTK_LABEL(label), str_title);
+		et_assertf(collect->tab_label, "%d %d", doc_id, i);
+		et_assertf(str_title, "%d %d", doc_id, i);
+		gtk_label_set_text(GTK_LABEL(collect->tab_label), str_title);
 	}
 
 	if(NULL != src_str_title){
 		g_free(src_str_title);
 	}
+}
+
+static void _cb_close_canvas_clicked_button(GtkWidget *button, gpointer data)
+{
+	et_assert(data);
+
+	GtkWidget *canvas_frame = (GtkWidget *)data;
+
+	// ** get document id
+	EtDocId doc_id = _et_canvas_collection_get_doc_id_from_canvas_frame(canvas_frame);
+
+	// ** close document
+	close_doc_from_id(doc_id, canvas_frame);
+
+	et_debug("Close %d", doc_id);
 }
 

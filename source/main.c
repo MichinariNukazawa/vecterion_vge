@@ -36,6 +36,7 @@
 #include "et_position_panel.h"
 #include "et_snap_panel.h"
 #include "pv_file_format.h"
+#include "et_doc_relation.h"
 
 const char *APP_NAME = "Etaion Vector Graphic Editor";
 
@@ -490,7 +491,7 @@ static EtDocId _open_doc_new_from_file(const char* filepath)
 		return -1;
 	}
 
-	if(!et_doc_set_filepath(doc_id, filepath)){
+	if(!et_doc_set_saved_filepath(doc_id, filepath)){
 		et_bug("");
 	}
 
@@ -499,53 +500,9 @@ static EtDocId _open_doc_new_from_file(const char* filepath)
 
 	return doc_id;
 }
-
 static EtDocId _open_doc_new(PvVg *vg_src)
 {
-	EtDocId doc_id = et_doc_manager_new_doc_from_vg(vg_src);
-	if(0 > doc_id){
-		et_error("");
-		return -1;
-	}
-
-	// ** gui
-	EtCanvas *canvas = et_canvas_collection_new_canvas(doc_id);
-	if(NULL == canvas){
-		et_error("");
-		return -1;
-	}
-
-	if(!et_doc_add_slot_change(doc_id, et_layer_view_slot_from_doc_change, NULL)){
-		et_error("");
-		return -1;
-	}
-
-	if(!et_doc_add_slot_change(doc_id, slot_et_color_panel_from_doc_change, NULL)){
-		et_error("");
-		return -1;
-	}
-
-	if(!et_doc_add_slot_change(doc_id, slot_et_stroke_panel_from_doc_change, NULL)){
-		et_error("");
-		return -1;
-	}
-
-	if(!et_doc_add_slot_change(doc_id, slot_et_position_panel_from_doc_change, NULL)){
-		et_error("");
-		return -1;
-	}
-
-	if(!et_doc_add_slot_change(doc_id, slot_et_snap_panel_from_doc_change, NULL)){
-		et_error("");
-		return -1;
-	}
-
-	if(!et_layer_view_set_doc_id(doc_id)){
-		et_error("");
-		return -1;
-	}
-
-	return doc_id;
+	return open_doc_new(vg_src);
 }
 
 static void _pvui_app_set_style(){
@@ -834,8 +791,10 @@ static gboolean _cb_menu_file_save(gpointer data)
 		return false;
 	}
 
+	et_doc_save_from_id(doc_id);
+
 	char *filepath = NULL;
-	if(!et_doc_get_filepath(&filepath, doc_id)){
+	if(!et_doc_get_saved_filepath(&filepath, doc_id)){
 		_show_error_dialog("Save:internal error.");
 		goto finally;
 	}
@@ -867,7 +826,7 @@ static gboolean _cb_menu_file_save(gpointer data)
 		goto finally;
 	}
 
-	if(!et_doc_set_filepath(doc_id, filepath)){
+	if(!et_doc_set_saved_filepath(doc_id, filepath)){
 		_show_error_dialog("Save:'%s'", filepath);
 		goto finally;
 	}
@@ -895,9 +854,11 @@ static gboolean _cb_menu_file_save_as(gpointer data)
 		return false;
 	}
 
+	et_doc_save_from_id(doc_id);
+
 	char *filepath = NULL;
 	char *src_filepath = NULL;
-	if(!et_doc_get_filepath(&src_filepath, doc_id)){
+	if(!et_doc_get_saved_filepath(&src_filepath, doc_id)){
 		_show_error_dialog("Save:internal error.");
 		goto finally;
 	}
@@ -963,7 +924,7 @@ static gboolean _cb_menu_file_export(gpointer data)
 	char *filepath = NULL;
 
 	char *prev_filepath = NULL;
-	if(!et_doc_get_filepath(&prev_filepath, doc_id)){
+	if(!et_doc_get_saved_filepath(&prev_filepath, doc_id)){
 		_show_error_dialog("Export:internal error.");
 		goto finally;
 	}
@@ -996,6 +957,20 @@ finally:
 	if(NULL != filepath){
 		g_free(filepath);
 	}
+
+	return false;
+}
+
+static gboolean _cb_menu_file_close(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		//_show_error_dialog("Close:nothing document.");
+		//et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	close_doc_from_id(doc_id, window_.status_bar);
 
 	return false;
 }
@@ -1370,12 +1345,15 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_e, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
-	/*
-	   menuitem = gtk_menu_item_new_with_label ("Save As");
-	   gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	   menuitem = pv_get_menuitem_new_tree_of_export();
-	   gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	 */
+	// ** "/_File/_Close (Ctrl+W)"
+	menuitem = gtk_menu_item_new_with_label ("_Close");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_close), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_w, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
+
+	menuitem = gtk_menu_item_new_with_label ("_Quit");
 	menuitem = gtk_menu_item_new_with_label ("_Quit");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);

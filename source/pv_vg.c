@@ -35,9 +35,10 @@ PvVg *pv_vg_new()
 	return self;
 }
 
-void pv_vg_free(PvVg *vg)
+void pv_vg_free(PvVg *self)
 {
-	// TODO: not implement.
+	pv_assert(pv_element_remove_delete_recursive(self->element_root));
+	free(self);
 }
 
 PvElement *pv_vg_get_layer_top(const PvVg *vg)

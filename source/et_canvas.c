@@ -35,6 +35,8 @@ struct EtCanvas{
 	EtDocId doc_id;
 	GdkPixbuf *pixbuf_buffer;
 
+	bool is_thumbnail;
+
 	bool is_first_fitting;
 	bool is_fitting_scale;
 
@@ -196,10 +198,23 @@ EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 	self->slot_mouse_action_data = NULL;
 	self->doc_id = doc_id;
 
+	self->is_thumbnail = false;
+
 	self->is_first_fitting = true;
 	self->is_fitting_scale = false;
 
 	return self;
+}
+
+void et_canvas_delete(EtCanvas *self)
+{
+	et_assert(self);
+
+	if(NULL != self->pixbuf_buffer){
+		g_object_unref(self->pixbuf_buffer);
+	}
+
+	free(self);
 }
 
 GtkWidget *et_canvas_get_widget_frame(EtCanvas *self)
@@ -271,6 +286,15 @@ static bool _signal_et_canvas_mouse_action(
 	if(NULL == self->slot_mouse_action){
 		et_error("");
 		return false;
+	}
+
+	if(self->doc_id < 0){
+		if(! self->is_thumbnail){
+			et_error("");
+			return false;
+		}else{
+			return true;
+		}
 	}
 
 	EtMouseAction _mouse_action = {
@@ -543,11 +567,9 @@ int et_canvas_set_slot_mouse_action(EtCanvas *self,
 
 void et_canvas_set_is_thumbnail(EtCanvas *self, bool is_thumbnail)
 {
-	if(NULL == self){
-		et_bug("");
-		return;
-	}
+	et_assert(self);
 
+	self->is_thumbnail = is_thumbnail;
 	self->is_fitting_scale = is_thumbnail;
 	gtk_widget_set_sensitive(self->text_scale, !is_thumbnail);
 }

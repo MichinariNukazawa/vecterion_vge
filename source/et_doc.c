@@ -16,7 +16,8 @@ struct EtDocSlotChangeInfo{
 
 typedef struct EtDoc{
 	EtDocId id;
-	const char *filepath;
+	char *filepath;
+	PvVg *latest_saved_vg;
 
 	EtDocHistoryHive *history_hive;
 
@@ -60,6 +61,7 @@ EtDoc *et_doc_new_from_vg(const PvVg *vg)
 	}
 
 	self->filepath = NULL;
+	self->latest_saved_vg = NULL;
 
 	self->history_hive = et_doc_history_hive_new(vg);
 	if(NULL == self->history_hive){
@@ -76,6 +78,18 @@ EtDoc *et_doc_new_from_vg(const PvVg *vg)
 	self->slot_change_infos[0].id = -1;
 
 	return self;
+}
+
+void et_doc_delete(EtDoc *self)
+{
+	if(NULL != self->slot_change_infos){
+		free(self->slot_change_infos);
+	}
+	et_doc_history_hive_free(self->history_hive);
+	if(NULL != self->filepath){
+		g_free(self->filepath);
+	}
+	free(self);
 }
 
 EtDocId et_doc_get_id(EtDoc *self)
@@ -106,7 +120,7 @@ char *et_doc_get_new_filename_from_id(EtDocId doc_id)
 	return g_strdup(sep);
 }
 
-bool et_doc_get_filepath(char **filepath, EtDocId doc_id)
+bool et_doc_get_saved_filepath(char **filepath, EtDocId doc_id)
 {
 	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
 	et_assertf(self, "%d", doc_id);
@@ -115,7 +129,7 @@ bool et_doc_get_filepath(char **filepath, EtDocId doc_id)
 	return true;
 }
 
-bool et_doc_set_filepath(EtDocId doc_id, const char *filepath)
+bool et_doc_set_saved_filepath(EtDocId doc_id, const char *filepath)
 {
 	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
 	if(NULL == self){
@@ -124,6 +138,17 @@ bool et_doc_set_filepath(EtDocId doc_id, const char *filepath)
 	}
 
 	self->filepath = g_strdup(filepath);
+
+	et_doc_save_from_id(doc_id);
+
+	if(NULL != self->filepath){
+		const EtDocHistory *hist = et_doc_history_hive_get_current(self->history_hive);
+		if(NULL != self->latest_saved_vg){
+			pv_vg_free(self->latest_saved_vg);
+			self->latest_saved_vg = NULL;
+		}
+		self->latest_saved_vg = pv_vg_copy_new(hist->vg);
+	}
 
 	et_debug("%s", ((self->filepath) ? self->filepath : "(null)"));
 
@@ -189,11 +214,11 @@ bool et_doc_signal_update(EtDoc *self)
 	return true;
 }
 
-bool et_doc_signal_update_from_id(EtDocId id)
+bool et_doc_signal_update_from_id(EtDocId doc_id)
 {
-	EtDoc *self = et_doc_manager_get_doc_from_id(id);
+	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
 	if(NULL == self){
-		et_error("");
+		et_error("%d", doc_id);
 		return false;
 	}
 
@@ -281,11 +306,9 @@ error:
 
 bool et_doc_save_from_id(EtDocId doc_id)
 {
-	et_debug("%d", doc_id);
-
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
 	if(NULL == doc){
-		et_error("");
+		et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -349,5 +372,19 @@ bool et_doc_redo_from_id(EtDocId doc_id)
 	}
 
 	return true;
+}
+
+bool et_doc_is_saved_from_id(EtDocId doc_id)
+{
+	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
+	et_assertf(self, "%d", doc_id);
+	
+	if(! self->latest_saved_vg){
+		return false;
+	}
+
+	// check saved is matching to document content.
+	const EtDocHistory *work_hist = et_doc_history_get_from_relative(self->history_hive, 0);
+	return (! pv_vg_is_diff(work_hist->vg, self->latest_saved_vg));
 }
 

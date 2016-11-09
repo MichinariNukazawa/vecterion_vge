@@ -48,10 +48,7 @@ static void _signal_et_etaion_change_state(EtEtaion *self)
 bool et_etaion_set_current_doc_id(EtDocId doc_id)
 {
 	EtEtaion *self = current_state;
-	if(NULL == self){
-		et_bug("");
-		exit(-1);
-	}
+	et_assert(self);
 
 	if((self->state).doc_id == doc_id){
 		return true;
@@ -59,13 +56,15 @@ bool et_etaion_set_current_doc_id(EtDocId doc_id)
 
 	if(0 <= (self->state).doc_id){
 		if(!et_doc_save_from_id((self->state).doc_id)){
-			et_error("");
+			et_error("%d %d",(self->state).doc_id, doc_id);
 			return false;
 		}
 	}
-	if(!et_doc_save_from_id(doc_id)){
-		et_error("");
-		return false;
+	if(0 <= doc_id){
+		if(!et_doc_save_from_id(doc_id)){
+			et_error("%d %d",(self->state).doc_id, doc_id);
+			return false;
+		}
 	}
 	(self->state).doc_id = doc_id;
 

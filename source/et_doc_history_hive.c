@@ -79,6 +79,25 @@ EtDocHistoryHive *et_doc_history_hive_new(const PvVg *vg)
 	return this;
 }
 
+void et_doc_history_hive_free(EtDocHistoryHive *hist)
+{
+	for(int ix = 0; ix < hist->num_history; ix++){
+		if(NULL != hist->hists[ix].vg){
+			pv_vg_free(hist->hists[ix].vg);
+		}
+		if(NULL != hist->hists[ix].focus){
+			pv_focus_free(hist->hists[ix].focus);
+		}
+	}
+
+	if(NULL != hist->hist_work.vg){
+		pv_vg_free(hist->hist_work.vg);
+	}
+	if(NULL != hist->hist_work.focus){
+		pv_focus_free(hist->hist_work.focus);
+	}
+}
+
 EtDocHistory *et_doc_history_get_from_relative(EtDocHistoryHive *hist, int relative)
 {
 	// et_debug("curr:%d rel:%d", hist->ix_current, relative);
@@ -101,6 +120,21 @@ EtDocHistory *et_doc_history_get_from_relative(EtDocHistoryHive *hist, int relat
 error:
 	et_error("ix:%d, rel:%d undo:%d, curr:%d, redo:%d, num:%d",
 			ix, relative,
+			hist->ix_undo, hist->ix_current, hist->ix_redo,
+			hist->num_history);
+	return NULL;
+}
+
+EtDocHistory *et_doc_history_hive_get_current(EtDocHistoryHive *hist)
+{
+	if(! _et_doc_history_hive_is_extent_enable(hist, hist->ix_current)){
+		goto error;
+	}
+
+	return &(hist->hists[hist->ix_current]);
+
+error:
+	et_error("undo:%d, curr:%d, redo:%d, num:%d",
 			hist->ix_undo, hist->ix_current, hist->ix_redo,
 			hist->num_history);
 	return NULL;

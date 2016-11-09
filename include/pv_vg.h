@@ -26,7 +26,7 @@ static const unsigned int PVVG_PX_SIZE_MAX = 20000;
 int pv_general_get_parray_num(void **pointers);
 
 PvVg *pv_vg_new();
-void pv_vg_free(PvVg *vg);
+void pv_vg_free(PvVg *);
 /** @brief 
  * @return vg->element_root->childs[0];
  */
