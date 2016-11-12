@@ -1028,7 +1028,8 @@ static gboolean _cb_menu_file_open(gpointer data)
 		char *filename;
 		GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
 		filename = gtk_file_chooser_get_filename (chooser);
-		if(!_open_doc_new_from_file(filename)){
+		EtDocId doc_id = _open_doc_new_from_file(filename);
+		if(doc_id < 0){
 			_show_error_dialog("Open:open error.:'%s'", filename);
 		}
 		g_free (filename);
