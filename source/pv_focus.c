@@ -85,14 +85,12 @@ bool pv_focus_add_element(PvFocus *focus, PvElement *element)
 	if(0 < num && PvElementKind_Layer == focus->elements[0]->kind){
 		return pv_focus_clear_set_element(focus, element);
 	}else{
-		PvElement **elements = realloc(focus->elements,
-				sizeof(PvElement *) * (num + 2));
-		if(NULL == elements){
-			pv_critical("");
-			return false;
-		}
+		PvElement **elements = realloc(focus->elements, sizeof(PvElement *) * (num + 2));
+		pv_assert(elements);
+
+		memmove(&(elements[1]), &(elements[0]), sizeof(PvElement *) * num);
 		elements[num + 1] = NULL;
-		elements[num] = element;
+		elements[0] = element;
 
 		focus->elements = elements;
 	}
