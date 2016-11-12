@@ -36,6 +36,7 @@ struct EtMouseAction{
 	GdkModifierType		state;		// mouse buttons state.
 
 	EtSnap			snap;
+	double			scale;
 };
 
 #ifdef include_ET_TEST

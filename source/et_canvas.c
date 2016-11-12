@@ -305,6 +305,7 @@ static bool _signal_et_canvas_mouse_action(
 		.move = dp_move,
 		.diff_down = cwp_diff_down,
 		.state = state,
+		.scale = self->render_context.scale,
 	};
 	if(!self->slot_mouse_action(self->doc_id, _mouse_action)){
 		et_error("");

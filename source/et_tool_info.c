@@ -10,6 +10,7 @@
 #include "et_doc_manager.h"
 #include "et_etaion.h"
 #include "et_color_panel.h"
+#include "et_focus_rel.h"
 
 
 EtToolInfo _et_tool_infos[];
@@ -159,6 +160,7 @@ static PvElement *_get_touch_element(EtDocId doc_id, PvPoint g_point)
 static bool _move_elements(
 		EtDocId doc_id,
 		EtMouseAction mouse_action,
+		const EtFocusRel *_focus_rel,
 		PvElement **elements,
 		bool _is_move)
 {
@@ -169,50 +171,59 @@ static bool _move_elements(
 		return false;
 	}
 
-	PvPoint move = {.x = 0, .y = 0};
 	if(!is_move)
 	{
-		if( PX_SENSITIVE_OF_MOVE < abs(mouse_action.diff_down.x)
-				|| PX_SENSITIVE_OF_MOVE < abs(mouse_action.diff_down.y))
+		if( PX_SENSITIVE_OF_MOVE > abs(mouse_action.diff_down.x)
+				&& PX_SENSITIVE_OF_MOVE > abs(mouse_action.diff_down.y))
 		{
-			is_move = true;
-
-			move = mouse_action.diff_down;
+			return false;
 		}
-	}else{
-		move = mouse_action.move;
 	}
 
 	int num = pv_general_get_parray_num((void **)elements);
+	int num_rel = pv_general_get_parray_num((void **)_focus_rel->element_rels);
+	if(num_rel != num){
+		et_bug("%d %d", num, num_rel);
+		return false;
+	}
+
+	PvVg *vg = et_doc_get_current_vg_ref_from_id(doc_id);
+	et_assert(vg);
+
+	PvPoint move = {.x = 0, .y = 0};
 	for(int i = 0; i < num; i++){
 		PvElement *focus_element = elements[i];
+		PvElement *src_element = et_element_rel_get_element_from_vg(_focus_rel->element_rels[i], vg);
 
 		const PvElementInfo *info = pv_element_get_info_from_kind(focus_element->kind);
 		et_assertf(info, "%d", focus_element->kind);
 
 		if(0 == i){
-			if(is_move){
-				PvPoint point_prev = info->func_get_point_by_anchor_points(focus_element);
-				info->func_move_element(focus_element, move.x, move.y);
-				if(mouse_action.snap.is_snap_for_pixel){
-					{
-						PvPoint point_snap = info->func_get_point_by_anchor_points(focus_element);
-						point_snap.x = round(point_snap.x),
-							point_snap.y = round(point_snap.y),
-							info->func_set_point_by_anchor_points(focus_element, point_snap);
-					}
-					PvPoint point_dst = info->func_get_point_by_anchor_points(focus_element);
-					move = pv_point_sub(point_dst, point_prev);
-				}
+			move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
+
+			PvPoint src_point = info->func_get_point_by_anchor_points(src_element);
+			PvPoint dst_point = pv_point_add(src_point, move);
+			info->func_set_point_by_anchor_points(focus_element, dst_point);
+
+			if(mouse_action.snap.is_snap_for_pixel){
+				PvPoint snap_point = info->func_get_point_by_anchor_points(focus_element);
+				snap_point.x = round(snap_point.x);
+				snap_point.y = round(snap_point.y);
+				info->func_set_point_by_anchor_points(focus_element, snap_point);
+
+				move = pv_point_sub(snap_point, src_point);
 			}
 
 		}else{
-			info->func_move_element(focus_element, move.x, move.y);
+			PvPoint src_point = info->func_get_point_by_anchor_points(src_element);
+			PvPoint dst_point = pv_point_add(src_point, move);
+			info->func_set_point_by_anchor_points(focus_element, dst_point);
 		}
 	}
 
-	return is_move;
+	return true;
 }
+
 typedef enum{
 	EtFocusElementMouseActionMode_Move,
 	EtFocusElementMouseActionMode_FocusingByArea,
@@ -224,6 +235,7 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 	static bool _is_already_focus = false;
 	static bool _is_move = false;
 	static EtFocusElementMouseActionMode _mode = EtFocusElementMouseActionMode_Move;
+	static EtFocusRel *_focus_rel = NULL;
 
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
@@ -247,6 +259,8 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 						_is_already_focus = true;
 					}
 				}
+
+				_focus_rel = et_focus_rel_new(focus);
 			}
 			break;
 		case EtMouseAction_Move:
@@ -261,7 +275,7 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 				switch(_mode){
 					case EtFocusElementMouseActionMode_Move:
 						{
-							if(_move_elements(doc_id, mouse_action, focus->elements, _is_move)){
+							if(_move_elements(doc_id, mouse_action, _focus_rel, focus->elements, _is_move)){
 								_is_move = true;
 							}
 						}
@@ -273,6 +287,9 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 			break;
 		case EtMouseAction_Up:
 			{
+				et_focus_rel_free(_focus_rel);
+				_focus_rel = NULL;
+
 				PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 				et_assertf(focus, "%d", doc_id);
 

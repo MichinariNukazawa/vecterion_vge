@@ -186,6 +186,17 @@ PvVg *et_doc_get_vg_ref(EtDoc *self)
 	return hist_item->vg;
 }
 
+PvVg *et_doc_get_current_vg_ref_from_id(EtDocId doc_id)
+{
+	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
+	et_assertf(self, "%d", doc_id);
+
+	EtDocHistory *hist_item = et_doc_history_hive_get_current(self->history_hive);
+	et_assertf(hist_item, "%d", doc_id);
+
+	return hist_item->vg;
+}
+
 static int _et_doc_get_num_slot_change_infos(
 		const EtDocSlotChangeInfo *slot_change_infos)
 {
