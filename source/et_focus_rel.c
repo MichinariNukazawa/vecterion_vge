@@ -6,7 +6,7 @@
 
 static int _get_index_from_element(const PvElement *element);
 static int *_get_indexes_from_element(const PvElement *element);
-static PvElement *_get_element_from_indexes(PvElement *element_root, const int *indexes);
+static const PvElement *_get_element_from_indexes_const(const PvElement *element_root, const int *indexes);
 
 EtElementRel *et_element_rel_new(const PvElement *element)
 {
@@ -25,9 +25,9 @@ void et_element_rel_free(EtElementRel *self)
 	free(self);
 }
 
-PvElement *et_element_rel_get_element_from_vg(const EtElementRel *element_rel, PvVg *vg)
+const PvElement *et_element_rel_get_element_from_vg_const(const EtElementRel *element_rel, const PvVg *vg)
 {
-	return _get_element_from_indexes(vg->element_root, element_rel->indexes);
+	return _get_element_from_indexes_const(vg->element_root, element_rel->indexes);
 }
 
 EtFocusRel *et_focus_rel_new(const PvFocus *focus)
@@ -120,7 +120,7 @@ error:
 	return NULL;
 }
 
-static PvElement *_get_element_from_indexes(PvElement *element_root, const int *indexes)
+static const PvElement *_get_element_from_indexes_const(const PvElement *element_root, const int *indexes)
 {
 
 	if(NULL == indexes){
@@ -128,7 +128,7 @@ static PvElement *_get_element_from_indexes(PvElement *element_root, const int *
 		return NULL;
 	}
 
-	PvElement *_element = element_root;
+	const PvElement *_element = element_root;
 	for(int level = 0; 0 <= indexes[level]; level++){
 		int num = pv_general_get_parray_num((void **)_element->childs);
 		if(!(indexes[level] < num)){

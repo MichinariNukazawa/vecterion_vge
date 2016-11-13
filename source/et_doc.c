@@ -186,7 +186,7 @@ PvVg *et_doc_get_vg_ref(EtDoc *self)
 	return hist_item->vg;
 }
 
-PvVg *et_doc_get_current_vg_ref_from_id(EtDocId doc_id)
+const PvVg *et_doc_get_current_vg_ref_from_id(EtDocId doc_id)
 {
 	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
 	et_assertf(self, "%d", doc_id);

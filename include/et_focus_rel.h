@@ -21,7 +21,7 @@ struct EtFocusRel{
 
 EtElementRel *et_element_rel_new(const PvElement *);
 void et_element_rel_free(EtElementRel *);
-PvElement *et_element_rel_get_element_from_vg(const EtElementRel *, PvVg *);
+const PvElement *et_element_rel_get_element_from_vg_const(const EtElementRel *, const PvVg *);
 
 EtFocusRel *et_focus_rel_new(const PvFocus *);
 void et_focus_rel_free(EtFocusRel *);

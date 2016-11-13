@@ -187,13 +187,14 @@ static bool _move_elements(
 		return false;
 	}
 
-	PvVg *vg = et_doc_get_current_vg_ref_from_id(doc_id);
+	const PvVg *vg = et_doc_get_current_vg_ref_from_id(doc_id);
 	et_assert(vg);
 
 	PvPoint move = {.x = 0, .y = 0};
 	for(int i = 0; i < num; i++){
 		PvElement *focus_element = elements[i];
-		PvElement *src_element = et_element_rel_get_element_from_vg(_focus_rel->element_rels[i], vg);
+		const PvElement *src_element = et_element_rel_get_element_from_vg_const(
+				_focus_rel->element_rels[i], vg);
 
 		const PvElementInfo *info = pv_element_get_info_from_kind(focus_element->kind);
 		et_assertf(info, "%d", focus_element->kind);

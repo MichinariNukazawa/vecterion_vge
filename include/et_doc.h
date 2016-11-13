@@ -25,8 +25,7 @@ bool et_doc_get_saved_filepath(char **filepath, EtDocId doc_id);
 bool et_doc_set_saved_filepath(EtDocId doc_id, const char *filepath);
 PvVg *et_doc_get_vg_ref(EtDoc *self);
 PvVg *et_doc_get_vg_ref_from_id(EtDocId doc_id);
-/*! latest save history @warning please use const return value */
-PvVg *et_doc_get_current_vg_ref_from_id(EtDocId doc_id);
+const PvVg *et_doc_get_current_vg_ref_from_id(EtDocId doc_id);
 bool et_doc_set_image_from_file(EtDoc *self, const char *filepath);
 EtCallbackId et_doc_add_slot_change(EtDocId doc_id, EtDocSlotChange slot, gpointer data);
 // Notice: they methods change signale not notify.
