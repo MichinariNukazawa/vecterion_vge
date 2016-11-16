@@ -74,14 +74,13 @@ bool pv_focus_add_element(PvFocus *focus, PvElement *element)
 	}
 
 	// check already exist in focus
-	int num = pv_general_get_parray_num((void **)focus->elements);
-	for(int i = 0; i < num; i++){
-		if(element == focus->elements[i]){
-			return true;
-		}
+	if(! pv_focus_remove_element(focus, element)){
+		pv_bug("");
+		return false;
 	}
 
 	// add element.
+	int num = pv_general_get_parray_num((void **)focus->elements);
 	if(0 < num && PvElementKind_Layer == focus->elements[0]->kind){
 		return pv_focus_clear_set_element(focus, element);
 	}else{

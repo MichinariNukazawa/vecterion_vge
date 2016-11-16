@@ -68,8 +68,19 @@ TEST(Test, Focus){
 
 	// add focue element of 2
 	EXPECT_TRUE(pv_focus_add_element(focus, elem1));
-	EXPECT_TRUE(elem0 == pv_focus_get_first_element(focus));
-	EXPECT_TRUE(layer0_1 == pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_EQ(elem1, pv_focus_get_first_element(focus));
+	EXPECT_EQ(layer1_1, pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_EQ(2, pv_general_get_parray_num((void **)focus->elements));
+
+	// internal implement.
+	EXPECT_NE(focus->elements[0], focus->elements[1]);
+	EXPECT_EQ(elem1, focus->elements[0]);
+	EXPECT_EQ(elem0, focus->elements[1]);
+
+	// add already focus element to first focus
+	EXPECT_TRUE(pv_focus_add_element(focus, elem0));
+	EXPECT_EQ(elem0, pv_focus_get_first_element(focus));
+	EXPECT_EQ(layer0_1, pv_focus_get_first_element_parent_layer(focus));
 	EXPECT_EQ(2, pv_general_get_parray_num((void **)focus->elements));
 
 	// remove and change element of 1
