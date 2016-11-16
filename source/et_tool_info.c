@@ -160,7 +160,8 @@ static PvElement *_get_touch_element(EtDocId doc_id, PvPoint g_point)
 static bool _move_elements(
 		EtDocId doc_id,
 		EtMouseAction mouse_action,
-		bool _is_move)
+		bool _is_move,
+		bool _is_already_focus)
 {
 	bool is_move = _is_move;
 	const int PX_SENSITIVE_OF_MOVE = 3;
@@ -169,17 +170,21 @@ static bool _move_elements(
 		return false;
 	}
 
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	et_assertf(focus, "%d", doc_id);
+
 	if(!is_move)
 	{
 		if( PX_SENSITIVE_OF_MOVE > abs(mouse_action.diff_down.x)
 				&& PX_SENSITIVE_OF_MOVE > abs(mouse_action.diff_down.y))
 		{
 			return false;
+		}else{
+			if(!_is_already_focus){
+				pv_focus_clear_set_element(focus, pv_focus_get_first_element(focus));
+			}
 		}
 	}
-
-	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-	et_assertf(focus, "%d", doc_id);
 
 	bool ret = true;
 	EtFocusRel *_focus_rel = et_focus_rel_new(focus);
@@ -263,11 +268,8 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 					et_assertf(pv_focus_clear_to_parent_layer(focus), "%d", doc_id);
 					_mode = EtFocusElementMouseActionMode_FocusingByArea;
 				}else{
-					et_assertf(pv_focus_add_element(focus, _touch_element), "%d", doc_id);
-
-					if(! pv_focus_is_exist_element(focus, _touch_element)){
-						_is_already_focus = true;
-					}
+					_is_already_focus = pv_focus_is_exist_element(focus, _touch_element);
+					pv_focus_add_element(focus, _touch_element);
 				}
 			}
 			break;
@@ -280,7 +282,7 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 				switch(_mode){
 					case EtFocusElementMouseActionMode_Move:
 						{
-							if(_move_elements(doc_id, mouse_action, _is_move)){
+							if(_move_elements(doc_id, mouse_action, _is_move, _is_already_focus)){
 								_is_move = true;
 							}
 						}
