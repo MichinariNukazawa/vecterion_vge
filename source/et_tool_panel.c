@@ -5,6 +5,7 @@
 #include "pv_element_general.h"
 #include "et_etaion.h"
 #include "et_tool_info.h"
+#include "et_mouse_cursor.h"
 
 static EtToolPanel *_et_tool_panel = NULL;
 
@@ -12,6 +13,7 @@ typedef struct EtToolPanelItem{
 	EtToolId tool_id;
 	GtkWidget *button;
 }EtToolPanelItem;
+
 
 struct EtToolPanel{
 	GtkWidget *widget;
@@ -167,6 +169,8 @@ EtToolPanel *et_tool_panel_init()
 	}
 
 	_et_tool_panel = self;
+
+	et_assert(et_mouse_cursor_info_init());
 
 	return _et_tool_panel;
 }
@@ -332,5 +336,22 @@ static void _cb_et_tool_panel_clicked_button(GtkWidget *button, gpointer data)
 	if(!_signal_et_tool_panel_change(self, tool_id)){
 		et_warning("");
 	}
+}
+
+bool et_tool_panel_set_cursor(GdkCursor *cursor)
+{
+	EtToolPanel *self = _et_tool_panel;
+	et_assert(self);
+
+	et_assert(cursor);
+
+	GdkWindow *window = gtk_widget_get_parent_window(self->widget);
+	if(!window){
+		et_debug("GdkWindow not grub");
+		return false;
+	}
+
+	gdk_window_set_cursor(window, cursor);
+	return true;
 }
 

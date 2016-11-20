@@ -38,7 +38,10 @@ void pv_anchor_point_set_handle_zero(
  */
 void pv_anchor_point_set_handle(PvAnchorPoint *ap,
 		PvAnchorPointIndex ap_index, PvPoint gpoint);
+void pv_anchor_point_set_handle_relate(PvAnchorPoint *ap,
+		PvAnchorPointIndex ap_index, PvPoint gpoint);
 
+PvPoint pv_anchor_point_get_point(const PvAnchorPoint *ap);
 void pv_anchor_point_set_point(PvAnchorPoint *ap, PvPoint point);
 void pv_anchor_point_move_point(PvAnchorPoint *ap, PvPoint move);
 
@@ -48,6 +51,7 @@ void pv_anchor_point_move_point(PvAnchorPoint *ap, PvPoint move);
  *		if rise error return value is not specitication.(ex. {0,0})
  */
 PvPoint pv_anchor_point_get_handle(const PvAnchorPoint *ap, PvAnchorPointIndex ap_index);
+PvPoint pv_anchor_point_get_handle_relate(const PvAnchorPoint *ap, PvAnchorPointIndex ap_index);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

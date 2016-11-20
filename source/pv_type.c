@@ -1,5 +1,7 @@
 #include "pv_type.h"
 
+#include <math.h>
+
 bool pv_rect_is_inside(PvRect rect, int x, int y)
 {
 	if(x < rect.x || (rect.x + rect.w) < x){
@@ -89,5 +91,19 @@ PvRect pv_rect_mul_value(PvRect r, double value)
 	};
 
 	return ret;
+}
+
+PvRect pv_rect_abs_size(PvRect r)
+{
+	if(r.w < 0){
+		r.x += r.w;
+		r.w = fabs(r.w);
+	}
+	if(r.h < 0){
+		r.y += r.h;
+		r.h = fabs(r.h);
+	}
+
+	return r;
 }
 

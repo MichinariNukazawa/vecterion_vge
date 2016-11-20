@@ -140,19 +140,20 @@ bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 		return false;
 	}
 	const EtToolInfo *info = et_tool_get_info_from_id(self->tool_id);
-	if(NULL == info){
-		et_bug("");
-		return false;
-	}
-	if(NULL == info->func_mouse_action){
-		et_bug("");
-		return false;
-	}
+	et_assert(info);
+	et_assert(info->func_mouse_action);
 
-	if(!info->func_mouse_action(doc_id, mouse_action)){
+	GdkCursor *cursor = NULL;
+	if(!info->func_mouse_action(doc_id, mouse_action, &cursor)){
 		et_error("");
 		return false;
 	}
+	if(!cursor){
+		cursor = info->mouse_cursor;
+	}
+	et_assert(cursor);
+
+	et_assert(et_tool_panel_set_cursor(cursor));
 
 	/*
 	   if(EtMouseAction_Up == mouse_action.action){

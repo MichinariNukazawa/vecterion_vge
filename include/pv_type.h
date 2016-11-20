@@ -32,6 +32,7 @@ typedef struct PvRect{
 static const PvRect PvRect_Default = {0, 0, 0, 0,};
 
 PvRect pv_rect_mul_value(PvRect, double);
+PvRect pv_rect_abs_size(PvRect);
 
 bool pv_rect_is_inside(PvRect, int x, int y);
 /*! @brief expanding PvRect area, logical operation "and" */

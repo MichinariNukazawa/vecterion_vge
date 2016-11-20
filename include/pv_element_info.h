@@ -69,6 +69,9 @@ typedef bool (*PvElementFuncMoveAnchorPointPoint)(
 		const PvPoint move);
 typedef PvRect (*PvElementFuncGetRectByAnchorPoints)(
 		const PvElement *element);
+typedef bool (*PvElementFuncSetRectByAnchorPoints)(
+		PvElement *element,
+		PvRect rect);
 typedef PvRect (*PvElementFuncGetRectByDraw)(
 		const PvElement *element);
 
@@ -92,6 +95,7 @@ typedef struct PvElementInfo{
 	PvElementFuncSetAnchorPointPoint	func_set_anchor_point_point;
 	PvElementFuncMoveAnchorPointPoint	func_move_anchor_point_point;
 	PvElementFuncGetRectByAnchorPoints	func_get_rect_by_anchor_points;
+	PvElementFuncSetRectByAnchorPoints	func_set_rect_by_anchor_points;
 	PvElementFuncGetRectByDraw		func_get_rect_by_draw;
 
 }PvElementInfo;

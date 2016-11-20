@@ -175,6 +175,13 @@ static PvRect _pv_element_notimpl_get_rect_by_anchor_points(
 	return PvRect_Default;
 }
 
+static bool _pv_element_notimpl_set_rect_by_anchor_points(
+		PvElement *element,
+		PvRect rect)
+{
+	return true;
+}
+
 static PvRect _pv_element_notimpl_get_rect_by_draw(
 		const PvElement *element)
 {
@@ -1052,6 +1059,47 @@ static PvRect _pv_element_bezier_get_rect_by_anchor_points(
 	return rect;
 }
 
+static bool _pv_element_bezier_set_rect_by_anchor_points(
+		PvElement *element,
+		PvRect rect)
+{
+	const PvElementBezierData *data = (PvElementBezierData *)element->data;
+	pv_assert(data);
+
+	rect = pv_rect_abs_size(rect);
+
+	const PvRect rect_src = _pv_element_bezier_get_rect_by_anchor_points(element);
+
+	PvPoint p = {.x = rect.x, .y = rect.y,};
+	_pv_element_bezier_set_point_by_anchor_points(element, p);
+
+	double scale_x = rect.w / rect_src.w;
+	double scale_y = rect.h / rect_src.h;
+
+	int num = data->anchor_points_num;
+	for(int i = 0; i < num; i++){
+		PvAnchorPoint *ap = &(data->anchor_points[i]);
+		PvPoint pp = pv_anchor_point_get_point(ap);
+		pp.x -= rect.x;
+		pp.y -= rect.y;
+		pp.x *= scale_x;
+		pp.y *= scale_y;
+		pp.x += rect.x;
+		pp.y += rect.y;
+		pv_anchor_point_set_point(ap, pp);
+		PvPoint hp = pv_anchor_point_get_handle_relate(ap, PvAnchorPointIndex_HandlePrev);
+		hp.x *= scale_x;
+		hp.y *= scale_y;
+		pv_anchor_point_set_handle_relate(ap, PvAnchorPointIndex_HandlePrev, hp);
+		PvPoint hn = pv_anchor_point_get_handle_relate(ap, PvAnchorPointIndex_HandleNext);
+		hn.x *= scale_x;
+		hn.y *= scale_y;
+		pv_anchor_point_set_handle_relate(ap, PvAnchorPointIndex_HandleNext, hn);
+	}
+
+	return true;
+}
+
 static PvRect _pv_element_bezier_get_rect_by_draw(
 		const PvElement *element)
 {
@@ -1146,6 +1194,35 @@ static gpointer _pv_element_raster_copy_new_data(void *_data)
 	return (gpointer)new_data;
 }
 
+static GdkPixbuf *_copy_new_pixbuf_scale(GdkPixbuf *pb_src, double w_dst, double h_dst)
+{
+	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w_dst, h_dst);
+	pv_assert(surface);
+	cairo_t *cr = cairo_create (surface);
+	pv_assert(cr);
+
+	double w_src = gdk_pixbuf_get_width(pb_src);
+	double h_src = gdk_pixbuf_get_height(pb_src);
+
+	cairo_matrix_t m = {
+		w_dst/w_src, 0,
+		0, h_dst/h_src,
+		0, 0,
+	};
+	cairo_set_matrix(cr, &m);
+
+	gdk_cairo_set_source_pixbuf (cr, pb_src, 0, 0);
+	cairo_paint (cr);
+
+	GdkPixbuf *pb = gdk_pixbuf_get_from_surface(surface, 0, 0, w_dst, h_dst);
+	pv_assert(pb);
+
+	cairo_surface_destroy (surface);
+	cairo_destroy (cr);
+
+	return pb;
+}
+
 static bool _pv_element_raster_draw(
 		cairo_t *cr,
 		const PvRenderOption render_option,
@@ -1157,12 +1234,24 @@ static bool _pv_element_raster_draw(
 	GdkPixbuf *pixbuf = data->pixbuf;
 	double w = gdk_pixbuf_get_width(pixbuf);
 	double h = gdk_pixbuf_get_height(pixbuf);
+	w *= data->matrix.scale_x;
+	h *= data->matrix.scale_y;
 	w *= render_context.scale;
 	h *= render_context.scale;
-	GdkPixbuf *pb = gdk_pixbuf_scale_simple(
+
+	if(w < 0 || h < 0){
+		pv_debug("%5.1f, %5.1f, %5.1f, ", w, h, data->matrix.scale_y);
+		return true;
+	}
+
+	if(0 == (int)w || 0 == (int)h ){
+		pv_debug("%5.1f, %5.1f, %5.1f, ", w, h, data->matrix.scale_y);
+		return true;
+	}
+
+	GdkPixbuf *pb = _copy_new_pixbuf_scale(
 			pixbuf,
-			(int)w, (int)h,
-			GDK_INTERP_HYPER);
+			(int)w, (int)h);
 	if(NULL == pb){
 		pv_error("");
 		return false;
@@ -1194,12 +1283,25 @@ static bool _pv_element_raster_draw_focusing(
 	GdkPixbuf *pixbuf = data->pixbuf;
 	double w = gdk_pixbuf_get_width(pixbuf);
 	double h = gdk_pixbuf_get_height(pixbuf);
+	w *= data->matrix.scale_x;
+	h *= data->matrix.scale_y;
+
 	w *= render_context.scale;
 	h *= render_context.scale;
 	double x = data->matrix.x;
 	double y = data->matrix.y;
 	x *= render_context.scale;
 	y *= render_context.scale;
+
+	if(w < 0 || h < 0){
+		pv_debug("%5.1f, %5.1f, %5.1f, ", w, h, data->matrix.scale_y);
+		return true;
+	}
+
+	if(0 == (int)w || 0 == (int)h ){
+		pv_debug("%5.1f, %5.1f, %5.1f, ", w, h, data->matrix.scale_y);
+		return true;
+	}
 
 	cairo_rectangle(cr, x, y, w, h);
 	cairo_set_line_width(cr, 1.0);
@@ -1231,6 +1333,8 @@ static bool _pv_element_raster_is_touch_element(
 	GdkPixbuf *pixbuf = data->pixbuf;
 	double w = gdk_pixbuf_get_width(pixbuf);
 	double h = gdk_pixbuf_get_height(pixbuf);
+	w *= data->matrix.scale_x;
+	h *= data->matrix.scale_y;
 	*is_touch = _is_inside_rect(
 			data->matrix.x,
 			data->matrix.x + w,
@@ -1403,10 +1507,30 @@ static PvRect _pv_element_raster_get_rect_by_anchor_points(
 	PvRect rect = PvRect_Default;
 	rect.x = data->matrix.x;
 	rect.y = data->matrix.y;
-	rect.w = gdk_pixbuf_get_width(data->pixbuf);
-	rect.h = gdk_pixbuf_get_height(data->pixbuf);
+	rect.w = gdk_pixbuf_get_width(data->pixbuf) * data->matrix.scale_x;
+	rect.h = gdk_pixbuf_get_height(data->pixbuf) * data->matrix.scale_y;
 
 	return rect;
+}
+
+static bool _pv_element_raster_set_rect_by_anchor_points(
+		PvElement *element,
+		PvRect rect)
+{
+	assert(element);
+	assert(PvElementKind_Raster == element->kind);
+
+	PvElementRasterData *data = element->data;
+	assert(data);
+
+	rect = pv_rect_abs_size(rect);
+
+	data->matrix.x = rect.x;
+	data->matrix.y = rect.y;
+	data->matrix.scale_x = rect.w / gdk_pixbuf_get_width(data->pixbuf);
+	data->matrix.scale_y = rect.h / gdk_pixbuf_get_height(data->pixbuf);
+
+	return true;
 }
 
 /* ****************
@@ -1432,6 +1556,7 @@ const PvElementInfo _pv_element_info[] = {
 		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
 		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
 		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _pv_element_notimpl_set_rect_by_anchor_points,
 		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
 	},
 	{PvElementKind_Root, "Root",
@@ -1452,6 +1577,7 @@ const PvElementInfo _pv_element_info[] = {
 		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
 		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
 		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _pv_element_notimpl_set_rect_by_anchor_points,
 		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
 	},
 	{PvElementKind_Layer, "Layer",
@@ -1472,6 +1598,7 @@ const PvElementInfo _pv_element_info[] = {
 		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
 		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
 		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _pv_element_notimpl_set_rect_by_anchor_points,
 		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
 	},
 	{PvElementKind_Group, "Group",
@@ -1492,6 +1619,7 @@ const PvElementInfo _pv_element_info[] = {
 		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
 		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
 		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _pv_element_notimpl_set_rect_by_anchor_points,
 		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
 	},
 	{PvElementKind_Bezier, "Bezier",
@@ -1512,6 +1640,7 @@ const PvElementInfo _pv_element_info[] = {
 		.func_set_anchor_point_point		= _pv_element_bezier_set_anchor_point_point,
 		.func_move_anchor_point_point		= _pv_element_bezier_move_anchor_point,
 		.func_get_rect_by_anchor_points		= _pv_element_bezier_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _pv_element_bezier_set_rect_by_anchor_points,
 		.func_get_rect_by_draw			= _pv_element_bezier_get_rect_by_draw,
 	},
 	{PvElementKind_Raster, "Raster",
@@ -1532,6 +1661,7 @@ const PvElementInfo _pv_element_info[] = {
 		.func_set_anchor_point_point		= _pv_element_raster_set_anchor_point_point,
 		.func_move_anchor_point_point		= _pv_element_raster_move_anchor_point,
 		.func_get_rect_by_anchor_points		= _pv_element_raster_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _pv_element_raster_set_rect_by_anchor_points,
 		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
 	},
 	/* 番兵 */
@@ -1553,6 +1683,7 @@ const PvElementInfo _pv_element_info[] = {
 		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
 		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
 		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _pv_element_notimpl_set_rect_by_anchor_points,
 		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
 	},
 };

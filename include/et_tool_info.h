@@ -10,7 +10,7 @@
 
 
 
-typedef bool (*EtToolFuncMouseAction)(EtDocId doc_id, EtMouseAction mouse_action);
+typedef bool (*EtToolFuncMouseAction)(EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **);
 
 typedef struct EtToolInfo{
 	EtToolId tool_id;

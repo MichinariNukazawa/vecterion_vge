@@ -19,13 +19,18 @@ struct PvElementGroupData{
 	char *name;
 };
 
+//! @todo this is not true matrix, do rename.
 typedef struct PvMatrix{
 	double x;
 	double y;
+	double scale_x;
+	double scale_y;
 }PvMatrix;
 static const PvMatrix PvMatrix_Default = {
 	.x = 0,
 	.y = 0,
+	.scale_x = 1.0,
+	.scale_y = 1.0,
 };
 
 struct PvElementRasterData;

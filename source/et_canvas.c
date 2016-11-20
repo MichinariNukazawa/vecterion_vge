@@ -280,6 +280,7 @@ static bool _signal_et_canvas_mouse_action(
 		PvPoint dp,
 		PvPoint dp_move,
 		PvPoint cwp_diff_down,
+		double scale,
 		GdkModifierType state,
 		EtMouseButtonType mouse_button, EtMouseActionType mouse_action)
 {
@@ -305,7 +306,7 @@ static bool _signal_et_canvas_mouse_action(
 		.move = dp_move,
 		.diff_down = cwp_diff_down,
 		.state = state,
-		.scale = self->render_context.scale,
+		.scale = scale,
 	};
 	if(!self->slot_mouse_action(self->doc_id, _mouse_action)){
 		et_error("");
@@ -348,6 +349,7 @@ static gboolean _cb_button_press(GtkWidget *widget, GdkEventButton *event, gpoin
 				dp,
 				dp_move,
 				cwp_diff_down,
+				self->render_context.scale,
 				event->state,
 				EtMouseButton_Right, EtMouseAction_Down))
 	{
@@ -383,6 +385,7 @@ static gboolean _cb_button_release(GtkWidget *widget, GdkEventButton *event, gpo
 				dp,
 				dp_move,
 				cwp_diff_down,
+				self->render_context.scale,
 				event->state,
 				EtMouseButton_Right, EtMouseAction_Up))
 	{
@@ -417,6 +420,7 @@ static gboolean _cb_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpoi
 				dp,
 				dp_move,
 				cwp_diff_down,
+				self->render_context.scale,
 				event->state,
 				EtMouseButton_Right, EtMouseAction_Move))
 	{
