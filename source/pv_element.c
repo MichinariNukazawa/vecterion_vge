@@ -700,8 +700,7 @@ int pv_element_bezier_get_num_anchor_point(const PvElement *self)
 	return data->anchor_points_num;
 }
 
-bool pv_element_raster_read_file(PvElement * const self,
-		const char * const path)
+static bool pv_element_raster_read_file(PvElement *self, const char *path)
 {
 	if(PvElementKind_Raster != self->kind){
 		pv_bug("");
@@ -730,6 +729,22 @@ bool pv_element_raster_read_file(PvElement * const self,
 	}
 
 	return true;
+}
+
+PvElement *pv_element_raster_new_from_filepath(const char *filepath)
+{
+	PvElement *self = pv_element_new(PvElementKind_Raster);
+	if(NULL == self){
+		pv_error("");
+		return NULL;
+	}
+
+	if(! pv_element_raster_read_file(self, filepath)){
+		_pv_element_delete_single(self);
+		return NULL;
+	}
+
+	return self;
 }
 
 const char *pv_element_get_name_from_kind(PvElementKind kind)

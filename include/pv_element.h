@@ -50,6 +50,7 @@ static const PvElementRecursiveError PvElementRecursiveError_Default = {
 
 PvElement *pv_element_new(const PvElementKind kind);
 void pv_element_delete(PvElement *);
+
 /** @brief 
  * copy element_tree parent is NULL.
  */
@@ -100,8 +101,8 @@ bool pv_element_is_diff_recursive(
 const char *pv_element_get_name_from_kind(PvElementKind kind);
 
 
-bool pv_element_raster_read_file(PvElement * const self,
-		const char * const path);
+
+PvElement *pv_element_raster_new_from_filepath(const char *filepath);
 
 /** @brief 
  *
