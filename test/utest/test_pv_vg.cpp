@@ -147,5 +147,10 @@ TEST(Test, CopyAndDiff){
 		ASSERT_TRUE(ret);
 	}
 
+	// independ (copyed vg2,3 is fine when after free vg)
+	pv_vg_free(vg);
+	pv_vg_is_diff(vg2, vg3);
+	pv_vg_free(vg3);
+	pv_vg_free(vg2);
 }
 

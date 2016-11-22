@@ -45,9 +45,8 @@ static bool _pv_element_doabort_delete(void *_data)
 
 static gpointer _pv_element_doabort_copy_new(void *_data)
 {
-	pv_error("");
+	pv_critical("");
 	abort();
-	return NULL;
 }
 
 /** @brief write_svg未実装箇所に挿入する */
@@ -255,17 +254,16 @@ static bool _pv_element_group_delete_data(void *_data)
 static gpointer _pv_element_group_copy_new_data(void *_data)
 {
 	if(NULL == _data){
-		pv_error("");
-		return false;
+		pv_bug("");
+		return NULL;
 	}
 
 	PvElementGroupData *data = (PvElementGroupData *)_data;
 
 	PvElementGroupData *new_data = (PvElementGroupData *)malloc(sizeof(PvElementGroupData));
-	if(NULL == new_data){
-		pv_critical("");
-		exit(-1);
-	}
+	pv_assert(new_data);
+
+	*new_data = *data;
 
 	new_data->name = pv_general_new_str(data->name);
 
@@ -420,19 +418,17 @@ static bool _pv_element_bezier_delete_data(void *_data)
 static gpointer _pv_element_bezier_copy_new_data(void *_data)
 {
 	if(NULL == _data){
-		pv_error("");
-		return false;
+		pv_bug("");
+		return NULL;
 	}
 
 	PvElementBezierData *data = (PvElementBezierData *)_data;
 
 	PvElementBezierData *new_data = (PvElementBezierData *)malloc(sizeof(PvElementBezierData));
-	if(NULL == new_data){
-		pv_critical("");
-		exit(-1);
-	}
+	pv_assert(new_data);
 
 	*new_data = *data;
+
 	new_data->anchor_points_num = 0;
 	new_data->anchor_points = NULL;
 	if(0 < data->anchor_points_num && NULL != data->anchor_points){
@@ -1155,24 +1151,22 @@ static bool _pv_element_raster_delete_data(void *_data)
 static gpointer _pv_element_raster_copy_new_data(void *_data)
 {
 	if(NULL == _data){
-		pv_error("");
-		return false;
+		pv_bug("");
+		return NULL;
 	}
 
 	PvElementRasterData *data = (PvElementRasterData *)_data;
 
-	PvElementRasterData *new_data 
-		= (PvElementRasterData *)malloc(sizeof(PvElementRasterData));
-	if(NULL == new_data){
-		pv_critical("");
-		exit(-1);
-	}
-	new_data = data;
+	PvElementRasterData *new_data = (PvElementRasterData *)malloc(sizeof(PvElementRasterData));
+	pv_assert(new_data);
+
+	*new_data = *data;
 
 	new_data->path = pv_general_new_str(data->path);
 
-	g_object_ref(G_OBJECT(data->pixbuf));
-	new_data->pixbuf = data->pixbuf;
+	if(NULL != new_data->pixbuf){
+		g_object_ref(G_OBJECT(new_data->pixbuf));
+	}
 
 	return (gpointer)new_data;
 }
