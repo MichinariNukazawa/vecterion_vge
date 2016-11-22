@@ -195,30 +195,23 @@ static PvRect _pv_element_notimpl_get_rect_by_draw(
  **************** */
 
 /** @brief 
- * arg1 NULL -> return NULL and not error(is_error == false)
+ * arg1 NULL -> return NULL is not error. (malloc error to exit app)
  */
-char *pv_general_new_str(const char *src, bool *is_error)
+char *pv_general_new_str(const char *src)
 {
-	*is_error = true;
-
 	if(NULL == src){
-		*is_error = false;
 		return NULL;
 	}
 
-	if(20 < strlen(src)){
+	if(2000 < strlen(src)){
 		pv_debug("len:%lu '%s'", strlen(src), src);
 	}
 
 	char *dst = (char *)malloc(sizeof(char) * (strlen(src) + 1));
-	if(NULL == dst){
-		pv_critical("");
-		exit(-1);
-	}
+	pv_assertf(dst, "%s", src);
 
 	strcpy(dst, src);
 
-	*is_error = false;
 	return dst;
 }
 
@@ -274,12 +267,7 @@ static gpointer _pv_element_group_copy_new_data(void *_data)
 		exit(-1);
 	}
 
-	bool is_error = true;
-	new_data->name = pv_general_new_str(data->name, &is_error);
-	if(is_error){
-		pv_critical("");
-		exit(-1);
-	}
+	new_data->name = pv_general_new_str(data->name);
 
 	return (gpointer)new_data;
 }
@@ -1181,12 +1169,7 @@ static gpointer _pv_element_raster_copy_new_data(void *_data)
 	}
 	new_data = data;
 
-	bool is_error = true;
-	new_data->path = pv_general_new_str(data->path, &is_error);
-	if(is_error){
-		pv_critical("");
-		exit(-1);
-	}
+	new_data->path = pv_general_new_str(data->path);
 
 	g_object_ref(G_OBJECT(data->pixbuf));
 	new_data->pixbuf = data->pixbuf;
