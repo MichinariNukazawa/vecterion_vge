@@ -57,6 +57,7 @@ unittest_run : $(TEST_TARGETS)
 ARGTEST_OUTPUT_BASE := $(OBJECT_DIR)/argtest/argtest_output
 argtest_run : $(TARGET)
 	bash test/argtest.sh $(TARGET) library/23.svg $(ARGTEST_OUTPUT_BASE)
+	bash test/argtest_import_raster.sh $(TARGET) test/testdata $(ARGTEST_OUTPUT_BASE)
 
 
 test_clean :

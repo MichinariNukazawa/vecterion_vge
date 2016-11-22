@@ -575,7 +575,7 @@ static bool _pv_element_is_diff_one(
 	}
 
 	if(!info->func_is_diff_one(&(data->is_diff), element0, element1)){
-		pv_bug("");
+		pv_bug("%d", element0->kind);
 		goto error;
 	}
 

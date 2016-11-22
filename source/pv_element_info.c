@@ -1207,7 +1207,12 @@ static bool _pv_element_raster_draw(
 {
 	const PvRenderContext render_context = render_option.render_context;
 
+	pv_assert(element);
+
 	PvElementRasterData *data = element->data;
+	pv_assert(data);
+	pv_assertf(data->pixbuf, "%p", data->pixbuf);
+
 	GdkPixbuf *pixbuf = data->pixbuf;
 	double w = gdk_pixbuf_get_width(pixbuf);
 	double h = gdk_pixbuf_get_height(pixbuf);
@@ -1343,7 +1348,7 @@ static bool _pv_element_raster_is_diff_one(
 
 	if(_pv_matrix_is_diff(data0->matrix, data1->matrix)){
 		*is_diff = true;
-		return false;
+		return true;
 	}
 
 	// ** dataX->path is not check.

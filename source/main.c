@@ -489,27 +489,63 @@ static EtDocId _open_doc_new_from_file(const char* filepath)
 		return -1;
 	}
 
-	PvVg *vg_src = pv_io_new_from_file(filepath);
-	if(NULL == vg_src){
+	const PvFileFormat *format = get_file_format_from_filepath(filepath);
+	if(!format){
 		et_error("");
 		return -1;
 	}
 
-	EtDocId doc_id = _open_doc_new(vg_src);
+	PvVg *vg_src = NULL;
+	EtDocId doc_id = -1;
+	if( PvFormatKind_SVG == format->kind){
+		vg_src = pv_io_new_from_file(filepath);
+		if(NULL == vg_src){
+			et_error("");
+			return -1;
+		}
+	}else{
+		vg_src = pv_vg_new();
+		if(NULL == vg_src){
+			et_error("");
+			return -1;
+		}
+		PvElement *element_parent = pv_vg_get_layer_top(vg_src);
+		if(NULL == element_parent){
+			et_error("");
+			goto finally;
+		}
+		PvElement *element_raster = pv_element_raster_new_from_filepath(filepath);
+		if(NULL == element_raster){
+			et_error("");
+			goto finally;
+		}
+		if(! pv_element_append_child(element_parent, NULL, element_raster)){
+			et_error("");
+			goto finally;
+		}
+
+		PvElementRasterData *data = element_raster->data;
+		vg_src->rect.w = gdk_pixbuf_get_width(data->pixbuf);
+		vg_src->rect.h = gdk_pixbuf_get_height(data->pixbuf);
+	}
+
+	doc_id = _open_doc_new(vg_src);
 	if(0 > doc_id){
 		et_error("");
-		return -1;
+		goto finally;
 	}
 
 	if(!et_doc_set_saved_filepath(doc_id, filepath)){
 		et_bug("");
 	}
 
+finally:
 	pv_vg_free(vg_src);
 	et_doc_signal_update_from_id(doc_id);
 
 	return doc_id;
 }
+
 static EtDocId _open_doc_new(PvVg *vg_src)
 {
 	return open_doc_new(vg_src);
