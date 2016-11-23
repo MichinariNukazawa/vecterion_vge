@@ -1,3 +1,6 @@
+// ******** ********
+//! @file
+// ******** ********
 #ifndef include_PV_TYPE_H
 #define include_PV_TYPE_H
 
@@ -9,6 +12,10 @@
 #define M_PI 3.14159265358979323846264338327
 #endif
 
+
+// ******** ********
+// PvPoint
+// ******** ********
 typedef struct PvPoint{
 	double x;
 	double y;
@@ -22,6 +29,10 @@ PvPoint pv_point_add_value(PvPoint, double);
 PvPoint pv_point_mul_value(PvPoint, double);
 PvPoint pv_point_div_value(PvPoint, double);
 
+
+// ******** ********
+// PvRect
+// ******** ********
 typedef struct PvRect{
 	double x;
 	double y;
@@ -35,8 +46,8 @@ PvRect pv_rect_mul_value(PvRect, double);
 PvRect pv_rect_abs_size(PvRect);
 
 bool pv_rect_is_inside(PvRect, int x, int y);
-/*! @brief expanding PvRect area, logical operation "and" */
 PvRect pv_rect_expand(PvRect rect0, PvRect rect1);
+
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

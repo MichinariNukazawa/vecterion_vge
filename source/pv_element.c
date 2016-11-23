@@ -326,6 +326,7 @@ error1:
 	return NULL;
 }
 
+//! @detail element->parent of copied is NULL.
 PvElement *pv_element_copy_recursive(const PvElement *self)
 {
 	if(NULL == self){
@@ -348,10 +349,16 @@ PvElement *pv_element_copy_recursive(const PvElement *self)
 	return new_element_tree;
 }
 
-
-
-bool pv_element_append_child(PvElement * const parent,
-		PvElement * const prev, PvElement * const element)
+/*! @brief 
+ *
+ * @param parent
+ *		NULL: return Error.
+ *		Not Layer(Group): return Error.
+ * @param prev
+ *		NULL: append toplevel element in parent.
+ *		Element: append under the prev.
+ */
+bool pv_element_append_child(PvElement *parent, const PvElement *prev, PvElement *element)
 {
 	if(NULL == parent){
 		pv_bug("");
@@ -503,7 +510,7 @@ static bool _pv_element_detouch_parent(PvElement * const self)
 	return true;
 }
 
-bool pv_element_remove_delete_recursive(PvElement * const self)
+bool pv_element_remove_delete_recursive(PvElement *self)
 {
 	if(NULL == self){
 		pv_error("");
@@ -634,9 +641,8 @@ static bool _pv_element_is_diff_recursive_inline(
 	return ret;
 }
 
-bool pv_element_is_diff_recursive(
-		PvElement *element0,
-		PvElement *element1)
+//! @todo argument to const
+bool pv_element_is_diff_recursive(PvElement *element0, PvElement *element1)
 {
 	if(element0 == element1){
 		pv_debug("");
@@ -662,8 +668,7 @@ bool pv_element_is_diff_recursive(
 	return _data.is_diff;
 }
 
-bool pv_element_bezier_add_anchor_point(PvElement * const self,
-		const PvAnchorPoint anchor_point)
+bool pv_element_bezier_add_anchor_point(PvElement *self, const PvAnchorPoint anchor_point)
 {
 	if(NULL == self){
 		pv_error("");
