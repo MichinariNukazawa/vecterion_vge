@@ -44,7 +44,10 @@ static GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext 
 		return NULL;
 	}
 
-	GdkPixbuf *pb = pv_renderer_pixbuf_from_vg(vg, render_context, focus);
+	PvElement *element_group_edit_draw
+		= et_doc_get_element_group_edit_draw_from_id(et_doc_get_id(doc));
+
+	GdkPixbuf *pb = pv_renderer_pixbuf_from_vg(vg, render_context, focus, element_group_edit_draw);
 	if(NULL == pb){
 		et_error("");
 		return NULL;

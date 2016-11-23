@@ -690,7 +690,7 @@ static bool _output_file_from_doc_id(const char *filepath, EtDocId doc_id)
 		}else{
 			render_context.background_kind = PvBackgroundKind_White;
 		}
-		GdkPixbuf *pixbuf = pv_renderer_pixbuf_from_vg(vg, render_context, NULL);
+		GdkPixbuf *pixbuf = pv_renderer_pixbuf_from_vg(vg, render_context, NULL, NULL);
 		if(!pixbuf){
 			et_error("");
 			return false;

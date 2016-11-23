@@ -4,6 +4,14 @@
 
 
 
+PvAnchorPoint pv_anchor_point_from_point(PvPoint point)
+{
+	PvAnchorPoint ap = PvAnchorPoint_Default;
+	ap.points[PvAnchorPointIndex_Point] = point;
+
+	return ap;
+}
+
 void pv_anchor_point_set_handle_zero(
 		PvAnchorPoint *ap,
 		PvAnchorPointIndex ap_index)

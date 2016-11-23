@@ -125,9 +125,11 @@ static bool _pv_renderer_cairo_background(cairo_t *cr,
 	return true;
 }
 
-GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
+GdkPixbuf *pv_renderer_pixbuf_from_vg(
+		const PvVg *vg,
 		const PvRenderContext render_context,
-		const PvFocus *focus)
+		const PvFocus *focus,
+		const PvElement *element_overwrite)
 {
 	if(NULL == vg){
 		pv_bug("");
@@ -155,15 +157,15 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		return NULL;
 	}
 
-	PvRenderOption render_option = {
-		.render_context = render_context,
-		.focus = focus,
-	};
-	int level = 0;
-	if(!_pv_renderer_cairo_recursive(cr, vg->element_root, render_option, &level)){
-		pv_error("");
-		return NULL;
-	}
+		PvRenderOption render_option = {
+			.render_context = render_context,
+			.focus = focus,
+		};
+		int level = 0;
+		if(!_pv_renderer_cairo_recursive(cr, vg->element_root, render_option, &level)){
+			pv_error("");
+			return NULL;
+		}
 
 	if(NULL != focus){
 		PvRect rect_extent = PvRect_Default;
@@ -194,6 +196,15 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
 		}
 	}
 
+	if(NULL != element_overwrite){
+		render_option.focus = NULL;
+		render_option.render_context.is_focus = false;
+		level = 0;
+		if(!_pv_renderer_cairo_recursive(cr, element_overwrite, render_option, &level)){
+			pv_error("");
+			return NULL;
+		}
+	}
 
 	GdkPixbuf *pb = gdk_pixbuf_get_from_surface(surface, 0, 0, width, height);
 	if(NULL == pb){

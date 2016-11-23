@@ -27,6 +27,8 @@ static const PvAnchorPoint PvAnchorPoint_Default = {
 
 
 
+PvAnchorPoint pv_anchor_point_from_point(PvPoint);
+
 /*! @brief handle set to zero.
  *	@param ap_index read to ~_set_handle() function.
  */

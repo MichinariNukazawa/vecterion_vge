@@ -93,8 +93,10 @@ bool pv_element_kind_is_viewable_object(PvElementKind kind);
 // ******** ********
 // PvElement Bezier
 // ******** ********
+PvElement *pv_element_bezier_new_from_rect(PvRect);
 bool pv_element_bezier_add_anchor_point(PvElement *, const PvAnchorPoint);
 int pv_element_bezier_get_num_anchor_point(const PvElement *);
+void pv_element_bezier_set_close_anchor_point(PvElement *, bool);
 
 
 

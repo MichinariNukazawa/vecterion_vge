@@ -7,9 +7,11 @@
 /*!
  * @param focus: NULL is disable focusing decorations(ex. frame line of select elements).
  */
-GdkPixbuf *pv_renderer_pixbuf_from_vg(PvVg * const vg,
+GdkPixbuf *pv_renderer_pixbuf_from_vg(
+		const PvVg *vg,
 		const PvRenderContext render_context,
-		const PvFocus *focus);
+		const PvFocus *focus,
+		const PvElement *element_overwrite);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

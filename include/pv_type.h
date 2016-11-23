@@ -33,6 +33,14 @@ PvPoint pv_point_div_value(PvPoint, double);
 // ******** ********
 // PvRect
 // ******** ********
+//! clockwise rotation because use "for()"
+typedef enum{
+	PvRectEdgeKind_UpLeft,
+	PvRectEdgeKind_UpRight,
+	PvRectEdgeKind_DownRight,
+	PvRectEdgeKind_DownLeft,
+}PvRectEdgeKind;
+
 typedef struct PvRect{
 	double x;
 	double y;
@@ -47,6 +55,7 @@ PvRect pv_rect_abs_size(PvRect);
 
 bool pv_rect_is_inside(PvRect, int x, int y);
 PvRect pv_rect_expand(PvRect rect0, PvRect rect1);
+PvPoint pv_rect_get_edge_point(PvRect, PvRectEdgeKind);
 
 
 #ifdef include_ET_TEST

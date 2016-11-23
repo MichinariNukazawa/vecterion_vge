@@ -484,6 +484,16 @@ static GdkCursor *_get_cursor_from_edge(EdgeKind edge)
 	return cursor;
 }
 
+PvRect get_square_rect_from_center_point_(PvPoint center, double size)
+{
+	return (PvRect){
+		.x = center.x - (size / 2.0),
+			.y = center.y - (size / 2.0),
+			.w = size,
+			.h = size,
+	};
+}
+
 static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
 	static PvElement *_touch_element = NULL;
@@ -597,6 +607,23 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 			break;
 	}
 
+	// edit draw
+	{
+		PvRect _after_extent_rect = _get_rect_extent_from_elements(focus->elements);
+		PvElement *element_group_edit_draw = pv_element_new(PvElementKind_Group);
+		et_assert(element_group_edit_draw);
+		int size = 5.0 / mouse_action.scale;
+		for(int i = 0; i < 4; i++){
+			PvPoint center = pv_rect_get_edge_point(_after_extent_rect, i);
+			PvRect rect = get_square_rect_from_center_point_(center, size);
+			PvElement *element_bezier = pv_element_bezier_new_from_rect(rect);
+			et_assert(element_bezier);
+			pv_element_append_child(element_group_edit_draw, NULL, element_bezier);
+		}
+		et_doc_set_element_group_edit_draw_from_id(doc_id, element_group_edit_draw);
+		pv_element_remove_delete_recursive(element_group_edit_draw);
+	}
+
 	return true;
 }
 
@@ -670,16 +697,20 @@ static int _et_tool_bezier_add_anchor_point(EtDoc *doc, PvElement **_element, do
 
 static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
+	bool result = true;
+
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
 	if(NULL == doc){
 		et_error("");
-		return false;
+		result = false;
+		goto finally;
 	}
 
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	if(NULL == focus){
 		et_error("");
-		return false;
+		result = false;
+		goto finally;
 	}
 
 	switch(mouse_action.action){
@@ -696,7 +727,8 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 					PvElementBezierData *_data = (PvElementBezierData *) _element->data;
 					if(NULL == _data){
 						et_error("");
-						return false;
+						result = false;
+						goto finally;
 					}
 					if(_data->is_close){
 						// if already closed is goto new anchor_point
@@ -724,7 +756,8 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 							mouse_action.point.x, mouse_action.point.y);
 					if(0 > index){
 						et_error("");
-						return false;
+						result = false;
+						goto finally;
 					}else{
 						pv_focus_clear_set_element_index(focus, _element, index);
 					}
@@ -743,13 +776,15 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 				PvElement *_element = pv_focus_get_first_element(focus);
 				if(NULL == _element || PvElementKind_Bezier != _element->kind){
 					et_error("");
-					return false;
+					result = false;
+					goto finally;
 				}
 
 				PvElementBezierData *_data =(PvElementBezierData *) _element->data;
 				if(NULL == _data){
 					et_error("");
-					return false;
+					result = false;
+					goto finally;
 				}
 				PvAnchorPoint *ap = NULL;
 				if(_data->is_close){
@@ -780,7 +815,10 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 			break;
 	}
 
-	return true;
+finally:
+	et_doc_set_element_group_edit_draw_from_id(doc_id, NULL);
+
+	return result;
 }
 
 static bool _get_touch_element_and_index(
@@ -883,16 +921,20 @@ static bool _move_elements_anchor_points(EtDocId doc_id, EtMouseAction mouse_act
 static bool _et_tool_edit_anchor_point_mouse_action(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
+	bool result = true;
+
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
 	if(NULL == doc){
 		et_error("");
-		return false;
+		result = false;
+		goto finally;
 	}
 
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	if(NULL == focus){
 		et_error("");
-		return false;
+		result = false;
+		goto finally;
 	}
 
 	switch(mouse_action.action){
@@ -935,7 +977,10 @@ static bool _et_tool_edit_anchor_point_mouse_action(
 			break;
 	}
 
-	return true;
+finally:
+	et_doc_set_element_group_edit_draw_from_id(doc_id, NULL);
+
+	return result;
 }
 
 /*! 
@@ -1030,16 +1075,20 @@ static int _edit_anchor_point_handle_grub_focus(PvFocus *focus, EtMouseAction mo
 static bool _et_tool_edit_anchor_point_handle_mouse_action(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
+	bool result = true;
+
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
 	if(NULL == doc){
 		et_error("");
-		return false;
+		result = false;
+		goto finally;
 	}
 
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	if(NULL == focus){
 		et_error("");
-		return false;
+		result = false;
+		goto finally;
 	}
 
 
@@ -1095,7 +1144,10 @@ static bool _et_tool_edit_anchor_point_handle_mouse_action(
 			break;
 	}
 
-	return true;
+finally:
+	et_doc_set_element_group_edit_draw_from_id(doc_id, NULL);
+
+	return result;
 }
 
 EtToolInfo _et_tool_infos[] = {

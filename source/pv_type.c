@@ -1,6 +1,8 @@
 #include "pv_type.h"
 
 #include <math.h>
+#include "pv_error.h"
+
 
 
 // ******** ********
@@ -114,5 +116,21 @@ PvRect pv_rect_expand(PvRect rect0, PvRect rect1)
 	ret.h = y - ret.y;
 
 	return ret;
+}
+
+PvPoint pv_rect_get_edge_point(PvRect rect, PvRectEdgeKind edgeKind)
+{
+	switch(edgeKind){
+		case PvRectEdgeKind_UpLeft:
+			return (PvPoint){rect.x, rect.y};
+		case PvRectEdgeKind_UpRight:
+			return (PvPoint){(rect.x + rect.w), rect.y};
+		case PvRectEdgeKind_DownLeft:
+			return (PvPoint){rect.x, (rect.y + rect.h)};
+		case PvRectEdgeKind_DownRight:
+			return (PvPoint){(rect.x + rect.w), (rect.y + rect.h)};
+		default:
+			pv_assertf(false, "%d", edgeKind);
+	}
 }
 

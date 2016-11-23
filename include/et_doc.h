@@ -32,6 +32,10 @@ EtCallbackId et_doc_add_slot_change(EtDocId doc_id, EtDocSlotChange slot, gpoint
 PvFocus *et_doc_get_focus_ref_from_id(EtDocId id);
 // PvFocus et_doc_get_focus(EtDoc *self);
 // void et_doc_set_focus(EtDoc *self, PvFocus focus);
+
+void et_doc_set_element_group_edit_draw_from_id(EtDocId, const PvElement *);
+PvElement *et_doc_get_element_group_edit_draw_from_id(EtDocId);
+
 bool et_doc_signal_update(EtDoc *self);
 bool et_doc_signal_update_from_id(EtDocId id);
 

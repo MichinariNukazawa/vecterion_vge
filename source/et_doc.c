@@ -19,6 +19,8 @@ typedef struct EtDoc{
 	char *filepath;
 	PvVg *latest_saved_vg;
 
+	PvElement *element_group_edit_draw;
+
 	EtDocHistoryHive *history_hive;
 
 	EtDocSlotChangeInfo *slot_change_infos;
@@ -62,6 +64,7 @@ EtDoc *et_doc_new_from_vg(const PvVg *vg)
 
 	self->filepath = NULL;
 	self->latest_saved_vg = NULL;
+	self->element_group_edit_draw = NULL;
 
 	self->history_hive = et_doc_history_hive_new(vg);
 	if(NULL == self->history_hive){
@@ -308,6 +311,30 @@ PvFocus *et_doc_get_focus_ref_from_id(EtDocId id)
 	return hist_item->focus;
 error:
 	return NULL;
+}
+
+void et_doc_set_element_group_edit_draw_from_id(EtDocId doc_id, const PvElement *element_group)
+{
+	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
+	et_assertf(doc, "%d", doc_id);
+
+	if(doc->element_group_edit_draw){
+		pv_element_remove_delete_recursive(doc->element_group_edit_draw);
+	}
+
+	if(!element_group){
+		doc->element_group_edit_draw = NULL;
+	}else{
+		doc->element_group_edit_draw = pv_element_copy_recursive(element_group);
+	}
+}
+
+PvElement *et_doc_get_element_group_edit_draw_from_id(EtDocId doc_id)
+{
+	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
+	et_assertf(doc, "%d", doc_id);
+
+	return doc->element_group_edit_draw;
 }
 
 bool et_doc_save_from_id(EtDocId doc_id)

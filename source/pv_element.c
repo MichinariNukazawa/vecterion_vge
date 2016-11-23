@@ -668,6 +668,22 @@ bool pv_element_is_diff_recursive(PvElement *element0, PvElement *element1)
 	return _data.is_diff;
 }
 
+PvElement *pv_element_bezier_new_from_rect(PvRect rect)
+{
+	PvElement *self = pv_element_new(PvElementKind_Bezier);
+	pv_assert(self);
+
+	for(int i = 0; i < 4; i++){
+		PvPoint point = pv_rect_get_edge_point(rect, i);
+		PvAnchorPoint ap = pv_anchor_point_from_point(point);
+		bool ret = pv_element_bezier_add_anchor_point(self, ap);
+		pv_assert(ret);
+	}
+	pv_element_bezier_set_close_anchor_point(self, true);
+
+	return self;
+}
+
 bool pv_element_bezier_add_anchor_point(PvElement *self, const PvAnchorPoint anchor_point)
 {
 	if(NULL == self){
@@ -703,6 +719,12 @@ int pv_element_bezier_get_num_anchor_point(const PvElement *self)
 
 	PvElementBezierData *data = self->data;
 	return data->anchor_points_num;
+}
+
+void pv_element_bezier_set_close_anchor_point(PvElement *self, bool is_close)
+{
+	PvElementBezierData *data = self->data;
+	data->is_close = is_close;
 }
 
 static bool pv_element_raster_read_file(PvElement *self, const char *path)
