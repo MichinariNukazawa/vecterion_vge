@@ -36,7 +36,7 @@ static gpointer _pv_element_doabort_new()
 	return NULL;
 }
 
-static bool _pv_element_doabort_delete(void *_data)
+static bool _pv_element_doabort_free_data(void *_data)
 {
 	pv_error("");
 	abort();
@@ -233,7 +233,7 @@ static gpointer _pv_element_group_new_data()
 	return (gpointer)data;
 }
 
-static bool _pv_element_group_delete_data(void *_data)
+static bool _pv_element_group_free_data(void *_data)
 {
 	if(NULL == _data){
 		pv_error("");
@@ -397,7 +397,7 @@ static gpointer _pv_element_bezier_new_data()
 	return (gpointer)data;
 }
 
-static bool _pv_element_bezier_delete_data(void *_data)
+static bool _pv_element_bezier_free_data(void *_data)
 {
 	if(NULL == _data){
 		pv_error("");
@@ -1126,7 +1126,7 @@ static gpointer _pv_element_raster_new_data()
 	return (gpointer)data;
 }
 
-static bool _pv_element_raster_delete_data(void *_data)
+static bool _pv_element_raster_free_data(void *_data)
 {
 	if(NULL == _data){
 		pv_error("");
@@ -1522,7 +1522,7 @@ static bool _pv_element_raster_set_rect_by_anchor_points(
 const PvElementInfo _pv_element_info[] = {
 	{PvElementKind_NotDefined, "NotDefined",
 		.func_new_data				= _pv_element_doabort_new,
-		.func_delete_data			= _pv_element_doabort_delete,
+		.func_free_data				= _pv_element_doabort_free_data,
 		.func_copy_new_data			= _pv_element_doabort_copy_new,
 		.func_write_svg				= _pv_element_notimpl_write_svg,
 		.func_draw				= _pv_element_notimpl_draw,
@@ -1543,7 +1543,7 @@ const PvElementInfo _pv_element_info[] = {
 	},
 	{PvElementKind_Root, "Root",
 		.func_new_data				= _pv_element_group_new_data,
-		.func_delete_data			= _pv_element_group_delete_data,
+		.func_free_data				= _pv_element_group_free_data,
 		.func_copy_new_data			= _pv_element_group_copy_new_data,
 		.func_write_svg				= _pv_element_group_write_svg,
 		.func_draw				= _pv_element_group_draw,
@@ -1564,7 +1564,7 @@ const PvElementInfo _pv_element_info[] = {
 	},
 	{PvElementKind_Layer, "Layer",
 		.func_new_data				= _pv_element_group_new_data,
-		.func_delete_data			= _pv_element_group_delete_data,
+		.func_free_data				= _pv_element_group_free_data,
 		.func_copy_new_data			= _pv_element_group_copy_new_data,
 		.func_write_svg				= _pv_element_group_write_svg,
 		.func_draw				= _pv_element_group_draw,
@@ -1585,7 +1585,7 @@ const PvElementInfo _pv_element_info[] = {
 	},
 	{PvElementKind_Group, "Group",
 		.func_new_data				= _pv_element_group_new_data,
-		.func_delete_data			= _pv_element_group_delete_data,
+		.func_free_data				= _pv_element_group_free_data,
 		.func_copy_new_data			= _pv_element_group_copy_new_data,
 		.func_write_svg				= _pv_element_group_write_svg,
 		.func_draw				= _pv_element_group_draw,
@@ -1606,7 +1606,7 @@ const PvElementInfo _pv_element_info[] = {
 	},
 	{PvElementKind_Bezier, "Bezier",
 		.func_new_data				= _pv_element_bezier_new_data,
-		.func_delete_data			= _pv_element_bezier_delete_data,
+		.func_free_data				= _pv_element_bezier_free_data,
 		.func_copy_new_data			= _pv_element_bezier_copy_new_data,
 		.func_write_svg				= _pv_element_bezier_write_svg,
 		.func_draw				= _pv_element_bezier_draw,
@@ -1627,7 +1627,7 @@ const PvElementInfo _pv_element_info[] = {
 	},
 	{PvElementKind_Raster, "Raster",
 		.func_new_data				= _pv_element_raster_new_data,
-		.func_delete_data			= _pv_element_raster_delete_data,
+		.func_free_data				= _pv_element_raster_free_data,
 		.func_copy_new_data			= _pv_element_raster_copy_new_data,
 		.func_write_svg				= _pv_element_notimpl_write_svg,
 		.func_draw				= _pv_element_raster_draw,
@@ -1649,7 +1649,7 @@ const PvElementInfo _pv_element_info[] = {
 	/* 番兵 */
 	{PvElementKind_EndOfKind, "EndOfKind",
 		.func_new_data				= _pv_element_doabort_new,
-		.func_delete_data			= _pv_element_doabort_delete,
+		.func_free_data				= _pv_element_doabort_free_data,
 		.func_copy_new_data			= _pv_element_doabort_copy_new,
 		.func_write_svg				= _pv_element_notimpl_write_svg,
 		.func_draw				= _pv_element_notimpl_draw,

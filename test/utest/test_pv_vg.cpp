@@ -115,7 +115,7 @@ TEST(Test, CopyAndDiff){
 		if(num < 1){
 			FAIL();
 		}
-		if(!pv_element_remove_delete_recursive(elem_layer->childs[0])){
+		if(!pv_element_remove_free_recursive(elem_layer->childs[0])){
 			FAIL();
 		}
 		ret = pv_vg_is_diff(vg, vg_diff);

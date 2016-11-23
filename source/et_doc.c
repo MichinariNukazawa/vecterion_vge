@@ -319,7 +319,7 @@ void et_doc_set_element_group_edit_draw_from_id(EtDocId doc_id, const PvElement 
 	et_assertf(doc, "%d", doc_id);
 
 	if(doc->element_group_edit_draw){
-		pv_element_remove_delete_recursive(doc->element_group_edit_draw);
+		pv_element_remove_free_recursive(doc->element_group_edit_draw);
 	}
 
 	if(!element_group){

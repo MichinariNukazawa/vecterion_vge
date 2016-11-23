@@ -5,7 +5,7 @@
 #include "pv_error.h"
 #include "pv_element_info.h"
 
-static bool _pv_element_delete_single(PvElement *self);
+static bool _pv_element_free_single(PvElement *self);
 
 char *pv_general_str_new(const char * const src)
 {
@@ -197,13 +197,13 @@ PvElement *pv_element_new(const PvElementKind kind)
 	return self;
 }
 
-void pv_element_delete(PvElement *element)
+void pv_element_free(PvElement *element)
 {
 	pv_assert(element);
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 	pv_assert(info);
 	pv_assert(element->data);
-	info->func_delete_data(element->data);
+	info->func_free_data(element->data);
 
 	free(element);
 }
@@ -316,12 +316,12 @@ static PvElement *_pv_element_copy_recursive_inline(const PvElement *self,
 	return new_element;
 
 error2:
-	pv_element_remove_delete_recursive(new_element);
+	pv_element_remove_free_recursive(new_element);
 
 	return NULL;
 
 error1:
-	_pv_element_delete_single(new_element);
+	_pv_element_free_single(new_element);
 
 	return NULL;
 }
@@ -406,7 +406,7 @@ bool pv_element_append_child(PvElement *parent, const PvElement *prev, PvElement
 	return true;
 }
 
-static bool _pv_element_delete_single(PvElement *self)
+static bool _pv_element_free_single(PvElement *self)
 {
 	if(NULL == self){
 		pv_bug("");
@@ -419,7 +419,7 @@ static bool _pv_element_delete_single(PvElement *self)
 		return false;
 	}
 
-	if(!info->func_delete_data(self->data)){
+	if(!info->func_free_data(self->data)){
 		pv_bug("");
 		return false;
 	}
@@ -429,7 +429,7 @@ static bool _pv_element_delete_single(PvElement *self)
 	return true;
 }
 
-static bool _pv_element_remove_delete_recursive_inline(PvElement *self,
+static bool _pv_element_remove_free_recursive_inline(PvElement *self,
 		int *level, PvElementRecursiveError *error)
 {
 	int num = pv_general_get_parray_num((void **)self->childs);
@@ -443,7 +443,7 @@ static bool _pv_element_remove_delete_recursive_inline(PvElement *self,
 	// pv_debug("delete childs:%3d:%d", *level, num);
 
 	for(int i = (num - 1); 0 <= i; i--){
-		if(!_pv_element_remove_delete_recursive_inline(
+		if(!_pv_element_remove_free_recursive_inline(
 					self->childs[i],
 					level,
 					error)){
@@ -458,7 +458,7 @@ static bool _pv_element_remove_delete_recursive_inline(PvElement *self,
 
 	(*level)--;
 
-	if(!_pv_element_delete_single(self)){
+	if(!_pv_element_free_single(self)){
 		error->is_error =true;
 		error->level = *level;
 		error->element = self;
@@ -510,7 +510,11 @@ static bool _pv_element_detouch_parent(PvElement * const self)
 	return true;
 }
 
-bool pv_element_remove_delete_recursive(PvElement *self)
+/*! @detail
+ * element remove in parent->childs
+ * delete element and childs recursive.
+ */
+bool pv_element_remove_free_recursive(PvElement *self)
 {
 	if(NULL == self){
 		pv_error("");
@@ -531,7 +535,7 @@ bool pv_element_remove_delete_recursive(PvElement *self)
 		.element = NULL,
 	};
 	int level = 0;
-	if(!_pv_element_remove_delete_recursive_inline(self, &level, &error)){
+	if(!_pv_element_remove_free_recursive_inline(self, &level, &error)){
 		pv_error("%d\n", error.level);
 		return false;
 	}
@@ -767,7 +771,7 @@ PvElement *pv_element_raster_new_from_filepath(const char *filepath)
 	}
 
 	if(! pv_element_raster_read_file(self, filepath)){
-		_pv_element_delete_single(self);
+		_pv_element_free_single(self);
 		return NULL;
 	}
 

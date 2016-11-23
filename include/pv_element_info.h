@@ -20,7 +20,7 @@ typedef struct {
 }InfoTargetSvg;
 
 typedef gpointer (*PvElementFuncNewData)(void);
-typedef bool (*PvElementFuncDeleteData)(void *data);
+typedef bool (*PvElementFuncFreeData)(void *data);
 typedef gpointer (*PvElementFuncCopyNewData)(void *data);
 /** @brief
  * @return 0正常終了 負の値:異常終了
@@ -79,7 +79,7 @@ typedef struct PvElementInfo{
 	PvElementKind kind;
 	const char *name;
 	PvElementFuncNewData			func_new_data;
-	PvElementFuncDeleteData			func_delete_data;
+	PvElementFuncFreeData			func_free_data;
 	PvElementFuncCopyNewData		func_copy_new_data;
 	PvElementFuncWriteSvg			func_write_svg;
 	PvElementFuncDraw			func_draw;

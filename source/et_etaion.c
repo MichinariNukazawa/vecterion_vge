@@ -414,7 +414,7 @@ bool et_etaion_remove_delete_layer(EtDocId doc_id)
 	pv_focus_clear_set_element(focus, element->parent);
 
 	bool ret = true;
-	if(!pv_element_remove_delete_recursive(element)){
+	if(!pv_element_remove_free_recursive(element)){
 		et_error("");
 		ret = false;
 	}

@@ -268,7 +268,7 @@ static PvElement *_pv_svg_path_new_element_from_svg(
 	return element_new;
 
 failed:
-	pv_element_delete(element_new);
+	pv_element_free(element_new);
 
 	return NULL;
 }

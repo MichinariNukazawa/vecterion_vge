@@ -716,7 +716,7 @@ PvVg *pv_io_new_from_file(const char *filepath)
 	// remove default layer, when after append element from raster image file.
 	int num = pv_general_get_parray_num((void **)(vg->element_root->childs));
 	pv_assertf(2 <= num, "%d", num);
-	assert(pv_element_remove_delete_recursive(vg->element_root->childs[0]));
+	assert(pv_element_remove_free_recursive(vg->element_root->childs[0]));
 	assert((num - 1) == pv_general_get_parray_num((void **)(vg->element_root->childs)));
 
 

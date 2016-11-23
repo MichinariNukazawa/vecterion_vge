@@ -37,7 +37,7 @@ PvVg *pv_vg_new()
 
 void pv_vg_free(PvVg *self)
 {
-	pv_assert(pv_element_remove_delete_recursive(self->element_root));
+	pv_assert(pv_element_remove_free_recursive(self->element_root));
 	free(self);
 }
 
@@ -72,7 +72,7 @@ bool pv_vg_copy_overwrite(PvVg *dst, const PvVg *src)
 		return false;
 	}
 
-	if(!pv_element_remove_delete_recursive(dst->element_root)){
+	if(!pv_element_remove_free_recursive(dst->element_root)){
 		pv_error("");
 		return false;
 	}

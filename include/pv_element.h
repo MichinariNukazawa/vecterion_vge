@@ -51,15 +51,10 @@ static const PvElementRecursiveError PvElementRecursiveError_Default = {
 
 
 PvElement *pv_element_new(const PvElementKind);
-void pv_element_delete(PvElement *);
+void pv_element_free(PvElement *);
 
 PvElement *pv_element_copy_recursive(const PvElement *);
-/*! @brief
- * element remove in parent->childs
- * delete element and childs recursive.
- */
-bool pv_element_remove_delete_recursive(PvElement *);
-
+bool pv_element_remove_free_recursive(PvElement *);
 
 bool pv_element_append_child(PvElement *parent, const PvElement *prev, PvElement *element);
 

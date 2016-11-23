@@ -621,7 +621,7 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 			pv_element_append_child(element_group_edit_draw, NULL, element_bezier);
 		}
 		et_doc_set_element_group_edit_draw_from_id(doc_id, element_group_edit_draw);
-		pv_element_remove_delete_recursive(element_group_edit_draw);
+		pv_element_remove_free_recursive(element_group_edit_draw);
 	}
 
 	return true;
