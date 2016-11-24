@@ -24,30 +24,11 @@ static PvRect _get_rect_extent_from_cr(cairo_t *cr)
 
 
 
-/* ****************
- * null functions. (ex. use method not implement)
- **************** */
+// ******** ********
+// null functions. (ex. use method not implement)
+//! @detail 無効なindexを引いた際に埋め込まれているダミー関数
+// ******** ********
 
-/** @brief 無効なindexを引いた際に埋め込まれているダミー関数 */
-static gpointer _func_doabort_new()
-{
-	pv_error("");
-	abort();
-	return NULL;
-}
-
-static bool _func_doabort_free_data(void *_data)
-{
-	pv_error("");
-	abort();
-	return false;
-}
-
-static gpointer _func_doabort_copy_new(void *_data)
-{
-	pv_critical("");
-	abort();
-}
 
 /** @brief write_svg未実装箇所に挿入する */
 static int _func_notimpl_write_svg(
@@ -90,53 +71,13 @@ static int _func_notimpl_write_svg(
 	return 0;
 }
 
-static bool _func_notimpl_draw(
-		cairo_t *cr,
-		const PvRenderOption render_option,
-		const PvElement *element)
-{
-	pv_error("");
-	return true;
-}
-
-static bool _func_notimpl_is_touch_element(
-		bool *is_touch,
-		const PvElement *element,
-		int offset,
-		double gx,
-		double gy)
-{
-	pv_error("");
-	*is_touch = false;
-	return true;
-}
-
-static bool _func_notimpl_is_diff_one(
-		bool *is_diff,
-		const PvElement *element0,
-		const PvElement *element1)
-{
-	pv_error("");
-	*is_diff = true;
-	return true;
-}
-
-static bool _func_notimpl_move_element(
-		const PvElement *element,
-		double gx,
-		double gy)
-{
-	pv_error("");
-	return false;
-}
-
-int _func_zero_get_num_anchor_point(
+static int _func_zero_get_num_anchor_point(
 		const PvElement *element)
 {
 	return 0;
 }
 
-PvAnchorPoint *_func_null_new_anchor_points(
+static PvAnchorPoint *_func_null_new_anchor_points(
 		const PvElement *element)
 {
 	return NULL;
@@ -1604,27 +1545,6 @@ static bool _func_raster_set_rect_by_anchor_points(
  **************** */
 
 const PvElementInfo _pv_element_infos[] = {
-	{PvElementKind_NotDefined, "NotDefined",
-		.func_new_data				= _func_doabort_new,
-		.func_free_data				= _func_doabort_free_data,
-		.func_copy_new_data			= _func_doabort_copy_new,
-		.func_write_svg				= _func_notimpl_write_svg,
-		.func_draw				= _func_notimpl_draw,
-		.func_draw_focusing			= _func_notimpl_draw,
-		.func_is_touch_element			= _func_notimpl_is_touch_element,
-		.func_is_diff_one			= _func_notimpl_is_diff_one,
-		.func_get_point_by_anchor_points	= _func_notimpl_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _func_notimpl_set_point_by_anchor_points,
-		.func_move_element			= _func_notimpl_move_element,
-		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
-		.func_new_anchor_points			= _func_null_new_anchor_points,
-		.func_get_anchor_point			= _func_notimpl_get_anchor_point,
-		.func_set_anchor_point_point		= _func_notimpl_set_anchor_point_point,
-		.func_move_anchor_point_point		= _func_notimpl_move_anchor_point,
-		.func_get_rect_by_anchor_points		= _func_notimpl_get_rect_by_anchor_points,
-		.func_set_rect_by_anchor_points		= _func_notimpl_set_rect_by_anchor_points,
-		.func_get_rect_by_draw			= _func_notimpl_get_rect_by_draw,
-	},
 	{PvElementKind_Root, "Root",
 		.func_new_data				= _func_group_new_data,
 		.func_free_data				= _func_group_free_data,
@@ -1730,28 +1650,6 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_set_rect_by_anchor_points		= _func_raster_set_rect_by_anchor_points,
 		.func_get_rect_by_draw			= _func_notimpl_get_rect_by_draw,
 	},
-	/* 番兵 */
-	{PvElementKind_EndOfKind, "EndOfKind",
-		.func_new_data				= _func_doabort_new,
-		.func_free_data				= _func_doabort_free_data,
-		.func_copy_new_data			= _func_doabort_copy_new,
-		.func_write_svg				= _func_notimpl_write_svg,
-		.func_draw				= _func_notimpl_draw,
-		.func_draw_focusing			= _func_notimpl_draw,
-		.func_is_touch_element			= _func_notimpl_is_touch_element,
-		.func_is_diff_one			= _func_notimpl_is_diff_one,
-		.func_get_point_by_anchor_points	= _func_notimpl_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _func_notimpl_set_point_by_anchor_points,
-		.func_move_element			= _func_notimpl_move_element,
-		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
-		.func_new_anchor_points			= _func_null_new_anchor_points,
-		.func_get_anchor_point			= _func_notimpl_get_anchor_point,
-		.func_set_anchor_point_point		= _func_notimpl_set_anchor_point_point,
-		.func_move_anchor_point_point		= _func_notimpl_move_anchor_point,
-		.func_get_rect_by_anchor_points		= _func_notimpl_get_rect_by_anchor_points,
-		.func_set_rect_by_anchor_points		= _func_notimpl_set_rect_by_anchor_points,
-		.func_get_rect_by_draw			= _func_notimpl_get_rect_by_draw,
-	},
 };
 
 
@@ -1762,13 +1660,8 @@ const PvElementInfo _pv_element_infos[] = {
 
 const PvElementInfo *pv_element_get_info_from_kind(PvElementKind kind)
 {
-	if(PvElementKind_NotDefined == kind || PvElementKind_EndOfKind == kind){
-		pv_error("%d", kind);
-		return NULL;
-	}
-
-	int num = sizeof(_pv_element_infos) / sizeof(PvElementInfo);
-	for(int i = 0; i < num; i++){
+	size_t num = sizeof(_pv_element_infos) / sizeof(PvElementInfo);
+	for(int i = 0; i < (int)num; i++){
 		if(kind == _pv_element_infos[i].kind){
 			return &_pv_element_infos[i];
 		}
