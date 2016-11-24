@@ -339,6 +339,11 @@ typedef enum{
 	PvElementPointKind_AnchorHandle,
 }PvElementPointKind;
 
+typedef enum{
+	PvSimplifyOption_All,
+	PvSimplifyOption_ResizeOnly,
+}PvSimplifyOption;
+
 int _func_bezier_get_num_anchor_point(const PvElement *element);
 
 static PvRect _func_bezier_get_rect_by_draw(
@@ -346,6 +351,52 @@ static PvRect _func_bezier_get_rect_by_draw(
 
 static PvRect _func_bezier_get_rect_by_anchor_points(
 		const PvElement *element);
+
+static void _bezier_rescale_anchor_point(PvAnchorPoint *ap, PvPoint point, PvPoint scale)
+{
+	PvPoint pp = pv_anchor_point_get_point(ap);
+	pp = pv_point_sub(pp, point);
+	pp = pv_point_mul(pp, scale);
+	pp = pv_point_add(pp, point);
+	pv_anchor_point_set_point(ap, pp);
+
+	PvPoint hp = pv_anchor_point_get_handle_relate(ap, PvAnchorPointIndex_HandlePrev);
+	hp = pv_point_mul(hp, scale);
+	pv_anchor_point_set_handle_relate(ap, PvAnchorPointIndex_HandlePrev, hp);
+
+	PvPoint hn = pv_anchor_point_get_handle_relate(ap, PvAnchorPointIndex_HandleNext);
+	hn = pv_point_mul(hn, scale);
+	pv_anchor_point_set_handle_relate(ap, PvAnchorPointIndex_HandleNext, hn);
+}
+
+static PvElement *_bezier_simplify_new(
+		const PvElement *element,
+		PvRenderContext render_context,
+		PvSimplifyOption option)
+{
+	pv_assert(element);
+
+	PvElement *simplify = pv_element_copy_recursive(element);
+	pv_assert(simplify);
+	PvElementBezierData *simplify_data = simplify->data;
+	pv_assert(simplify_data);
+
+	// scale
+	simplify->stroke.width *= render_context.scale;
+	for(int i = 0; i < simplify_data->anchor_points_num; i++){
+		PvPoint point = {0, 0};
+		PvPoint scale = {render_context.scale, render_context.scale};
+		PvAnchorPoint *ap = &(simplify_data->anchor_points[i]);
+		_bezier_rescale_anchor_point(ap, point, scale);
+	}
+
+	return simplify;
+}
+
+void _bezier_simplify_free(PvElement *self)
+{
+	pv_element_remove_free_recursive(self);
+}
 
 static void _bezier_draw_point(cairo_t *cr, PvPoint gp, PvElementPointKind kind)
 {
@@ -372,91 +423,66 @@ static void _draw_extent_from_rect(cairo_t *cr, PvRect rect)
 
 void _bezier_command_path(
 		cairo_t *cr,
-		const PvRenderContext render_context,
 		const PvElement *element)
 {
 	const PvElementBezierData *data = element->data;
-
-	PvAnchorPoint * const anchor_points = data->anchor_points;
+	const PvAnchorPoint *anchor_points = data->anchor_points;
 
 	if((data->anchor_points_num) <= 0){
 		return;
 	}
 
 	// ** path stroking
-	double first_ap_x = 0, first_ap_y = 0, second_ap_x = 0, second_ap_y = 0;
 	for(int i = 0; i < data->anchor_points_num; i++){
-		double x = anchor_points[i].points[PvAnchorPointIndex_Point].x;
-		double y = anchor_points[i].points[PvAnchorPointIndex_Point].y;
-
+		PvPoint point = pv_anchor_point_get_point(&anchor_points[i]);
 		if(0 == i){
-			x *= render_context.scale;
-			y *= render_context.scale;
-
 			if(1 == data->anchor_points_num){
-				cairo_rectangle (cr, x, y, 2, 2);
+				cairo_rectangle (cr, point.x, point.y, 2, 2);
 				cairo_fill (cr);
 			}else{
-				cairo_move_to(cr, x, y);
+				cairo_move_to(cr, point.x, point.y);
 			}
 		}else{
 			const PvAnchorPoint *ap_prev = &anchor_points[i - 1];
-			first_ap_x = ap_prev->points[PvAnchorPointIndex_HandleNext].x
-				+ ap_prev->points[PvAnchorPointIndex_Point].x;
-			first_ap_y = ap_prev->points[PvAnchorPointIndex_HandleNext].y
-				+ ap_prev->points[PvAnchorPointIndex_Point].y;
+			PvPoint first_point = pv_anchor_point_get_handle(ap_prev, PvAnchorPointIndex_HandleNext);
 
-			second_ap_x = anchor_points[i].points[PvAnchorPointIndex_HandlePrev].x;
-			second_ap_y = anchor_points[i].points[PvAnchorPointIndex_HandlePrev].y;
-			second_ap_x += x;
-			second_ap_y += y;
+			PvPoint second_point = pv_anchor_point_get_handle(
+					&(anchor_points[i]),
+					PvAnchorPointIndex_HandlePrev);
 
-			x *= render_context.scale;
-			y *= render_context.scale;
-			first_ap_x *= render_context.scale;
-			first_ap_y *= render_context.scale;
-			second_ap_x *= render_context.scale;
-			second_ap_y *= render_context.scale;
-			cairo_curve_to(cr, first_ap_x, first_ap_y, second_ap_x, second_ap_y, x, y);
+			cairo_curve_to(
+					cr,
+					first_point.x, first_point.y,
+					second_point.x,  second_point.y,
+					point.x, point.y);
 		}
 
 	}
 	if(data->is_close){
-		double x = anchor_points[0].points[PvAnchorPointIndex_Point].x;
-		double y = anchor_points[0].points[PvAnchorPointIndex_Point].y;
+		PvPoint point = pv_anchor_point_get_point(&anchor_points[0]);
 
 		const PvAnchorPoint *ap_last = &anchor_points[data->anchor_points_num - 1];
-		first_ap_x = ap_last->points[PvAnchorPointIndex_HandleNext].x
-			+ ap_last->points[PvAnchorPointIndex_Point].x;
-		first_ap_y = ap_last->points[PvAnchorPointIndex_HandleNext].y
-			+ ap_last->points[PvAnchorPointIndex_Point].y;
+		PvPoint first_point = pv_anchor_point_get_handle(ap_last, PvAnchorPointIndex_HandleNext);
 
 		const PvAnchorPoint *ap_first = &anchor_points[0];
-		second_ap_x = ap_first->points[PvAnchorPointIndex_HandlePrev].x
-			+ ap_first->points[PvAnchorPointIndex_Point].x;
-		second_ap_y = ap_first->points[PvAnchorPointIndex_HandlePrev].y
-			+ ap_first->points[PvAnchorPointIndex_Point].y;
+		PvPoint second_point = pv_anchor_point_get_handle(ap_first, PvAnchorPointIndex_HandlePrev);
 
-		first_ap_x *= render_context.scale;
-		first_ap_y *= render_context.scale;
-		second_ap_x *= render_context.scale;
-		second_ap_y *= render_context.scale;
-		x *= render_context.scale;
-		y *= render_context.scale;
-		cairo_curve_to(cr, first_ap_x, first_ap_y, second_ap_x, second_ap_y, x, y);
+		cairo_curve_to(
+				cr,
+				first_point.x, first_point.y,
+				second_point.x,  second_point.y,
+				point.x, point.y);
 		cairo_close_path (cr);
 	}
 }
 
 static void _func_bezier_draw_inline(
 		cairo_t *cr,
-		const PvRenderContext render_context,
 		const PvElement *element)
 {
-	_bezier_command_path(cr, render_context, element);
+	_bezier_command_path(cr, element);
 
-	double c_width = element->stroke.width * render_context.scale;
-	cairo_set_line_width(cr, c_width);
+	cairo_set_line_width(cr, element->stroke.width);
 
 	//! fill
 	PvCairoRgbaColor cc_f = pv_color_get_cairo_rgba(
@@ -509,18 +535,13 @@ static bool _node_add_stroke_props(xmlNodePtr node, PvStroke stroke)
 }
 
 static void _bezier_draw_anchor_handle(
-		cairo_t *cr, PvAnchorPoint ap,
-		int ofs_index, PvRenderContext render_context)
+		cairo_t *cr,
+		PvAnchorPoint ap,
+		int ofs_index)
 {
 	PvPoint gp_current = ap.points[PvAnchorPointIndex_Point];
 	PvPoint gp_prev = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_HandlePrev);
 	PvPoint gp_next = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_HandleNext);
-	gp_current.x *= render_context.scale;
-	gp_current.y *= render_context.scale;
-	gp_prev.x *= render_context.scale;
-	gp_prev.y *= render_context.scale;
-	gp_next.x *= render_context.scale;
-	gp_next.y *= render_context.scale;
 
 	if(0 == ofs_index){
 		// ** current anchor_point
@@ -731,9 +752,16 @@ static bool _func_bezier_draw(
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
-	const PvRenderContext render_context = render_option.render_context;
-	_func_bezier_draw_inline(cr, render_context, element);
+	PvElement *simplify = _bezier_simplify_new(
+			element,
+			render_option.render_context,
+			PvSimplifyOption_All);
+	pv_assert(simplify);
+
+	_func_bezier_draw_inline(cr, simplify);
 	cairo_new_path(cr);
+
+	_bezier_simplify_free(simplify);
 
 	return true;
 }
@@ -747,51 +775,50 @@ static bool _func_bezier_draw_focusing(
 	const PvFocus *focus = render_option.focus;
 
 	const PvElementBezierData *data = element->data;
-	if(NULL == data){
-		pv_error("");
-		return false;
-	}
+	pv_assert(data);
+
+	PvElement *simplify = _bezier_simplify_new(
+			element,
+			render_option.render_context,
+			PvSimplifyOption_ResizeOnly);
+	pv_assert(simplify);
+	const PvElementBezierData *simplify_data = simplify->data;
 
 	// ** stroke line
-	_bezier_command_path(cr, render_context, element);
+	_bezier_command_path(cr, simplify);
 	double LINE_WIDTH_FOCUS = 1.0;
 	cairo_set_line_width(cr, LINE_WIDTH_FOCUS);
 	pv_cairo_set_source_rgba_workingcolor(cr);
 	cairo_stroke(cr);
 
 	// ** anchor points
-	int num = _func_bezier_get_num_anchor_point(element);
+	int num = _func_bezier_get_num_anchor_point(simplify);
 	for(int i = 0; i < num; i++){
 		int ofs_index = (i - focus->index);
 		if(-1 != focus->index){
 			if(abs(ofs_index) <= 1){
 				// * anchor handle. draw to focus and +-1
-				_bezier_draw_anchor_handle(
-						cr, data->anchor_points[i],
-						ofs_index, render_context);
+				_bezier_draw_anchor_handle(cr, simplify_data->anchor_points[i], ofs_index);
 			}
-			// *anchor handle. to last AnchorPoint
 			if(0 == focus->index && i == (num - 1) && data->is_close){
-				_bezier_draw_anchor_handle(
-						cr, data->anchor_points[i],
-						-1, render_context);
+				// *anchor handle. to last AnchorPoint
+				_bezier_draw_anchor_handle(cr, simplify_data->anchor_points[i], -1);
 			}
 		}
-		PvPoint gp = data->anchor_points[i].points[PvAnchorPointIndex_Point];
-		gp.x *= render_context.scale;
-		gp.y *= render_context.scale;
+
+		// draw AnchorPoint
+		PvPoint p = simplify_data->anchor_points[i].points[PvAnchorPointIndex_Point];
 		PvElementPointKind kind = ((i == focus->index)?
 				PvElementPointKind_Selected : PvElementPointKind_Normal);
-		_bezier_draw_point(cr, gp, kind);
+		_bezier_draw_point(cr, p, kind);
 	}
 
 	// ** extent
 	if(render_context.is_extent_view){
-		PvRect rect_extent = _func_bezier_get_rect_by_anchor_points(element);
-		PvRect crect_extent = pv_rect_mul_value(rect_extent, render_context.scale);
-
-		_draw_extent_from_rect(cr, crect_extent);
+		_draw_extent_from_rect(cr, _func_bezier_get_rect_by_anchor_points(simplify));
 	}
+
+	_bezier_simplify_free(simplify);
 
 	return true;
 }
@@ -811,7 +838,7 @@ static bool _func_bezier_is_touch_element(
 	pv_assert(cr);
 
 	PvRenderContext render_context = PvRenderContext_Default;
-	_bezier_command_path(cr, render_context, element);
+	_bezier_command_path(cr, element);
 
 	double c_width = (element->stroke.width * render_context.scale) + offset;
 	cairo_set_line_width(cr, c_width);
@@ -1077,19 +1104,7 @@ static bool _func_bezier_set_rect_by_anchor_points(
 	int num = data->anchor_points_num;
 	for(int i = 0; i < num; i++){
 		PvAnchorPoint *ap = &(data->anchor_points[i]);
-		PvPoint pp = pv_anchor_point_get_point(ap);
-		pp = pv_point_sub(pp, point);
-		pp = pv_point_mul(pp, scale);
-		pp = pv_point_add(pp, point);
-		pv_anchor_point_set_point(ap, pp);
-
-		PvPoint hp = pv_anchor_point_get_handle_relate(ap, PvAnchorPointIndex_HandlePrev);
-		hp = pv_point_mul(hp, scale);
-		pv_anchor_point_set_handle_relate(ap, PvAnchorPointIndex_HandlePrev, hp);
-
-		PvPoint hn = pv_anchor_point_get_handle_relate(ap, PvAnchorPointIndex_HandleNext);
-		hn = pv_point_mul(hn, scale);
-		pv_anchor_point_set_handle_relate(ap, PvAnchorPointIndex_HandleNext, hn);
+		_bezier_rescale_anchor_point(ap, point, scale);
 	}
 
 	return true;
@@ -1103,8 +1118,7 @@ static PvRect _func_bezier_get_rect_by_draw(
 	cairo_t *cr = cairo_create (surface);
 	pv_assert(cr);
 
-	PvRenderContext render_context = PvRenderContext_Default;
-	_func_bezier_draw_inline(cr, render_context, element);
+	_func_bezier_draw_inline(cr, element);
 
 	PvRect rect = _get_rect_extent_from_cr(cr);
 
