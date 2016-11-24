@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pv_error.h"
-#include "pv_element_info_cairo.h"
 #include "pv_render_context.h"
 #include "pv_color.h"
+#include "pv_cairo.h"
 
 
 
@@ -29,28 +29,28 @@ static PvRect _get_rect_extent_from_cr(cairo_t *cr)
  **************** */
 
 /** @brief 無効なindexを引いた際に埋め込まれているダミー関数 */
-static gpointer _pv_element_doabort_new()
+static gpointer _func_doabort_new()
 {
 	pv_error("");
 	abort();
 	return NULL;
 }
 
-static bool _pv_element_doabort_free_data(void *_data)
+static bool _func_doabort_free_data(void *_data)
 {
 	pv_error("");
 	abort();
 	return false;
 }
 
-static gpointer _pv_element_doabort_copy_new(void *_data)
+static gpointer _func_doabort_copy_new(void *_data)
 {
 	pv_critical("");
 	abort();
 }
 
 /** @brief write_svg未実装箇所に挿入する */
-static int _pv_element_notimpl_write_svg(
+static int _func_notimpl_write_svg(
 		InfoTargetSvg *target,
 		const PvElement *element, const ConfWriteSvg *conf)
 {
@@ -90,7 +90,7 @@ static int _pv_element_notimpl_write_svg(
 	return 0;
 }
 
-static bool _pv_element_notimpl_draw(
+static bool _func_notimpl_draw(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
@@ -99,7 +99,7 @@ static bool _pv_element_notimpl_draw(
 	return true;
 }
 
-static bool _pv_element_notimpl_is_touch_element(
+static bool _func_notimpl_is_touch_element(
 		bool *is_touch,
 		const PvElement *element,
 		int offset,
@@ -111,7 +111,7 @@ static bool _pv_element_notimpl_is_touch_element(
 	return true;
 }
 
-static bool _pv_element_notimpl_is_diff_one(
+static bool _func_notimpl_is_diff_one(
 		bool *is_diff,
 		const PvElement *element0,
 		const PvElement *element1)
@@ -121,7 +121,7 @@ static bool _pv_element_notimpl_is_diff_one(
 	return true;
 }
 
-static bool _pv_element_notimpl_move_element(
+static bool _func_notimpl_move_element(
 		const PvElement *element,
 		double gx,
 		double gy)
@@ -130,20 +130,32 @@ static bool _pv_element_notimpl_move_element(
 	return false;
 }
 
-static PvPoint _pv_element_notimpl_get_point_by_anchor_points(
+int _func_zero_get_num_anchor_point(
+		const PvElement *element)
+{
+	return 0;
+}
+
+PvAnchorPoint *_func_null_new_anchor_points(
+		const PvElement *element)
+{
+	return NULL;
+}
+
+static PvPoint _func_notimpl_get_point_by_anchor_points(
 		const PvElement *element)
 {
 	return PvPoint_Default;
 }
 
-static void _pv_element_notimpl_set_point_by_anchor_points(
+static void _func_notimpl_set_point_by_anchor_points(
 		PvElement *element,
 		const PvPoint point)
 {
 	return;
 }
 
-static PvAnchorPoint _pv_element_notimpl_get_anchor_point(
+static PvAnchorPoint _func_notimpl_get_anchor_point(
 		const PvElement *element,
 		const int index)
 {
@@ -152,7 +164,7 @@ static PvAnchorPoint _pv_element_notimpl_get_anchor_point(
 	return ap;
 }
 
-static bool _pv_element_notimpl_set_anchor_point_point(
+static bool _func_notimpl_set_anchor_point_point(
 		const PvElement *element,
 		const int index,
 		const PvPoint point)
@@ -160,7 +172,7 @@ static bool _pv_element_notimpl_set_anchor_point_point(
 	return true;
 }
 
-static bool _pv_element_notimpl_move_anchor_point(
+static bool _func_notimpl_move_anchor_point(
 		const PvElement *element,
 		const int index,
 		const PvPoint move)
@@ -168,20 +180,20 @@ static bool _pv_element_notimpl_move_anchor_point(
 	return true;
 }
 
-static PvRect _pv_element_notimpl_get_rect_by_anchor_points(
+static PvRect _func_notimpl_get_rect_by_anchor_points(
 		const PvElement *element)
 {
 	return PvRect_Default;
 }
 
-static bool _pv_element_notimpl_set_rect_by_anchor_points(
+static bool _func_notimpl_set_rect_by_anchor_points(
 		PvElement *element,
 		PvRect rect)
 {
 	return true;
 }
 
-static PvRect _pv_element_notimpl_get_rect_by_draw(
+static PvRect _func_notimpl_get_rect_by_draw(
 		const PvElement *element)
 {
 	return PvRect_Default;
@@ -220,7 +232,7 @@ char *pv_general_new_str(const char *src)
  * Group(Root,Layer,Group)
  **************** */
 
-static gpointer _pv_element_group_new_data()
+static gpointer _func_group_new_data()
 {
 	PvElementGroupData *data = (PvElementGroupData *)malloc(sizeof(PvElementGroupData));
 	if(NULL == data){
@@ -233,7 +245,7 @@ static gpointer _pv_element_group_new_data()
 	return (gpointer)data;
 }
 
-static bool _pv_element_group_free_data(void *_data)
+static bool _func_group_free_data(void *_data)
 {
 	if(NULL == _data){
 		pv_error("");
@@ -251,7 +263,7 @@ static bool _pv_element_group_free_data(void *_data)
 	return true;
 }
 
-static gpointer _pv_element_group_copy_new_data(void *_data)
+static gpointer _func_group_copy_new_data(void *_data)
 {
 	if(NULL == _data){
 		pv_bug("");
@@ -270,7 +282,7 @@ static gpointer _pv_element_group_copy_new_data(void *_data)
 	return (gpointer)new_data;
 }
 
-static int _pv_element_group_write_svg(
+static int _func_group_write_svg(
 		InfoTargetSvg *target,
 		const PvElement *element, const ConfWriteSvg *conf)
 {
@@ -320,7 +332,7 @@ static int _pv_element_group_write_svg(
 	return 0;
 }
 
-static bool _pv_element_group_draw(
+static bool _func_group_draw(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
@@ -328,7 +340,7 @@ static bool _pv_element_group_draw(
 	return true;
 }
 
-static bool _pv_element_group_is_touch_element(
+static bool _func_group_is_touch_element(
 		bool *is_touch,
 		const PvElement *element,
 		int offset,
@@ -351,7 +363,7 @@ static bool _pv_general_strcmp(char *str0, char *str1)
 	return (0 == strcmp(str0, str1));
 }
 
-static bool _pv_element_group_is_diff_one(
+static bool _func_group_is_diff_one(
 		bool *is_diff,
 		const PvElement *element0,
 		const PvElement *element1)
@@ -368,7 +380,7 @@ static bool _pv_element_group_is_diff_one(
 	return true;
 }
 
-static bool _pv_element_group_move_element(
+static bool _func_group_move_element(
 		const PvElement *element,
 		double gx,
 		double gy)
@@ -376,76 +388,159 @@ static bool _pv_element_group_move_element(
 	return true;
 }
 
-/* ****************
- * Bezier
- **************** */
+// ******** ********
+// Bezier
+// ******** ********
 
-int _pv_element_bezier_get_num_anchor_point(const PvElement *element);
+typedef enum{
+	PvElementPointKind_Normal,
+	PvElementPointKind_Selected,
+	PvElementPointKind_AnchorHandle,
+}PvElementPointKind;
 
-static gpointer _pv_element_bezier_new_data()
+int _func_bezier_get_num_anchor_point(const PvElement *element);
+
+static PvRect _func_bezier_get_rect_by_draw(
+		const PvElement *element);
+
+static PvRect _func_bezier_get_rect_by_anchor_points(
+		const PvElement *element);
+
+static void _bezier_draw_point(cairo_t *cr, PvPoint gp, PvElementPointKind kind)
 {
-	PvElementBezierData *data = (PvElementBezierData *)malloc(sizeof(PvElementBezierData));
-	if(NULL == data){
-		pv_critical("");
-		exit(-1);
+	cairo_arc (cr, gp.x, gp.y, 2.0, 0., 2 * M_PI);
+
+	cairo_set_source_rgba (cr, 1, 1, 1, 1.0); // white
+	if(PvElementPointKind_Selected == kind){
+		pv_cairo_set_source_rgba_workingcolor(cr);
 	}
+	cairo_fill_preserve (cr);
 
-	data->is_close = false;
-	data->anchor_points_num = 0;
-	data->anchor_points = NULL;
-
-	return (gpointer)data;
+	pv_cairo_set_source_rgba_workingcolor(cr);
+	cairo_set_line_width(cr, 0.75);
+	cairo_stroke (cr);
 }
 
-static bool _pv_element_bezier_free_data(void *_data)
+static void _draw_extent_from_rect(cairo_t *cr, PvRect rect)
 {
-	if(NULL == _data){
+	cairo_rectangle (cr, rect.x, rect.y, rect.w, rect.h);
+	pv_cairo_set_source_rgba_workingcolor(cr);
+	cairo_set_line_width(cr, 1.0);
+	cairo_stroke(cr);
+}
+
+bool _bezier_command_path(
+		cairo_t *cr,
+		const PvRenderContext render_context,
+		const PvElement *element)
+{
+	const PvElementBezierData *data = element->data;
+	if(NULL == data){
 		pv_error("");
 		return false;
 	}
+	PvAnchorPoint * const anchor_points = data->anchor_points;
 
-	PvElementBezierData *data = (PvElementBezierData *)_data;
-
-	if(NULL != data->anchor_points){
-		free(data->anchor_points);
+	if((data->anchor_points_num) <= 0){
+		return true;
 	}
 
-	free(data);
+	// ** path stroking
+	double first_ap_x = 0, first_ap_y = 0, second_ap_x = 0, second_ap_y = 0;
+	for(int i = 0; i < data->anchor_points_num; i++){
+		double x = anchor_points[i].points[PvAnchorPointIndex_Point].x;
+		double y = anchor_points[i].points[PvAnchorPointIndex_Point].y;
+
+		if(0 == i){
+			x *= render_context.scale;
+			y *= render_context.scale;
+
+			if(1 == data->anchor_points_num){
+				cairo_rectangle (cr, x, y, 2, 2);
+				cairo_fill (cr);
+			}else{
+				cairo_move_to(cr, x, y);
+			}
+		}else{
+			const PvAnchorPoint *ap_prev = &anchor_points[i - 1];
+			first_ap_x = ap_prev->points[PvAnchorPointIndex_HandleNext].x
+				+ ap_prev->points[PvAnchorPointIndex_Point].x;
+			first_ap_y = ap_prev->points[PvAnchorPointIndex_HandleNext].y
+				+ ap_prev->points[PvAnchorPointIndex_Point].y;
+
+			second_ap_x = anchor_points[i].points[PvAnchorPointIndex_HandlePrev].x;
+			second_ap_y = anchor_points[i].points[PvAnchorPointIndex_HandlePrev].y;
+			second_ap_x += x;
+			second_ap_y += y;
+
+			x *= render_context.scale;
+			y *= render_context.scale;
+			first_ap_x *= render_context.scale;
+			first_ap_y *= render_context.scale;
+			second_ap_x *= render_context.scale;
+			second_ap_y *= render_context.scale;
+			cairo_curve_to(cr, first_ap_x, first_ap_y, second_ap_x, second_ap_y, x, y);
+		}
+
+	}
+	if(data->is_close){
+		double x = anchor_points[0].points[PvAnchorPointIndex_Point].x;
+		double y = anchor_points[0].points[PvAnchorPointIndex_Point].y;
+
+		const PvAnchorPoint *ap_last = &anchor_points[data->anchor_points_num - 1];
+		first_ap_x = ap_last->points[PvAnchorPointIndex_HandleNext].x
+			+ ap_last->points[PvAnchorPointIndex_Point].x;
+		first_ap_y = ap_last->points[PvAnchorPointIndex_HandleNext].y
+			+ ap_last->points[PvAnchorPointIndex_Point].y;
+
+		const PvAnchorPoint *ap_first = &anchor_points[0];
+		second_ap_x = ap_first->points[PvAnchorPointIndex_HandlePrev].x
+			+ ap_first->points[PvAnchorPointIndex_Point].x;
+		second_ap_y = ap_first->points[PvAnchorPointIndex_HandlePrev].y
+			+ ap_first->points[PvAnchorPointIndex_Point].y;
+
+		first_ap_x *= render_context.scale;
+		first_ap_y *= render_context.scale;
+		second_ap_x *= render_context.scale;
+		second_ap_y *= render_context.scale;
+		x *= render_context.scale;
+		y *= render_context.scale;
+		cairo_curve_to(cr, first_ap_x, first_ap_y, second_ap_x, second_ap_y, x, y);
+		cairo_close_path (cr);
+	}
 
 	return true;
 }
 
-static gpointer _pv_element_bezier_copy_new_data(void *_data)
+static bool _func_bezier_draw_inline(
+		cairo_t *cr,
+		const PvRenderContext render_context,
+		const PvElement *element)
 {
-	if(NULL == _data){
-		pv_bug("");
-		return NULL;
-	}
+	pv_assert(_bezier_command_path(cr, render_context, element));
 
-	PvElementBezierData *data = (PvElementBezierData *)_data;
+	double c_width = element->stroke.width * render_context.scale;
+	cairo_set_line_width(cr, c_width);
 
-	PvElementBezierData *new_data = (PvElementBezierData *)malloc(sizeof(PvElementBezierData));
-	pv_assert(new_data);
+	//! fill
+	PvCairoRgbaColor cc_f = pv_color_get_cairo_rgba(
+			element->color_pair.colors[PvColorPairGround_BackGround]);
+	cairo_set_source_rgba (cr, cc_f.r, cc_f.g, cc_f.b, cc_f.a);
+	cairo_fill_preserve(cr);
+	//! stroke
+	const PvStrokeLinecapInfo *linecap_info = get_stroke_linecap_info_from_id(element->stroke.linecap);
+	cairo_set_line_cap (cr, linecap_info->cairo_value);
+	const PvStrokeLinejoinInfo *linejoin_info = get_stroke_linejoin_info_from_id(element->stroke.linejoin);
+	cairo_set_line_join (cr, linejoin_info->cairo_value);
+	PvCairoRgbaColor cc_s = pv_color_get_cairo_rgba(
+			element->color_pair.colors[PvColorPairGround_ForGround]);
+	cairo_set_source_rgba (cr, cc_s.r, cc_s.g, cc_s.b, cc_s.a);
+	cairo_stroke_preserve(cr);
 
-	*new_data = *data;
-
-	new_data->anchor_points_num = 0;
-	new_data->anchor_points = NULL;
-	if(0 < data->anchor_points_num && NULL != data->anchor_points){
-		size_t size = data->anchor_points_num * sizeof(PvAnchorPoint);
-		new_data->anchor_points = malloc(size);
-		if(NULL == new_data->anchor_points){
-			pv_critical("");
-			exit(-1);
-		}
-		memcpy(new_data->anchor_points, data->anchor_points, size);
-		new_data->anchor_points_num = data->anchor_points_num;
-	}
-
-	return (gpointer)new_data;
+	return true;
 }
 
-static char *_pv_element_bezier_new_str_from_anchor(const PvAnchorPoint ap_current, const PvAnchorPoint ap_prev)
+static char *_bezier_new_str_from_anchor(const PvAnchorPoint ap_current, const PvAnchorPoint ap_prev)
 {
 	char *str = g_strdup_printf("%c %f %f %f %f %f %f",
 			'C',
@@ -478,7 +573,124 @@ static bool _node_add_stroke_props(xmlNodePtr node, PvStroke stroke)
 	return true;
 }
 
-static int _pv_element_bezier_write_svg(
+static void _bezier_draw_anchor_handle(
+		cairo_t *cr, PvAnchorPoint ap,
+		int ofs_index, PvRenderContext render_context)
+{
+	PvPoint gp_current = ap.points[PvAnchorPointIndex_Point];
+	PvPoint gp_prev = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_HandlePrev);
+	PvPoint gp_next = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_HandleNext);
+	gp_current.x *= render_context.scale;
+	gp_current.y *= render_context.scale;
+	gp_prev.x *= render_context.scale;
+	gp_prev.y *= render_context.scale;
+	gp_next.x *= render_context.scale;
+	gp_next.y *= render_context.scale;
+
+	if(0 == ofs_index){
+		// ** current anchor_point
+		cairo_set_line_width(cr, 1.0);
+		pv_cairo_set_source_rgba_workingcolor(cr);
+		cairo_move_to(cr, gp_current.x, gp_current.y);
+		cairo_line_to(cr, gp_prev.x, gp_prev.y);
+		cairo_stroke(cr);
+
+		cairo_set_line_width(cr, 1.0);
+		pv_cairo_set_source_rgba_workingcolor(cr);
+		cairo_move_to(cr, gp_current.x, gp_current.y);
+		cairo_line_to(cr, gp_next.x, gp_next.y);
+		cairo_stroke(cr);
+
+		_bezier_draw_point(cr, gp_prev, PvElementPointKind_AnchorHandle);
+		_bezier_draw_point(cr, gp_next, PvElementPointKind_AnchorHandle);
+	} else if(-1 == ofs_index) {
+		// ** prev anchor_point
+		cairo_set_line_width(cr, 1.0);
+		pv_cairo_set_source_rgba_workingcolor(cr);
+		cairo_move_to(cr, gp_current.x, gp_current.y);
+		cairo_line_to(cr, gp_next.x, gp_next.y);
+		cairo_stroke(cr);
+
+		_bezier_draw_point(cr, gp_next, PvElementPointKind_AnchorHandle);
+	}else if(1 == ofs_index){
+		// ** next anchor_point
+		cairo_set_line_width(cr, 1.0);
+		pv_cairo_set_source_rgba_workingcolor(cr);
+		cairo_move_to(cr, gp_current.x, gp_current.y);
+		cairo_line_to(cr, gp_prev.x, gp_prev.y);
+		cairo_stroke(cr);
+
+		_bezier_draw_point(cr, gp_prev, PvElementPointKind_AnchorHandle);
+	}else{
+		pv_bug("%d", ofs_index);
+	}
+}
+
+
+static gpointer _func_bezier_new_data()
+{
+	PvElementBezierData *data = (PvElementBezierData *)malloc(sizeof(PvElementBezierData));
+	if(NULL == data){
+		pv_critical("");
+		exit(-1);
+	}
+
+	data->is_close = false;
+	data->anchor_points_num = 0;
+	data->anchor_points = NULL;
+
+	return (gpointer)data;
+}
+
+static bool _func_bezier_free_data(void *_data)
+{
+	if(NULL == _data){
+		pv_error("");
+		return false;
+	}
+
+	PvElementBezierData *data = (PvElementBezierData *)_data;
+
+	if(NULL != data->anchor_points){
+		free(data->anchor_points);
+	}
+
+	free(data);
+
+	return true;
+}
+
+static gpointer _func_bezier_copy_new_data(void *_data)
+{
+	if(NULL == _data){
+		pv_bug("");
+		return NULL;
+	}
+
+	PvElementBezierData *data = (PvElementBezierData *)_data;
+
+	PvElementBezierData *new_data = (PvElementBezierData *)malloc(sizeof(PvElementBezierData));
+	pv_assert(new_data);
+
+	*new_data = *data;
+
+	new_data->anchor_points_num = 0;
+	new_data->anchor_points = NULL;
+	if(0 < data->anchor_points_num && NULL != data->anchor_points){
+		size_t size = data->anchor_points_num * sizeof(PvAnchorPoint);
+		new_data->anchor_points = malloc(size);
+		if(NULL == new_data->anchor_points){
+			pv_critical("");
+			exit(-1);
+		}
+		memcpy(new_data->anchor_points, data->anchor_points, size);
+		new_data->anchor_points_num = data->anchor_points_num;
+	}
+
+	return (gpointer)new_data;
+}
+
+static int _func_bezier_write_svg(
 		InfoTargetSvg *target,
 		const PvElement *element, const ConfWriteSvg *conf)
 {
@@ -519,7 +731,7 @@ static int _pv_element_bezier_write_svg(
 		}else{
 			// other (not first)(true last)
 			const PvAnchorPoint ap_prev = data->anchor_points[i - 1];
-			str_point = _pv_element_bezier_new_str_from_anchor(ap, ap_prev);
+			str_point = _bezier_new_str_from_anchor(ap, ap_prev);
 		}
 
 		if(NULL == str_point){
@@ -544,7 +756,7 @@ static int _pv_element_bezier_write_svg(
 	if(data->is_close && 0 < data->anchor_points_num){
 		const PvAnchorPoint ap_first = data->anchor_points[0];
 		const PvAnchorPoint ap_last = data->anchor_points[data->anchor_points_num - 1];
-		char *str_end = _pv_element_bezier_new_str_from_anchor(ap_first, ap_last);
+		char *str_end = _bezier_new_str_from_anchor(ap_first, ap_last);
 		char *str_prev = str_current;
 		str_current = g_strjoin(" ", str_current, str_end, "Z", NULL);
 		g_free(str_prev);
@@ -579,135 +791,19 @@ static int _pv_element_bezier_write_svg(
 	return 0;
 }
 
-static PvRect _pv_element_bezier_get_rect_by_draw(
-		const PvElement *element);
-
-static bool _pv_element_bezier_draw_inline(
-		cairo_t *cr,
-		const PvRenderContext render_context,
-		const PvElement *element)
-{
-	pv_assert(_pv_element_bezier_command_path(cr, render_context, element));
-
-	double c_width = element->stroke.width * render_context.scale;
-	cairo_set_line_width(cr, c_width);
-
-	//! fill
-	PvCairoRgbaColor cc_f = pv_color_get_cairo_rgba(
-			element->color_pair.colors[PvColorPairGround_BackGround]);
-	cairo_set_source_rgba (cr, cc_f.r, cc_f.g, cc_f.b, cc_f.a);
-	cairo_fill_preserve(cr);
-	//! stroke
-	const PvStrokeLinecapInfo *linecap_info = get_stroke_linecap_info_from_id(element->stroke.linecap);
-	cairo_set_line_cap (cr, linecap_info->cairo_value);
-	const PvStrokeLinejoinInfo *linejoin_info = get_stroke_linejoin_info_from_id(element->stroke.linejoin);
-	cairo_set_line_join (cr, linejoin_info->cairo_value);
-	PvCairoRgbaColor cc_s = pv_color_get_cairo_rgba(
-			element->color_pair.colors[PvColorPairGround_ForGround]);
-	cairo_set_source_rgba (cr, cc_s.r, cc_s.g, cc_s.b, cc_s.a);
-	cairo_stroke_preserve(cr);
-
-	return true;
-}
-
-static void _pv_renderer_draw_extent_from_crect(cairo_t *cr, PvRect rect)
-{
-	cairo_rectangle (cr, rect.x, rect.y, rect.w, rect.h);
-	pv_cairo_set_source_rgba_workingcolor(cr);
-	cairo_set_line_width(cr, 1.0);
-	cairo_stroke(cr);
-}
-
-static bool _pv_element_bezier_draw(
+static bool _func_bezier_draw(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
 	const PvRenderContext render_context = render_option.render_context;
-	pv_assert(_pv_element_bezier_draw_inline(cr, render_context, element));
+	pv_assert(_func_bezier_draw_inline(cr, render_context, element));
 	cairo_new_path(cr);
 
 	return true;
 }
 
-typedef enum{
-	PvElementPointKind_Normal,
-	PvElementPointKind_Selected,
-	PvElementPointKind_AnchorHandle,
-}PvElementPointKind;
-
-static void _pv_element_bezier_draw_point(cairo_t *cr, PvPoint gp, PvElementPointKind kind)
-{
-	cairo_arc (cr, gp.x, gp.y, 2.0, 0., 2 * M_PI);
-
-	cairo_set_source_rgba (cr, 1, 1, 1, 1.0); // white
-	if(PvElementPointKind_Selected == kind){
-		pv_cairo_set_source_rgba_workingcolor(cr);
-	}
-	cairo_fill_preserve (cr);
-
-	pv_cairo_set_source_rgba_workingcolor(cr);
-	cairo_set_line_width(cr, 0.75);
-	cairo_stroke (cr);
-}
-
-static void _pv_element_bezier_draw_anchor_handle(
-		cairo_t *cr, PvAnchorPoint ap,
-		int ofs_index, PvRenderContext render_context)
-{
-	PvPoint gp_current = ap.points[PvAnchorPointIndex_Point];
-	PvPoint gp_prev = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_HandlePrev);
-	PvPoint gp_next = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_HandleNext);
-	gp_current.x *= render_context.scale;
-	gp_current.y *= render_context.scale;
-	gp_prev.x *= render_context.scale;
-	gp_prev.y *= render_context.scale;
-	gp_next.x *= render_context.scale;
-	gp_next.y *= render_context.scale;
-
-	if(0 == ofs_index){
-		// ** current anchor_point
-		cairo_set_line_width(cr, 1.0);
-		pv_cairo_set_source_rgba_workingcolor(cr);
-		cairo_move_to(cr, gp_current.x, gp_current.y);
-		cairo_line_to(cr, gp_prev.x, gp_prev.y);
-		cairo_stroke(cr);
-
-		cairo_set_line_width(cr, 1.0);
-		pv_cairo_set_source_rgba_workingcolor(cr);
-		cairo_move_to(cr, gp_current.x, gp_current.y);
-		cairo_line_to(cr, gp_next.x, gp_next.y);
-		cairo_stroke(cr);
-
-		_pv_element_bezier_draw_point(cr, gp_prev, PvElementPointKind_AnchorHandle);
-		_pv_element_bezier_draw_point(cr, gp_next, PvElementPointKind_AnchorHandle);
-	} else if(-1 == ofs_index) {
-		// ** prev anchor_point
-		cairo_set_line_width(cr, 1.0);
-		pv_cairo_set_source_rgba_workingcolor(cr);
-		cairo_move_to(cr, gp_current.x, gp_current.y);
-		cairo_line_to(cr, gp_next.x, gp_next.y);
-		cairo_stroke(cr);
-
-		_pv_element_bezier_draw_point(cr, gp_next, PvElementPointKind_AnchorHandle);
-	}else if(1 == ofs_index){
-		// ** next anchor_point
-		cairo_set_line_width(cr, 1.0);
-		pv_cairo_set_source_rgba_workingcolor(cr);
-		cairo_move_to(cr, gp_current.x, gp_current.y);
-		cairo_line_to(cr, gp_prev.x, gp_prev.y);
-		cairo_stroke(cr);
-
-		_pv_element_bezier_draw_point(cr, gp_prev, PvElementPointKind_AnchorHandle);
-	}else{
-		pv_bug("%d", ofs_index);
-	}
-}
-
-static PvRect _pv_element_bezier_get_rect_by_anchor_points(
-		const PvElement *element);
-
-static bool _pv_element_bezier_draw_focusing(
+static bool _func_bezier_draw_focusing(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
@@ -722,7 +818,7 @@ static bool _pv_element_bezier_draw_focusing(
 	}
 
 	// ** stroke line
-	if(!_pv_element_bezier_command_path(
+	if(!_bezier_command_path(
 				cr,
 				render_context,
 				element))
@@ -736,19 +832,19 @@ static bool _pv_element_bezier_draw_focusing(
 	cairo_stroke(cr);
 
 	// ** anchor points
-	int num = _pv_element_bezier_get_num_anchor_point(element);
+	int num = _func_bezier_get_num_anchor_point(element);
 	for(int i = 0; i < num; i++){
 		int ofs_index = (i - focus->index);
 		if(-1 != focus->index){
 			if(abs(ofs_index) <= 1){
 				// * anchor handle. draw to focus and +-1
-				_pv_element_bezier_draw_anchor_handle(
+				_bezier_draw_anchor_handle(
 						cr, data->anchor_points[i],
 						ofs_index, render_context);
 			}
 			// *anchor handle. to last AnchorPoint
 			if(0 == focus->index && i == (num - 1) && data->is_close){
-				_pv_element_bezier_draw_anchor_handle(
+				_bezier_draw_anchor_handle(
 						cr, data->anchor_points[i],
 						-1, render_context);
 			}
@@ -758,21 +854,21 @@ static bool _pv_element_bezier_draw_focusing(
 		gp.y *= render_context.scale;
 		PvElementPointKind kind = ((i == focus->index)?
 				PvElementPointKind_Selected : PvElementPointKind_Normal);
-		_pv_element_bezier_draw_point(cr, gp, kind);
+		_bezier_draw_point(cr, gp, kind);
 	}
 
 	// ** extent
 	if(render_context.is_extent_view){
-		PvRect rect_extent = _pv_element_bezier_get_rect_by_anchor_points(element);
+		PvRect rect_extent = _func_bezier_get_rect_by_anchor_points(element);
 		PvRect crect_extent = pv_rect_mul_value(rect_extent, render_context.scale);
 
-		_pv_renderer_draw_extent_from_crect(cr, crect_extent);
+		_draw_extent_from_rect(cr, crect_extent);
 	}
 
 	return true;
 }
 
-static bool _pv_element_bezier_is_touch_element(
+static bool _func_bezier_is_touch_element(
 		bool *is_touch,
 		const PvElement *element,
 		int offset,
@@ -787,7 +883,7 @@ static bool _pv_element_bezier_is_touch_element(
 	pv_assert(cr);
 
 	PvRenderContext render_context = PvRenderContext_Default;
-	pv_assert(_pv_element_bezier_command_path(cr, render_context, element));
+	pv_assert(_bezier_command_path(cr, render_context, element));
 
 	double c_width = (element->stroke.width * render_context.scale) + offset;
 	cairo_set_line_width(cr, c_width);
@@ -801,7 +897,7 @@ static bool _pv_element_bezier_is_touch_element(
 	return true;
 }
 
-static bool _pv_element_bezier_is_diff_one(
+static bool _func_bezier_is_diff_one(
 		bool *is_diff,
 		const PvElement *element0,
 		const PvElement *element1)
@@ -845,7 +941,7 @@ static bool _pv_element_bezier_is_diff_one(
 }
 
 /*! @fixme get point left head. */
-static PvPoint _pv_element_bezier_get_point_by_anchor_points(
+static PvPoint _func_bezier_get_point_by_anchor_points(
 		const PvElement *element)
 {
 	assert(element);
@@ -867,7 +963,7 @@ static PvPoint _pv_element_bezier_get_point_by_anchor_points(
 	return point;
 }
 
-static void _pv_element_bezier_set_point_by_anchor_points(
+static void _func_bezier_set_point_by_anchor_points(
 		PvElement *element,
 		const PvPoint point)
 {
@@ -876,7 +972,7 @@ static void _pv_element_bezier_set_point_by_anchor_points(
 	PvElementBezierData *data = element->data;
 
 
-	PvPoint point_prev = _pv_element_bezier_get_point_by_anchor_points(element);
+	PvPoint point_prev = _func_bezier_get_point_by_anchor_points(element);
 	PvPoint move = pv_point_sub(point, point_prev);
 
 	int num = data->anchor_points_num;
@@ -887,7 +983,7 @@ static void _pv_element_bezier_set_point_by_anchor_points(
 	return;
 }
 
-static bool _pv_element_bezier_move_element(
+static bool _func_bezier_move_element(
 		const PvElement *element,
 		double gx,
 		double gy)
@@ -910,13 +1006,7 @@ static bool _pv_element_bezier_move_element(
 	return true;
 }
 
-int _pv_element_zero_get_num_anchor_point(
-		const PvElement *element)
-{
-	return 0;
-}
-
-int _pv_element_bezier_get_num_anchor_point(
+int _func_bezier_get_num_anchor_point(
 		const PvElement *element)
 {
 	if(NULL == element || PvElementKind_Bezier != element->kind){
@@ -932,13 +1022,7 @@ int _pv_element_bezier_get_num_anchor_point(
 	return data->anchor_points_num;
 }
 
-PvAnchorPoint *_pv_element_null_new_anchor_points(
-		const PvElement *element)
-{
-	return NULL;
-}
-
-PvAnchorPoint *_pv_element_bezier_new_anchor_points(
+PvAnchorPoint *_func_bezier_new_anchor_points(
 		const PvElement *element)
 {
 	assert(element);
@@ -958,7 +1042,7 @@ PvAnchorPoint *_pv_element_bezier_new_anchor_points(
 	return new_anchor_points;
 }
 
-static PvAnchorPoint _pv_element_bezier_get_anchor_point(
+static PvAnchorPoint _func_bezier_get_anchor_point(
 		const PvElement *element,
 		const int index)
 {
@@ -973,7 +1057,7 @@ static PvAnchorPoint _pv_element_bezier_get_anchor_point(
 	return data->anchor_points[index];
 }
 
-static bool _pv_element_bezier_set_anchor_point_point(
+static bool _func_bezier_set_anchor_point_point(
 		const PvElement *element,
 		const int index,
 		const PvPoint point)
@@ -993,7 +1077,7 @@ static bool _pv_element_bezier_set_anchor_point_point(
 	return true;
 }
 
-static bool _pv_element_bezier_move_anchor_point(
+static bool _func_bezier_move_anchor_point(
 		const PvElement *element,
 		const int index,
 		const PvPoint move)
@@ -1004,7 +1088,7 @@ static bool _pv_element_bezier_move_anchor_point(
 	PvElementBezierData *data = element->data;
 	assert(data);
 
-	int num = _pv_element_bezier_get_num_anchor_point(element);
+	int num = _func_bezier_get_num_anchor_point(element);
 	if(num <= index){
 		pv_bug("%d %d", index, num);
 		return false;
@@ -1016,7 +1100,7 @@ static bool _pv_element_bezier_move_anchor_point(
 	return true;
 }
 
-static PvRect _pv_element_bezier_get_rect_by_anchor_points(
+static PvRect _func_bezier_get_rect_by_anchor_points(
 		const PvElement *element)
 {
 	const PvElementBezierData *data = (PvElementBezierData *)element->data;
@@ -1043,7 +1127,7 @@ static PvRect _pv_element_bezier_get_rect_by_anchor_points(
 	return rect;
 }
 
-static bool _pv_element_bezier_set_rect_by_anchor_points(
+static bool _func_bezier_set_rect_by_anchor_points(
 		PvElement *element,
 		PvRect rect)
 {
@@ -1052,10 +1136,10 @@ static bool _pv_element_bezier_set_rect_by_anchor_points(
 
 	rect = pv_rect_abs_size(rect);
 
-	const PvRect rect_src = _pv_element_bezier_get_rect_by_anchor_points(element);
+	const PvRect rect_src = _func_bezier_get_rect_by_anchor_points(element);
 
 	PvPoint p = {.x = rect.x, .y = rect.y,};
-	_pv_element_bezier_set_point_by_anchor_points(element, p);
+	_func_bezier_set_point_by_anchor_points(element, p);
 
 	double scale_x = rect.w / rect_src.w;
 	double scale_y = rect.h / rect_src.h;
@@ -1084,7 +1168,7 @@ static bool _pv_element_bezier_set_rect_by_anchor_points(
 	return true;
 }
 
-static PvRect _pv_element_bezier_get_rect_by_draw(
+static PvRect _func_bezier_get_rect_by_draw(
 		const PvElement *element)
 {
 	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1,1);
@@ -1093,7 +1177,7 @@ static PvRect _pv_element_bezier_get_rect_by_draw(
 	pv_assert(cr);
 
 	PvRenderContext render_context = PvRenderContext_Default;
-	pv_assert(_pv_element_bezier_draw_inline(cr, render_context, element));
+	pv_assert(_func_bezier_draw_inline(cr, render_context, element));
 
 	cairo_set_line_width(cr, element->stroke.width);
 
@@ -1111,7 +1195,7 @@ static PvRect _pv_element_bezier_get_rect_by_draw(
  * Raster
  **************** */
 
-static gpointer _pv_element_raster_new_data()
+static gpointer _func_raster_new_data()
 {
 	PvElementRasterData *data = (PvElementRasterData *)malloc(sizeof(PvElementRasterData));
 	if(NULL == data){
@@ -1126,7 +1210,7 @@ static gpointer _pv_element_raster_new_data()
 	return (gpointer)data;
 }
 
-static bool _pv_element_raster_free_data(void *_data)
+static bool _func_raster_free_data(void *_data)
 {
 	if(NULL == _data){
 		pv_error("");
@@ -1148,7 +1232,7 @@ static bool _pv_element_raster_free_data(void *_data)
 	return true;
 }
 
-static gpointer _pv_element_raster_copy_new_data(void *_data)
+static gpointer _func_raster_copy_new_data(void *_data)
 {
 	if(NULL == _data){
 		pv_bug("");
@@ -1200,7 +1284,7 @@ static GdkPixbuf *_copy_new_pixbuf_scale(GdkPixbuf *pb_src, double w_dst, double
 	return pb;
 }
 
-static bool _pv_element_raster_draw(
+static bool _func_raster_draw(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
@@ -1250,7 +1334,7 @@ static bool _pv_element_raster_draw(
 	return true;
 }
 
-static bool _pv_element_raster_draw_focusing(
+static bool _func_raster_draw_focusing(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
@@ -1301,7 +1385,7 @@ static bool _is_inside_rect(
 	return (x_min <= x && x <= x_max && y_min <= y && y <= y_max);
 }
 
-static bool _pv_element_raster_is_touch_element(
+static bool _func_raster_is_touch_element(
 		bool *is_touch,
 		const PvElement *element,
 		int offset,
@@ -1333,7 +1417,7 @@ static bool _pv_matrix_is_diff(const PvMatrix matrix1, const PvMatrix matrix2)
 	return !(matrix1.x == matrix2.x && matrix1.y == matrix2.y);
 }
 
-static bool _pv_element_raster_is_diff_one(
+static bool _func_raster_is_diff_one(
 		bool *is_diff,
 		const PvElement *element0,
 		const PvElement *element1)
@@ -1363,7 +1447,7 @@ static bool _pv_element_raster_is_diff_one(
 	return true;
 }
 
-static PvPoint _pv_element_raster_get_point_by_anchor_points(
+static PvPoint _func_raster_get_point_by_anchor_points(
 		const PvElement *element)
 {
 	assert(element);
@@ -1378,7 +1462,7 @@ static PvPoint _pv_element_raster_get_point_by_anchor_points(
 	return ret;
 }
 
-static void _pv_element_raster_set_point_by_anchor_points(
+static void _func_raster_set_point_by_anchor_points(
 		PvElement *element,
 		const PvPoint point)
 {
@@ -1390,7 +1474,7 @@ static void _pv_element_raster_set_point_by_anchor_points(
 	data->matrix.y = point.y;
 }
 
-static bool _pv_element_raster_move_element(
+static bool _func_raster_move_element(
 		const PvElement *element,
 		double gx,
 		double gy)
@@ -1411,7 +1495,7 @@ static bool _pv_element_raster_move_element(
 	return true;
 }
 
-static PvAnchorPoint _pv_element_raster_get_anchor_point(
+static PvAnchorPoint _func_raster_get_anchor_point(
 		const PvElement *element,
 		const int index)
 {
@@ -1431,7 +1515,7 @@ static PvAnchorPoint _pv_element_raster_get_anchor_point(
 	return ap;
 }
 
-static bool _pv_element_raster_set_anchor_point_point(
+static bool _func_raster_set_anchor_point_point(
 		const PvElement *element,
 		const int index,
 		const PvPoint point)
@@ -1448,7 +1532,7 @@ static bool _pv_element_raster_set_anchor_point_point(
 	return true;
 }
 
-static bool _pv_element_raster_move_anchor_point(
+static bool _func_raster_move_anchor_point(
 		const PvElement *element,
 		const int index,
 		const PvPoint move)
@@ -1477,7 +1561,7 @@ static bool _pv_element_raster_move_anchor_point(
 	return true;
 }
 
-static PvRect _pv_element_raster_get_rect_by_anchor_points(
+static PvRect _func_raster_get_rect_by_anchor_points(
 		const PvElement *element)
 {
 	assert(element);
@@ -1495,7 +1579,7 @@ static PvRect _pv_element_raster_get_rect_by_anchor_points(
 	return rect;
 }
 
-static bool _pv_element_raster_set_rect_by_anchor_points(
+static bool _func_raster_set_rect_by_anchor_points(
 		PvElement *element,
 		PvRect rect)
 {
@@ -1519,154 +1603,154 @@ static bool _pv_element_raster_set_rect_by_anchor_points(
  * ElementInfo配列の定義
  **************** */
 
-const PvElementInfo _pv_element_info[] = {
+const PvElementInfo _pv_element_infos[] = {
 	{PvElementKind_NotDefined, "NotDefined",
-		.func_new_data				= _pv_element_doabort_new,
-		.func_free_data				= _pv_element_doabort_free_data,
-		.func_copy_new_data			= _pv_element_doabort_copy_new,
-		.func_write_svg				= _pv_element_notimpl_write_svg,
-		.func_draw				= _pv_element_notimpl_draw,
-		.func_draw_focusing			= _pv_element_notimpl_draw,
-		.func_is_touch_element			= _pv_element_notimpl_is_touch_element,
-		.func_is_diff_one			= _pv_element_notimpl_is_diff_one,
-		.func_get_point_by_anchor_points	= _pv_element_notimpl_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _pv_element_notimpl_set_point_by_anchor_points,
-		.func_move_element			= _pv_element_notimpl_move_element,
-		.func_get_num_anchor_point		= _pv_element_zero_get_num_anchor_point,
-		.func_new_anchor_points			= _pv_element_null_new_anchor_points,
-		.func_get_anchor_point			= _pv_element_notimpl_get_anchor_point,
-		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
-		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
-		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
-		.func_set_rect_by_anchor_points		= _pv_element_notimpl_set_rect_by_anchor_points,
-		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
+		.func_new_data				= _func_doabort_new,
+		.func_free_data				= _func_doabort_free_data,
+		.func_copy_new_data			= _func_doabort_copy_new,
+		.func_write_svg				= _func_notimpl_write_svg,
+		.func_draw				= _func_notimpl_draw,
+		.func_draw_focusing			= _func_notimpl_draw,
+		.func_is_touch_element			= _func_notimpl_is_touch_element,
+		.func_is_diff_one			= _func_notimpl_is_diff_one,
+		.func_get_point_by_anchor_points	= _func_notimpl_get_point_by_anchor_points,
+		.func_set_point_by_anchor_points	= _func_notimpl_set_point_by_anchor_points,
+		.func_move_element			= _func_notimpl_move_element,
+		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
+		.func_new_anchor_points			= _func_null_new_anchor_points,
+		.func_get_anchor_point			= _func_notimpl_get_anchor_point,
+		.func_set_anchor_point_point		= _func_notimpl_set_anchor_point_point,
+		.func_move_anchor_point_point		= _func_notimpl_move_anchor_point,
+		.func_get_rect_by_anchor_points		= _func_notimpl_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _func_notimpl_set_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _func_notimpl_get_rect_by_draw,
 	},
 	{PvElementKind_Root, "Root",
-		.func_new_data				= _pv_element_group_new_data,
-		.func_free_data				= _pv_element_group_free_data,
-		.func_copy_new_data			= _pv_element_group_copy_new_data,
-		.func_write_svg				= _pv_element_group_write_svg,
-		.func_draw				= _pv_element_group_draw,
-		.func_draw_focusing			= _pv_element_group_draw,
-		.func_is_touch_element			= _pv_element_group_is_touch_element,
-		.func_is_diff_one			= _pv_element_group_is_diff_one,
-		.func_get_point_by_anchor_points	= _pv_element_notimpl_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _pv_element_notimpl_set_point_by_anchor_points,
-		.func_move_element			= _pv_element_group_move_element,
-		.func_get_num_anchor_point		= _pv_element_zero_get_num_anchor_point,
-		.func_new_anchor_points			= _pv_element_null_new_anchor_points,
-		.func_get_anchor_point			= _pv_element_notimpl_get_anchor_point,
-		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
-		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
-		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
-		.func_set_rect_by_anchor_points		= _pv_element_notimpl_set_rect_by_anchor_points,
-		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
+		.func_new_data				= _func_group_new_data,
+		.func_free_data				= _func_group_free_data,
+		.func_copy_new_data			= _func_group_copy_new_data,
+		.func_write_svg				= _func_group_write_svg,
+		.func_draw				= _func_group_draw,
+		.func_draw_focusing			= _func_group_draw,
+		.func_is_touch_element			= _func_group_is_touch_element,
+		.func_is_diff_one			= _func_group_is_diff_one,
+		.func_get_point_by_anchor_points	= _func_notimpl_get_point_by_anchor_points,
+		.func_set_point_by_anchor_points	= _func_notimpl_set_point_by_anchor_points,
+		.func_move_element			= _func_group_move_element,
+		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
+		.func_new_anchor_points			= _func_null_new_anchor_points,
+		.func_get_anchor_point			= _func_notimpl_get_anchor_point,
+		.func_set_anchor_point_point		= _func_notimpl_set_anchor_point_point,
+		.func_move_anchor_point_point		= _func_notimpl_move_anchor_point,
+		.func_get_rect_by_anchor_points		= _func_notimpl_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _func_notimpl_set_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _func_notimpl_get_rect_by_draw,
 	},
 	{PvElementKind_Layer, "Layer",
-		.func_new_data				= _pv_element_group_new_data,
-		.func_free_data				= _pv_element_group_free_data,
-		.func_copy_new_data			= _pv_element_group_copy_new_data,
-		.func_write_svg				= _pv_element_group_write_svg,
-		.func_draw				= _pv_element_group_draw,
-		.func_draw_focusing			= _pv_element_group_draw,
-		.func_is_touch_element			= _pv_element_group_is_touch_element,
-		.func_is_diff_one			= _pv_element_group_is_diff_one,
-		.func_get_point_by_anchor_points	= _pv_element_notimpl_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _pv_element_notimpl_set_point_by_anchor_points,
-		.func_move_element			= _pv_element_group_move_element,
-		.func_get_num_anchor_point		= _pv_element_zero_get_num_anchor_point,
-		.func_new_anchor_points			= _pv_element_null_new_anchor_points,
-		.func_get_anchor_point			= _pv_element_notimpl_get_anchor_point,
-		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
-		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
-		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
-		.func_set_rect_by_anchor_points		= _pv_element_notimpl_set_rect_by_anchor_points,
-		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
+		.func_new_data				= _func_group_new_data,
+		.func_free_data				= _func_group_free_data,
+		.func_copy_new_data			= _func_group_copy_new_data,
+		.func_write_svg				= _func_group_write_svg,
+		.func_draw				= _func_group_draw,
+		.func_draw_focusing			= _func_group_draw,
+		.func_is_touch_element			= _func_group_is_touch_element,
+		.func_is_diff_one			= _func_group_is_diff_one,
+		.func_get_point_by_anchor_points	= _func_notimpl_get_point_by_anchor_points,
+		.func_set_point_by_anchor_points	= _func_notimpl_set_point_by_anchor_points,
+		.func_move_element			= _func_group_move_element,
+		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
+		.func_new_anchor_points			= _func_null_new_anchor_points,
+		.func_get_anchor_point			= _func_notimpl_get_anchor_point,
+		.func_set_anchor_point_point		= _func_notimpl_set_anchor_point_point,
+		.func_move_anchor_point_point		= _func_notimpl_move_anchor_point,
+		.func_get_rect_by_anchor_points		= _func_notimpl_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _func_notimpl_set_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _func_notimpl_get_rect_by_draw,
 	},
 	{PvElementKind_Group, "Group",
-		.func_new_data				= _pv_element_group_new_data,
-		.func_free_data				= _pv_element_group_free_data,
-		.func_copy_new_data			= _pv_element_group_copy_new_data,
-		.func_write_svg				= _pv_element_group_write_svg,
-		.func_draw				= _pv_element_group_draw,
-		.func_draw_focusing			= _pv_element_group_draw,
-		.func_is_touch_element			= _pv_element_group_is_touch_element,
-		.func_is_diff_one			= _pv_element_group_is_diff_one,
-		.func_get_point_by_anchor_points	= _pv_element_notimpl_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _pv_element_notimpl_set_point_by_anchor_points,
-		.func_move_element			= _pv_element_group_move_element,
-		.func_get_num_anchor_point		= _pv_element_zero_get_num_anchor_point,
-		.func_new_anchor_points			= _pv_element_null_new_anchor_points,
-		.func_get_anchor_point			= _pv_element_notimpl_get_anchor_point,
-		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
-		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
-		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
-		.func_set_rect_by_anchor_points		= _pv_element_notimpl_set_rect_by_anchor_points,
-		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
+		.func_new_data				= _func_group_new_data,
+		.func_free_data				= _func_group_free_data,
+		.func_copy_new_data			= _func_group_copy_new_data,
+		.func_write_svg				= _func_group_write_svg,
+		.func_draw				= _func_group_draw,
+		.func_draw_focusing			= _func_group_draw,
+		.func_is_touch_element			= _func_group_is_touch_element,
+		.func_is_diff_one			= _func_group_is_diff_one,
+		.func_get_point_by_anchor_points	= _func_notimpl_get_point_by_anchor_points,
+		.func_set_point_by_anchor_points	= _func_notimpl_set_point_by_anchor_points,
+		.func_move_element			= _func_group_move_element,
+		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
+		.func_new_anchor_points			= _func_null_new_anchor_points,
+		.func_get_anchor_point			= _func_notimpl_get_anchor_point,
+		.func_set_anchor_point_point		= _func_notimpl_set_anchor_point_point,
+		.func_move_anchor_point_point		= _func_notimpl_move_anchor_point,
+		.func_get_rect_by_anchor_points		= _func_notimpl_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _func_notimpl_set_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _func_notimpl_get_rect_by_draw,
 	},
 	{PvElementKind_Bezier, "Bezier",
-		.func_new_data				= _pv_element_bezier_new_data,
-		.func_free_data				= _pv_element_bezier_free_data,
-		.func_copy_new_data			= _pv_element_bezier_copy_new_data,
-		.func_write_svg				= _pv_element_bezier_write_svg,
-		.func_draw				= _pv_element_bezier_draw,
-		.func_draw_focusing			= _pv_element_bezier_draw_focusing,
-		.func_is_touch_element			= _pv_element_bezier_is_touch_element,
-		.func_is_diff_one			= _pv_element_bezier_is_diff_one,
-		.func_get_point_by_anchor_points	= _pv_element_bezier_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _pv_element_bezier_set_point_by_anchor_points,
-		.func_move_element			= _pv_element_bezier_move_element,
-		.func_get_num_anchor_point		= _pv_element_bezier_get_num_anchor_point,
-		.func_new_anchor_points			= _pv_element_bezier_new_anchor_points,
-		.func_get_anchor_point			= _pv_element_bezier_get_anchor_point,
-		.func_set_anchor_point_point		= _pv_element_bezier_set_anchor_point_point,
-		.func_move_anchor_point_point		= _pv_element_bezier_move_anchor_point,
-		.func_get_rect_by_anchor_points		= _pv_element_bezier_get_rect_by_anchor_points,
-		.func_set_rect_by_anchor_points		= _pv_element_bezier_set_rect_by_anchor_points,
-		.func_get_rect_by_draw			= _pv_element_bezier_get_rect_by_draw,
+		.func_new_data				= _func_bezier_new_data,
+		.func_free_data				= _func_bezier_free_data,
+		.func_copy_new_data			= _func_bezier_copy_new_data,
+		.func_write_svg				= _func_bezier_write_svg,
+		.func_draw				= _func_bezier_draw,
+		.func_draw_focusing			= _func_bezier_draw_focusing,
+		.func_is_touch_element			= _func_bezier_is_touch_element,
+		.func_is_diff_one			= _func_bezier_is_diff_one,
+		.func_get_point_by_anchor_points	= _func_bezier_get_point_by_anchor_points,
+		.func_set_point_by_anchor_points	= _func_bezier_set_point_by_anchor_points,
+		.func_move_element			= _func_bezier_move_element,
+		.func_get_num_anchor_point		= _func_bezier_get_num_anchor_point,
+		.func_new_anchor_points			= _func_bezier_new_anchor_points,
+		.func_get_anchor_point			= _func_bezier_get_anchor_point,
+		.func_set_anchor_point_point		= _func_bezier_set_anchor_point_point,
+		.func_move_anchor_point_point		= _func_bezier_move_anchor_point,
+		.func_get_rect_by_anchor_points		= _func_bezier_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _func_bezier_set_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _func_bezier_get_rect_by_draw,
 	},
 	{PvElementKind_Raster, "Raster",
-		.func_new_data				= _pv_element_raster_new_data,
-		.func_free_data				= _pv_element_raster_free_data,
-		.func_copy_new_data			= _pv_element_raster_copy_new_data,
-		.func_write_svg				= _pv_element_notimpl_write_svg,
-		.func_draw				= _pv_element_raster_draw,
-		.func_draw_focusing			= _pv_element_raster_draw_focusing,
-		.func_is_touch_element			= _pv_element_raster_is_touch_element,
-		.func_is_diff_one			= _pv_element_raster_is_diff_one,
-		.func_get_point_by_anchor_points	= _pv_element_raster_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _pv_element_raster_set_point_by_anchor_points,
-		.func_move_element			= _pv_element_raster_move_element,
-		.func_get_num_anchor_point		= _pv_element_zero_get_num_anchor_point,
-		.func_new_anchor_points			= _pv_element_null_new_anchor_points,
-		.func_get_anchor_point			= _pv_element_raster_get_anchor_point,
-		.func_set_anchor_point_point		= _pv_element_raster_set_anchor_point_point,
-		.func_move_anchor_point_point		= _pv_element_raster_move_anchor_point,
-		.func_get_rect_by_anchor_points		= _pv_element_raster_get_rect_by_anchor_points,
-		.func_set_rect_by_anchor_points		= _pv_element_raster_set_rect_by_anchor_points,
-		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
+		.func_new_data				= _func_raster_new_data,
+		.func_free_data				= _func_raster_free_data,
+		.func_copy_new_data			= _func_raster_copy_new_data,
+		.func_write_svg				= _func_notimpl_write_svg,
+		.func_draw				= _func_raster_draw,
+		.func_draw_focusing			= _func_raster_draw_focusing,
+		.func_is_touch_element			= _func_raster_is_touch_element,
+		.func_is_diff_one			= _func_raster_is_diff_one,
+		.func_get_point_by_anchor_points	= _func_raster_get_point_by_anchor_points,
+		.func_set_point_by_anchor_points	= _func_raster_set_point_by_anchor_points,
+		.func_move_element			= _func_raster_move_element,
+		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
+		.func_new_anchor_points			= _func_null_new_anchor_points,
+		.func_get_anchor_point			= _func_raster_get_anchor_point,
+		.func_set_anchor_point_point		= _func_raster_set_anchor_point_point,
+		.func_move_anchor_point_point		= _func_raster_move_anchor_point,
+		.func_get_rect_by_anchor_points		= _func_raster_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _func_raster_set_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _func_notimpl_get_rect_by_draw,
 	},
 	/* 番兵 */
 	{PvElementKind_EndOfKind, "EndOfKind",
-		.func_new_data				= _pv_element_doabort_new,
-		.func_free_data				= _pv_element_doabort_free_data,
-		.func_copy_new_data			= _pv_element_doabort_copy_new,
-		.func_write_svg				= _pv_element_notimpl_write_svg,
-		.func_draw				= _pv_element_notimpl_draw,
-		.func_draw_focusing			= _pv_element_notimpl_draw,
-		.func_is_touch_element			= _pv_element_notimpl_is_touch_element,
-		.func_is_diff_one			= _pv_element_notimpl_is_diff_one,
-		.func_get_point_by_anchor_points	= _pv_element_notimpl_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _pv_element_notimpl_set_point_by_anchor_points,
-		.func_move_element			= _pv_element_notimpl_move_element,
-		.func_get_num_anchor_point		= _pv_element_zero_get_num_anchor_point,
-		.func_new_anchor_points			= _pv_element_null_new_anchor_points,
-		.func_get_anchor_point			= _pv_element_notimpl_get_anchor_point,
-		.func_set_anchor_point_point		= _pv_element_notimpl_set_anchor_point_point,
-		.func_move_anchor_point_point		= _pv_element_notimpl_move_anchor_point,
-		.func_get_rect_by_anchor_points		= _pv_element_notimpl_get_rect_by_anchor_points,
-		.func_set_rect_by_anchor_points		= _pv_element_notimpl_set_rect_by_anchor_points,
-		.func_get_rect_by_draw			= _pv_element_notimpl_get_rect_by_draw,
+		.func_new_data				= _func_doabort_new,
+		.func_free_data				= _func_doabort_free_data,
+		.func_copy_new_data			= _func_doabort_copy_new,
+		.func_write_svg				= _func_notimpl_write_svg,
+		.func_draw				= _func_notimpl_draw,
+		.func_draw_focusing			= _func_notimpl_draw,
+		.func_is_touch_element			= _func_notimpl_is_touch_element,
+		.func_is_diff_one			= _func_notimpl_is_diff_one,
+		.func_get_point_by_anchor_points	= _func_notimpl_get_point_by_anchor_points,
+		.func_set_point_by_anchor_points	= _func_notimpl_set_point_by_anchor_points,
+		.func_move_element			= _func_notimpl_move_element,
+		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
+		.func_new_anchor_points			= _func_null_new_anchor_points,
+		.func_get_anchor_point			= _func_notimpl_get_anchor_point,
+		.func_set_anchor_point_point		= _func_notimpl_set_anchor_point_point,
+		.func_move_anchor_point_point		= _func_notimpl_move_anchor_point,
+		.func_get_rect_by_anchor_points		= _func_notimpl_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _func_notimpl_set_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _func_notimpl_get_rect_by_draw,
 	},
 };
 
@@ -1678,16 +1762,15 @@ const PvElementInfo _pv_element_info[] = {
 
 const PvElementInfo *pv_element_get_info_from_kind(PvElementKind kind)
 {
-
 	if(PvElementKind_NotDefined == kind || PvElementKind_EndOfKind == kind){
 		pv_error("%d", kind);
 		return NULL;
 	}
 
-	int num = sizeof(_pv_element_info) / sizeof(PvElementInfo);
+	int num = sizeof(_pv_element_infos) / sizeof(PvElementInfo);
 	for(int i = 0; i < num; i++){
-		if(kind == _pv_element_info[i].kind){
-			return &_pv_element_info[i];
+		if(kind == _pv_element_infos[i].kind){
+			return &_pv_element_infos[i];
 		}
 	}
 
