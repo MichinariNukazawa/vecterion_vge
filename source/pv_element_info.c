@@ -370,20 +370,17 @@ static void _draw_extent_from_rect(cairo_t *cr, PvRect rect)
 	cairo_stroke(cr);
 }
 
-bool _bezier_command_path(
+void _bezier_command_path(
 		cairo_t *cr,
 		const PvRenderContext render_context,
 		const PvElement *element)
 {
 	const PvElementBezierData *data = element->data;
-	if(NULL == data){
-		pv_error("");
-		return false;
-	}
+
 	PvAnchorPoint * const anchor_points = data->anchor_points;
 
 	if((data->anchor_points_num) <= 0){
-		return true;
+		return;
 	}
 
 	// ** path stroking
@@ -449,16 +446,14 @@ bool _bezier_command_path(
 		cairo_curve_to(cr, first_ap_x, first_ap_y, second_ap_x, second_ap_y, x, y);
 		cairo_close_path (cr);
 	}
-
-	return true;
 }
 
-static bool _func_bezier_draw_inline(
+static void _func_bezier_draw_inline(
 		cairo_t *cr,
 		const PvRenderContext render_context,
 		const PvElement *element)
 {
-	pv_assert(_bezier_command_path(cr, render_context, element));
+	_bezier_command_path(cr, render_context, element);
 
 	double c_width = element->stroke.width * render_context.scale;
 	cairo_set_line_width(cr, c_width);
@@ -478,7 +473,6 @@ static bool _func_bezier_draw_inline(
 	cairo_set_source_rgba (cr, cc_s.r, cc_s.g, cc_s.b, cc_s.a);
 	cairo_stroke_preserve(cr);
 
-	return true;
 }
 
 static char *_bezier_new_str_from_anchor(const PvAnchorPoint ap_current, const PvAnchorPoint ap_prev)
@@ -738,7 +732,7 @@ static bool _func_bezier_draw(
 		const PvElement *element)
 {
 	const PvRenderContext render_context = render_option.render_context;
-	pv_assert(_func_bezier_draw_inline(cr, render_context, element));
+	_func_bezier_draw_inline(cr, render_context, element);
 	cairo_new_path(cr);
 
 	return true;
@@ -759,14 +753,7 @@ static bool _func_bezier_draw_focusing(
 	}
 
 	// ** stroke line
-	if(!_bezier_command_path(
-				cr,
-				render_context,
-				element))
-	{
-		pv_error("");
-		return false;
-	}
+	_bezier_command_path(cr, render_context, element);
 	double LINE_WIDTH_FOCUS = 1.0;
 	cairo_set_line_width(cr, LINE_WIDTH_FOCUS);
 	pv_cairo_set_source_rgba_workingcolor(cr);
@@ -824,7 +811,7 @@ static bool _func_bezier_is_touch_element(
 	pv_assert(cr);
 
 	PvRenderContext render_context = PvRenderContext_Default;
-	pv_assert(_bezier_command_path(cr, render_context, element));
+	_bezier_command_path(cr, render_context, element);
 
 	double c_width = (element->stroke.width * render_context.scale) + offset;
 	cairo_set_line_width(cr, c_width);
@@ -1118,9 +1105,7 @@ static PvRect _func_bezier_get_rect_by_draw(
 	pv_assert(cr);
 
 	PvRenderContext render_context = PvRenderContext_Default;
-	pv_assert(_func_bezier_draw_inline(cr, render_context, element));
-
-	cairo_set_line_width(cr, element->stroke.width);
+	_func_bezier_draw_inline(cr, render_context, element);
 
 	PvRect rect = _get_rect_extent_from_cr(cr);
 
