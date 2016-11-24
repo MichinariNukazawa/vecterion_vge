@@ -1033,20 +1033,20 @@ static PvRect _func_bezier_get_rect_by_anchor_points(
 {
 	const PvElementBezierData *data = (PvElementBezierData *)element->data;
 
+	pv_assert(0 < data->anchor_points_num);
+
 	PvPoint min = (PvPoint){0, 0};
 	PvPoint max = (PvPoint){0, 0};
 	for(int i = 0; i < data->anchor_points_num; i++){
-		PvPoint p = data->anchor_points[i].points[PvAnchorPointIndex_Point];
+		PvPoint point = data->anchor_points[i].points[PvAnchorPointIndex_Point];
 		if(0 == i){
-			min.x = p.x;
-			min.y = p.y;
-			max.x = p.x;
-			max.y = p.y;
+			min = point;
+			max = point;
 		}else{
-			min.x = (min.x < p.x)? min.x : p.x;
-			min.y = (min.y < p.y)? min.y : p.y;
-			max.x = (max.x > p.x)? max.x : p.x;
-			max.y = (max.y > p.y)? max.y : p.y;
+			min.x = (min.x < point.x)? min.x : point.x;
+			min.y = (min.y < point.y)? min.y : point.y;
+			max.x = (max.x > point.x)? max.x : point.x;
+			max.y = (max.y > point.y)? max.y : point.y;
 		}
 	}
 
@@ -1066,30 +1066,29 @@ static bool _func_bezier_set_rect_by_anchor_points(
 
 	const PvRect rect_src = _func_bezier_get_rect_by_anchor_points(element);
 
-	PvPoint p = {.x = rect.x, .y = rect.y,};
-	_func_bezier_set_point_by_anchor_points(element, p);
+	PvPoint point = {.x = rect.x, .y = rect.y,};
+	_func_bezier_set_point_by_anchor_points(element, point);
 
-	double scale_x = rect.w / rect_src.w;
-	double scale_y = rect.h / rect_src.h;
+	PvPoint scale = {
+		.x = rect.w / rect_src.w,
+		.y = rect.h / rect_src.h,
+	};
 
 	int num = data->anchor_points_num;
 	for(int i = 0; i < num; i++){
 		PvAnchorPoint *ap = &(data->anchor_points[i]);
 		PvPoint pp = pv_anchor_point_get_point(ap);
-		pp.x -= rect.x;
-		pp.y -= rect.y;
-		pp.x *= scale_x;
-		pp.y *= scale_y;
-		pp.x += rect.x;
-		pp.y += rect.y;
+		pp = pv_point_sub(pp, point);
+		pp = pv_point_mul(pp, scale);
+		pp = pv_point_add(pp, point);
 		pv_anchor_point_set_point(ap, pp);
+
 		PvPoint hp = pv_anchor_point_get_handle_relate(ap, PvAnchorPointIndex_HandlePrev);
-		hp.x *= scale_x;
-		hp.y *= scale_y;
+		hp = pv_point_mul(hp, scale);
 		pv_anchor_point_set_handle_relate(ap, PvAnchorPointIndex_HandlePrev, hp);
+
 		PvPoint hn = pv_anchor_point_get_handle_relate(ap, PvAnchorPointIndex_HandleNext);
-		hn.x *= scale_x;
-		hn.y *= scale_y;
+		hn = pv_point_mul(hn, scale);
 		pv_anchor_point_set_handle_relate(ap, PvAnchorPointIndex_HandleNext, hn);
 	}
 

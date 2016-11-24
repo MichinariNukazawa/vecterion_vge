@@ -28,6 +28,16 @@ PvPoint pv_point_sub(PvPoint p0, PvPoint p1)
 	return ret;
 }
 
+PvPoint pv_point_mul(PvPoint p0, PvPoint p1)
+{
+	PvPoint ret = {
+		.x = p0.x * p1.x,
+		.y = p0.y * p1.y,
+	};
+
+	return ret;
+}
+
 PvPoint pv_point_add_value(PvPoint p, double diff)
 {
 	PvPoint ret = {
