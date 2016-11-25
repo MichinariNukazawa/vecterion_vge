@@ -40,6 +40,27 @@ error:
 	return NULL;
 }
 
+bool pv_focus_is_focused(const PvFocus *focus)
+{
+	int num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < num; i++){
+		switch(focus->elements[0]->kind){
+			case PvElementKind_Root:
+			case PvElementKind_Layer:
+				// NOP
+				break;
+			default:
+				return true;
+		}
+	}
+
+	if(1 != num){
+		pv_bug("");
+	}
+
+	return false;
+}
+
 bool pv_focus_is_exist_element(const PvFocus *focus, const PvElement *element)
 {
 	if(NULL == focus){
@@ -81,7 +102,7 @@ bool pv_focus_add_element(PvFocus *focus, PvElement *element)
 
 	// add element.
 	int num = pv_general_get_parray_num((void **)focus->elements);
-	if(0 < num && PvElementKind_Layer == focus->elements[0]->kind){
+	if(!pv_focus_is_focused(focus)){
 		return pv_focus_clear_set_element(focus, element);
 	}else{
 		PvElement **elements = realloc(focus->elements, sizeof(PvElement *) * (num + 2));

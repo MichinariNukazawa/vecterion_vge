@@ -626,14 +626,18 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
 
-	PvRect _src_extent_rect;
+	PvRect _src_extent_rect = PvRect_Default;
 	EdgeKind _edge = EdgeKind_None;
-	int num = pv_general_get_parray_num((void **)focus->elements);
-	if(0 < num){
-		_src_extent_rect = _get_rect_extent_from_elements(focus->elements);
-		_edge = _get_outside_touch_edge_kind_from_rect(
-				_src_extent_rect, mouse_action.point, mouse_action.scale);
+
+	if(pv_focus_is_focused(focus)){
+		int num = pv_general_get_parray_num((void **)focus->elements);
+		if(0 < num){
+			_src_extent_rect = _get_rect_extent_from_elements(focus->elements);
+			_edge = _get_outside_touch_edge_kind_from_rect(
+					_src_extent_rect, mouse_action.point, mouse_action.scale);
+		}
 	}
+
 	if(EdgeKind_None == _mode_edge){
 		*cursor = _get_cursor_from_edge(_edge);
 	}else{
@@ -765,31 +769,35 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 
 	// edit draw
 	{
-		PvRect _after_extent_rect = _get_rect_extent_from_elements(focus->elements);
 		PvElement *element_group_edit_draw = pv_element_new(PvElementKind_Group);
 		et_assert(element_group_edit_draw);
-		int size = 5.0 / mouse_action.scale;
-		for(int i = 0; i < 4; i++){
-			PvPoint center = pv_rect_get_edge_point(_after_extent_rect, i);
-			PvRect rect = get_square_rect_from_center_point_(center, size);
-			PvElement *element_bezier = pv_element_bezier_new_from_rect(rect);
-			et_assert(element_bezier);
-			pv_element_append_child(element_group_edit_draw, NULL, element_bezier);
-		}
 
-		switch(_mode){
-			case EtFocusElementMouseActionMode_Rotate:
-				{
-					// rotate center mark
-					PvPoint center = pv_rect_get_center(_after_extent_rect);
-					int diameter = 8.0 / mouse_action.scale;
-					PvElement *element_center = _element_new_from_circle(center, diameter);
-					et_assert(element_center);
-					pv_element_append_child(element_group_edit_draw, NULL, element_center);
-				}
-				break;
-			default:
-				break;
+		if(pv_focus_is_focused(focus)){
+			PvRect _after_extent_rect = _get_rect_extent_from_elements(focus->elements);
+			int size = 5.0 / mouse_action.scale;
+			for(int i = 0; i < 4; i++){
+				PvPoint center = pv_rect_get_edge_point(_after_extent_rect, i);
+				PvRect rect = get_square_rect_from_center_point_(center, size);
+				PvElement *element_bezier = pv_element_bezier_new_from_rect(rect);
+				et_assert(element_bezier);
+				pv_element_append_child(element_group_edit_draw, NULL, element_bezier);
+			}
+
+			switch(_mode){
+				case EtFocusElementMouseActionMode_Rotate:
+					{
+						// rotate center mark
+						PvPoint center = pv_rect_get_center(_after_extent_rect);
+						int diameter = 8.0 / mouse_action.scale;
+						PvElement *element_center = _element_new_from_circle(center, diameter);
+						et_assert(element_center);
+						pv_element_append_child(element_group_edit_draw, NULL, element_center);
+					}
+					break;
+				default:
+					break;
+			}
+
 		}
 
 		et_doc_set_element_group_edit_draw_from_id(doc_id, element_group_edit_draw);
