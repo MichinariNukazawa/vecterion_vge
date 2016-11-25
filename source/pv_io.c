@@ -596,7 +596,7 @@ ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, const
 	return dst_conf;
 }
 
-static bool _pv_io_element_from_svg_in_recursive_inline(PvElement *element_parent,
+static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_parent,
 		xmlNode *xmlnode,
 		gpointer data,
 		ConfReadSvg *conf)
@@ -630,7 +630,7 @@ static bool _pv_io_element_from_svg_in_recursive_inline(PvElement *element_paren
 
 	if(isDoChild){
 		for (xmlNode *cur_node = xmlnode->children; cur_node; cur_node = cur_node->next) {
-			if(!_pv_io_element_from_svg_in_recursive_inline(element_current,
+			if(!_new_elements_from_svg_elements_recursive_inline(element_current,
 						cur_node,
 						data,
 						conf))
@@ -646,25 +646,17 @@ error:
 	return false;
 }
 
-static bool _pv_io_pvvg_from_svg_element_recursive(PvVg *vg,
+static bool _new_elements_from_svg_elements_recursive(
+		PvElement *parent_element,
 		xmlNodePtr xml_svg, 
 		ConfReadSvg *conf)
 {
-	if(NULL == vg){
-		pv_bug("");
-		return true;
-	}
-	if(NULL == xml_svg){
-		pv_bug("");
-		return false;
-	}
-	if(NULL == conf){
-		pv_bug("");
-		return false;
-	}
+	pv_assert(parent_element);
+	pv_assert(xml_svg);
+	pv_assert(conf);
 
-	if(!_pv_io_element_from_svg_in_recursive_inline(
-				vg->element_root,
+	if(!_new_elements_from_svg_elements_recursive_inline(
+				parent_element,
 				xml_svg,
 				NULL,
 				conf))
@@ -706,19 +698,32 @@ PvVg *pv_io_new_from_file(const char *filepath)
 		pv_error("");
 		goto error;
 	}
+	PvElement *layer = pv_element_new(PvElementKind_Layer);
+	pv_assert(layer);
 	ConfReadSvg conf = ConfReadSvg_Default;
-	if(!_pv_io_pvvg_from_svg_element_recursive(vg, xmlnode_svg, &conf)){
+	if(!_new_elements_from_svg_elements_recursive(layer, xmlnode_svg, &conf)){
 		pv_error("");
 		return false;
 	}
-	// print_element_names(xmlnode_svg);
 
-	// remove default layer, when after append element from raster image file.
-	int num = pv_general_get_parray_num((void **)(vg->element_root->childs));
-	pv_assertf(2 <= num, "%d", num);
-	assert(pv_element_remove_free_recursive(vg->element_root->childs[0]));
-	assert((num - 1) == pv_general_get_parray_num((void **)(vg->element_root->childs)));
-
+	int num_svg_top = pv_general_get_parray_num((void **)layer->childs);
+	bool is_toplevel_layer_all = true;
+	for(int i = 0; i < num_svg_top; i++){
+		if(PvElementKind_Layer != layer->childs[i]->kind){
+			is_toplevel_layer_all = false;
+			break;
+		}
+	}
+	if(is_toplevel_layer_all){
+		layer->kind = PvElementKind_Root;
+		PvElement *_root = vg->element_root;
+		vg->element_root = layer;
+		pv_assert(pv_element_remove_free_recursive(_root));
+	}else{
+		pv_assert(pv_element_append_child(vg->element_root, NULL, layer));
+		pv_assert(pv_element_remove_free_recursive(vg->element_root->childs[0]));
+		assert(1 == pv_general_get_parray_num((void **)(vg->element_root->childs)));
+	}
 
 	xmlFreeDoc(xml_doc);
 	xmlCleanupParser();
