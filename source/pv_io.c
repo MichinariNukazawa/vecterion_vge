@@ -72,7 +72,7 @@ static bool _pv_io_svg_from_element_in_recursive_after(
 	return true;
 }
 
-static bool _pv_io_svg_from_pvvg_element_recurseve(
+static bool _pv_io_svg_from_pvvg_element_recursive(
 		xmlNodePtr xml_svg, PvElement *element_root,
 		const ConfWriteSvg *conf)
 {
@@ -171,7 +171,7 @@ bool pv_io_write_file_svg_from_vg(PvVg *vg, const char *path)
 
 	//		vg->element_root;
 	ConfWriteSvg conf;
-	if(!_pv_io_svg_from_pvvg_element_recurseve(root_node, vg->element_root, &conf)){
+	if(!_pv_io_svg_from_pvvg_element_recursive(root_node, vg->element_root, &conf)){
 		pv_error("");
 		return false;
 	}
@@ -646,7 +646,7 @@ error:
 	return false;
 }
 
-static bool _pv_io_pvvg_from_svg_element_recurseve(PvVg *vg,
+static bool _pv_io_pvvg_from_svg_element_recursive(PvVg *vg,
 		xmlNodePtr xml_svg, 
 		ConfReadSvg *conf)
 {
@@ -707,7 +707,7 @@ PvVg *pv_io_new_from_file(const char *filepath)
 		goto error;
 	}
 	ConfReadSvg conf = ConfReadSvg_Default;
-	if(!_pv_io_pvvg_from_svg_element_recurseve(vg, xmlnode_svg, &conf)){
+	if(!_pv_io_pvvg_from_svg_element_recursive(vg, xmlnode_svg, &conf)){
 		pv_error("");
 		return false;
 	}
