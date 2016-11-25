@@ -638,7 +638,7 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 		}
 	}
 
-	if(EdgeKind_None == _mode_edge){
+	if(EtFocusElementMouseActionMode_None == _mode){
 		*cursor = _get_cursor_from_edge(_edge);
 	}else{
 		*cursor = _get_cursor_from_edge(_mode_edge);
