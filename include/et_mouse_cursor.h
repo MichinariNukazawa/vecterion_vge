@@ -10,6 +10,10 @@ typedef enum{
 	EtMouseCursorId_Resize_UpLeft,
 	EtMouseCursorId_Resize_DownRight,
 	EtMouseCursorId_Resize_DownLeft,
+	EtMouseCursorId_Rotate_UpRight,
+	EtMouseCursorId_Rotate_UpLeft,
+	EtMouseCursorId_Rotate_DownRight,
+	EtMouseCursorId_Rotate_DownLeft,
 }EtMouseCursorId;
 
 typedef struct{

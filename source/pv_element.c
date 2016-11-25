@@ -168,31 +168,25 @@ bool pv_element_recursive_desc_before(PvElement *element,
 PvElement *pv_element_new(const PvElementKind kind)
 {
 	PvElement *self = (PvElement *)malloc(sizeof(PvElement));
-	if(NULL == self){
-		pv_critical("");
-		exit(-1);
-	}
+	pv_assert(self);
 
 	self->parent = NULL;
 	self->childs = NULL;
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(kind);
-	if(NULL == info || NULL == info->func_new_data){
-		pv_error("");
-		return NULL;
-	}
+	pv_assertf(info, "%d", kind);
+	pv_assertf(info->func_new_data, "%d", kind);
 
-	gpointer data = info->func_new_data();
-	if(NULL == data){
-		pv_bug("");
-		return NULL;
-	}
+	self->data = info->func_new_data();
+	pv_assertf(self->data, "%d", kind);
 
 	self->color_pair = PvColorPair_Default;
 	self->stroke = PvStroke_Default;
 
 	self->kind = kind;
-	self->data = data;
+
+	self->etaion_work_appearances = pv_appearance_parray_new_from_num(NUM_WORK_APPEARANCE + 1);
+	pv_assert(self->etaion_work_appearances);
 
 	return self;
 }
@@ -210,42 +204,30 @@ void pv_element_free(PvElement *element)
 
 static PvElement *_pv_element_copy_single(const PvElement *self)
 {
-	if(NULL == self){
-		pv_error("");
-		return NULL;
-	}
+	pv_assert(self);
 
 	PvElement *new_element = (PvElement *)malloc(sizeof(PvElement));
-	if(NULL == new_element){
-		pv_error("");
-		return NULL;
-	}
+	pv_assert(new_element);
 
-	new_element->kind = self->kind;
-	new_element->color_pair = self->color_pair;
-	new_element->stroke = self->stroke;
+	*new_element = *self;
 	new_element->parent = NULL;
 	new_element->childs = NULL;
-	new_element->data = NULL;
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(self->kind);
-	if(NULL == info || NULL == info->func_copy_new_data){
-		pv_error("");
-		return NULL;
+	pv_assertf(info, "%d", self->kind);
+
+	new_element->data = info->func_copy_new_data(self->data);
+	pv_assertf(new_element->data, "%d", self->kind);
+
+	if(NULL == self->etaion_work_appearances){
+		new_element->etaion_work_appearances = NULL;
+	}else{
+		new_element->etaion_work_appearances
+			= pv_appearance_parray_copy_new(self->etaion_work_appearances);
+		pv_assert(new_element->etaion_work_appearances);
 	}
-	void *new_data = info->func_copy_new_data(self->data);
-	if(NULL == new_data){
-		pv_error("");
-		goto error1;
-	}
-	new_element->data = new_data;
 
 	return new_element;
-
-error1:
-	free(new_element);
-
-	return NULL;
 }
 
 static PvElement *_pv_element_copy_recursive_inline(const PvElement *self,

@@ -10,12 +10,14 @@
 #include "pv_element_general.h"
 #include "pv_color.h"
 #include "pv_stroke.h"
+#include "pv_appearance.h"
 
 
 
 // ******** ********
 // PvElement
 // ******** ********
+#define NUM_WORK_APPEARANCE (3)
 struct PvElement;
 typedef struct PvElement PvElement;
 struct PvElement{
@@ -28,6 +30,8 @@ struct PvElement{
 	PvElementKind kind;
 	// kind固有の情報を格納した型のオブジェクト
 	gpointer data;
+
+	PvAppearance **etaion_work_appearances;
 };
 
 /*!

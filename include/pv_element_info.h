@@ -8,6 +8,7 @@
 #include "pv_element_general.h"
 #include "pv_element.h"
 #include "pv_render_option.h"
+#include "pv_appearance.h"
 
 typedef struct {
 	int dummy;
@@ -74,6 +75,9 @@ typedef bool (*PvElementFuncSetRectByAnchorPoints)(
 		PvRect rect);
 typedef PvRect (*PvElementFuncGetRectByDraw)(
 		const PvElement *element);
+typedef void (*PvElementFuncApplyAppearances)(
+		PvElement *,
+		PvAppearance **);
 
 typedef struct PvElementInfo{
 	PvElementKind kind;
@@ -97,6 +101,7 @@ typedef struct PvElementInfo{
 	PvElementFuncGetRectByAnchorPoints	func_get_rect_by_anchor_points;
 	PvElementFuncSetRectByAnchorPoints	func_set_rect_by_anchor_points;
 	PvElementFuncGetRectByDraw		func_get_rect_by_draw;
+	PvElementFuncApplyAppearances		func_apply_appearances;
 
 }PvElementInfo;
 

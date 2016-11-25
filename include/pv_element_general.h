@@ -8,6 +8,7 @@
 #include "pv_type.h"
 #include "pv_general.h"
 #include "pv_anchor_point.h"
+#include "pv_appearance.h"
 
 
 // ** 各 ElementKindのdata構造
@@ -25,20 +26,31 @@ typedef struct PvMatrix{
 	double y;
 	double scale_x;
 	double scale_y;
+	double degree;
 }PvMatrix;
 static const PvMatrix PvMatrix_Default = {
 	.x = 0,
 	.y = 0,
 	.scale_x = 1.0,
 	.scale_y = 1.0,
+	.degree = 0,
 };
+
+typedef enum{
+	PvElementRasterAppearanceIndex_Translate,
+	PvElementRasterAppearanceIndex_Resize,
+	PvElementRasterAppearanceIndex_Rotate,
+}PvElementRasterAppearanceIndex;
+#define Num_PvElementRasterAppearance (3)
 
 struct PvElementRasterData;
 typedef struct PvElementRasterData PvElementRasterData;
 struct PvElementRasterData{
-	PvMatrix matrix;
 	char *path;
 	GdkPixbuf *pixbuf;
+
+	// default payload appearances (void **) type is easy access
+	PvAppearance **raster_appearances;
 };
 
 struct PvElementBezierData;

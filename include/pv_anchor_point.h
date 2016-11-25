@@ -55,6 +55,8 @@ void pv_anchor_point_move_point(PvAnchorPoint *ap, PvPoint move);
 PvPoint pv_anchor_point_get_handle(const PvAnchorPoint *ap, PvAnchorPointIndex ap_index);
 PvPoint pv_anchor_point_get_handle_relate(const PvAnchorPoint *ap, PvAnchorPointIndex ap_index);
 
+PvPoint *pv_anchor_point_get_point_ref(PvAnchorPoint *ap, PvAnchorPointIndex ap_index);
+
 #ifdef include_ET_TEST
 #endif // include_ET_TEST
 

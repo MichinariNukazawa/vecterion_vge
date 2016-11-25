@@ -6,6 +6,7 @@
 #include "pv_element.h"
 #include "pv_element_info.h"
 #include "pv_focus.h"
+#include "pv_rotate.h"
 #include "et_doc.h"
 #include "et_doc_manager.h"
 #include "et_etaion.h"
@@ -23,10 +24,14 @@ static int PX_SENSITIVE_OF_TOUCH = 16;
 
 typedef enum{
 	EdgeKind_None,
-	EdgeKind_UpRight,
-	EdgeKind_UpLeft,
-	EdgeKind_DownRight,
-	EdgeKind_DownLeft,
+	EdgeKind_Resize_UpRight,
+	EdgeKind_Resize_UpLeft,
+	EdgeKind_Resize_DownRight,
+	EdgeKind_Resize_DownLeft,
+	EdgeKind_Rotate_UpRight,
+	EdgeKind_Rotate_UpLeft,
+	EdgeKind_Rotate_DownRight,
+	EdgeKind_Rotate_DownLeft,
 }EdgeKind;
 
 static EdgeKind _get_outside_touch_edge_kind_from_rect(PvRect rect, PvPoint point, double scale);
@@ -38,19 +43,45 @@ static EdgeKind _get_outside_touch_edge_kind_from_rect(PvRect rect, PvPoint poin
 {
 	const int PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH = 16;
 	const double SENSE = PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH / scale;
-	PvRect ul = {(rect.x - (SENSE / 2.0)),	(rect.y - (SENSE / 2.0)),	SENSE, SENSE};
-	PvRect ur = {(rect.x + rect.w),		(rect.y - (SENSE / 2.0)),	SENSE, SENSE};
-	PvRect dl = {(rect.x - (SENSE / 2.0)),	(rect.y + rect.h),		SENSE, SENSE};
-	PvRect dr = {(rect.x + rect.w),		(rect.y + rect.h),		SENSE, SENSE};
+	// resize
+	PvRect ul = {
+		(rect.x - (SENSE / 2.0)),
+		(rect.y - (SENSE / 2.0)),
+		SENSE, SENSE};
+	PvRect ur = {
+		(rect.x + rect.w - (SENSE / 2.0)),
+		(rect.y - (SENSE / 2.0)),
+		SENSE, SENSE};
+	PvRect dl = {
+		(rect.x - (SENSE / 2.0)),
+		(rect.y + rect.h - (SENSE / 2.0)),
+		SENSE, SENSE};
+	PvRect dr = {
+		(rect.x + rect.w - (SENSE / 2.0)),
+		(rect.y + rect.h - (SENSE / 2.0)),
+		SENSE, SENSE};
+	// rotate
+	PvRect ul_rotate = {(rect.x - SENSE),	(rect.y - SENSE),	SENSE, SENSE};
+	PvRect ur_rotate = {(rect.x + rect.w),	(rect.y - SENSE),	SENSE, SENSE};
+	PvRect dl_rotate = {(rect.x - SENSE),	(rect.y + rect.h),	SENSE, SENSE};
+	PvRect dr_rotate = {(rect.x + rect.w),	(rect.y + rect.h),	SENSE, SENSE};
 
 	if(pv_rect_is_inside(ul, point.x, point.y)){
-		return EdgeKind_UpLeft;
+		return EdgeKind_Resize_UpLeft;
 	}else if(pv_rect_is_inside(ur, point.x, point.y)){
-		return EdgeKind_UpRight;
+		return EdgeKind_Resize_UpRight;
 	}else if(pv_rect_is_inside(dr, point.x, point.y)){
-		return EdgeKind_DownRight;
+		return EdgeKind_Resize_DownRight;
 	}else if(pv_rect_is_inside(dl, point.x, point.y)){
-		return EdgeKind_DownLeft;
+		return EdgeKind_Resize_DownLeft;
+	}else if(pv_rect_is_inside(ul_rotate, point.x, point.y)){
+		return EdgeKind_Rotate_UpLeft;
+	}else if(pv_rect_is_inside(ur_rotate, point.x, point.y)){
+		return EdgeKind_Rotate_UpRight;
+	}else if(pv_rect_is_inside(dr_rotate, point.x, point.y)){
+		return EdgeKind_Rotate_DownRight;
+	}else if(pv_rect_is_inside(dl_rotate, point.x, point.y)){
+		return EdgeKind_Rotate_DownLeft;
 	}else{
 		return EdgeKind_None;
 	}
@@ -303,7 +334,7 @@ static PvRect _get_rect_resize(PvPoint base, EdgeKind edge_kind, PvRect src_rect
 	rect.y -= base.y;
 
 	switch(edge_kind){
-		case EdgeKind_UpLeft:
+		case EdgeKind_Resize_UpLeft:
 			rect.x *= scale.x;
 			rect.y *= scale.y;
 
@@ -312,7 +343,7 @@ static PvRect _get_rect_resize(PvPoint base, EdgeKind edge_kind, PvRect src_rect
 			rect.y += move.y;
 			rect.h *= scale.y;
 			break;
-		case EdgeKind_UpRight:
+		case EdgeKind_Resize_UpRight:
 			rect.x *= scale.x;
 			rect.y *= scale.y;
 
@@ -321,7 +352,7 @@ static PvRect _get_rect_resize(PvPoint base, EdgeKind edge_kind, PvRect src_rect
 			rect.y += move.y;
 			rect.h *= scale.y;
 			break;
-		case EdgeKind_DownLeft:
+		case EdgeKind_Resize_DownLeft:
 			rect.x *= scale.x;
 			rect.y *= scale.y;
 
@@ -330,7 +361,7 @@ static PvRect _get_rect_resize(PvPoint base, EdgeKind edge_kind, PvRect src_rect
 			//rect.y
 			rect.h *= scale.y;
 			break;
-		case EdgeKind_DownRight:
+		case EdgeKind_Resize_DownRight:
 			rect.x *= scale.x;
 			rect.y *= scale.y;
 
@@ -362,19 +393,19 @@ static EdgeKind _resize_elements(
 
 	PvPoint size_after;
 	switch(dst_edge_kind){
-		case EdgeKind_UpLeft:
+		case EdgeKind_Resize_UpLeft:
 			size_after.x = (src_extent_rect.w - diff.x);
 			size_after.y = (src_extent_rect.h - diff.y);
 			break;
-		case EdgeKind_UpRight:
+		case EdgeKind_Resize_UpRight:
 			size_after.x = (src_extent_rect.w + diff.x);
 			size_after.y = (src_extent_rect.h - diff.y);
 			break;
-		case EdgeKind_DownLeft:
+		case EdgeKind_Resize_DownLeft:
 			size_after.x = (src_extent_rect.w - diff.x);
 			size_after.y = (src_extent_rect.h + diff.y);
 			break;
-		case EdgeKind_DownRight:
+		case EdgeKind_Resize_DownRight:
 			size_after.x = (src_extent_rect.w + diff.x);
 			size_after.y = (src_extent_rect.h + diff.y);
 			break;
@@ -436,50 +467,127 @@ finally:
 	return dst_edge_kind;
 }
 
+static double _get_degree_from_radian(double radian)
+{
+	return radian * (180.0 / M_PI);
+	// return radian * 180.0 / (atan(1.0) * 4.0);
+}
+
+static double get_degree_from_point(PvPoint point)
+{
+	double radian = atan2(point.y, point.x);
+	double degree = _get_degree_from_radian(radian);
+	return degree;
+}
+
+static EdgeKind _rotate_elements(
+		EtDocId doc_id,
+		EtMouseAction mouse_action,
+		EdgeKind _src_edge_kind,
+		PvRect src_extent_rect)
+{
+	EdgeKind dst_edge_kind = _src_edge_kind;
+
+	PvPoint diff = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
+
+	PvPoint extent_center = {
+		.x = src_extent_rect.x + (src_extent_rect.w / 2),
+		.y = src_extent_rect.y + (src_extent_rect.h / 2),
+	};
+
+	PvPoint dst_point = mouse_action.point;
+	PvPoint src_point = pv_point_sub(dst_point, diff);
+
+	double src_degree = get_degree_from_point(pv_point_sub(extent_center, src_point));
+	double dst_degree = get_degree_from_point(pv_point_sub(extent_center, dst_point));
+
+	double degree = dst_degree - src_degree;
+
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	et_assertf(focus, "%d", doc_id);
+
+	PvElement **elements = focus->elements;
+	int num_ = pv_general_get_parray_num((void **)elements);
+	for(int i = 0; i < num_; i++){
+		PvElement *element = elements[i];
+		const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+
+		// remove work appearance
+		element->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
+
+		// calculate work appearance
+		PvRect src_rect = info->func_get_rect_by_anchor_points(element);
+		PvPoint src_center = pv_rect_get_center(src_rect);
+		PvPoint dst_center = pv_rotate_point(src_center, degree, extent_center);
+		PvPoint move = pv_point_sub(dst_center, src_center);
+
+		// append work appearance
+		PvAppearance appearance0 = {
+			.kind = PvAppearanceKind_Rotate,
+			.rotate = (PvAppearanceRotateData){
+				.degree = degree,
+			},
+		};
+		PvAppearance appearance1 = {
+			.kind = PvAppearanceKind_Translate,
+			.translate = (PvAppearanceTranslateData){
+				.move = move,
+			},
+		};
+		*(element->etaion_work_appearances[0]) = appearance0;
+		*(element->etaion_work_appearances[1]) = appearance1;
+		element->etaion_work_appearances[2]->kind = PvAppearanceKind_None;
+	}
+
+	return dst_edge_kind;
+}
+
 typedef enum{
 	EtFocusElementMouseActionMode_None,
 	EtFocusElementMouseActionMode_Move,
 	EtFocusElementMouseActionMode_FocusingByArea,
 	EtFocusElementMouseActionMode_Resize,
+	EtFocusElementMouseActionMode_Rotate,
 }EtFocusElementMouseActionMode;
 
 static GdkCursor *_get_cursor_from_edge(EdgeKind edge)
 {
-	GdkCursor *cursor = NULL;
-
+	EtMouseCursorId mouse_cursor_id;
 	switch(edge){
-		case EdgeKind_UpLeft:
-			{
-				const EtMouseCursorInfo *info_cursor =
-					et_mouse_cursor_get_info_from_id(EtMouseCursorId_Resize_UpLeft);
-				cursor = info_cursor->cursor;
-			}
+		case EdgeKind_Resize_UpLeft:
+			mouse_cursor_id = EtMouseCursorId_Resize_UpLeft;
 			break;
-		case EdgeKind_UpRight:
-			{
-				const EtMouseCursorInfo *info_cursor =
-					et_mouse_cursor_get_info_from_id(EtMouseCursorId_Resize_UpRight);
-				cursor = info_cursor->cursor;
-			}
+		case EdgeKind_Resize_UpRight:
+			mouse_cursor_id = EtMouseCursorId_Resize_UpRight;
 			break;
-		case EdgeKind_DownLeft:
-			{
-				const EtMouseCursorInfo *info_cursor =
-					et_mouse_cursor_get_info_from_id(EtMouseCursorId_Resize_DownLeft);
-				cursor = info_cursor->cursor;
-			}
+		case EdgeKind_Resize_DownLeft:
+			mouse_cursor_id = EtMouseCursorId_Resize_DownLeft;
 			break;
-		case EdgeKind_DownRight:
-			{
-				const EtMouseCursorInfo *info_cursor =
-					et_mouse_cursor_get_info_from_id(EtMouseCursorId_Resize_DownRight);
-				cursor = info_cursor->cursor;
-			}
+		case EdgeKind_Resize_DownRight:
+			mouse_cursor_id = EtMouseCursorId_Resize_DownRight;
+			break;
+		case EdgeKind_Rotate_UpLeft:
+			mouse_cursor_id = EtMouseCursorId_Rotate_UpLeft;
+			break;
+		case EdgeKind_Rotate_UpRight:
+			mouse_cursor_id = EtMouseCursorId_Rotate_UpRight;
+			break;
+		case EdgeKind_Rotate_DownLeft:
+			mouse_cursor_id = EtMouseCursorId_Rotate_DownLeft;
+			break;
+		case EdgeKind_Rotate_DownRight:
+			mouse_cursor_id = EtMouseCursorId_Rotate_DownRight;
 			break;
 		case EdgeKind_None:
 		default:
+			return NULL;
 			break;
 	}
+
+	GdkCursor *cursor = NULL;
+	const EtMouseCursorInfo *info_cursor =
+		et_mouse_cursor_get_info_from_id(mouse_cursor_id);
+	cursor = info_cursor->cursor;
 
 	return cursor;
 }
@@ -492,6 +600,18 @@ PvRect get_square_rect_from_center_point_(PvPoint center, double size)
 			.w = size,
 			.h = size,
 	};
+}
+
+static PvElement *_element_new_from_circle(PvPoint center, double size)
+{
+	PvRect rect = {
+		center.x - (size / 2),
+		center.y - (size / 2),
+		size,
+		size,
+	};
+
+	return pv_element_bezier_new_from_rect(rect);
 }
 
 static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
@@ -526,23 +646,42 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 				_is_already_focus = false;
 				_is_move = false;
 
-				if(EdgeKind_None != _edge){
-					_mode = EtFocusElementMouseActionMode_Resize;
 
-					_mode_edge = _edge;
-					src_extent_rect = _src_extent_rect;
-				}else{
-					_mode = EtFocusElementMouseActionMode_Move;
+				_mode_edge = _edge;
+				src_extent_rect = _src_extent_rect;
 
-					_touch_element = _get_touch_element(doc_id, mouse_action.point);
+				switch(_edge){
+					case EdgeKind_Resize_UpLeft:
+					case EdgeKind_Resize_UpRight:
+					case EdgeKind_Resize_DownLeft:
+					case EdgeKind_Resize_DownRight:
+						{
+							_mode = EtFocusElementMouseActionMode_Resize;
+						}
+						break;
+					case EdgeKind_Rotate_UpLeft:
+					case EdgeKind_Rotate_UpRight:
+					case EdgeKind_Rotate_DownLeft:
+					case EdgeKind_Rotate_DownRight:
+						{
+							_mode = EtFocusElementMouseActionMode_Rotate;
+						}
+						break;
+					case EdgeKind_None:
+					default:
+						{
+							_mode = EtFocusElementMouseActionMode_Move;
 
-					if(NULL == _touch_element){
-						et_assertf(pv_focus_clear_to_parent_layer(focus), "%d", doc_id);
-						_mode = EtFocusElementMouseActionMode_FocusingByArea;
-					}else{
-						_is_already_focus = pv_focus_is_exist_element(focus, _touch_element);
-						pv_focus_add_element(focus, _touch_element);
-					}
+							_touch_element = _get_touch_element(doc_id, mouse_action.point);
+
+							if(NULL == _touch_element){
+								et_assertf(pv_focus_clear_to_parent_layer(focus), "%d", doc_id);
+								_mode = EtFocusElementMouseActionMode_FocusingByArea;
+							}else{
+								_is_already_focus = pv_focus_is_exist_element(focus, _touch_element);
+								pv_focus_add_element(focus, _touch_element);
+							}
+						}
 				}
 			}
 			break;
@@ -564,6 +703,14 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 						{
 
 							EdgeKind _edge_kind = _resize_elements(doc_id, mouse_action, _mode_edge, src_extent_rect);
+
+							*cursor = _get_cursor_from_edge(_edge_kind);
+						}
+						break;
+					case EtFocusElementMouseActionMode_Rotate:
+						{
+
+							EdgeKind _edge_kind = _rotate_elements(doc_id, mouse_action, _mode_edge, src_extent_rect);
 
 							*cursor = _get_cursor_from_edge(_edge_kind);
 						}
@@ -597,6 +744,15 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 						break;
 				}
 
+				// apply work appearances
+				size_t num_ = pv_general_get_parray_num((void **)focus->elements);
+				for(int i = 0; i < (int)num_; i++){
+					PvElement *element = focus->elements[i];
+					const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+					info->func_apply_appearances(element, element->etaion_work_appearances);
+					element->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
+				}
+
 				_mode_edge = EdgeKind_None;
 				et_doc_save_from_id(doc_id);
 
@@ -620,6 +776,22 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 			et_assert(element_bezier);
 			pv_element_append_child(element_group_edit_draw, NULL, element_bezier);
 		}
+
+		switch(_mode){
+			case EtFocusElementMouseActionMode_Rotate:
+				{
+					// rotate center mark
+					PvPoint center = pv_rect_get_center(_after_extent_rect);
+					int diameter = 8.0 / mouse_action.scale;
+					PvElement *element_center = _element_new_from_circle(center, diameter);
+					et_assert(element_center);
+					pv_element_append_child(element_group_edit_draw, NULL, element_center);
+				}
+				break;
+			default:
+				break;
+		}
+
 		et_doc_set_element_group_edit_draw_from_id(doc_id, element_group_edit_draw);
 		pv_element_remove_free_recursive(element_group_edit_draw);
 	}

@@ -2,6 +2,12 @@
 
 #include "et_error.h"
 
+// http://stackoverflow.com/questions/7356523/linking-math-library-to-a-c90-code-using-gcc
+// http://www.sbin.org/doc/glibc/libc_19.html
+#ifndef M_PI
+#define M_PI 3.14159265358979323846264338327
+#endif
+
 static bool _is_init_mouse_cursor_infos = false;
 
 EtMouseCursorInfo _mouse_cursor_infos[] = {
@@ -29,6 +35,30 @@ EtMouseCursorInfo _mouse_cursor_infos[] = {
 		NULL, NULL,
 		24, 0,
 	},
+	{
+		EtMouseCursorId_Rotate_UpRight,
+		"resource/cursor/rotate_upright_24x24.svg",
+		NULL, NULL,
+		0, 24,
+	},
+	{
+		EtMouseCursorId_Rotate_UpLeft,
+		NULL,
+		NULL, NULL,
+		24, 24,
+	},
+	{
+		EtMouseCursorId_Rotate_DownRight,
+		NULL,
+		NULL, NULL,
+		0, 0,
+	},
+	{
+		EtMouseCursorId_Rotate_DownLeft,
+		NULL,
+		NULL, NULL,
+		24, 0,
+	},
 };
 
 static size_t _et_mouse_cursor_get_num()
@@ -51,6 +81,31 @@ static GdkPixbuf *_copy_new_pixbuf_reverse_horizontal(const GdkPixbuf *pb_src)
 		w, 0,
 	};
 	cairo_set_matrix(cr, &rev_h);
+
+	gdk_cairo_set_source_pixbuf (cr, pb_src, 0, 0);
+	cairo_paint (cr);
+
+	GdkPixbuf *pb = gdk_pixbuf_get_from_surface(surface, 0, 0, w, h);
+	et_assert(pb);
+
+	cairo_surface_destroy (surface);
+	cairo_destroy (cr);
+
+	return pb;
+}
+
+static GdkPixbuf *_copy_new_pixbuf_rotate(const GdkPixbuf *pb_src, int rotate)
+{
+	double w = gdk_pixbuf_get_width(pb_src);
+	double h = gdk_pixbuf_get_height(pb_src);
+	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
+	et_assert(surface);
+	cairo_t *cr = cairo_create (surface);
+	et_assert(cr);
+
+	cairo_translate(cr, w/2, h/2);
+	cairo_rotate(cr, rotate * (M_PI/180));
+	cairo_translate(cr, -w/2, -h/2);
 
 	gdk_cairo_set_source_pixbuf (cr, pb_src, 0, 0);
 	cairo_paint (cr);
@@ -101,6 +156,44 @@ bool et_mouse_cursor_info_init()
 					et_assert(info_upright && info_upright->cursor);
 
 					info->pixbuf = gdk_pixbuf_copy(info_upright->pixbuf);
+					et_assert(info->pixbuf);
+				}
+				break;
+			case EtMouseCursorId_Rotate_UpRight:
+				{
+					et_assertf(info->filepath, "%d", info->id);
+					GError *error = NULL;
+					info->pixbuf = gdk_pixbuf_new_from_file(info->filepath, &error);
+					et_assertf(info->pixbuf, "%s, %s",info->filepath, error->message);
+				}
+				break;
+			case EtMouseCursorId_Rotate_UpLeft:
+				{
+					const EtMouseCursorInfo *info_upright =
+						&(_mouse_cursor_infos[EtMouseCursorId_Rotate_UpRight]);
+					et_assert(info_upright && info_upright->cursor);
+
+					info->pixbuf = _copy_new_pixbuf_reverse_horizontal(info_upright->pixbuf);
+					et_assert(info->pixbuf);
+				}
+				break;
+			case EtMouseCursorId_Rotate_DownRight:
+				{
+					const EtMouseCursorInfo *info_upright =
+						&(_mouse_cursor_infos[EtMouseCursorId_Rotate_UpRight]);
+					et_assert(info_upright && info_upright->cursor);
+
+					info->pixbuf = _copy_new_pixbuf_rotate(info_upright->pixbuf, 90);
+					et_assert(info->pixbuf);
+				}
+				break;
+			case EtMouseCursorId_Rotate_DownLeft:
+				{
+					const EtMouseCursorInfo *info_upright =
+						&(_mouse_cursor_infos[EtMouseCursorId_Rotate_UpRight]);
+					et_assert(info_upright && info_upright->cursor);
+
+					info->pixbuf = _copy_new_pixbuf_rotate(info_upright->pixbuf, 180);
 					et_assert(info->pixbuf);
 				}
 				break;

@@ -68,6 +68,18 @@ PvPoint pv_point_div_value(PvPoint p, double scale)
 	return ret;
 }
 
+bool pv_point_is_diff(PvPoint point0, PvPoint point1)
+{
+	if(point0.x != point1.x){
+		return true;
+	}
+	if(point0.y != point1.y){
+		return true;
+	}
+
+	return false;
+}
+
 
 // ******** ********
 // PvRect
@@ -142,5 +154,15 @@ PvPoint pv_rect_get_edge_point(PvRect rect, PvRectEdgeKind edgeKind)
 		default:
 			pv_assertf(false, "%d", edgeKind);
 	}
+}
+
+PvPoint pv_rect_get_center(PvRect rect)
+{
+	PvPoint center = {
+		.x = rect.x + (rect.w / 2),
+		.y = rect.y + (rect.h / 2),
+	};
+
+	return center;
 }
 
