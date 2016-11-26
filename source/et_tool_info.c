@@ -244,7 +244,7 @@ static PvElement *_get_touch_element(EtDocId doc_id, PvPoint g_point)
 }
 
 /*! @return is move */
-static void _move_elements(
+static void _translate_elements(
 		EtDocId doc_id,
 		EtMouseAction mouse_action)
 {
@@ -520,7 +520,7 @@ static EdgeKind _rotate_elements(
 
 typedef enum{
 	EtFocusElementMouseActionMode_None,
-	EtFocusElementMouseActionMode_Move,
+	EtFocusElementMouseActionMode_Translate,
 	EtFocusElementMouseActionMode_FocusingByArea,
 	EtFocusElementMouseActionMode_Resize,
 	EtFocusElementMouseActionMode_Rotate,
@@ -650,7 +650,7 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 					case EdgeKind_None:
 					default:
 						{
-							_mode = EtFocusElementMouseActionMode_Move;
+							_mode = EtFocusElementMouseActionMode_Translate;
 
 							_touch_element = _get_touch_element(doc_id, mouse_action.point);
 
@@ -685,16 +685,16 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 						break;
 					}else{
 						_is_move = true;
-						if(EtFocusElementMouseActionMode_Move == _mode && !_is_already_focus){
+						if(EtFocusElementMouseActionMode_Translate == _mode && !_is_already_focus){
 							pv_focus_clear_set_element(focus, pv_focus_get_first_element(focus));
 						}
 					}
 				}
 
 				switch(_mode){
-					case EtFocusElementMouseActionMode_Move:
+					case EtFocusElementMouseActionMode_Translate:
 						{
-							_move_elements(doc_id, mouse_action);
+							_translate_elements(doc_id, mouse_action);
 						}
 						break;
 					case EtFocusElementMouseActionMode_Resize:
@@ -721,7 +721,7 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 		case EtMouseAction_Up:
 			{
 				switch(_mode){
-					case EtFocusElementMouseActionMode_Move:
+					case EtFocusElementMouseActionMode_Translate:
 						{
 							if(_is_move){
 								// NOP
