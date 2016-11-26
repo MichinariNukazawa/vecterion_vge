@@ -11,7 +11,6 @@
 #include "et_doc_manager.h"
 #include "et_etaion.h"
 #include "et_color_panel.h"
-#include "et_focus_rel.h"
 #include "et_mouse_cursor.h"
 
 
@@ -251,110 +250,44 @@ static void _translate_elements(
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
 
-	EtFocusRel *_focus_rel = et_focus_rel_new(focus);
+	PvPoint move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
 
 	int num = pv_general_get_parray_num((void **)focus->elements);
-	int num_rel = pv_general_get_parray_num((void **)_focus_rel->element_rels);
-	if(num_rel != num){
-		et_bug("%d %d", num, num_rel);
-		goto finally;
-	}
-
-	const PvVg *vg = et_doc_get_current_vg_ref_from_id(doc_id);
-	et_assert(vg);
-
-	PvElement **elements = focus->elements;
-
-	PvPoint move = {.x = 0, .y = 0};
 	for(int i = 0; i < num; i++){
-		PvElement *focus_element = elements[i];
-		const PvElement *src_element = et_element_rel_get_element_from_vg_const(
-				_focus_rel->element_rels[i], vg);
+		PvElement *element = focus->elements[i];
 
-		const PvElementInfo *info = pv_element_get_info_from_kind(focus_element->kind);
-		et_assertf(info, "%d", focus_element->kind);
+		// remove work appearance
+		element->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
 
-		if(0 == i){
-			move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
-
-			PvPoint src_point = info->func_get_point_by_anchor_points(src_element);
-			PvPoint dst_point = pv_point_add(src_point, move);
-			info->func_set_point_by_anchor_points(focus_element, dst_point);
-
-			if(mouse_action.snap.is_snap_for_pixel){
-				PvPoint snap_point = info->func_get_point_by_anchor_points(focus_element);
-				snap_point.x = round(snap_point.x);
-				snap_point.y = round(snap_point.y);
-				info->func_set_point_by_anchor_points(focus_element, snap_point);
-
-				move = pv_point_sub(snap_point, src_point);
-			}
-
-		}else{
-			PvPoint src_point = info->func_get_point_by_anchor_points(src_element);
-			PvPoint dst_point = pv_point_add(src_point, move);
-			info->func_set_point_by_anchor_points(focus_element, dst_point);
-		}
+		// append work appearance
+		PvAppearance appearance0 = {
+			.kind = PvAppearanceKind_Translate,
+			.translate = (PvAppearanceTranslateData){
+				.move = move,
+			},
+		};
+		*(element->etaion_work_appearances[0]) = appearance0;
+		element->etaion_work_appearances[1]->kind = PvAppearanceKind_None;
 	}
-
-finally:
-	et_focus_rel_free(_focus_rel);
 
 	return;
 }
 
-static PvRect _get_rect_resize(PvPoint base, EdgeKind edge_kind, PvRect src_rect, PvPoint move, PvPoint scale)
+PvPoint pv_resize_point_(PvPoint point, PvPoint resize, PvPoint center)
 {
-	PvRect rect = src_rect;
-	rect.x -= base.x;
-	rect.y -= base.y;
+	PvPoint rel = pv_point_sub(point, center);
+	rel = pv_point_mul(rel, resize);
+	return pv_point_add(rel, center);
+}
 
-	switch(edge_kind){
-		case EdgeKind_Resize_UpLeft:
-			rect.x *= scale.x;
-			rect.y *= scale.y;
+static PvPoint pv_resize_diff_(PvPoint size, PvPoint resize)
+{
+	PvPoint diff_ = {
+		.x = (size.x - (size.x * resize.x)),
+		.y = (size.y - (size.y * resize.y)),
+	};
 
-			rect.x += move.x;
-			rect.w *= scale.x;
-			rect.y += move.y;
-			rect.h *= scale.y;
-			break;
-		case EdgeKind_Resize_UpRight:
-			rect.x *= scale.x;
-			rect.y *= scale.y;
-
-			//rect.x
-			rect.w *= scale.x;
-			rect.y += move.y;
-			rect.h *= scale.y;
-			break;
-		case EdgeKind_Resize_DownLeft:
-			rect.x *= scale.x;
-			rect.y *= scale.y;
-
-			rect.x += move.x;
-			rect.w *= scale.x;
-			//rect.y
-			rect.h *= scale.y;
-			break;
-		case EdgeKind_Resize_DownRight:
-			rect.x *= scale.x;
-			rect.y *= scale.y;
-
-			//rect.x
-			rect.w *= scale.x;
-			//rect.y
-			rect.h *= scale.y;
-			break;
-		default:
-			et_assert(false);
-			break;
-	}
-
-	rect.x += base.x;
-	rect.y += base.y;
-
-	return rect;
+	return diff_;
 }
 
 static EdgeKind _resize_elements(
@@ -365,80 +298,93 @@ static EdgeKind _resize_elements(
 {
 	EdgeKind dst_edge_kind = _src_edge_kind;
 
-	PvPoint diff = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	et_assertf(focus, "%d", doc_id);
 
+	PvPoint move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
+
+	PvPoint move_upleft = (PvPoint){0,0};
 	PvPoint size_after;
 	switch(dst_edge_kind){
 		case EdgeKind_Resize_UpLeft:
-			size_after.x = (src_extent_rect.w - diff.x);
-			size_after.y = (src_extent_rect.h - diff.y);
+			move_upleft = (PvPoint){move.x, move.y};
+			size_after.x = (src_extent_rect.w - move.x);
+			size_after.y = (src_extent_rect.h - move.y);
 			break;
 		case EdgeKind_Resize_UpRight:
-			size_after.x = (src_extent_rect.w + diff.x);
-			size_after.y = (src_extent_rect.h - diff.y);
+			move_upleft = (PvPoint){0, move.y};
+			size_after.x = (src_extent_rect.w + move.x);
+			size_after.y = (src_extent_rect.h - move.y);
 			break;
 		case EdgeKind_Resize_DownLeft:
-			size_after.x = (src_extent_rect.w - diff.x);
-			size_after.y = (src_extent_rect.h + diff.y);
+			move_upleft = (PvPoint){move.x, 0};
+			size_after.x = (src_extent_rect.w - move.x);
+			size_after.y = (src_extent_rect.h + move.y);
 			break;
 		case EdgeKind_Resize_DownRight:
-			size_after.x = (src_extent_rect.w + diff.x);
-			size_after.y = (src_extent_rect.h + diff.y);
+			move_upleft = (PvPoint){0,0};
+			size_after.x = (src_extent_rect.w + move.x);
+			size_after.y = (src_extent_rect.h + move.y);
 			break;
 		default:
 			et_assert(false);
 			break;
 	}
 
-	PvPoint scale = {
+	PvPoint resize = {
 		.x = size_after.x / src_extent_rect.w,
 		.y = size_after.y / src_extent_rect.h,
 	};
+
 	const double DELTA_OF_RESIZE = 0.001;
-	scale.x = ((DELTA_OF_RESIZE > src_extent_rect.w)? DELTA_OF_RESIZE : scale.x); //! @todo fix
-	scale.y = ((DELTA_OF_RESIZE > src_extent_rect.h)? DELTA_OF_RESIZE : scale.y);
+	resize.x = ((DELTA_OF_RESIZE > src_extent_rect.w)? DELTA_OF_RESIZE : resize.x); //! @todo fix
+	resize.y = ((DELTA_OF_RESIZE > src_extent_rect.h)? DELTA_OF_RESIZE : resize.y);
 
 	//! @todo minus to not implement.
-	scale.x = ((scale.x > DELTA_OF_RESIZE) ? scale.x : DELTA_OF_RESIZE);
-	scale.y = ((scale.y > DELTA_OF_RESIZE) ? scale.y : DELTA_OF_RESIZE);
-
-	PvPoint base = {
-		.x = src_extent_rect.x,
-		.y = src_extent_rect.y,
-	};
-
-	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-	et_assertf(focus, "%d", doc_id);
-
-	EtFocusRel *_focus_rel = et_focus_rel_new(focus);
+	resize.x = ((resize.x > DELTA_OF_RESIZE) ? resize.x : DELTA_OF_RESIZE);
+	resize.y = ((resize.y > DELTA_OF_RESIZE) ? resize.y : DELTA_OF_RESIZE);
 
 	int num = pv_general_get_parray_num((void **)focus->elements);
-	int num_rel = pv_general_get_parray_num((void **)_focus_rel->element_rels);
-	if(num_rel != num){
-		et_bug("%d %d", num, num_rel);
-		goto finally;
-	}
-
-	const PvVg *vg = et_doc_get_current_vg_ref_from_id(doc_id);
-	et_assert(vg);
-
-	PvElement **elements = focus->elements;
-	int num_ = pv_general_get_parray_num((void **)elements);
-	for(int i = 0; i < num_; i++){
-		PvElement *element = elements[i];
+	for(int i = 0; i < num; i++){
+		PvElement *element = focus->elements[i];
 		const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 
-		const PvElement *src_element = et_element_rel_get_element_from_vg_const(
-				_focus_rel->element_rels[i], vg);
-		const PvRect src_rect = info->func_get_rect_by_anchor_points(src_element);
+		PvRect rect_ = info->func_get_rect_by_anchor_points(element);
 
-		PvRect dst_rect = _get_rect_resize(base, _src_edge_kind, src_rect, diff, scale);
+		// remove work appearance
+		element->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
 
-		info->func_set_rect_by_anchor_points(element, dst_rect);
+		// calculate work appearance
+		PvPoint pos_ = {.x = rect_.x, .y = rect_.y};
+		PvPoint src_extent_pos = {.x = src_extent_rect.x, .y = src_extent_rect.y};
+		PvPoint move_upleft_ = pv_resize_diff_(pv_point_sub(pos_, src_extent_pos), resize);
+		PvPoint move_upleft_by_resize_ = {
+			.x = ((rect_.w - (rect_.w * resize.x)) / 2),
+			.y = ((rect_.h - (rect_.h * resize.y)) / 2),
+		};
+		PvPoint translate_move_ = {
+			// rect of elements, elements in element, element resize offset
+			.x = move_upleft.x - move_upleft_.x - move_upleft_by_resize_.x,
+			.y = move_upleft.y - move_upleft_.y - move_upleft_by_resize_.y,
+		};
+
+		// append work appearance
+		PvAppearance appearance0 = {
+			.kind = PvAppearanceKind_Translate,
+			.translate = (PvAppearanceTranslateData){
+				.move = translate_move_,
+			},
+		};
+		PvAppearance appearance1 = {
+			.kind = PvAppearanceKind_Resize,
+			.resize = (PvAppearanceResizeData){
+				.resize = resize,
+			},
+		};
+		*(element->etaion_work_appearances[0]) = appearance0;
+		*(element->etaion_work_appearances[1]) = appearance1;
+		element->etaion_work_appearances[2]->kind = PvAppearanceKind_None;
 	}
-
-finally:
-	et_focus_rel_free(_focus_rel);
 
 	return dst_edge_kind;
 }
