@@ -244,43 +244,19 @@ static PvElement *_get_touch_element(EtDocId doc_id, PvPoint g_point)
 }
 
 /*! @return is move */
-static bool _move_elements(
+static void _move_elements(
 		EtDocId doc_id,
-		EtMouseAction mouse_action,
-		bool _is_move,
-		bool _is_already_focus)
+		EtMouseAction mouse_action)
 {
-	bool is_move = _is_move;
-	const int PX_SENSITIVE_OF_MOVE = 3;
-
-	if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
-		return false;
-	}
-
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
 
-	if(!is_move)
-	{
-		if( PX_SENSITIVE_OF_MOVE > abs(mouse_action.diff_down.x)
-				&& PX_SENSITIVE_OF_MOVE > abs(mouse_action.diff_down.y))
-		{
-			return false;
-		}else{
-			if(!_is_already_focus){
-				pv_focus_clear_set_element(focus, pv_focus_get_first_element(focus));
-			}
-		}
-	}
-
-	bool ret = true;
 	EtFocusRel *_focus_rel = et_focus_rel_new(focus);
 
 	int num = pv_general_get_parray_num((void **)focus->elements);
 	int num_rel = pv_general_get_parray_num((void **)_focus_rel->element_rels);
 	if(num_rel != num){
 		et_bug("%d %d", num, num_rel);
-		ret = false;
 		goto finally;
 	}
 
@@ -324,7 +300,7 @@ static bool _move_elements(
 finally:
 	et_focus_rel_free(_focus_rel);
 
-	return ret;
+	return;
 }
 
 static PvRect _get_rect_resize(PvPoint base, EdgeKind edge_kind, PvRect src_rect, PvPoint move, PvPoint scale)
@@ -691,16 +667,34 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 			break;
 		case EtMouseAction_Move:
 			{
+				if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
+					break;
+				}
+
 				if(0 != (mouse_action.state & GDK_SHIFT_MASK)){
 					break;
+				}
+
+				if(!_is_move)
+				{
+					const int PX_SENSITIVE_OF_MOVE = 3;
+
+					if( PX_SENSITIVE_OF_MOVE > abs(mouse_action.diff_down.x)
+							&& PX_SENSITIVE_OF_MOVE > abs(mouse_action.diff_down.y))
+					{
+						break;
+					}else{
+						_is_move = true;
+						if(EtFocusElementMouseActionMode_Move == _mode && !_is_already_focus){
+							pv_focus_clear_set_element(focus, pv_focus_get_first_element(focus));
+						}
+					}
 				}
 
 				switch(_mode){
 					case EtFocusElementMouseActionMode_Move:
 						{
-							if(_move_elements(doc_id, mouse_action, _is_move, _is_already_focus)){
-								_is_move = true;
-							}
+							_move_elements(doc_id, mouse_action);
 						}
 						break;
 					case EtFocusElementMouseActionMode_Resize:
