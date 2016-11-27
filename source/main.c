@@ -1078,6 +1078,128 @@ static gboolean _cb_menu_file_open(gpointer data)
 	return false;
 }
 
+static bool _pv_element_append_near_first_parrent_layer(PvFocus *focus, PvElement *element)
+{
+	PvElement *first_parent = pv_focus_get_first_element_parent_layer(focus);
+
+	PvElement *sister_layer = NULL;
+	PvElement *parent_layer = NULL;
+	if(element->kind == PvElementKind_Layer
+		&& first_parent->kind != PvElementKind_Root){
+		//! PvElementKind_Layer is append sister level on current layer
+		sister_layer = first_parent;
+		parent_layer = sister_layer->parent;
+	}else{
+		//! PvElementKind_Layer is append child level on current layer
+		sister_layer = NULL;
+		parent_layer = first_parent;
+	}
+
+	return pv_element_append_child(parent_layer, sister_layer, element);
+}
+
+PvElement *_new_element_from_filepath(const char *filepath)
+{
+	PvElement *element = NULL;
+	const PvFileFormat *format = get_file_format_from_filepath(filepath);
+	if(!format){
+		et_warning("%s", filepath);
+		return NULL;
+	}
+
+	if(PvFormatKind_SVG == format->kind){
+		element = pv_io_new_element_from_filepath(filepath);
+	}else{
+		element = pv_element_raster_new_from_filepath(filepath);
+	}
+
+	if(NULL == element){
+		et_warning("%s", filepath);
+	}
+
+	return element;
+}
+
+static gboolean _cb_menu_file_import(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		_show_error_dialog("Import:nothing document.");
+		et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
+	GtkWidget *dialog = gtk_file_chooser_dialog_new ("Import File",
+			NULL,
+			action,
+			_("_Cancel"),
+			GTK_RESPONSE_CANCEL,
+			_("_Import"),
+			GTK_RESPONSE_ACCEPT,
+			NULL);
+
+	char *filename = NULL;
+	gint res = gtk_dialog_run (GTK_DIALOG (dialog));
+	if (res == GTK_RESPONSE_ACCEPT)
+	{
+		GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
+		filename = gtk_file_chooser_get_filename (chooser);
+
+		PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+		if(NULL == focus){
+			_show_error_dialog("Import:internal error.");
+			et_debug("%d", doc_id);
+			goto finally_1;
+		}
+
+		PvElement *import_element = _new_element_from_filepath(filename);
+		if(NULL == import_element){
+			_show_error_dialog("Import:open error.:%s", filename);
+			et_debug("%d", doc_id);
+			goto finally_1;
+		}
+
+		if(!_pv_element_append_near_first_parrent_layer(focus, import_element)){
+			pv_element_remove_free_recursive(import_element);
+
+			_show_error_dialog("Import:open error.:%s", filename);
+			et_debug("%d", doc_id);
+			goto finally_1;
+		}
+
+		if(!pv_focus_clear_set_element(focus, import_element)){
+			_show_error_dialog("Import:open error.:%s", filename);
+			et_debug("%d", doc_id);
+			goto finally_1;
+		}
+		if(!pv_focus_clear_to_parent_layer(focus)){
+			_show_error_dialog("Import:open error.:%s", filename);
+			et_debug("%d", doc_id);
+			goto finally_1;
+		}
+
+		g_free (filename);
+	}
+
+	gtk_widget_destroy (dialog);
+
+	et_doc_save_from_id(doc_id);
+	et_doc_signal_update_from_id(doc_id);
+
+	et_debug("Import");
+
+	return false;
+
+finally_1:
+	if(NULL != filename){
+		g_free (filename);
+	}
+	gtk_widget_destroy (dialog);
+	return false;
+
+}
+
 static void _cb_menu_view_extent(GtkCheckMenuItem *menuitem, gpointer user_data)
 {
 	if(!et_etaion_set_is_extent_view(gtk_check_menu_item_get_active(menuitem))){
@@ -1390,6 +1512,12 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_open), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_o, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+
+	// ** "/_File/_Import"
+	menuitem = gtk_menu_item_new_with_label ("_Import");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_import), NULL);
 
 	// ** "/_File/_Save (Ctrl+S)"
 	menuitem = gtk_menu_item_new_with_label ("_Save");

@@ -668,18 +668,9 @@ static bool _new_elements_from_svg_elements_recursive(
 	return true;
 }
 
-PvVg *pv_io_new_from_file(const char *filepath)
+static PvElement *pv_io_new_element_from_filepath_with_vg_(PvVg *vg, const char *filepath)
 {
-	if(NULL == filepath){
-		pv_error("");
-		return NULL;
-	}
-
-	PvVg *vg = pv_vg_new();
-	if(NULL == vg){
-		pv_error("");
-		return NULL;
-	}
+	PvElement *top_layer = NULL;
 
 	LIBXML_TEST_VERSION
 
@@ -694,46 +685,90 @@ PvVg *pv_io_new_from_file(const char *filepath)
 		pv_error("");
 		goto error;
 	}
-	if(!_pv_io_set_vg_from_xmlnode_svg(vg, xmlnode_svg)){
-		pv_error("");
-		goto error;
+
+	if(NULL != vg){
+		if(!_pv_io_set_vg_from_xmlnode_svg(vg, xmlnode_svg)){
+			pv_error("");
+			goto error;
+		}
 	}
+
 	PvElement *layer = pv_element_new(PvElementKind_Layer);
 	pv_assert(layer);
 	ConfReadSvg conf = ConfReadSvg_Default;
 	if(!_new_elements_from_svg_elements_recursive(layer, xmlnode_svg, &conf)){
 		pv_error("");
-		return false;
+		goto error;
 	}
 
 	int num_svg_top = pv_general_get_parray_num((void **)layer->childs);
-	bool is_toplevel_layer_all = true;
+	if(1 == num_svg_top && PvElementKind_Layer == layer->childs[0]->kind){
+		// cut self root layer if exist root layer in svg
+		top_layer = layer->childs[0];
+		top_layer->parent = NULL;
+		pv_element_free(layer);
+	}else{
+		top_layer = layer;
+	}
+
+error:
+	xmlFreeDoc(xml_doc);
+	xmlCleanupParser();
+
+	return top_layer;
+}
+
+PvVg *pv_io_new_from_file(const char *filepath)
+{
+	if(NULL == filepath){
+		pv_error("");
+		return NULL;
+	}
+
+	PvVg *vg = pv_vg_new();
+	if(NULL == vg){
+		pv_error("");
+		return NULL;
+	}
+
+	PvElement *layer = pv_io_new_element_from_filepath_with_vg_(vg, filepath);
+	if(NULL == layer){
+		pv_warning("");
+		goto error;
+	}
+
+	bool is_toplevel_layer_all = false;
+	int num_svg_top = pv_general_get_parray_num((void **)layer->childs);
 	for(int i = 0; i < num_svg_top; i++){
+		is_toplevel_layer_all = true;
 		if(PvElementKind_Layer != layer->childs[i]->kind){
 			is_toplevel_layer_all = false;
 			break;
 		}
 	}
 	if(is_toplevel_layer_all){
-		layer->kind = PvElementKind_Root;
+		// castle root layer
 		PvElement *_root = vg->element_root;
+		layer->kind = PvElementKind_Root;
 		vg->element_root = layer;
 		pv_assert(pv_element_remove_free_recursive(_root));
 	}else{
+		// append root child
 		pv_assert(pv_element_append_child(vg->element_root, NULL, layer));
 		pv_assert(pv_element_remove_free_recursive(vg->element_root->childs[0]));
 		assert(1 == pv_general_get_parray_num((void **)(vg->element_root->childs)));
 	}
 
-	xmlFreeDoc(xml_doc);
-	xmlCleanupParser();
 	return vg;
 
 error:
-	xmlFreeDoc(xml_doc);
-	xmlCleanupParser();
 	pv_vg_free(vg);
 
 	return NULL;
+}
+
+PvElement *pv_io_new_element_from_filepath(const char *filepath)
+{
+	return pv_io_new_element_from_filepath_with_vg_(NULL, filepath);
 }
 
