@@ -51,10 +51,17 @@ TEST(test, hist_start){
 	ASSERT_TRUE(NULL == item);
 
 	bool ret;
+	// Nothing history undo, redo
+	ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
+	ASSERT_EQ(0, et_doc_history_hive_get_num_redo(hist));
 	ret = et_doc_history_hive_undo(hist);
-	ASSERT_FALSE(ret);
+	ASSERT_TRUE(ret);
+	ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
+	ASSERT_EQ(0, et_doc_history_hive_get_num_redo(hist));
 	ret = et_doc_history_hive_redo(hist);
-	ASSERT_FALSE(ret);
+	ASSERT_TRUE(ret);
+	ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
+	ASSERT_EQ(0, et_doc_history_hive_get_num_redo(hist));
 
 	item = et_doc_history_get_from_relative(hist, 0);
 	ASSERT_TRUE(NULL != item);
@@ -219,9 +226,10 @@ TEST_F(MyTest, hist_change){
 			FAIL();
 		}
 		// ** undo
-		bool ret;
-		ret = et_doc_history_hive_undo(hist);
-		ASSERT_FALSE(ret);
+		// Nothing history undo.
+		ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
+		ASSERT_TRUE(et_doc_history_hive_undo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
 		item = et_doc_history_get_from_relative(hist, 0);
 		ASSERT_TRUE(NULL != item);
 		ASSERT_TRUE(NULL != item->vg);
@@ -254,7 +262,9 @@ TEST_F(MyTest, hist_change){
 		ASSERT_EQ(1, et_doc_history_hive_get_num_redo(hist));
 		ASSERT_TRUE(pv_vg_is_diff(vg1, item->vg));
 		ASSERT_FALSE(pv_vg_is_diff(vg_src, item->vg));
-		ASSERT_FALSE(et_doc_history_hive_undo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
+		ASSERT_TRUE(et_doc_history_hive_undo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
 		// ** redo
 		ASSERT_TRUE(et_doc_history_hive_redo(hist));
 		item = et_doc_history_get_from_relative(hist, 0);
@@ -469,7 +479,9 @@ TEST_F(MyTest, hist_change){
 		ASSERT_FALSE(pv_vg_is_diff(vg1, item->vg));
 		printf("**\n");
 		// ** over undo
-		ASSERT_FALSE(et_doc_history_hive_undo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
+		ASSERT_TRUE(et_doc_history_hive_undo(hist));
+		ASSERT_EQ(0, et_doc_history_hive_get_num_undo(hist));
 		item = et_doc_history_get_from_relative(hist, 0);
 		ASSERT_TRUE(NULL != item);
 		ASSERT_TRUE(pv_vg_is_diff(vg_src, item->vg));

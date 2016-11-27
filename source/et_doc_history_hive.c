@@ -189,7 +189,7 @@ bool et_doc_history_hive_undo(EtDocHistoryHive *hist)
 
 	if(0 >= et_doc_history_hive_get_num_undo(hist)){
 		et_debug("undo history is empty.");
-		return false;
+		return true;
 	}
 
 	// ** 変更があればそれをsaveしておく
@@ -228,7 +228,7 @@ bool et_doc_history_hive_redo(EtDocHistoryHive *hist)
 
 	if(et_doc_history_hive_get_num_redo(hist) <= 0){
 		et_debug("redo history is empty.");
-		return false;
+		return true;
 	}
 
 	int ix = _et_doc_history_hive_get_index_from_relative(
