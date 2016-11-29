@@ -654,30 +654,30 @@ bool pv_element_is_diff_recursive(PvElement *element0, PvElement *element1)
 	return _data.is_diff;
 }
 
-PvElement *pv_element_bezier_new_from_rect(PvRect rect)
+PvElement *pv_element_curve_new_from_rect(PvRect rect)
 {
-	PvElement *self = pv_element_new(PvElementKind_Bezier);
+	PvElement *self = pv_element_new(PvElementKind_Curve);
 	pv_assert(self);
 
 	for(int i = 0; i < 4; i++){
 		PvPoint point = pv_rect_get_edge_point(rect, i);
 		PvAnchorPoint ap = pv_anchor_point_from_point(point);
-		bool ret = pv_element_bezier_add_anchor_point(self, ap);
+		bool ret = pv_element_curve_add_anchor_point(self, ap);
 		pv_assert(ret);
 	}
-	pv_element_bezier_set_close_anchor_point(self, true);
+	pv_element_curve_set_close_anchor_point(self, true);
 
 	return self;
 }
 
-bool pv_element_bezier_add_anchor_point(PvElement *self, const PvAnchorPoint anchor_point)
+bool pv_element_curve_add_anchor_point(PvElement *self, const PvAnchorPoint anchor_point)
 {
 	if(NULL == self){
 		pv_error("");
 		return false;
 	}
 
-	if(PvElementKind_Bezier != self->kind){
+	if(PvElementKind_Curve != self->kind){
 		pv_bug("");
 		return false;
 	}
@@ -687,7 +687,7 @@ bool pv_element_bezier_add_anchor_point(PvElement *self, const PvAnchorPoint anc
 		return false;
 	}
 
-	PvElementBezierData *data = self->data;
+	PvElementCurveData *data = self->data;
 	PvAnchorPoint *anchor_points = (PvAnchorPoint *)realloc(data->anchor_points,
 			sizeof(PvAnchorPoint) * (data->anchor_points_num + 1));
 	anchor_points[data->anchor_points_num] = anchor_point;
@@ -697,19 +697,19 @@ bool pv_element_bezier_add_anchor_point(PvElement *self, const PvAnchorPoint anc
 	return true;
 }
 
-int pv_element_bezier_get_num_anchor_point(const PvElement *self)
+int pv_element_curve_get_num_anchor_point(const PvElement *self)
 {
 	assert(self);
 	assert(self->data);
-	assert(PvElementKind_Bezier == self->kind);
+	assert(PvElementKind_Curve == self->kind);
 
-	PvElementBezierData *data = self->data;
+	PvElementCurveData *data = self->data;
 	return data->anchor_points_num;
 }
 
-void pv_element_bezier_set_close_anchor_point(PvElement *self, bool is_close)
+void pv_element_curve_set_close_anchor_point(PvElement *self, bool is_close)
 {
-	PvElementBezierData *data = self->data;
+	PvElementCurveData *data = self->data;
 	data->is_close = is_close;
 }
 
@@ -780,7 +780,7 @@ bool pv_element_kind_is_viewable_object(PvElementKind kind)
 		case PvElementKind_Group:
 		case PvElementKind_EndOfKind:
 			return false;
-		case PvElementKind_Bezier:
+		case PvElementKind_Curve:
 		case PvElementKind_Raster:
 			return true;
 		default:
@@ -795,13 +795,13 @@ void pv_element_debug_print(const PvElement *element)
 		pv_debug("");
 		return;
 	}
-	if(PvElementKind_Bezier != element->kind){
+	if(PvElementKind_Curve != element->kind){
 		pv_debug("%d", element->kind);
 		return;
 	}
 
 
-	PvElementBezierData *data = element->data;
+	PvElementCurveData *data = element->data;
 	if(NULL == data){
 		pv_debug("");
 		return;

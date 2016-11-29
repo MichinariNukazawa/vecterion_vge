@@ -338,7 +338,7 @@ static bool _func_group_move_element(
 }
 
 // ******** ********
-// Bezier
+// Curve
 // ******** ********
 
 typedef enum{
@@ -352,24 +352,24 @@ typedef enum{
 	PvSimplifyOption_ResizeOnly,
 }PvSimplifyOption;
 
-int _func_bezier_get_num_anchor_point(const PvElement *element);
+int _func_curve_get_num_anchor_point(const PvElement *element);
 
-static bool _func_bezier_move_element(
+static bool _func_curve_move_element(
 		const PvElement *element,
 		double gx,
 		double gy);
 
-static PvRect _func_bezier_get_rect_by_draw(
+static PvRect _func_curve_get_rect_by_draw(
 		const PvElement *element);
 
-static PvRect _func_bezier_get_rect_by_anchor_points(
+static PvRect _func_curve_get_rect_by_anchor_points(
 		const PvElement *element);
 
-static void _func_bezier_apply_appearances(
+static void _func_curve_apply_appearances(
 		PvElement *element,
 		PvAppearance **appearances);
 
-static void _bezier_rescale_anchor_point(PvAnchorPoint *ap, PvPoint point, PvPoint scale)
+static void _curve_rescale_anchor_point(PvAnchorPoint *ap, PvPoint point, PvPoint scale)
 {
 	PvPoint pp = pv_anchor_point_get_point(ap);
 	pp = pv_point_sub(pp, point);
@@ -386,7 +386,7 @@ static void _bezier_rescale_anchor_point(PvAnchorPoint *ap, PvPoint point, PvPoi
 	pv_anchor_point_set_handle_relate(ap, PvAnchorPointIndex_HandleNext, hn);
 }
 
-static PvElement *_bezier_simplify_new(
+static PvElement *_curve_simplify_new(
 		const PvElement *element,
 		PvRenderContext render_context,
 		PvSimplifyOption option)
@@ -395,11 +395,11 @@ static PvElement *_bezier_simplify_new(
 
 	PvElement *simplify = pv_element_copy_recursive(element);
 	pv_assert(simplify);
-	PvElementBezierData *simplify_data = simplify->data;
+	PvElementCurveData *simplify_data = simplify->data;
 	pv_assert(simplify_data);
 
 	// appearance
-	_func_bezier_apply_appearances(simplify, element->etaion_work_appearances);
+	_func_curve_apply_appearances(simplify, element->etaion_work_appearances);
 	simplify->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
 
 	// scale
@@ -408,18 +408,18 @@ static PvElement *_bezier_simplify_new(
 		PvPoint point = {0, 0};
 		PvPoint scale = {render_context.scale, render_context.scale};
 		PvAnchorPoint *ap = &(simplify_data->anchor_points[i]);
-		_bezier_rescale_anchor_point(ap, point, scale);
+		_curve_rescale_anchor_point(ap, point, scale);
 	}
 
 	return simplify;
 }
 
-void _bezier_simplify_free(PvElement *self)
+void _curve_simplify_free(PvElement *self)
 {
 	pv_element_remove_free_recursive(self);
 }
 
-static void _bezier_draw_point(cairo_t *cr, PvPoint gp, PvElementPointKind kind)
+static void _curve_draw_point(cairo_t *cr, PvPoint gp, PvElementPointKind kind)
 {
 	cairo_arc (cr, gp.x, gp.y, 2.0, 0., 2 * M_PI);
 
@@ -442,11 +442,11 @@ static void _draw_extent_from_rect(cairo_t *cr, PvRect rect)
 	cairo_stroke(cr);
 }
 
-void _bezier_command_path(
+void _curve_command_path(
 		cairo_t *cr,
 		const PvElement *element)
 {
-	const PvElementBezierData *data = element->data;
+	const PvElementCurveData *data = element->data;
 	const PvAnchorPoint *anchor_points = data->anchor_points;
 
 	if((data->anchor_points_num) <= 0){
@@ -497,11 +497,11 @@ void _bezier_command_path(
 	}
 }
 
-static void _func_bezier_draw_inline(
+static void _func_curve_draw_inline(
 		cairo_t *cr,
 		const PvElement *element)
 {
-	_bezier_command_path(cr, element);
+	_curve_command_path(cr, element);
 
 	cairo_set_line_width(cr, element->stroke.width);
 
@@ -522,7 +522,7 @@ static void _func_bezier_draw_inline(
 
 }
 
-static char *_bezier_new_str_from_anchor(const PvAnchorPoint ap_current, const PvAnchorPoint ap_prev)
+static char *_curve_new_str_from_anchor(const PvAnchorPoint ap_current, const PvAnchorPoint ap_prev)
 {
 	char *str = g_strdup_printf("%c %f %f %f %f %f %f",
 			'C',
@@ -555,7 +555,7 @@ static bool _node_add_stroke_props(xmlNodePtr node, PvStroke stroke)
 	return true;
 }
 
-static void _bezier_draw_anchor_handle(
+static void _curve_draw_anchor_handle(
 		cairo_t *cr,
 		PvAnchorPoint ap,
 		int ofs_index)
@@ -578,8 +578,8 @@ static void _bezier_draw_anchor_handle(
 		cairo_line_to(cr, gp_next.x, gp_next.y);
 		cairo_stroke(cr);
 
-		_bezier_draw_point(cr, gp_prev, PvElementPointKind_AnchorHandle);
-		_bezier_draw_point(cr, gp_next, PvElementPointKind_AnchorHandle);
+		_curve_draw_point(cr, gp_prev, PvElementPointKind_AnchorHandle);
+		_curve_draw_point(cr, gp_next, PvElementPointKind_AnchorHandle);
 	} else if(-1 == ofs_index) {
 		// ** prev anchor_point
 		cairo_set_line_width(cr, 1.0);
@@ -588,7 +588,7 @@ static void _bezier_draw_anchor_handle(
 		cairo_line_to(cr, gp_next.x, gp_next.y);
 		cairo_stroke(cr);
 
-		_bezier_draw_point(cr, gp_next, PvElementPointKind_AnchorHandle);
+		_curve_draw_point(cr, gp_next, PvElementPointKind_AnchorHandle);
 	}else if(1 == ofs_index){
 		// ** next anchor_point
 		cairo_set_line_width(cr, 1.0);
@@ -597,7 +597,7 @@ static void _bezier_draw_anchor_handle(
 		cairo_line_to(cr, gp_prev.x, gp_prev.y);
 		cairo_stroke(cr);
 
-		_bezier_draw_point(cr, gp_prev, PvElementPointKind_AnchorHandle);
+		_curve_draw_point(cr, gp_prev, PvElementPointKind_AnchorHandle);
 	}else{
 		pv_bug("%d", ofs_index);
 	}
@@ -615,10 +615,10 @@ static void _anchor_point_rotate(PvAnchorPoint *ap, double degree, PvPoint cente
 	*pn = pv_rotate_point(*pn, degree, (PvPoint){0,0});
 }
 
-static void _bezier_rotate(PvElement *element, double degree, PvPoint center)
+static void _curve_rotate(PvElement *element, double degree, PvPoint center)
 {
 	pv_assert(element);
-	PvElementBezierData *data = element->data;
+	PvElementCurveData *data = element->data;
 	pv_assert(data);
 
 	size_t num = data->anchor_points_num;
@@ -628,9 +628,9 @@ static void _bezier_rotate(PvElement *element, double degree, PvPoint center)
 	}
 }
 
-static gpointer _func_bezier_new_data()
+static gpointer _func_curve_new_data()
 {
-	PvElementBezierData *data = (PvElementBezierData *)malloc(sizeof(PvElementBezierData));
+	PvElementCurveData *data = (PvElementCurveData *)malloc(sizeof(PvElementCurveData));
 	if(NULL == data){
 		pv_critical("");
 		exit(-1);
@@ -643,14 +643,14 @@ static gpointer _func_bezier_new_data()
 	return (gpointer)data;
 }
 
-static bool _func_bezier_free_data(void *_data)
+static bool _func_curve_free_data(void *_data)
 {
 	if(NULL == _data){
 		pv_error("");
 		return false;
 	}
 
-	PvElementBezierData *data = (PvElementBezierData *)_data;
+	PvElementCurveData *data = (PvElementCurveData *)_data;
 
 	if(NULL != data->anchor_points){
 		free(data->anchor_points);
@@ -661,16 +661,16 @@ static bool _func_bezier_free_data(void *_data)
 	return true;
 }
 
-static gpointer _func_bezier_copy_new_data(void *_data)
+static gpointer _func_curve_copy_new_data(void *_data)
 {
 	if(NULL == _data){
 		pv_bug("");
 		return NULL;
 	}
 
-	PvElementBezierData *data = (PvElementBezierData *)_data;
+	PvElementCurveData *data = (PvElementCurveData *)_data;
 
-	PvElementBezierData *new_data = (PvElementBezierData *)malloc(sizeof(PvElementBezierData));
+	PvElementCurveData *new_data = (PvElementCurveData *)malloc(sizeof(PvElementCurveData));
 	pv_assert(new_data);
 
 	*new_data = *data;
@@ -691,7 +691,7 @@ static gpointer _func_bezier_copy_new_data(void *_data)
 	return (gpointer)new_data;
 }
 
-static int _func_bezier_write_svg(
+static int _func_curve_write_svg(
 		InfoTargetSvg *target,
 		const PvElement *element, const ConfWriteSvg *conf)
 {
@@ -715,7 +715,7 @@ static int _func_bezier_write_svg(
 		return -1;
 	}
 
-	PvElementBezierData *data = (PvElementBezierData *)element->data;
+	PvElementCurveData *data = (PvElementCurveData *)element->data;
 
 	char *str_current = NULL;
 	for(int i = 0; i < data->anchor_points_num; i++){
@@ -732,7 +732,7 @@ static int _func_bezier_write_svg(
 		}else{
 			// other (not first)(true last)
 			const PvAnchorPoint ap_prev = data->anchor_points[i - 1];
-			str_point = _bezier_new_str_from_anchor(ap, ap_prev);
+			str_point = _curve_new_str_from_anchor(ap, ap_prev);
 		}
 
 		if(NULL == str_point){
@@ -757,7 +757,7 @@ static int _func_bezier_write_svg(
 	if(data->is_close && 0 < data->anchor_points_num){
 		const PvAnchorPoint ap_first = data->anchor_points[0];
 		const PvAnchorPoint ap_last = data->anchor_points[data->anchor_points_num - 1];
-		char *str_end = _bezier_new_str_from_anchor(ap_first, ap_last);
+		char *str_end = _curve_new_str_from_anchor(ap_first, ap_last);
 		char *str_prev = str_current;
 		str_current = g_strjoin(" ", str_current, str_end, "Z", NULL);
 		g_free(str_prev);
@@ -792,26 +792,26 @@ static int _func_bezier_write_svg(
 	return 0;
 }
 
-static bool _func_bezier_draw(
+static bool _func_curve_draw(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
-	PvElement *simplify = _bezier_simplify_new(
+	PvElement *simplify = _curve_simplify_new(
 			element,
 			render_option.render_context,
 			PvSimplifyOption_All);
 	pv_assert(simplify);
 
-	_func_bezier_draw_inline(cr, simplify);
+	_func_curve_draw_inline(cr, simplify);
 	cairo_new_path(cr);
 
-	_bezier_simplify_free(simplify);
+	_curve_simplify_free(simplify);
 
 	return true;
 }
 
-static bool _func_bezier_draw_focusing(
+static bool _func_curve_draw_focusing(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
@@ -819,35 +819,35 @@ static bool _func_bezier_draw_focusing(
 	const PvRenderContext render_context = render_option.render_context;
 	const PvFocus *focus = render_option.focus;
 
-	const PvElementBezierData *data = element->data;
+	const PvElementCurveData *data = element->data;
 	pv_assert(data);
 
-	PvElement *simplify = _bezier_simplify_new(
+	PvElement *simplify = _curve_simplify_new(
 			element,
 			render_option.render_context,
 			PvSimplifyOption_ResizeOnly);
 	pv_assert(simplify);
-	const PvElementBezierData *simplify_data = simplify->data;
+	const PvElementCurveData *simplify_data = simplify->data;
 
 	// ** stroke line
-	_bezier_command_path(cr, simplify);
+	_curve_command_path(cr, simplify);
 	double LINE_WIDTH_FOCUS = 1.0;
 	cairo_set_line_width(cr, LINE_WIDTH_FOCUS);
 	pv_cairo_set_source_rgba_workingcolor(cr);
 	cairo_stroke(cr);
 
 	// ** anchor points
-	int num = _func_bezier_get_num_anchor_point(simplify);
+	int num = _func_curve_get_num_anchor_point(simplify);
 	for(int i = 0; i < num; i++){
 		int ofs_index = (i - focus->index);
 		if(-1 != focus->index){
 			if(abs(ofs_index) <= 1){
 				// * anchor handle. draw to focus and +-1
-				_bezier_draw_anchor_handle(cr, simplify_data->anchor_points[i], ofs_index);
+				_curve_draw_anchor_handle(cr, simplify_data->anchor_points[i], ofs_index);
 			}
 			if(0 == focus->index && i == (num - 1) && data->is_close){
 				// *anchor handle. to last AnchorPoint
-				_bezier_draw_anchor_handle(cr, simplify_data->anchor_points[i], -1);
+				_curve_draw_anchor_handle(cr, simplify_data->anchor_points[i], -1);
 			}
 		}
 
@@ -855,20 +855,20 @@ static bool _func_bezier_draw_focusing(
 		PvPoint p = simplify_data->anchor_points[i].points[PvAnchorPointIndex_Point];
 		PvElementPointKind kind = ((i == focus->index)?
 				PvElementPointKind_Selected : PvElementPointKind_Normal);
-		_bezier_draw_point(cr, p, kind);
+		_curve_draw_point(cr, p, kind);
 	}
 
 	// ** extent
 	if(render_context.is_extent_view){
-		_draw_extent_from_rect(cr, _func_bezier_get_rect_by_anchor_points(simplify));
+		_draw_extent_from_rect(cr, _func_curve_get_rect_by_anchor_points(simplify));
 	}
 
-	_bezier_simplify_free(simplify);
+	_curve_simplify_free(simplify);
 
 	return true;
 }
 
-static bool _func_bezier_is_touch_element(
+static bool _func_curve_is_touch_element(
 		bool *is_touch,
 		const PvElement *element,
 		int offset,
@@ -883,7 +883,7 @@ static bool _func_bezier_is_touch_element(
 	pv_assert(cr);
 
 	PvRenderContext render_context = PvRenderContext_Default;
-	_bezier_command_path(cr, element);
+	_curve_command_path(cr, element);
 
 	double c_width = (element->stroke.width * render_context.scale) + offset;
 	cairo_set_line_width(cr, c_width);
@@ -897,13 +897,13 @@ static bool _func_bezier_is_touch_element(
 	return true;
 }
 
-static bool _func_bezier_is_diff_one(
+static bool _func_curve_is_diff_one(
 		bool *is_diff,
 		const PvElement *element0,
 		const PvElement *element1)
 {
-	const PvElementBezierData *data0 = element0->data;
-	const PvElementBezierData *data1 = element1->data;
+	const PvElementCurveData *data0 = element0->data;
+	const PvElementCurveData *data1 = element1->data;
 	if(NULL == data0 || NULL == data1){
 		pv_bug("%p,%p", data0, data1);
 		*is_diff = true;
@@ -941,12 +941,12 @@ static bool _func_bezier_is_diff_one(
 }
 
 /*! @fixme get point left head. */
-static PvPoint _func_bezier_get_point_by_anchor_points(
+static PvPoint _func_curve_get_point_by_anchor_points(
 		const PvElement *element)
 {
 	assert(element);
 	assert(element->data);
-	const PvElementBezierData *data = element->data;
+	const PvElementCurveData *data = element->data;
 
 	PvPoint point = PvPoint_Default;
 	int num = data->anchor_points_num;
@@ -963,16 +963,16 @@ static PvPoint _func_bezier_get_point_by_anchor_points(
 	return point;
 }
 
-static void _func_bezier_set_point_by_anchor_points(
+static void _func_curve_set_point_by_anchor_points(
 		PvElement *element,
 		const PvPoint point)
 {
 	assert(element);
 	assert(element->data);
-	PvElementBezierData *data = element->data;
+	PvElementCurveData *data = element->data;
 
 
-	PvPoint point_prev = _func_bezier_get_point_by_anchor_points(element);
+	PvPoint point_prev = _func_curve_get_point_by_anchor_points(element);
 	PvPoint move = pv_point_sub(point, point_prev);
 
 	int num = data->anchor_points_num;
@@ -983,16 +983,16 @@ static void _func_bezier_set_point_by_anchor_points(
 	return;
 }
 
-static bool _func_bezier_move_element(
+static bool _func_curve_move_element(
 		const PvElement *element,
 		double gx,
 		double gy)
 {
-	if(NULL == element || PvElementKind_Bezier != element->kind){
+	if(NULL == element || PvElementKind_Curve != element->kind){
 		pv_error("%p", element);
 		return false;
 	}
-	PvElementBezierData *data = element->data;
+	PvElementCurveData *data = element->data;
 	if(NULL == data){
 		pv_error("");
 		return false;
@@ -1006,14 +1006,14 @@ static bool _func_bezier_move_element(
 	return true;
 }
 
-int _func_bezier_get_num_anchor_point(
+int _func_curve_get_num_anchor_point(
 		const PvElement *element)
 {
-	if(NULL == element || PvElementKind_Bezier != element->kind){
+	if(NULL == element || PvElementKind_Curve != element->kind){
 		pv_error("%p", element);
 		return false;
 	}
-	PvElementBezierData *data = element->data;
+	PvElementCurveData *data = element->data;
 	if(NULL == data){
 		pv_error("");
 		return false;
@@ -1022,13 +1022,13 @@ int _func_bezier_get_num_anchor_point(
 	return data->anchor_points_num;
 }
 
-PvAnchorPoint *_func_bezier_new_anchor_points(
+PvAnchorPoint *_func_curve_new_anchor_points(
 		const PvElement *element)
 {
 	assert(element);
-	assert(PvElementKind_Bezier == element->kind);
+	assert(PvElementKind_Curve == element->kind);
 
-	PvElementBezierData *data = element->data;
+	PvElementCurveData *data = element->data;
 	assert(data);
 	assert(data->anchor_points);
 
@@ -1042,14 +1042,14 @@ PvAnchorPoint *_func_bezier_new_anchor_points(
 	return new_anchor_points;
 }
 
-static PvAnchorPoint _func_bezier_get_anchor_point(
+static PvAnchorPoint _func_curve_get_anchor_point(
 		const PvElement *element,
 		const int index)
 {
 	assert(element);
-	assert(PvElementKind_Bezier == element->kind);
+	assert(PvElementKind_Curve == element->kind);
 
-	PvElementBezierData *data = element->data;
+	PvElementCurveData *data = element->data;
 	assert(data);
 	assert(data->anchor_points);
 	assert(index < data->anchor_points_num);
@@ -1057,15 +1057,15 @@ static PvAnchorPoint _func_bezier_get_anchor_point(
 	return data->anchor_points[index];
 }
 
-static bool _func_bezier_set_anchor_point_point(
+static bool _func_curve_set_anchor_point_point(
 		const PvElement *element,
 		const int index,
 		const PvPoint point)
 {
 	assert(element);
-	assert(PvElementKind_Bezier == element->kind);
+	assert(PvElementKind_Curve == element->kind);
 
-	PvElementBezierData *data = element->data;
+	PvElementCurveData *data = element->data;
 	assert(data);
 	assert(data->anchor_points);
 	assert(index < data->anchor_points_num);
@@ -1077,18 +1077,18 @@ static bool _func_bezier_set_anchor_point_point(
 	return true;
 }
 
-static bool _func_bezier_move_anchor_point(
+static bool _func_curve_move_anchor_point(
 		const PvElement *element,
 		const int index,
 		const PvPoint move)
 {
 	assert(element);
-	assert(PvElementKind_Bezier == element->kind);
+	assert(PvElementKind_Curve == element->kind);
 
-	PvElementBezierData *data = element->data;
+	PvElementCurveData *data = element->data;
 	assert(data);
 
-	int num = _func_bezier_get_num_anchor_point(element);
+	int num = _func_curve_get_num_anchor_point(element);
 	if(num <= index){
 		pv_bug("%d %d", index, num);
 		return false;
@@ -1100,10 +1100,10 @@ static bool _func_bezier_move_anchor_point(
 	return true;
 }
 
-static PvRect _func_bezier_get_rect_by_anchor_points(
+static PvRect _func_curve_get_rect_by_anchor_points(
 		const PvElement *element)
 {
-	const PvElementBezierData *data = (PvElementBezierData *)element->data;
+	const PvElementCurveData *data = (PvElementCurveData *)element->data;
 
 	pv_assert(0 < data->anchor_points_num);
 
@@ -1127,19 +1127,19 @@ static PvRect _func_bezier_get_rect_by_anchor_points(
 	return rect;
 }
 
-static bool _func_bezier_set_rect_by_anchor_points(
+static bool _func_curve_set_rect_by_anchor_points(
 		PvElement *element,
 		PvRect rect)
 {
-	const PvElementBezierData *data = (PvElementBezierData *)element->data;
+	const PvElementCurveData *data = (PvElementCurveData *)element->data;
 	pv_assert(data);
 
 	rect = pv_rect_abs_size(rect);
 
-	const PvRect rect_src = _func_bezier_get_rect_by_anchor_points(element);
+	const PvRect rect_src = _func_curve_get_rect_by_anchor_points(element);
 
 	PvPoint point = {.x = rect.x, .y = rect.y,};
-	_func_bezier_set_point_by_anchor_points(element, point);
+	_func_curve_set_point_by_anchor_points(element, point);
 
 	PvPoint scale = {
 		.x = rect.w / rect_src.w,
@@ -1149,13 +1149,13 @@ static bool _func_bezier_set_rect_by_anchor_points(
 	int num = data->anchor_points_num;
 	for(int i = 0; i < num; i++){
 		PvAnchorPoint *ap = &(data->anchor_points[i]);
-		_bezier_rescale_anchor_point(ap, point, scale);
+		_curve_rescale_anchor_point(ap, point, scale);
 	}
 
 	return true;
 }
 
-static PvRect _func_bezier_get_rect_by_draw(
+static PvRect _func_curve_get_rect_by_draw(
 		const PvElement *element)
 {
 	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1,1);
@@ -1163,7 +1163,7 @@ static PvRect _func_bezier_get_rect_by_draw(
 	cairo_t *cr = cairo_create (surface);
 	pv_assert(cr);
 
-	_func_bezier_draw_inline(cr, element);
+	_func_curve_draw_inline(cr, element);
 
 	PvRect rect = _get_rect_extent_from_cr(cr);
 
@@ -1173,12 +1173,12 @@ static PvRect _func_bezier_get_rect_by_draw(
 	return rect;
 }
 
-static void _func_bezier_apply_appearances(
+static void _func_curve_apply_appearances(
 		PvElement *element,
 		PvAppearance **appearances)
 {
 	assert(element);
-	PvElementBezierData *data = element->data;
+	PvElementCurveData *data = element->data;
 	assert(data);
 
 	size_t num = pv_general_get_parray_num((void **)appearances);
@@ -1191,26 +1191,26 @@ static void _func_bezier_apply_appearances(
 			case PvAppearanceKind_Translate:
 				{
 					PvPoint move = appearances[i]->translate.move;
-					_func_bezier_move_element(element, move.x, move.y);
+					_func_curve_move_element(element, move.x, move.y);
 				}
 				break;
 			case PvAppearanceKind_Resize:
 				{
-					PvRect src_rect = _func_bezier_get_rect_by_anchor_points(element);
+					PvRect src_rect = _func_curve_get_rect_by_anchor_points(element);
 					PvRect dst_rect = src_rect;
 					dst_rect.w *= appearances[i]->resize.resize.x;
 					dst_rect.h *= appearances[i]->resize.resize.y;
 					dst_rect.x += (src_rect.w - dst_rect.w) / 2;
 					dst_rect.y += (src_rect.h - dst_rect.h) / 2;
-					_func_bezier_set_rect_by_anchor_points(element, dst_rect);
+					_func_curve_set_rect_by_anchor_points(element, dst_rect);
 				}
 				break;
 			case PvAppearanceKind_Rotate:
 				{
-					PvRect rect = _func_bezier_get_rect_by_anchor_points(element);
+					PvRect rect = _func_curve_get_rect_by_anchor_points(element);
 					PvPoint center = pv_rect_get_center(rect);
 					double degree = appearances[i]->rotate.degree;
-					_bezier_rotate(element, degree, center);
+					_curve_rotate(element, degree, center);
 				}
 				break;
 			default:
@@ -1834,27 +1834,27 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_get_rect_by_draw			= _func_notimpl_get_rect_by_draw,
 		.func_apply_appearances			= _func_nop_apply_appearances,
 	},
-	{PvElementKind_Bezier, "Bezier",
-		.func_new_data				= _func_bezier_new_data,
-		.func_free_data				= _func_bezier_free_data,
-		.func_copy_new_data			= _func_bezier_copy_new_data,
-		.func_write_svg				= _func_bezier_write_svg,
-		.func_draw				= _func_bezier_draw,
-		.func_draw_focusing			= _func_bezier_draw_focusing,
-		.func_is_touch_element			= _func_bezier_is_touch_element,
-		.func_is_diff_one			= _func_bezier_is_diff_one,
-		.func_get_point_by_anchor_points	= _func_bezier_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _func_bezier_set_point_by_anchor_points,
-		.func_move_element			= _func_bezier_move_element,
-		.func_get_num_anchor_point		= _func_bezier_get_num_anchor_point,
-		.func_new_anchor_points			= _func_bezier_new_anchor_points,
-		.func_get_anchor_point			= _func_bezier_get_anchor_point,
-		.func_set_anchor_point_point		= _func_bezier_set_anchor_point_point,
-		.func_move_anchor_point_point		= _func_bezier_move_anchor_point,
-		.func_get_rect_by_anchor_points		= _func_bezier_get_rect_by_anchor_points,
-		.func_set_rect_by_anchor_points		= _func_bezier_set_rect_by_anchor_points,
-		.func_get_rect_by_draw			= _func_bezier_get_rect_by_draw,
-		.func_apply_appearances			= _func_bezier_apply_appearances,
+	{PvElementKind_Curve, "Curve",
+		.func_new_data				= _func_curve_new_data,
+		.func_free_data				= _func_curve_free_data,
+		.func_copy_new_data			= _func_curve_copy_new_data,
+		.func_write_svg				= _func_curve_write_svg,
+		.func_draw				= _func_curve_draw,
+		.func_draw_focusing			= _func_curve_draw_focusing,
+		.func_is_touch_element			= _func_curve_is_touch_element,
+		.func_is_diff_one			= _func_curve_is_diff_one,
+		.func_get_point_by_anchor_points	= _func_curve_get_point_by_anchor_points,
+		.func_set_point_by_anchor_points	= _func_curve_set_point_by_anchor_points,
+		.func_move_element			= _func_curve_move_element,
+		.func_get_num_anchor_point		= _func_curve_get_num_anchor_point,
+		.func_new_anchor_points			= _func_curve_new_anchor_points,
+		.func_get_anchor_point			= _func_curve_get_anchor_point,
+		.func_set_anchor_point_point		= _func_curve_set_anchor_point_point,
+		.func_move_anchor_point_point		= _func_curve_move_anchor_point,
+		.func_get_rect_by_anchor_points		= _func_curve_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _func_curve_set_rect_by_anchor_points,
+		.func_get_rect_by_draw			= _func_curve_get_rect_by_draw,
+		.func_apply_appearances			= _func_curve_apply_appearances,
 	},
 	{PvElementKind_Raster, "Raster",
 		.func_new_data				= _func_raster_new_data,

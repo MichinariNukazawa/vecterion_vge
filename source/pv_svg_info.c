@@ -108,7 +108,7 @@ static bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const ch
 		pv_error("");
 		return false;
 	}
-	PvElementBezierData *data = element->data;
+	PvElementCurveData *data = element->data;
 
 	const char *p = str;
 	while('\0' != *p){
@@ -167,7 +167,7 @@ static bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const ch
 		}
 
 		if(is_append){
-			if(!pv_element_bezier_add_anchor_point(element, ap)){
+			if(!pv_element_curve_add_anchor_point(element, ap)){
 				pv_error("");
 				return false;
 			}
@@ -213,7 +213,7 @@ static PvElement *_pv_svg_path_new_element_from_svg(
 		const ConfReadSvg *conf
 		)
 {
-	PvElement *element_new = pv_element_new(PvElementKind_Bezier);
+	PvElement *element_new = pv_element_new(PvElementKind_Curve);
 	if(NULL == element_new){
 		pv_error("");
 		return NULL;

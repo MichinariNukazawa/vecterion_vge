@@ -38,7 +38,7 @@ TEST(Test, Focus){
 	if(!pv_element_append_child(layer0_0, NULL, layer0_1)){
 		FAIL();
 	}
-	PvElement *elem0 = pv_element_new(PvElementKind_Bezier);
+	PvElement *elem0 = pv_element_new(PvElementKind_Curve);
 	if(!pv_element_append_child(layer0_1, NULL, elem0)){
 		FAIL();
 	}
@@ -50,7 +50,7 @@ TEST(Test, Focus){
 	if(!pv_element_append_child(layer1_0, NULL, layer1_1)){
 		FAIL();
 	}
-	PvElement *elem1 = pv_element_new(PvElementKind_Bezier);
+	PvElement *elem1 = pv_element_new(PvElementKind_Curve);
 	if(!pv_element_append_child(layer1_1, NULL, elem1)){
 		FAIL();
 	}
@@ -159,7 +159,7 @@ TEST(Test, Invalid){
 	if(!pv_element_append_child(layer0_0, NULL, layer0_1)){
 		FAIL();
 	}
-	PvElement *elem0 = pv_element_new(PvElementKind_Bezier);
+	PvElement *elem0 = pv_element_new(PvElementKind_Curve);
 	if(!pv_element_append_child(layer0_1, NULL, elem0)){
 		FAIL();
 	}
@@ -171,7 +171,7 @@ TEST(Test, Invalid){
 	if(!pv_element_append_child(layer1_0, NULL, layer1_1)){
 		FAIL();
 	}
-	PvElement *elem1 = pv_element_new(PvElementKind_Bezier);
+	PvElement *elem1 = pv_element_new(PvElementKind_Curve);
 	if(!pv_element_append_child(layer1_1, NULL, elem1)){
 		FAIL();
 	}

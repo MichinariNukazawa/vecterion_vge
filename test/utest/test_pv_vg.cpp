@@ -133,14 +133,14 @@ TEST(Test, CopyAndDiff){
 		if(num < 1){
 			FAIL();
 		}
-		PvElement *elem_bezier = elem_layer->childs[0];
-		if(PvElementKind_Bezier != elem_bezier->kind){
+		PvElement *elem_curve = elem_layer->childs[0];
+		if(PvElementKind_Curve != elem_curve->kind){
 			FAIL();
 		}
 		PvAnchorPoint ap = {
 			.points = {{0,0},{10,20},{0,0}},
 		};
-		if(!pv_element_bezier_add_anchor_point(elem_bezier, ap)){
+		if(!pv_element_curve_add_anchor_point(elem_curve, ap)){
 			FAIL();
 		}
 		ret = pv_vg_is_diff(vg, vg_diff);

@@ -53,9 +53,9 @@ struct PvElementRasterData{
 	PvAppearance **raster_appearances;
 };
 
-struct PvElementBezierData;
-typedef struct PvElementBezierData PvElementBezierData;
-struct PvElementBezierData{
+struct PvElementCurveData;
+typedef struct PvElementCurveData PvElementCurveData;
+struct PvElementCurveData{
 	bool is_close;
 	int anchor_points_num;
 	PvAnchorPoint *anchor_points;
@@ -71,7 +71,7 @@ typedef enum _PvElementKind{
 	PvElementKind_Layer,
 	PvElementKind_Group,
 	/* simple element kinds */
-	PvElementKind_Bezier,
+	PvElementKind_Curve,
 	PvElementKind_Raster, /* Raster image */
 
 	/* 番兵 */

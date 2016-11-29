@@ -54,13 +54,13 @@ TEST(Test, PvVg_OnAllElementKind){
 		ASSERT_TRUE(pv_element_append_child(element_parent, NULL, element));
 	}
 
-	// **bezier
-	PvElement *element_bezier0 = pv_element_new(PvElementKind_Bezier);
+	// **curve
+	PvElement *element_curve0 = pv_element_new(PvElementKind_Curve);
 	PvAnchorPoint ap = {
 		.points = {{0,0},{10,20},{0,0}},
 	};
-	assert(pv_element_bezier_add_anchor_point(element_bezier0, ap));
-	ASSERT_TRUE(pv_element_append_child(element_parent, NULL, element_bezier0));
+	assert(pv_element_curve_add_anchor_point(element_curve0, ap));
+	ASSERT_TRUE(pv_element_append_child(element_parent, NULL, element_curve0));
 	// ** raster
 	PvElement *element_raster1 = pv_element_raster_new_from_filepath(RASTER_FILEPATH_1);
 	ASSERT_TRUE(pv_element_append_child(element_parent, NULL, element_raster1));

@@ -533,7 +533,7 @@ static PvElement *_element_new_from_circle(PvPoint center, double size)
 		size,
 	};
 
-	return pv_element_bezier_new_from_rect(rect);
+	return pv_element_curve_new_from_rect(rect);
 }
 
 static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
@@ -718,9 +718,9 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 			for(int i = 0; i < 4; i++){
 				PvPoint center = pv_rect_get_edge_point(_after_extent_rect, i);
 				PvRect rect = get_square_rect_from_center_point_(center, size);
-				PvElement *element_bezier = pv_element_bezier_new_from_rect(rect);
-				et_assert(element_bezier);
-				pv_element_append_child(element_group_edit_draw, NULL, element_bezier);
+				PvElement *element_curve = pv_element_curve_new_from_rect(rect);
+				et_assert(element_curve);
+				pv_element_append_child(element_group_edit_draw, NULL, element_curve);
 			}
 
 			switch(_mode){
@@ -748,7 +748,7 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 }
 
 /** @return new AnchorPoint index number. error:-1 */
-static int _et_tool_bezier_add_anchor_point(EtDoc *doc, PvElement **_element, double x, double y)
+static int _et_tool_curve_add_anchor_point(EtDoc *doc, PvElement **_element, double x, double y)
 {
 	bool is_new = true;
 	PvElement *element = *_element;
@@ -758,7 +758,7 @@ static int _et_tool_bezier_add_anchor_point(EtDoc *doc, PvElement **_element, do
 		//element = NULL;
 	}else{
 		switch(element->kind){
-			case PvElementKind_Bezier:
+			case PvElementKind_Curve:
 				parent = element->parent;
 				//element = element;
 				is_new = false;
@@ -777,7 +777,7 @@ static int _et_tool_bezier_add_anchor_point(EtDoc *doc, PvElement **_element, do
 	if(is_new){
 		et_doc_save_from_id(et_doc_get_id(doc));
 
-		element = pv_element_new(PvElementKind_Bezier);
+		element = pv_element_new(PvElementKind_Curve);
 		if(NULL == element){
 			et_error("");
 			return -1;
@@ -789,7 +789,7 @@ static int _et_tool_bezier_add_anchor_point(EtDoc *doc, PvElement **_element, do
 	PvAnchorPoint anchor_point = {
 		.points = {{0,0}, {x, y,}, {0,0}},
 	};
-	if(!pv_element_bezier_add_anchor_point(element, anchor_point)){
+	if(!pv_element_curve_add_anchor_point(element, anchor_point)){
 		et_error("");
 		return -1;
 	}
@@ -812,10 +812,10 @@ static int _et_tool_bezier_add_anchor_point(EtDoc *doc, PvElement **_element, do
 
 	*_element = element;
 
-	return (pv_element_bezier_get_num_anchor_point(*_element) - 1);
+	return (pv_element_curve_get_num_anchor_point(*_element) - 1);
 }
 
-static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
+static bool _et_tool_curve_mouse_action(EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
 	bool result = true;
 
@@ -843,8 +843,8 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 				PvElement *_element = pv_focus_get_first_element(focus);
 
 				bool is_closed = false;
-				if(NULL != _element && PvElementKind_Bezier == _element->kind){
-					PvElementBezierData *_data = (PvElementBezierData *) _element->data;
+				if(NULL != _element && PvElementKind_Curve == _element->kind){
+					PvElementCurveData *_data = (PvElementCurveData *) _element->data;
 					if(NULL == _data){
 						et_error("");
 						result = false;
@@ -871,7 +871,7 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 
 				// ** new anchor_point
 				if(!is_closed){
-					int index = _et_tool_bezier_add_anchor_point(
+					int index = _et_tool_curve_add_anchor_point(
 							doc, &_element,
 							mouse_action.point.x, mouse_action.point.y);
 					if(0 > index){
@@ -894,13 +894,13 @@ static bool _et_tool_bezier_mouse_action(EtDocId doc_id, EtMouseAction mouse_act
 				}
 
 				PvElement *_element = pv_focus_get_first_element(focus);
-				if(NULL == _element || PvElementKind_Bezier != _element->kind){
+				if(NULL == _element || PvElementKind_Curve != _element->kind){
 					et_error("");
 					result = false;
 					goto finally;
 				}
 
-				PvElementBezierData *_data =(PvElementBezierData *) _element->data;
+				PvElementCurveData *_data =(PvElementCurveData *) _element->data;
 				if(NULL == _data){
 					et_error("");
 					result = false;
@@ -953,7 +953,7 @@ static bool _get_touch_element_and_index(
 	int index = -1;
 	PvAnchorPoint *anchor_points = info->func_new_anchor_points(element);
 
-	const PvElementBezierData *data_ = element->data;
+	const PvElementCurveData *data_ = element->data;
 	assert(data_);
 	int num = data_->anchor_points_num;
 	for(int i = 0; i < num; i++){
@@ -1104,7 +1104,7 @@ finally:
 }
 
 /*! 
- * @fixme implement and usable only to PvElementKind_Bezier
+ * @fixme implement and usable only to PvElementKind_Curve
  * @return anchor points of focusing. Not focus:NULL.
  */
 PvAnchorPoint *_get_focus_anchor_point(const PvFocus *focus){
@@ -1114,12 +1114,12 @@ PvAnchorPoint *_get_focus_anchor_point(const PvFocus *focus){
 		return NULL;
 	}
 	PvElement *element = focus->elements[0];
-	if(PvElementKind_Bezier != element->kind){
+	if(PvElementKind_Curve != element->kind){
 		return NULL;
 	}
 	assert(element->data);
-	PvElementBezierData *data = element->data;
-	int num_ap = pv_element_bezier_get_num_anchor_point(element);
+	PvElementCurveData *data = element->data;
+	int num_ap = pv_element_curve_get_num_anchor_point(element);
 	assert(focus->index < num_ap);
 	PvAnchorPoint *ap = &(data->anchor_points[focus->index]);
 
@@ -1290,7 +1290,7 @@ EtToolInfo _et_tool_infos[] = {
 		.icon_cursor = NULL,
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_put_allow_24x24.svg",
-		.func_mouse_action = _et_tool_bezier_mouse_action,
+		.func_mouse_action = _et_tool_curve_mouse_action,
 		.mouse_cursor = NULL,
 	},
 	{
