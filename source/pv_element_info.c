@@ -1319,12 +1319,14 @@ void _raster_simplify_free(PvElement *self)
 typedef enum{
 	RasterDrawKind_Draw,
 	RasterDrawKind_DrawFocusing,
+	RasterDrawKind_IsTouch,
 }RasterDrawKind;
 
 static bool _raster_draw_inline(
 		cairo_t *cr,
-		const PvRenderOption render_option,
+		const PvRenderContext render_context,
 		const PvElement *element,
+		double line_width,
 		RasterDrawKind rasterDrawKind
 		)
 {
@@ -1334,8 +1336,6 @@ static bool _raster_draw_inline(
 	PvElementRasterData *data = element->data;
 	pv_assert(data);
 	pv_assertf(data->pixbuf, "%p", data->pixbuf);
-
-	const PvRenderContext render_context = render_option.render_context;
 
 	PvElement *simplify = _raster_simplify_new(element, render_context);
 	pv_assert(simplify);
@@ -1393,9 +1393,18 @@ static bool _raster_draw_inline(
 		case RasterDrawKind_DrawFocusing:
 			{
 				cairo_rectangle(cr, position.x, position.y, size.x, size.y);
-				cairo_set_line_width(cr, 1.0);
+				cairo_set_line_width(cr, line_width);
 				pv_cairo_set_source_rgba_workingcolor(cr);
 				cairo_stroke(cr);
+			}
+			break;
+		case RasterDrawKind_IsTouch:
+			{
+				cairo_rectangle(cr, position.x, position.y, size.x, size.y);
+				cairo_set_line_width(cr, line_width);
+				pv_cairo_set_source_rgba_workingcolor(cr);
+				cairo_stroke_preserve(cr);
+				cairo_fill_preserve(cr);
 			}
 			break;
 		default:
@@ -1415,7 +1424,7 @@ static bool _func_raster_draw(
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
-	bool ret = _raster_draw_inline(cr, render_option, element, RasterDrawKind_Draw);
+	bool ret = _raster_draw_inline(cr, render_option.render_context, element, 0, RasterDrawKind_Draw);
 	return ret;
 }
 
@@ -1424,16 +1433,8 @@ static bool _func_raster_draw_focusing(
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
-	bool ret = _raster_draw_inline(cr, render_option, element, RasterDrawKind_DrawFocusing);
+	bool ret = _raster_draw_inline(cr, render_option.render_context, element, 1.0, RasterDrawKind_DrawFocusing);
 	return ret;
-}
-
-static bool _is_inside_rect(
-		double x_min, double x_max,
-		double y_min, double y_max,
-		double x, double y)
-{
-	return (x_min <= x && x <= x_max && y_min <= y && y <= y_max);
 }
 
 static bool _func_raster_is_touch_element(
@@ -1445,31 +1446,20 @@ static bool _func_raster_is_touch_element(
 {
 	*is_touch = false;
 
-	PvElementRasterData *data = element->data;
+	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1,1);
+	pv_assert(surface);
+	cairo_t *cr = cairo_create (surface);
+	pv_assert(cr);
 
-	PvPoint position = data->raster_appearances
-		[PvElementRasterAppearanceIndex_Translate]->translate.move;
-	PvPoint resize = data->raster_appearances
-		[PvElementRasterAppearanceIndex_Resize]->resize.resize;
-	/*
-	//! @todo use this
-	double degree = data->raster_appearances
-	[PvElementRasterAppearanceIndex_Rotate]->rotate.degree;
-	 */
+	PvRenderContext render_context = PvRenderContext_Default;
+	double c_width = (element->stroke.width * render_context.scale) + offset;
+	bool ret = _raster_draw_inline(cr, render_context, element, c_width, RasterDrawKind_IsTouch);
+	pv_assert(ret);
 
-	GdkPixbuf *pixbuf = data->pixbuf;
-	double w = gdk_pixbuf_get_width(pixbuf);
-	double h = gdk_pixbuf_get_height(pixbuf);
-	PvPoint size = {.x = w, .y = h};
-	size = pv_point_mul(size, resize);
+	//! @fixme bug fill area not detection.(down below side in fill.)
+	*is_touch = cairo_in_stroke(cr, gx, gy) || cairo_in_fill(cr, gx, gy);
 
-	*is_touch = _is_inside_rect(
-			position.x,
-			position.x + size.x,
-			position.y,
-			position.y + size.y,
-			gx,
-			gy);
+	cairo_surface_destroy (surface);
 
 	return true;
 }
