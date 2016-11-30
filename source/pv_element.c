@@ -672,27 +672,16 @@ PvElement *pv_element_curve_new_from_rect(PvRect rect)
 
 bool pv_element_curve_add_anchor_point(PvElement *self, const PvAnchorPoint anchor_point)
 {
-	if(NULL == self){
-		pv_error("");
-		return false;
-	}
+	pv_assert(self);
+	pv_assert(self->data);
 
 	if(PvElementKind_Curve != self->kind){
 		pv_bug("");
 		return false;
 	}
 
-	if(NULL == self->data){
-		pv_bug("");
-		return false;
-	}
-
 	PvElementCurveData *data = self->data;
-	PvAnchorPoint *anchor_points = (PvAnchorPoint *)realloc(data->anchor_points,
-			sizeof(PvAnchorPoint) * (data->anchor_points_num + 1));
-	anchor_points[data->anchor_points_num] = anchor_point;
-	(data->anchor_points_num) += 1;
-	data->anchor_points = anchor_points;
+	pv_bezier_add_anchor_point(data->bezier, anchor_point);
 
 	return true;
 }
@@ -704,13 +693,13 @@ int pv_element_curve_get_num_anchor_point(const PvElement *self)
 	assert(PvElementKind_Curve == self->kind);
 
 	PvElementCurveData *data = self->data;
-	return data->anchor_points_num;
+	return pv_bezier_get_anchor_point_num(data->bezier);
 }
 
 void pv_element_curve_set_close_anchor_point(PvElement *self, bool is_close)
 {
 	PvElementCurveData *data = self->data;
-	data->is_close = is_close;
+	pv_bezier_set_is_close(data->bezier, is_close);
 }
 
 static bool pv_element_raster_read_file(PvElement *self, const char *path)
@@ -807,18 +796,6 @@ void pv_element_debug_print(const PvElement *element)
 		return;
 	}
 
-	pv_debug("anchor:%d(%s)", data->anchor_points_num, (data->is_close)? "true":"false");
-
-	for(int i = 0; i < data->anchor_points_num; i++){
-		const PvAnchorPoint *ap = &data->anchor_points[i];
-		pv_debug("%d:% 3.2f,% 3.2f, % 3.2f,% 3.2f, % 3.2f,% 3.2f, ",
-				i,
-				ap->points[PvAnchorPointIndex_HandlePrev].x,
-				ap->points[PvAnchorPointIndex_HandlePrev].y,
-				ap->points[PvAnchorPointIndex_Point].x,
-				ap->points[PvAnchorPointIndex_Point].y,
-				ap->points[PvAnchorPointIndex_HandleNext].x,
-				ap->points[PvAnchorPointIndex_HandleNext].y);
-	}
+	pv_bezier_debug_print(data->bezier);
 }
 

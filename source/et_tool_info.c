@@ -7,6 +7,7 @@
 #include "pv_element_info.h"
 #include "pv_focus.h"
 #include "pv_rotate.h"
+#include "pv_bezier.h"
 #include "et_doc.h"
 #include "et_doc_manager.h"
 #include "et_etaion.h"
@@ -850,19 +851,20 @@ static bool _et_tool_curve_mouse_action(EtDocId doc_id, EtMouseAction mouse_acti
 						result = false;
 						goto finally;
 					}
-					if(_data->is_close){
+					if(pv_bezier_get_is_close(_data->bezier)){
 						// if already closed is goto new anchor_point
 						_element = NULL;
 					}else{
-						if(0 < _data->anchor_points_num){
+						if(0 < pv_bezier_get_anchor_point_num(_data->bezier)){
+							const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(_data->bezier, 0);
 							if(_is_bound_point(
 										PX_SENSITIVE_OF_TOUCH,
-										_data->anchor_points[0].points[PvAnchorPointIndex_Point],
+										ap->points[PvAnchorPointIndex_Point],
 										mouse_action.point)
 							  ){
 								// ** do close anchor_point
-								_data->is_close = true;
 								is_closed = true;
+								pv_bezier_set_is_close(_data->bezier, is_closed);
 								pv_focus_clear_set_element_index(focus, _element, 0);
 							}
 						}
@@ -907,10 +909,11 @@ static bool _et_tool_curve_mouse_action(EtDocId doc_id, EtMouseAction mouse_acti
 					goto finally;
 				}
 				PvAnchorPoint *ap = NULL;
-				if(_data->is_close){
-					ap = &_data->anchor_points[0];
+				if(pv_bezier_get_is_close(_data->bezier)){
+					ap = pv_bezier_get_anchor_point_from_index(_data->bezier, 0);
 				}else{
-					ap = &_data->anchor_points[_data->anchor_points_num - 1];
+					size_t num = pv_bezier_get_anchor_point_num(_data->bezier);
+					ap = pv_bezier_get_anchor_point_from_index(_data->bezier, ((int)num - 1));
 				}
 
 				PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
@@ -942,31 +945,29 @@ finally:
 }
 
 static bool _get_touch_element_and_index(
-		PvElement *element, gpointer data, int level)
+		PvElement *element, gpointer data_0, int level)
 {
-	RecursiveDataGetFocus *_data = data;
+	RecursiveDataGetFocus *_data = data_0;
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 	assert(info);
-	assert(info->func_get_num_anchor_point);
 
 	int index = -1;
-	PvAnchorPoint *anchor_points = info->func_new_anchor_points(element);
 
-	const PvElementCurveData *data_ = element->data;
-	assert(data_);
-	int num = data_->anchor_points_num;
-	for(int i = 0; i < num; i++){
-		PvAnchorPoint ap = anchor_points[i];
+	const PvElementCurveData *data = element->data;
+	assert(data);
+
+	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
+	for(int i = 0; i < (int)num; i++){
+		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
 		if(_is_bound_point(
 					PX_SENSITIVE_OF_TOUCH,
-					ap.points[PvAnchorPointIndex_Point],
+					ap->points[PvAnchorPointIndex_Point],
 					_data->g_point))
 		{
 			index = i;
 		}
 	}
-	free(anchor_points);
 
 	if(0 <= index){
 		*(_data->p_index) = index;
@@ -1121,7 +1122,7 @@ PvAnchorPoint *_get_focus_anchor_point(const PvFocus *focus){
 	PvElementCurveData *data = element->data;
 	int num_ap = pv_element_curve_get_num_anchor_point(element);
 	assert(focus->index < num_ap);
-	PvAnchorPoint *ap = &(data->anchor_points[focus->index]);
+	PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, focus->index);
 
 	return ap;
 }
