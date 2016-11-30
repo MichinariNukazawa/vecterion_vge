@@ -1627,6 +1627,29 @@ static bool _func_raster_move_anchor_point(
 	return true;
 }
 
+static PvRect pv_rect_expand_from_point_(PvRect rect, PvPoint point, bool is_init)
+{
+	if(is_init){
+		rect.x = point.x;
+		rect.y = point.y;
+		rect.w = 0;
+		rect.h = 0;
+	}else{
+		PvPoint dr = {
+			.x = rect.x + rect.w,
+			.y = rect.y + rect.h,
+		};
+		rect.x = (rect.x < point.x)? rect.x : point.x;
+		rect.y = (rect.y < point.y)? rect.y : point.y;
+		dr.x = (dr.x > point.x)? dr.x : point.x;
+		dr.y = (dr.y > point.y)? dr.y : point.y;
+		rect.w = dr.x - rect.x;
+		rect.h = dr.y - rect.y;
+	}
+
+	return rect;
+}
+
 static PvRect _func_raster_get_rect_by_anchor_points(
 		const PvElement *element)
 {
@@ -1645,7 +1668,18 @@ static PvRect _func_raster_get_rect_by_anchor_points(
 	rect.w = gdk_pixbuf_get_width(data->pixbuf) * resize.x;
 	rect.h = gdk_pixbuf_get_height(data->pixbuf) * resize.y;
 
-	return rect;
+	PvPoint center = pv_rect_get_center(rect);
+	PvRect expand = PvRect_Default;
+	for(int i = 0; i < 4; i++){
+		PvPoint p = pv_rect_get_edge_point(rect, i);
+		p = pv_rotate_point(
+			p, 
+			data->raster_appearances[PvElementRasterAppearanceIndex_Rotate]->rotate.degree,
+			center);
+		expand = pv_rect_expand_from_point_(expand, p, i == 0);
+	}
+
+	return expand;
 }
 
 static bool _func_raster_set_rect_by_anchor_points(
@@ -1660,12 +1694,16 @@ static bool _func_raster_set_rect_by_anchor_points(
 
 	rect = pv_rect_abs_size(rect);
 
+	PvRect src_rect = _func_raster_get_rect_by_anchor_points(element);
+
 	data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move
 		= (PvPoint){.x = rect.x, .y = rect.y};
-	double scale_x = rect.w / gdk_pixbuf_get_width(data->pixbuf);
-	double scale_y = rect.h / gdk_pixbuf_get_height(data->pixbuf);
-	data->raster_appearances[PvElementRasterAppearanceIndex_Resize]->resize.resize
-		= (PvPoint){.x = scale_x, .y = scale_y};
+	PvPoint scale_ = {
+		.x = rect.w / src_rect.w,
+		.y = rect.h / src_rect.h,
+	};
+	PvPoint *resize = &(data->raster_appearances[PvElementRasterAppearanceIndex_Resize]->resize.resize);
+	*resize = pv_point_mul(*resize, scale_);
 
 	return true;
 }
