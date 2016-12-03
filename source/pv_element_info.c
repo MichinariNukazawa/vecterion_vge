@@ -85,19 +85,6 @@ static PvAnchorPoint *_func_null_new_anchor_points(
 	return NULL;
 }
 
-static PvPoint _func_notimpl_get_point_by_anchor_points(
-		const PvElement *element)
-{
-	return PvPoint_Default;
-}
-
-static void _func_notimpl_set_point_by_anchor_points(
-		PvElement *element,
-		const PvPoint point)
-{
-	return;
-}
-
 static PvAnchorPoint _func_notimpl_get_anchor_point(
 		const PvElement *element,
 		const int index)
@@ -950,53 +937,6 @@ static bool _func_curve_is_diff_one(
 	return true;
 }
 
-/*! @fixme get point left head. */
-static PvPoint _func_curve_get_point_by_anchor_points(
-		const PvElement *element)
-{
-	assert(element);
-	assert(element->data);
-	const PvElementCurveData *data = element->data;
-
-	PvPoint point = PvPoint_Default;
-	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
-	for(int i = 0; i < (int)num; i++){
-		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
-		PvPoint a_point = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
-
-		if(0 == i){
-			point = a_point;
-		}else{
-			point.x = (point.x < a_point.x)? point.x : a_point.x;
-			point.y = (point.y < a_point.y)? point.y : a_point.y;
-		}
-	}
-
-	return point;
-}
-
-static void _func_curve_set_point_by_anchor_points(
-		PvElement *element,
-		const PvPoint point)
-{
-	assert(element);
-	assert(element->data);
-	PvElementCurveData *data = element->data;
-
-
-	PvPoint point_prev = _func_curve_get_point_by_anchor_points(element);
-	PvPoint move = pv_point_sub(point, point_prev);
-
-	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
-	for(int i = 0; i < (int)num; i++){
-		PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
-
-		pv_anchor_point_move_point(ap, move);
-	}
-
-	return;
-}
-
 static bool _func_curve_move_element(
 		const PvElement *element,
 		double gx,
@@ -1122,6 +1062,53 @@ static PvRect _func_curve_get_rect_by_anchor_points(
 	return rect;
 }
 
+static PvPoint _curve_get_point_by_anchor_points(
+		const PvElement *element)
+{
+	assert(element);
+	assert(element->data);
+	const PvElementCurveData *data = element->data;
+
+	PvPoint point = PvPoint_Default;
+	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
+	for(int i = 0; i < (int)num; i++){
+		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
+		PvPoint a_point = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
+
+		if(0 == i){
+			point = a_point;
+		}else{
+			point.x = (point.x < a_point.x)? point.x : a_point.x;
+			point.y = (point.y < a_point.y)? point.y : a_point.y;
+		}
+	}
+
+	return point;
+}
+
+static void _curve_set_point_by_anchor_points(
+		PvElement *element,
+		const PvPoint point)
+{
+	assert(element);
+	assert(element->data);
+	PvElementCurveData *data = element->data;
+
+
+	PvPoint point_prev = _curve_get_point_by_anchor_points(element);
+	PvPoint move = pv_point_sub(point, point_prev);
+
+	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
+	for(int i = 0; i < (int)num; i++){
+		PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
+
+		pv_anchor_point_move_point(ap, move);
+	}
+
+	return;
+}
+
+
 static bool _func_curve_set_rect_by_anchor_points(
 		PvElement *element,
 		PvRect rect)
@@ -1134,7 +1121,7 @@ static bool _func_curve_set_rect_by_anchor_points(
 	const PvRect rect_src = _func_curve_get_rect_by_anchor_points(element);
 
 	PvPoint point = {.x = rect.x, .y = rect.y,};
-	_func_curve_set_point_by_anchor_points(element, point);
+	_curve_set_point_by_anchor_points(element, point);
 
 	PvPoint scale = {
 		.x = rect.w / rect_src.w,
@@ -1550,35 +1537,6 @@ static bool _func_raster_is_diff_one(
 	return true;
 }
 
-static PvPoint _func_raster_get_point_by_anchor_points(
-		const PvElement *element)
-{
-	assert(element);
-	assert(element->data);
-	const PvElementRasterData *data = element->data;
-
-	PvPoint position = data->raster_appearances
-		[PvElementRasterAppearanceIndex_Translate]->translate.move;
-
-	PvPoint ret = {
-		.x = position.x,
-		.y = position.y,
-	};
-
-	return ret;
-}
-
-static void _func_raster_set_point_by_anchor_points(
-		PvElement *element,
-		const PvPoint point)
-{
-	assert(element);
-	assert(element->data);
-	PvElementRasterData *data = element->data;
-
-	data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move = point;
-}
-
 static bool _func_raster_move_element(
 		const PvElement *element,
 		double gx,
@@ -1719,9 +1677,9 @@ static PvRect _func_raster_get_rect_by_anchor_points(
 	for(int i = 0; i < 4; i++){
 		PvPoint p = pv_rect_get_edge_point(rect, i);
 		p = pv_rotate_point(
-			p, 
-			data->raster_appearances[PvElementRasterAppearanceIndex_Rotate]->rotate.degree,
-			center);
+				p, 
+				data->raster_appearances[PvElementRasterAppearanceIndex_Rotate]->rotate.degree,
+				center);
 		expand = pv_rect_expand_from_point_(expand, p, i == 0);
 	}
 
@@ -1814,8 +1772,6 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_touch_element			= _func_group_is_touch_element,
 		.func_is_overlap_rect			= _func_nop_is_overlap_rect,
 		.func_is_diff_one			= _func_group_is_diff_one,
-		.func_get_point_by_anchor_points	= _func_notimpl_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _func_notimpl_set_point_by_anchor_points,
 		.func_move_element			= _func_group_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
 		.func_new_anchor_points			= _func_null_new_anchor_points,
@@ -1837,8 +1793,6 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_touch_element			= _func_group_is_touch_element,
 		.func_is_overlap_rect			= _func_nop_is_overlap_rect,
 		.func_is_diff_one			= _func_group_is_diff_one,
-		.func_get_point_by_anchor_points	= _func_notimpl_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _func_notimpl_set_point_by_anchor_points,
 		.func_move_element			= _func_group_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
 		.func_new_anchor_points			= _func_null_new_anchor_points,
@@ -1860,8 +1814,6 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_touch_element			= _func_group_is_touch_element,
 		.func_is_overlap_rect			= _func_nop_is_overlap_rect,
 		.func_is_diff_one			= _func_group_is_diff_one,
-		.func_get_point_by_anchor_points	= _func_notimpl_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _func_notimpl_set_point_by_anchor_points,
 		.func_move_element			= _func_group_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
 		.func_new_anchor_points			= _func_null_new_anchor_points,
@@ -1883,8 +1835,6 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_touch_element			= _func_curve_is_touch_element,
 		.func_is_overlap_rect			= _func_curve_is_overlap_rect,
 		.func_is_diff_one			= _func_curve_is_diff_one,
-		.func_get_point_by_anchor_points	= _func_curve_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _func_curve_set_point_by_anchor_points,
 		.func_move_element			= _func_curve_move_element,
 		.func_get_num_anchor_point		= _func_curve_get_num_anchor_point,
 		.func_new_anchor_points			= _func_curve_new_anchor_points,
@@ -1906,8 +1856,6 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_touch_element			= _func_raster_is_touch_element,
 		.func_is_overlap_rect			= _func_raster_is_overlap_rect,
 		.func_is_diff_one			= _func_raster_is_diff_one,
-		.func_get_point_by_anchor_points	= _func_raster_get_point_by_anchor_points,
-		.func_set_point_by_anchor_points	= _func_raster_set_point_by_anchor_points,
 		.func_move_element			= _func_raster_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
 		.func_new_anchor_points			= _func_null_new_anchor_points,
