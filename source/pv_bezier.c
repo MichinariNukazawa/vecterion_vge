@@ -37,6 +37,8 @@ PvBezier *pv_bezier_copy_new(const PvBezier *self)
 {
 	PvBezier *new_ = pv_bezier_new();
 
+	*new_ = *self;
+
 	size_t num = pv_bezier_get_anchor_point_num(self);
 
 	if(0 < num){
