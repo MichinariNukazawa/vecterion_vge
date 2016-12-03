@@ -33,6 +33,10 @@ static const PvColor PvColor_None = {
 	{0, 0, 0, 0,}
 };
 
+static const PvColor PvColor_Working = {
+	{0.2 * 255, 0.4 * 255, 0.9 * 255, 1.0 * 100,},
+};
+
 typedef enum{
 	PvColorPairGround_ForGround,
 	PvColorPairGround_BackGround,

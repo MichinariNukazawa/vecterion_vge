@@ -465,6 +465,68 @@ static EdgeKind _rotate_elements(
 	return dst_edge_kind;
 }
 
+typedef struct {
+	PvFocus *focus;
+	PvRect rect;
+	int offset;
+}RecursiveInlineFocusingByAreaData;
+
+static bool _recursive_inline_focusing_by_area(PvElement *element, gpointer data, int level)
+{
+	RecursiveInlineFocusingByAreaData *data_ = data;
+	PvFocus *focus = data_->focus;
+	PvRect rect = data_->rect;
+	int offset = data_->offset;
+
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	bool is_overlap = false;
+	if(!info->func_is_overlap_rect(&is_overlap, element, offset, rect)){
+		return false;
+	}
+	if(is_overlap){
+		pv_focus_add_element(focus, element);
+	}
+
+	return true;
+}
+
+static PvRect _focusing_by_area(
+		EtDocId doc_id,
+		EtMouseAction mouse_action)
+{
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	et_assertf(focus, "%d", doc_id);
+	pv_focus_clear_to_parent_layer(focus);
+
+	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
+	et_assertf(vg, "%d", doc_id);
+
+	PvPoint diff = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
+	PvRect rect = {
+		.x = mouse_action.point.x - diff.x,
+		.y = mouse_action.point.y - diff.y,
+		.w = diff.x,
+		.h = diff.y,
+	};
+	rect = pv_rect_abs_size(rect);
+
+	RecursiveInlineFocusingByAreaData data = {
+		.focus = focus,
+		.rect = rect,
+		.offset = 0,
+	};
+	PvElementRecursiveError error;
+	bool ret = pv_element_recursive_desc_before(
+			vg->element_root,
+			_recursive_inline_focusing_by_area,
+			&data,
+			&error);
+
+	et_assert(ret);
+
+	return rect;
+}
+
 typedef enum{
 	EtFocusElementMouseActionMode_None,
 	EtFocusElementMouseActionMode_Translate,
@@ -567,6 +629,8 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 		*cursor = _get_cursor_from_edge(_mode_edge);
 	}
 
+	PvRect focusing_mouse_rect;
+
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
 			{
@@ -660,6 +724,11 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 							*cursor = _get_cursor_from_edge(_edge_kind);
 						}
 						break;
+					case EtFocusElementMouseActionMode_FocusingByArea:
+						{
+							focusing_mouse_rect = _focusing_by_area(doc_id, mouse_action);
+						}
+						break;
 					default:
 						break;
 				}
@@ -713,8 +782,8 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 		PvElement *element_group_edit_draw = pv_element_new(PvElementKind_Group);
 		et_assert(element_group_edit_draw);
 
+		PvRect _after_extent_rect = _get_rect_extent_from_elements(focus->elements);
 		if(pv_focus_is_focused(focus)){
-			PvRect _after_extent_rect = _get_rect_extent_from_elements(focus->elements);
 			int size = 5.0 / mouse_action.scale;
 			for(int i = 0; i < 4; i++){
 				PvPoint center = pv_rect_get_edge_point(_after_extent_rect, i);
@@ -723,10 +792,12 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 				et_assert(element_curve);
 				pv_element_append_child(element_group_edit_draw, NULL, element_curve);
 			}
+		}
 
-			switch(_mode){
-				case EtFocusElementMouseActionMode_Rotate:
-					{
+		switch(_mode){
+			case EtFocusElementMouseActionMode_Rotate:
+				{
+					if(pv_focus_is_focused(focus)){
 						// rotate center mark
 						PvPoint center = pv_rect_get_center(_after_extent_rect);
 						int diameter = 8.0 / mouse_action.scale;
@@ -734,12 +805,21 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 						et_assert(element_center);
 						pv_element_append_child(element_group_edit_draw, NULL, element_center);
 					}
-					break;
-				default:
-					break;
-			}
-
+				}
+				break;
+			case EtFocusElementMouseActionMode_FocusingByArea:
+				{
+					PvElement *element_curve = pv_element_curve_new_from_rect(focusing_mouse_rect);
+					et_assert(element_curve);
+					element_curve->color_pair.colors[PvColorPairGround_ForGround] = PvColor_Working;
+					element_curve->color_pair.colors[PvColorPairGround_BackGround] = PvColor_None;
+					element_curve->stroke.width = 1.0 / mouse_action.scale;
+					pv_element_append_child(element_group_edit_draw, NULL, element_curve);
+				}
+			default:
+				break;
 		}
+
 
 		et_doc_set_element_group_edit_draw_from_id(doc_id, element_group_edit_draw);
 		pv_element_remove_free_recursive(element_group_edit_draw);

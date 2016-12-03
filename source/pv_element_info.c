@@ -300,6 +300,16 @@ static bool _func_group_is_touch_element(
 	return true;
 }
 
+static bool _func_nop_is_overlap_rect(
+		bool *is_overlap,
+		const PvElement *element,
+		int offset,
+		PvRect rect)
+{
+	*is_overlap = false;
+	return true;
+}
+
 static bool _pv_general_strcmp(char *str0, char *str1)
 {
 	if(NULL == str0 && NULL == str1){
@@ -885,6 +895,39 @@ static bool _func_curve_is_touch_element(
 	return true;
 }
 
+static bool _func_curve_is_overlap_rect(
+		bool *is_overlap,
+		const PvElement *element,
+		int offset,
+		PvRect rect)
+{
+	*is_overlap = false;
+
+	const PvElementCurveData *data = element->data;
+	pv_assert(data);
+
+	rect = pv_rect_abs_size(rect);
+
+	PvRect rect_offseted = {
+		.x = rect.x - offset,
+		.y = rect.y - offset,
+		.w = rect.w + offset,
+		.h = rect.h + offset,
+	};
+
+	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
+	for(int i = 0; i < (int)num; i++){
+		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
+		PvPoint a_point = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
+		if(pv_rect_is_inside(rect_offseted, a_point)){
+			*is_overlap = true;
+			return true;
+		}
+	}
+
+	return true;
+}
+
 static bool _func_curve_is_diff_one(
 		bool *is_diff,
 		const PvElement *element0,
@@ -1464,6 +1507,19 @@ static bool _func_raster_is_touch_element(
 	return true;
 }
 
+static bool _func_raster_is_overlap_rect(
+		bool *is_overlap,
+		const PvElement *element,
+		int offset,
+		PvRect rect)
+{
+	*is_overlap = false;
+
+	rect = pv_rect_abs_size(rect);
+
+	return true;
+}
+
 static bool _func_raster_is_diff_one(
 		bool *is_diff,
 		const PvElement *element0,
@@ -1756,6 +1812,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw				= _func_group_draw,
 		.func_draw_focusing			= _func_group_draw,
 		.func_is_touch_element			= _func_group_is_touch_element,
+		.func_is_overlap_rect			= _func_nop_is_overlap_rect,
 		.func_is_diff_one			= _func_group_is_diff_one,
 		.func_get_point_by_anchor_points	= _func_notimpl_get_point_by_anchor_points,
 		.func_set_point_by_anchor_points	= _func_notimpl_set_point_by_anchor_points,
@@ -1778,6 +1835,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw				= _func_group_draw,
 		.func_draw_focusing			= _func_group_draw,
 		.func_is_touch_element			= _func_group_is_touch_element,
+		.func_is_overlap_rect			= _func_nop_is_overlap_rect,
 		.func_is_diff_one			= _func_group_is_diff_one,
 		.func_get_point_by_anchor_points	= _func_notimpl_get_point_by_anchor_points,
 		.func_set_point_by_anchor_points	= _func_notimpl_set_point_by_anchor_points,
@@ -1800,6 +1858,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw				= _func_group_draw,
 		.func_draw_focusing			= _func_group_draw,
 		.func_is_touch_element			= _func_group_is_touch_element,
+		.func_is_overlap_rect			= _func_nop_is_overlap_rect,
 		.func_is_diff_one			= _func_group_is_diff_one,
 		.func_get_point_by_anchor_points	= _func_notimpl_get_point_by_anchor_points,
 		.func_set_point_by_anchor_points	= _func_notimpl_set_point_by_anchor_points,
@@ -1822,6 +1881,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw				= _func_curve_draw,
 		.func_draw_focusing			= _func_curve_draw_focusing,
 		.func_is_touch_element			= _func_curve_is_touch_element,
+		.func_is_overlap_rect			= _func_curve_is_overlap_rect,
 		.func_is_diff_one			= _func_curve_is_diff_one,
 		.func_get_point_by_anchor_points	= _func_curve_get_point_by_anchor_points,
 		.func_set_point_by_anchor_points	= _func_curve_set_point_by_anchor_points,
@@ -1844,6 +1904,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw				= _func_raster_draw,
 		.func_draw_focusing			= _func_raster_draw_focusing,
 		.func_is_touch_element			= _func_raster_is_touch_element,
+		.func_is_overlap_rect			= _func_raster_is_overlap_rect,
 		.func_is_diff_one			= _func_raster_is_diff_one,
 		.func_get_point_by_anchor_points	= _func_raster_get_point_by_anchor_points,
 		.func_set_point_by_anchor_points	= _func_raster_set_point_by_anchor_points,

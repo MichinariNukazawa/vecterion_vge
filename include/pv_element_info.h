@@ -40,6 +40,11 @@ typedef bool (*PvElementFuncIsTouchElement)(
 		int offset,
 		double gx,
 		double gy);
+typedef bool (*PvElementFuncIsOverlapRect)(
+		bool *is_overlap,
+		const PvElement *element,
+		int offset,
+		PvRect rect);
 typedef bool (*PvElementFuncIsDiffOne)(
 		bool *is_diff,
 		const PvElement *element0,
@@ -89,6 +94,7 @@ typedef struct PvElementInfo{
 	PvElementFuncDraw			func_draw;
 	PvElementFuncDrawFocusing		func_draw_focusing;
 	PvElementFuncIsTouchElement		func_is_touch_element;
+	PvElementFuncIsOverlapRect		func_is_overlap_rect;
 	PvElementFuncIsDiffOne			func_is_diff_one;
 	PvElementFuncGetPointByAnchorPoints	func_get_point_by_anchor_points;
 	PvElementFuncSetPointByAnchorPoints	func_set_point_by_anchor_points;
