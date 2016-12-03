@@ -954,15 +954,13 @@ static bool _get_touch_element_and_index(
 
 	int index = -1;
 
-	const PvElementCurveData *data = element->data;
-	assert(data);
-
-	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
+	size_t num = info->func_get_num_anchor_point(element);
 	for(int i = 0; i < (int)num; i++){
-		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
+		PvAnchorPoint ap = info->func_get_anchor_point(element, i);
+
 		if(_is_bound_point(
 					PX_SENSITIVE_OF_TOUCH,
-					ap->points[PvAnchorPointIndex_Point],
+					ap.points[PvAnchorPointIndex_Point],
 					_data->g_point))
 		{
 			index = i;
