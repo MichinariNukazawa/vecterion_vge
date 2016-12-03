@@ -277,7 +277,7 @@ static gboolean _cb_button_press_pallet(
 
 	PvColorPairGround ground_check = !(self->color_pair_ground);
 	PvRect rect = _get_pv_rect_of_pallet_from_ground(ground_check, W_PALLET, H_PALLET);
-	if(pv_rect_is_inside(rect, event->x, event->y)){
+	if(pv_rect_is_inside(rect, (PvPoint){.x = event->x, .y = event->y})){
 		self->color_pair_ground = ground_check;
 		_et_color_panel_update_ui();
 	}

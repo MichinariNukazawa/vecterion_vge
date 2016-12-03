@@ -66,21 +66,21 @@ static EdgeKind _get_outside_touch_edge_kind_from_rect(PvRect rect, PvPoint poin
 	PvRect dl_rotate = {(rect.x - SENSE),	(rect.y + rect.h),	SENSE, SENSE};
 	PvRect dr_rotate = {(rect.x + rect.w),	(rect.y + rect.h),	SENSE, SENSE};
 
-	if(pv_rect_is_inside(ul, point.x, point.y)){
+	if(pv_rect_is_inside(ul, point)){
 		return EdgeKind_Resize_UpLeft;
-	}else if(pv_rect_is_inside(ur, point.x, point.y)){
+	}else if(pv_rect_is_inside(ur, point)){
 		return EdgeKind_Resize_UpRight;
-	}else if(pv_rect_is_inside(dr, point.x, point.y)){
+	}else if(pv_rect_is_inside(dr, point)){
 		return EdgeKind_Resize_DownRight;
-	}else if(pv_rect_is_inside(dl, point.x, point.y)){
+	}else if(pv_rect_is_inside(dl, point)){
 		return EdgeKind_Resize_DownLeft;
-	}else if(pv_rect_is_inside(ul_rotate, point.x, point.y)){
+	}else if(pv_rect_is_inside(ul_rotate, point)){
 		return EdgeKind_Rotate_UpLeft;
-	}else if(pv_rect_is_inside(ur_rotate, point.x, point.y)){
+	}else if(pv_rect_is_inside(ur_rotate, point)){
 		return EdgeKind_Rotate_UpRight;
-	}else if(pv_rect_is_inside(dr_rotate, point.x, point.y)){
+	}else if(pv_rect_is_inside(dr_rotate, point)){
 		return EdgeKind_Rotate_DownRight;
-	}else if(pv_rect_is_inside(dl_rotate, point.x, point.y)){
+	}else if(pv_rect_is_inside(dl_rotate, point)){
 		return EdgeKind_Rotate_DownLeft;
 	}else{
 		return EdgeKind_None;

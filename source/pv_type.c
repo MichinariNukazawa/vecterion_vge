@@ -110,12 +110,12 @@ PvRect pv_rect_abs_size(PvRect r)
 	return r;
 }
 
-bool pv_rect_is_inside(PvRect rect, int x, int y)
+bool pv_rect_is_inside(PvRect rect, PvPoint point)
 {
-	if(x < rect.x || (rect.x + rect.w) < x){
+	if(point.x < rect.x || (rect.x + rect.w) < point.x){
 		return false;
 	}
-	if(y < rect.y || (rect.y + rect.h) < y){
+	if(point.y < rect.y || (rect.y + rect.h) < point.y){
 		return false;
 	}
 

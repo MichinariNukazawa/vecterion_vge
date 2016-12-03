@@ -56,7 +56,7 @@ static const PvRect PvRect_Default = {0, 0, 0, 0,};
 PvRect pv_rect_mul_value(PvRect, double);
 PvRect pv_rect_abs_size(PvRect);
 
-bool pv_rect_is_inside(PvRect, int x, int y);
+bool pv_rect_is_inside(PvRect, PvPoint);
 PvRect pv_rect_expand(PvRect rect0, PvRect rect1);
 PvPoint pv_rect_get_edge_point(PvRect, PvRectEdgeKind);
 PvPoint pv_rect_get_center(PvRect);
