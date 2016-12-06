@@ -1116,8 +1116,6 @@ static bool _func_curve_set_rect_by_anchor_points(
 	const PvElementCurveData *data = (PvElementCurveData *)element->data;
 	pv_assert(data);
 
-	rect = pv_rect_abs_size(rect);
-
 	const PvRect rect_src = _func_curve_get_rect_by_anchor_points(element);
 
 	PvPoint point = {.x = rect.x, .y = rect.y,};
@@ -1364,15 +1362,8 @@ static bool _raster_draw_inline(
 
 	// effectively invisible to not draw
 	const int PX_RASTER_MINIMUM = 0.00001;
-	if(size.x  < PX_RASTER_MINIMUM || size.y < PX_RASTER_MINIMUM){
+	if(fabs(size.x)  < PX_RASTER_MINIMUM || fabs(size.y) < PX_RASTER_MINIMUM){
 		pv_debug("%f, %f", size.x, size.y);
-		result = false;
-		goto finally;
-	}
-
-	//! @todo
-	if(size.x < 0 || size.y < 0){
-		// pv_debug("%f, %f", size.x, size.y);
 		goto finally;
 	}
 
@@ -1672,8 +1663,6 @@ static bool _func_raster_set_rect_by_anchor_points(
 
 	PvElementRasterData *data = element->data;
 	assert(data);
-
-	rect = pv_rect_abs_size(rect);
 
 	PvRect src_rect = _func_raster_get_rect_by_anchor_points(element);
 

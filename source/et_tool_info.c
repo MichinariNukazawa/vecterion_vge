@@ -337,13 +337,12 @@ static EdgeKind _resize_elements(
 		.y = size_after.y / src_extent_rect.h,
 	};
 
+	//! @todo delta needed?
+	/*
 	const double DELTA_OF_RESIZE = 0.001;
-	resize.x = ((DELTA_OF_RESIZE > src_extent_rect.w)? DELTA_OF_RESIZE : resize.x); //! @todo fix
-	resize.y = ((DELTA_OF_RESIZE > src_extent_rect.h)? DELTA_OF_RESIZE : resize.y);
-
-	//! @todo minus to not implement.
-	resize.x = ((resize.x > DELTA_OF_RESIZE) ? resize.x : DELTA_OF_RESIZE);
-	resize.y = ((resize.y > DELTA_OF_RESIZE) ? resize.y : DELTA_OF_RESIZE);
+	resize.x = ((fabs(resize.x) > DELTA_OF_RESIZE) ? resize.x : DELTA_OF_RESIZE);
+	resize.y = ((fabs(resize.y) > DELTA_OF_RESIZE) ? resize.y : DELTA_OF_RESIZE);
+	*/
 
 	int num = pv_general_get_parray_num((void **)focus->elements);
 	for(int i = 0; i < num; i++){

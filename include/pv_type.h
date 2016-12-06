@@ -30,6 +30,8 @@ PvPoint pv_point_add_value(PvPoint, double);
 PvPoint pv_point_mul_value(PvPoint, double);
 PvPoint pv_point_div_value(PvPoint, double);
 
+PvPoint pv_point_abs(PvPoint);
+
 bool pv_point_is_diff(PvPoint, PvPoint);
 
 

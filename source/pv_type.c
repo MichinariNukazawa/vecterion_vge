@@ -68,6 +68,16 @@ PvPoint pv_point_div_value(PvPoint p, double scale)
 	return ret;
 }
 
+PvPoint pv_point_abs(PvPoint p)
+{
+	PvPoint ret = {
+		.x = fabs(p.x),
+		.y = fabs(p.y),
+	};
+
+	return ret;
+}
+
 bool pv_point_is_diff(PvPoint point0, PvPoint point1)
 {
 	if(point0.x != point1.x){
