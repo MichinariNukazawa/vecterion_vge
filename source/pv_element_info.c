@@ -1283,35 +1283,6 @@ static gpointer _func_raster_copy_new_data(void *_data)
 	return (gpointer)new_data;
 }
 
-static GdkPixbuf *_copy_new_pixbuf_scale(GdkPixbuf *pb_src, double w_dst, double h_dst)
-{
-	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w_dst, h_dst);
-	pv_assert(surface);
-	cairo_t *cr = cairo_create (surface);
-	pv_assert(cr);
-
-	double w_src = gdk_pixbuf_get_width(pb_src);
-	double h_src = gdk_pixbuf_get_height(pb_src);
-
-	cairo_matrix_t m = {
-		w_dst/w_src, 0,
-		0, h_dst/h_src,
-		0, 0,
-	};
-	cairo_set_matrix(cr, &m);
-
-	gdk_cairo_set_source_pixbuf (cr, pb_src, 0, 0);
-	cairo_paint (cr);
-
-	GdkPixbuf *pb = gdk_pixbuf_get_from_surface(surface, 0, 0, w_dst, h_dst);
-	pv_assertf(pb, "%f %f", w_dst, h_dst);
-
-	cairo_surface_destroy (surface);
-	cairo_destroy (cr);
-
-	return pb;
-}
-
 static void _func_raster_apply_appearances(
 		PvElement *element,
 		PvAppearance **appearances);
@@ -1345,6 +1316,15 @@ void _raster_simplify_free(PvElement *self)
 	pv_element_remove_free_recursive(self);
 }
 
+static PvPoint get_pixbuf_size_(const GdkPixbuf *pb)
+{
+	PvPoint ret = {
+		.x = gdk_pixbuf_get_width(pb),
+	.y = gdk_pixbuf_get_height(pb),
+	};
+
+	return ret;
+}
 
 typedef enum{
 	RasterDrawKind_Draw,
@@ -1379,10 +1359,7 @@ static bool _raster_draw_inline(
 	double degree = simplify_data->raster_appearances
 		[PvElementRasterAppearanceIndex_Rotate]->rotate.degree;
 
-	GdkPixbuf *pixbuf = data->pixbuf;
-	double w = gdk_pixbuf_get_width(pixbuf);
-	double h = gdk_pixbuf_get_height(pixbuf);
-	PvPoint size = {.x = w, .y = h};
+	PvPoint size = get_pixbuf_size_(data->pixbuf);
 	size = pv_point_mul(size, resize);
 
 	// effectively invisible to not draw
@@ -1413,11 +1390,11 @@ static bool _raster_draw_inline(
 	switch(rasterDrawKind){
 		case RasterDrawKind_Draw:
 			{
-				GdkPixbuf *pb = _copy_new_pixbuf_scale(simplify_data->pixbuf, size.x, size.y);
-				pv_assert(pb);
-				gdk_cairo_set_source_pixbuf (cr, pb, position.x, position.y);
+				cairo_translate(cr, position.x, position.y);
+				cairo_scale(cr, resize.x, resize.y);
+
+				gdk_cairo_set_source_pixbuf (cr, simplify_data->pixbuf, 0, 0);
 				cairo_paint (cr);
-				g_object_unref(G_OBJECT(pb));
 			}
 			break;
 		case RasterDrawKind_DrawFocusing:
@@ -1739,7 +1716,17 @@ static void _func_raster_apply_appearances(
 				{
 					PvPoint *resize = &(data->raster_appearances
 							[PvElementRasterAppearanceIndex_Resize]->resize.resize);
+					PvPoint img_size = get_pixbuf_size_(data->pixbuf);
+					PvPoint src_size = pv_point_mul(img_size, *resize);
+
 					*resize = pv_point_mul(*resize, appearances[i]->resize.resize);
+
+					PvPoint dst_size = pv_point_mul(img_size, *resize);
+
+					PvPoint *move = &(data->raster_appearances
+							[PvElementRasterAppearanceIndex_Translate]->translate.move);
+					PvPoint diff = pv_point_div_value(pv_point_sub(src_size, dst_size), 2);
+					*move = pv_point_add(*move, diff);
 				}
 				break;
 			case PvAppearanceKind_Rotate:
