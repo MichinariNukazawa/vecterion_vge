@@ -430,6 +430,10 @@ static PvFocus *_et_doc_history_hive_copy_focus_by_vg(const PvFocus *focus_src, 
 	const PvElement *focus_element = pv_focus_get_first_element(focus_src);
 	if(NULL != focus_element){
 		// ** get focus path(index's)
+		/*! @todo Rootだと検出に失敗するのだが...
+		 * 1. Rootは来ないはずの不正な値だからエラーで良い？
+		 * 2. それ以外でも、ここなどから履歴でfocusが外れた場合の処理が甘くない？
+		 */
 		indexes = _element_get_indexes(
 				focus_element);
 		if(NULL == indexes){

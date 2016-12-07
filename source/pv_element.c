@@ -495,6 +495,10 @@ static bool _pv_element_detouch_parent(PvElement * const self)
 /*! @detail
  * element remove in parent->childs
  * delete element and childs recursive.
+ *
+ * @todo この関数自体の問題ではないが、この関数を呼び出した側の注意不足で、
+ *	rootを除去してしまったり、rootのchildsを空にしてしまったりするが、
+ *	どのレベルでセーフティをかける？
  */
 bool pv_element_remove_free_recursive(PvElement *self)
 {

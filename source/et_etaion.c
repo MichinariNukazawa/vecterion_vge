@@ -404,19 +404,29 @@ bool et_etaion_remove_delete_layer(EtDocId doc_id)
 		return false;
 	}
 
-	PvElement *element = pv_focus_get_first_element_parent_layer(focus);
-	if(NULL == element){
+	PvElement *layer_element = pv_focus_get_first_element_parent_layer(focus);
+	if(NULL == layer_element){
 		et_error("");
 		return false;
 	}
 
 	// 削除実行前にfocusを外しておく
-	pv_focus_clear_set_element(focus, element->parent);
+	pv_focus_clear_set_element(focus, layer_element->parent);
+	PvElement *parent = layer_element->parent;
+	et_assert(parent);
+	et_assert(PvElementKind_Root != layer_element->kind);
 
 	bool ret = true;
-	if(!pv_element_remove_free_recursive(element)){
+	if(!pv_element_remove_free_recursive(layer_element)){
 		et_error("");
 		ret = false;
+	}
+
+	if(PvElementKind_Root == parent->kind && 0 == pv_general_get_parray_num((void **)parent->childs)){
+		PvElement *layer = pv_element_new(PvElementKind_Layer);
+		et_assert(layer);
+		pv_element_append_child(parent, NULL, layer);
+		pv_focus_clear_set_element(focus, layer);
 	}
 
 	_signal_et_etaion_change_state(self);
