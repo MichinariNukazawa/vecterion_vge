@@ -1027,6 +1027,44 @@ static gboolean _cb_menu_file_quit(gpointer data)
 	return FALSE;
 }
 
+static gboolean _cb_menu_edit_undo(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		//_show_error_dialog("Close:nothing document.");
+		//et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	if(!et_doc_undo_from_id(doc_id)){
+		et_error("");
+		return false;
+	}
+
+	et_doc_signal_update_from_id(doc_id);
+
+	return false;
+}
+
+static gboolean _cb_menu_edit_redo(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		//_show_error_dialog("Close:nothing document.");
+		//et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	if(!et_doc_redo_from_id(doc_id)){
+		et_error("");
+		return false;
+	}
+
+	et_doc_signal_update_from_id(doc_id);
+
+	return false;
+}
+
 static gboolean _cb_menu_layer_new(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
@@ -1618,6 +1656,37 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	return menuitem_root;
 }
 
+static GtkWidget *_pv_get_menuitem_new_tree_of_edit(GtkAccelGroup *accel_group)
+{
+	GtkWidget *menuitem_root;
+	GtkWidget *menuitem;
+	GtkWidget *menu;
+
+	menuitem_root = gtk_menu_item_new_with_label ("_Edit");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
+
+	menu = gtk_menu_new ();
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
+
+	// ** Accel to "/_Edit/_Undo (Ctrl+Z)"
+	menuitem = gtk_menu_item_new_with_label ("_Undo");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_edit_undo), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_z, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+
+	// ** Accel to "/_Edit/_Redo (Ctrl+Shift+Z)"
+	menuitem = gtk_menu_item_new_with_label ("_Redo");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_edit_redo), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_z, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
+
+	return menuitem_root;
+}
+
 static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group){
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
@@ -1741,6 +1810,9 @@ static bool _init_menu(GtkWidget *window, GtkWidget *box_root)
 	gtk_box_pack_start (GTK_BOX (box_root), menubar, FALSE, TRUE, 0);
 
 	menuitem = _pv_get_menuitem_new_tree_of_file(accel_group);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
+
+	menuitem = _pv_get_menuitem_new_tree_of_edit(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	menuitem = _pv_get_menuitem_new_tree_of_layer(accel_group);

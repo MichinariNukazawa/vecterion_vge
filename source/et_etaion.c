@@ -189,22 +189,6 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 
 			_signal_et_etaion_change_state(self);
 			break;
-		case GDK_KEY_z:
-			if(0 != (key_action.state & GDK_CONTROL_MASK)){
-				if(!et_doc_undo_from_id((self->state).doc_id)){
-					et_error("");
-					return false;
-				}
-			}
-			break;
-		case GDK_KEY_Z:
-			if(0 != (key_action.state & (GDK_CONTROL_MASK))){
-				if(!et_doc_redo_from_id((self->state).doc_id)){
-					et_error("");
-					return false;
-				}
-			}
-			break;
 		default:
 			et_debug("no use:%d", key_action.key);
 			return true;
