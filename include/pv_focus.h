@@ -18,10 +18,10 @@ bool pv_focus_add_element(PvFocus *focus, PvElement *element);
 bool pv_focus_remove_element(PvFocus *focus, PvElement *element);
 // void pv_focus_detouch_element(PvFocus *focus, const PvElement *element);
 PvElement *pv_focus_get_first_element(const PvFocus *focus);
-PvElement *pv_focus_get_first_element_parent_layer(const PvFocus *focus);
+PvElement *pv_focus_get_first_layer(const PvFocus *focus);
 bool pv_focus_clear_set_element(PvFocus *focus, PvElement *element);
 bool pv_focus_clear_set_element_index(PvFocus *focus, PvElement *element, int index);
-bool pv_focus_clear_to_parent_layer(PvFocus *focus);
+bool pv_focus_clear_to_first_layer(PvFocus *focus);
 void pv_focus_free(PvFocus *focus);
 
 bool pv_focus_is_layer_root_null_from_element(const PvElement *element);

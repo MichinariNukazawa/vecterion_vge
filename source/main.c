@@ -1080,7 +1080,7 @@ static gboolean _cb_menu_file_open(gpointer data)
 
 static bool _pv_element_append_near_first_parrent_layer(PvFocus *focus, PvElement *element)
 {
-	PvElement *first_parent = pv_focus_get_first_element_parent_layer(focus);
+	PvElement *first_parent = pv_focus_get_first_layer(focus);
 
 	PvElement *sister_layer = NULL;
 	PvElement *parent_layer = NULL;
@@ -1173,7 +1173,7 @@ static gboolean _cb_menu_file_import(gpointer data)
 			et_debug("%d", doc_id);
 			goto finally_1;
 		}
-		if(!pv_focus_clear_to_parent_layer(focus)){
+		if(!pv_focus_clear_to_first_layer(focus)){
 			_show_error_dialog("Import:open error.:%s", filename);
 			et_debug("%d", doc_id);
 			goto finally_1;
@@ -1367,7 +1367,7 @@ static void _cb_menu_select_none (GtkMenuItem *menuitem, gpointer user_data)
 		return;
 	}
 
-	if(!pv_focus_clear_to_parent_layer(focus)){
+	if(!pv_focus_clear_to_first_layer(focus)){
 		_show_error_dialog("Select:internal error.");
 		et_error("");
 		return;
@@ -1408,7 +1408,7 @@ static void _cb_menu_select_invert (GtkMenuItem *menuitem, gpointer user_data)
 	}
 	memcpy(elements_prefocus, focus->elements, sizeof(PvElement *) * (num + 1));
 
-	if(!pv_focus_clear_to_parent_layer(focus)){
+	if(!pv_focus_clear_to_first_layer(focus)){
 		_show_error_dialog("Select Invert:internal error.");
 		et_error("");
 		goto finally;

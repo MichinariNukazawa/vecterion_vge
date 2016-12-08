@@ -185,7 +185,7 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 
 	switch(key_action.key){
 		case EtKeyType_Enter:
-			pv_focus_clear_to_parent_layer(focus);
+			pv_focus_clear_to_first_layer(focus);
 
 			_signal_et_etaion_change_state(self);
 			break;
@@ -258,7 +258,7 @@ bool et_etaion_append_new_layer(EtDocId doc_id)
 	// **レイヤの追加位置を決める
 	// FocusされたElementに近い親Layerを位置指定にする
 	PvElement *prev = pv_focus_get_first_element(focus);
-	PvElement *parent = pv_focus_get_first_element_parent_layer(focus);
+	PvElement *parent = pv_focus_get_first_layer(focus);
 	// 親がNULLなら、親をroot直下に指定し、位置指定を解除
 	if(NULL == parent){
 		EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
@@ -308,7 +308,7 @@ bool et_etaion_append_new_layer_child(EtDocId doc_id)
 
 	// **レイヤの追加位置を決める
 	// FocusされたElementに近いLayerをparentにする
-	PvElement *parent = pv_focus_get_first_element_parent_layer(focus);
+	PvElement *parent = pv_focus_get_first_layer(focus);
 	// 親がNULLはありえない
 	if(NULL == parent){
 		et_bug("");
@@ -404,7 +404,7 @@ bool et_etaion_remove_delete_layer(EtDocId doc_id)
 		return false;
 	}
 
-	PvElement *layer_element = pv_focus_get_first_element_parent_layer(focus);
+	PvElement *layer_element = pv_focus_get_first_layer(focus);
 	if(NULL == layer_element){
 		et_error("");
 		return false;

@@ -122,7 +122,7 @@ bool pv_focus_remove_element(PvFocus *focus, PvElement *element)
 {
 	int num = pv_general_get_parray_num((void **)focus->elements);
 	if(1 == num && focus->elements[0] == element){
-		return pv_focus_clear_to_parent_layer(focus);
+		return pv_focus_clear_to_first_layer(focus);
 	}
 	for(int i = 0; i < num; i++){
 		if(element == focus->elements[i]){
@@ -167,7 +167,7 @@ bool pv_focus_is_layer_root_null_from_element(const PvElement *element)
 	return false;
 }
 
-PvElement *pv_focus_get_first_element_parent_layer(const PvFocus *focus)
+PvElement *pv_focus_get_first_layer(const PvFocus *focus)
 {
 	if(NULL == focus){
 		pv_error("");
@@ -217,14 +217,14 @@ bool pv_focus_clear_set_element(PvFocus *focus, PvElement *element)
 	return pv_focus_clear_set_element_index(focus, element, -1);
 }
 
-bool pv_focus_clear_to_parent_layer(PvFocus *focus)
+bool pv_focus_clear_to_first_layer(PvFocus *focus)
 {
 	if(NULL == focus){
 		pv_bug("");
 		return false;
 	}
 
-	PvElement *element = pv_focus_get_first_element_parent_layer(focus);
+	PvElement *element = pv_focus_get_first_layer(focus);
 	if(NULL == element){
 		pv_bug("");
 		return false;

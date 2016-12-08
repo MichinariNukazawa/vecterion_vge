@@ -495,7 +495,7 @@ static PvRect _focusing_by_area(
 {
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
-	pv_focus_clear_to_parent_layer(focus);
+	pv_focus_clear_to_first_layer(focus);
 
 	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
 	et_assertf(vg, "%d", doc_id);
@@ -665,7 +665,7 @@ static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mo
 							_touch_element = _get_touch_element(doc_id, mouse_action.point);
 
 							if(NULL == _touch_element){
-								et_assertf(pv_focus_clear_to_parent_layer(focus), "%d", doc_id);
+								et_assertf(pv_focus_clear_to_first_layer(focus), "%d", doc_id);
 								_mode = EtFocusElementMouseActionMode_FocusingByArea;
 							}else{
 								_is_already_focus = pv_focus_is_exist_element(focus, _touch_element);
@@ -1146,7 +1146,7 @@ static bool _et_tool_edit_anchor_point_mouse_action(
 						doc_id,
 						mouse_action.point);
 				if(index < 0){
-					pv_focus_clear_to_parent_layer(focus);
+					pv_focus_clear_to_first_layer(focus);
 				}else{
 					pv_focus_clear_set_element_index(focus, _element, index);
 				}
