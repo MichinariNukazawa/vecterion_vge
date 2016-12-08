@@ -346,6 +346,31 @@ bool et_etaion_copy_layer(EtDocId doc_id)
 	return true;
 }
 
+//! @return elder sister -> younger sister -> null
+static PvElement *pv_element_get_sister_(PvElement *element)
+{
+	if(NULL == element->parent){
+		return NULL;
+	}
+
+	size_t num = pv_general_get_parray_num((void **)element->parent->childs);
+	if(1 >= num){
+		return NULL;
+	}
+	for(int i = 0; i < (int)num; i++){
+		if(element == element->parent->childs[i]){
+			if(i == 0){
+				return element->parent->childs[1];
+			}else{
+				return element->parent->childs[i - 1];
+			}
+		}
+	}
+
+	et_bug("");
+	return NULL;
+}
+
 bool et_etaion_remove_delete_layer(EtDocId doc_id)
 {
 	EtEtaion *self = current_state;
@@ -357,40 +382,38 @@ bool et_etaion_remove_delete_layer(EtDocId doc_id)
 	(self->state).doc_id = doc_id;
 
 	PvFocus *focus = et_doc_get_focus_ref_from_id((self->state).doc_id);
-	if(NULL == focus){
-		et_error("");
-		return false;
-	}
+	et_assertf(focus, "%d", doc_id);
 
 	PvElement *layer_element = pv_focus_get_first_layer(focus);
-	if(NULL == layer_element){
-		et_error("");
-		return false;
+	et_assert(layer_element);
+	et_assertf(PvElementKind_Root != layer_element->kind, "%d", doc_id);
+
+	PvElement *sister = pv_element_get_sister_(layer_element);
+	if(NULL == sister){
+		//! @todo focus to root is unacceptable
+		pv_focus_clear_set_element(focus, layer_element->parent);
+	}else{
+		pv_focus_clear_set_element(focus, sister);
 	}
 
-	// 削除実行前にfocusを外しておく
-	pv_focus_clear_set_element(focus, layer_element->parent);
-	PvElement *parent = layer_element->parent;
-	et_assert(parent);
-	et_assert(PvElementKind_Root != layer_element->kind);
+	bool ret = pv_element_remove_free_recursive(layer_element);
+	et_assertf(ret, "%d", doc_id);
 
-	bool ret = true;
-	if(!pv_element_remove_free_recursive(layer_element)){
-		et_error("");
-		ret = false;
-	}
-
-	if(PvElementKind_Root == parent->kind && 0 == pv_general_get_parray_num((void **)parent->childs)){
-		PvElement *layer = pv_element_new(PvElementKind_Layer);
-		et_assert(layer);
-		pv_element_append_child(parent, NULL, layer);
-		pv_focus_clear_set_element(focus, layer);
+	//! focus resetting to not root
+	PvElement *element_first = pv_focus_get_first_element(focus);
+	if(PvElementKind_Root == element_first->kind){
+		if(0 == pv_general_get_parray_num((void **)element_first->childs)){
+			PvElement *layer = pv_element_new(PvElementKind_Layer);
+			et_assert(layer);
+			pv_element_append_child(element_first, NULL, layer);
+		}
+		pv_focus_clear_set_element(focus, element_first->childs[0]);
 	}
 
 	_signal_et_etaion_change_state(self);
 	et_doc_signal_update_from_id((self->state).doc_id);
 
-	return ret;
+	return true;
 }
 
 bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data)
