@@ -241,46 +241,21 @@ int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data)
 bool et_etaion_append_new_layer(EtDocId doc_id)
 {
 	EtEtaion *self = current_state;
-	if(NULL == self){
-		et_bug("");
-		exit(-1);
-	}
+	et_assert(self);
 
 	(self->state).doc_id = doc_id;
 
 	PvFocus *focus = et_doc_get_focus_ref_from_id((self->state).doc_id);
-	if(NULL == focus){
-		et_error("");
-		return false;
-	}
+	et_assertf(focus, "%d", doc_id);
 
-
-	// **レイヤの追加位置を決める
-	// FocusされたElementに近い親Layerを位置指定にする
-	PvElement *prev = pv_focus_get_first_element(focus);
-	PvElement *parent = pv_focus_get_first_layer(focus);
-	// 親がNULLなら、親をroot直下に指定し、位置指定を解除
-	if(NULL == parent){
-		EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
-		PvVg *vg = et_doc_get_vg_ref(doc);
-		parent = vg->element_root;
-		prev = NULL;
-	}
-	if(parent != prev->parent){
-		// TODO: set prev is parent level 1 child.
-		prev = NULL;
-	}
+	PvElement *sister_layer = pv_focus_get_first_layer(focus);
+	et_assertf(sister_layer->parent, "%d", doc_id);
 
 	PvElement *layer = pv_element_new(PvElementKind_Layer);
-	if(NULL == layer){
-		et_error("");
-		return false;
-	}
+	et_assert(layer);
 
-	if(!pv_element_append_child(parent, prev, layer)){
-		et_error("");
-		return false;
-	}
+	bool ret = pv_element_append_child(sister_layer->parent, sister_layer, layer);
+	et_assert(ret);
 
 	pv_focus_clear_set_element(focus, layer);
 
@@ -293,38 +268,21 @@ bool et_etaion_append_new_layer(EtDocId doc_id)
 bool et_etaion_append_new_layer_child(EtDocId doc_id)
 {
 	EtEtaion *self = current_state;
-	if(NULL == self){
-		et_bug("");
-		exit(-1);
-	}
+	et_assert(self);
 
 	(self->state).doc_id = doc_id;
 
 	PvFocus *focus = et_doc_get_focus_ref_from_id((self->state).doc_id);
-	if(NULL == focus){
-		et_error("");
-		return false;
-	}
+	et_assertf(focus, "%d", doc_id);
 
-	// **レイヤの追加位置を決める
-	// FocusされたElementに近いLayerをparentにする
 	PvElement *parent = pv_focus_get_first_layer(focus);
-	// 親がNULLはありえない
-	if(NULL == parent){
-		et_bug("");
-		return false;
-	}
+	et_assertf(parent, "%d", doc_id);
 
 	PvElement *layer = pv_element_new(PvElementKind_Layer);
-	if(NULL == layer){
-		et_error("");
-		return false;
-	}
+	et_assert(layer);
 
-	if(!pv_element_append_child(parent, NULL, layer)){
-		et_error("");
-		return false;
-	}
+	bool ret = pv_element_append_child(parent, NULL, layer);
+	et_assert(ret);
 
 	pv_focus_clear_set_element(focus, layer);
 

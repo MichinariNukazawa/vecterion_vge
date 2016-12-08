@@ -36,7 +36,7 @@ int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data)
 
 EtDocId et_etaion_get_current_doc_id();
 
-// @brief focus(Layer)の兄弟Layerを追加
+// @brief focus(Layer)の姉妹Layerを追加
 bool et_etaion_append_new_layer(EtDocId doc_id);
 // @brief focus(Layer)の子Layerを追加
 bool et_etaion_append_new_layer_child(EtDocId doc_id);
