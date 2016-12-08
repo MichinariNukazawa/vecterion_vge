@@ -34,7 +34,7 @@ static const PvColor PvColor_None = {
 };
 
 static const PvColor PvColor_Working = {
-	{0.2 * 255, 0.4 * 255, 0.9 * 255, 1.0 * 100,},
+	{(uint8_t)(0.2 * 255), (uint8_t)(0.4 * 255), (uint8_t)(0.9 * 255), (uint8_t)(1.0 * 100),},
 };
 
 typedef enum{

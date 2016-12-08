@@ -59,17 +59,17 @@ TEST(Test, Focus){
 			" focus:%p, focus_layer:%p\n",
 			elem0, layer0_0, layer0_1,
 			pv_focus_get_first_element(focus),
-			pv_focus_get_first_element_parent_layer(focus));
+			pv_focus_get_first_layer(focus));
 	// add focus element of 1.
 	EXPECT_TRUE(pv_focus_add_element(focus, elem0));
 	EXPECT_TRUE(elem0 == pv_focus_get_first_element(focus));
-	EXPECT_TRUE(layer0_1 == pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_TRUE(layer0_1 == pv_focus_get_first_layer(focus));
 	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
 
 	// add focue element of 2
 	EXPECT_TRUE(pv_focus_add_element(focus, elem1));
 	EXPECT_EQ(elem1, pv_focus_get_first_element(focus));
-	EXPECT_EQ(layer1_1, pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_EQ(layer1_1, pv_focus_get_first_layer(focus));
 	EXPECT_EQ(2, pv_general_get_parray_num((void **)focus->elements));
 
 	// internal implement.
@@ -80,47 +80,47 @@ TEST(Test, Focus){
 	// add already focus element to first focus
 	EXPECT_TRUE(pv_focus_add_element(focus, elem0));
 	EXPECT_EQ(elem0, pv_focus_get_first_element(focus));
-	EXPECT_EQ(layer0_1, pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_EQ(layer0_1, pv_focus_get_first_layer(focus));
 	EXPECT_EQ(2, pv_general_get_parray_num((void **)focus->elements));
 
 	// remove and change element of 1
 	EXPECT_TRUE(pv_focus_remove_element(focus, elem0));
 	EXPECT_TRUE(elem1 == pv_focus_get_first_element(focus));
-	EXPECT_TRUE(layer1_1 == pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_TRUE(layer1_1 == pv_focus_get_first_layer(focus));
 	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
 
 	// remove last element move to parent layer
 	EXPECT_TRUE(pv_focus_remove_element(focus, elem1));
 	EXPECT_TRUE(layer1_1 == pv_focus_get_first_element(focus));
-	EXPECT_TRUE(layer1_1 == pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_TRUE(layer1_1 == pv_focus_get_first_layer(focus));
 	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
 
 	// already focus to parrent is not move.
-	EXPECT_TRUE(pv_focus_clear_to_parent_layer(focus));
+	EXPECT_TRUE(pv_focus_clear_to_first_layer(focus));
 	EXPECT_TRUE(layer1_1 == pv_focus_get_first_element(focus));
-	EXPECT_TRUE(layer1_1 == pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_TRUE(layer1_1 == pv_focus_get_first_layer(focus));
 	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
 
 	// set single focus.
 	EXPECT_TRUE(pv_focus_clear_set_element(focus, elem1));
 	EXPECT_TRUE(elem1 == pv_focus_get_first_element(focus));
-	EXPECT_TRUE(layer1_1 == pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_TRUE(layer1_1 == pv_focus_get_first_layer(focus));
 	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
 	EXPECT_TRUE(pv_focus_clear_set_element(focus, elem0));
 	EXPECT_TRUE(elem0 == pv_focus_get_first_element(focus));
-	EXPECT_TRUE(layer0_1 == pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_TRUE(layer0_1 == pv_focus_get_first_layer(focus));
 	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
 
 	// focus clear move to parrent.
-	EXPECT_TRUE(pv_focus_clear_to_parent_layer(focus));
+	EXPECT_TRUE(pv_focus_clear_to_first_layer(focus));
 	EXPECT_TRUE(layer0_1 == pv_focus_get_first_element(focus));
-	EXPECT_TRUE(layer0_1 == pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_TRUE(layer0_1 == pv_focus_get_first_layer(focus));
 	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
 
 	// set single layer.
 	EXPECT_TRUE(pv_focus_clear_set_element(focus, layer1_1));
 	EXPECT_TRUE(layer1_1 == pv_focus_get_first_element(focus));
-	EXPECT_TRUE(layer1_1 == pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_TRUE(layer1_1 == pv_focus_get_first_layer(focus));
 	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
 
 	// free
@@ -182,7 +182,7 @@ TEST(Test, Invalid){
 	if(! (elem0 == pv_focus_get_first_element(focus))){
 		FAIL();
 	}
-	if(! (layer0_1 == pv_focus_get_first_element_parent_layer(focus))){
+	if(! (layer0_1 == pv_focus_get_first_layer(focus))){
 		FAIL();
 	}
 	if(! (1 == pv_general_get_parray_num((void **)focus->elements))){
@@ -192,24 +192,24 @@ TEST(Test, Invalid){
 	EXPECT_FALSE(pv_focus_add_element(NULL, elem1));
 	EXPECT_FALSE(pv_focus_add_element(focus, NULL));
 	EXPECT_TRUE(elem0 == pv_focus_get_first_element(focus));
-	EXPECT_TRUE(layer0_1 == pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_TRUE(layer0_1 == pv_focus_get_first_layer(focus));
 	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
 
 	EXPECT_TRUE(NULL == pv_focus_get_first_element(NULL));
-	EXPECT_TRUE(NULL == pv_focus_get_first_element_parent_layer(NULL));
+	EXPECT_TRUE(NULL == pv_focus_get_first_layer(NULL));
 	EXPECT_TRUE(elem0 == pv_focus_get_first_element(focus));
-	EXPECT_TRUE(layer0_1 == pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_TRUE(layer0_1 == pv_focus_get_first_layer(focus));
 	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
 
 	EXPECT_FALSE(pv_focus_clear_set_element(NULL, elem1));
 	EXPECT_FALSE(pv_focus_clear_set_element(focus, NULL));
 	EXPECT_TRUE(elem0 == pv_focus_get_first_element(focus));
-	EXPECT_TRUE(layer0_1 == pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_TRUE(layer0_1 == pv_focus_get_first_layer(focus));
 	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
 
-	EXPECT_FALSE(pv_focus_clear_to_parent_layer(NULL));
+	EXPECT_FALSE(pv_focus_clear_to_first_layer(NULL));
 	EXPECT_TRUE(elem0 == pv_focus_get_first_element(focus));
-	EXPECT_TRUE(layer0_1 == pv_focus_get_first_element_parent_layer(focus));
+	EXPECT_TRUE(layer0_1 == pv_focus_get_first_layer(focus));
 	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
 
 	// free
