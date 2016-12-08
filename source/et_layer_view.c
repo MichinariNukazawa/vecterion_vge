@@ -479,13 +479,13 @@ static gboolean _et_layer_view_cb_layer_ctrl(
 
 	switch(index){
 		case 0:
-			if(!et_etaion_add_new_layer(self->doc_id)){
+			if(!et_etaion_append_new_layer(self->doc_id)){
 				et_error("");
 				return false;
 			}
 			break;
 		case 1:
-			if(!et_etaion_add_new_layer_child(self->doc_id)){
+			if(!et_etaion_append_new_layer_child(self->doc_id)){
 				et_error("");
 				return false;
 			}

@@ -238,7 +238,7 @@ int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data)
 	return 1; // Todo: return callback id
 }
 
-bool et_etaion_add_new_layer(EtDocId doc_id)
+bool et_etaion_append_new_layer(EtDocId doc_id)
 {
 	EtEtaion *self = current_state;
 	if(NULL == self){
@@ -290,7 +290,7 @@ bool et_etaion_add_new_layer(EtDocId doc_id)
 	return true;
 }
 
-bool et_etaion_add_new_layer_child(EtDocId doc_id)
+bool et_etaion_append_new_layer_child(EtDocId doc_id)
 {
 	EtEtaion *self = current_state;
 	if(NULL == self){
