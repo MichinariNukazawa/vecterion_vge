@@ -1027,6 +1027,62 @@ static gboolean _cb_menu_file_quit(gpointer data)
 	return FALSE;
 }
 
+static gboolean _cb_menu_layer_new(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		//_show_error_dialog("Close:nothing document.");
+		//et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	et_etaion_append_new_layer(doc_id);
+
+	return false;
+}
+
+static gboolean _cb_menu_layer_copy(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		//_show_error_dialog("Close:nothing document.");
+		//et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	et_etaion_copy_layer(doc_id);
+
+	return false;
+}
+
+static gboolean _cb_menu_layer_new_child(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		//_show_error_dialog("Close:nothing document.");
+		//et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	et_etaion_append_new_layer_child(doc_id);
+
+	return false;
+}
+
+static gboolean _cb_menu_layer_delete(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		//_show_error_dialog("Close:nothing document.");
+		//et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	et_etaion_remove_delete_layer(doc_id);
+
+	return false;
+}
+
 static bool _gui_quit()
 {
 	EtDocId doc_id = -1;
@@ -1562,6 +1618,46 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	return menuitem_root;
 }
 
+static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group){
+	GtkWidget *menuitem_root;
+	GtkWidget *menuitem;
+	GtkWidget *menu;
+
+	menuitem_root = gtk_menu_item_new_with_label ("_Layer");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
+
+	menu = gtk_menu_new ();
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
+
+	// ** Accel to "/_Layer/_New Layer (Ctrl+Shift+N)"
+	menuitem = gtk_menu_item_new_with_label ("_New Layer");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_new), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_n, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
+
+	// ** Accel to "/_Layer/_Copy Layer"
+	menuitem = gtk_menu_item_new_with_label ("_Copy Layer");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_copy), NULL);
+
+	// ** Accel to "/_Layer/New Child Layer"
+	menuitem = gtk_menu_item_new_with_label ("New Child Layer");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_new_child), NULL);
+
+	// ** Accel to "/_Layer/_Delete Layer"
+	menuitem = gtk_menu_item_new_with_label ("_Delete Layer");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_delete), NULL);
+
+	return menuitem_root;
+}
+
 static GtkWidget *_pv_get_menuitem_new_tree_of_view(GtkAccelGroup *accel_group)
 {
 	GtkWidget *menuitem_root;
@@ -1645,6 +1741,9 @@ static bool _init_menu(GtkWidget *window, GtkWidget *box_root)
 	gtk_box_pack_start (GTK_BOX (box_root), menubar, FALSE, TRUE, 0);
 
 	menuitem = _pv_get_menuitem_new_tree_of_file(accel_group);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
+
+	menuitem = _pv_get_menuitem_new_tree_of_layer(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	menuitem = _pv_get_menuitem_new_tree_of_select(accel_group);
