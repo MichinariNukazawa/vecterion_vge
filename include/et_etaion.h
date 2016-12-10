@@ -45,6 +45,9 @@ bool et_etaion_copy_layer(EtDocId doc_id);
 /** @brief focus(Layer)および子Elementを削除 */
 bool et_etaion_remove_delete_layer(EtDocId doc_id);
 
+/** @brief focus(非Layer)Elementsを削除 */
+bool et_etaion_remove_delete_object_elements(EtDocId doc_id);
+
 bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data);
 
 #ifdef include_ET_TEST

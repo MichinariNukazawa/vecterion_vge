@@ -782,6 +782,24 @@ bool pv_element_kind_is_viewable_object(PvElementKind kind)
 	}
 }
 
+bool pv_element_kind_is_object(PvElementKind kind)
+{
+	switch(kind){
+		case PvElementKind_NotDefined:
+		case PvElementKind_Root:
+		case PvElementKind_Layer:
+		case PvElementKind_EndOfKind:
+			return false;
+		case PvElementKind_Group:
+		case PvElementKind_Curve:
+		case PvElementKind_Raster:
+			return true;
+		default:
+			pv_bug("");
+			return false;
+	}
+}
+
 void pv_element_debug_print(const PvElement *element)
 {
 	if(NULL == element){

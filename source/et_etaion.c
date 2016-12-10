@@ -209,9 +209,9 @@ int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data)
 
 	int num = pv_general_get_parray_num((void **)self->slot_change_states);
 	EtEtaionSlotChangeState *new_slots = realloc(self->slot_change_states,
-					sizeof(self->slot_change_states[0]) * (num + 2));
+			sizeof(self->slot_change_states[0]) * (num + 2));
 	gpointer *new_datas = realloc(self->slot_change_state_datas,
-					sizeof(self->slot_change_state_datas[0]) * (num + 2));
+			sizeof(self->slot_change_state_datas[0]) * (num + 2));
 	new_slots[num] = slot;
 	new_slots[num + 1] = NULL;
 	new_datas[num] = data;
@@ -394,6 +394,53 @@ bool et_etaion_remove_delete_layer(EtDocId doc_id)
 		pv_focus_clear_set_element(focus, element_first->childs[0]);
 	}
 
+	_signal_et_etaion_change_state(self);
+	et_doc_signal_update_from_id((self->state).doc_id);
+
+	return true;
+}
+
+bool et_etaion_remove_delete_object_elements(EtDocId doc_id)
+{
+	EtEtaion *self = current_state;
+	et_assert(self);
+
+	(self->state).doc_id = doc_id;
+
+	PvFocus *focus = et_doc_get_focus_ref_from_id((self->state).doc_id);
+	et_assertf(focus, "%d", doc_id);
+
+	PvElement *first_element = pv_focus_get_first_element(focus);
+	if(!pv_element_kind_is_object(first_element->kind)){
+		et_debug("");
+		return true;
+	}
+
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = ((int)num) - 1; 0 <= i; i--){
+		if(!pv_element_kind_is_object(focus->elements[i]->kind)){
+			et_bug("");
+			goto failure;
+		}
+
+		bool ret;
+		PvElement *element = NULL;
+		if(0 == i){
+			element = pv_focus_get_first_element(focus);
+			ret = pv_focus_clear_to_first_layer(focus);
+			et_assertf(ret, "%d", doc_id);
+			et_assert(element != pv_focus_get_first_layer(focus));
+		}else{
+			element = focus->elements[i];
+			ret = pv_focus_remove_element(focus, element);
+			et_assertf(ret, "%d", doc_id);
+		}
+
+		ret = pv_element_remove_free_recursive(element);
+		et_assertf(ret, "%d", doc_id);
+	}
+
+failure:
 	_signal_et_etaion_change_state(self);
 	et_doc_signal_update_from_id((self->state).doc_id);
 

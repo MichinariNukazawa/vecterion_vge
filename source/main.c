@@ -1065,6 +1065,23 @@ static gboolean _cb_menu_edit_redo(gpointer data)
 	return false;
 }
 
+static gboolean _cb_menu_edit_delete_element(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		//_show_error_dialog("Close:nothing document.");
+		//et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	if(!et_etaion_remove_delete_object_elements(doc_id)){
+		et_error("");
+		return false;
+	}
+
+	return false;
+}
+
 static gboolean _cb_menu_layer_new(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
@@ -1683,6 +1700,14 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_edit(GtkAccelGroup *accel_group)
 	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_edit_redo), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_z, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
+
+	// ** Accel to "/_Edit/_Delete (Delete)"
+	menuitem = gtk_menu_item_new_with_label ("_Delete Elements");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_edit_delete_element), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_Delete, 0, GTK_ACCEL_VISIBLE);
 
 	return menuitem_root;
 }
