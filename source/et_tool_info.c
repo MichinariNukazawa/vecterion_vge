@@ -896,121 +896,107 @@ static int _et_tool_curve_add_anchor_point(EtDoc *doc, PvElement **_element, dou
 	return (pv_element_curve_get_num_anchor_point(*_element) - 1);
 }
 
+static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action)
+{
+	PvElement *_element = pv_focus_get_first_element(focus);
+
+	bool is_closed = false;
+	if(NULL != _element && PvElementKind_Curve == _element->kind){
+		PvElementCurveData *_data = (PvElementCurveData *) _element->data;
+		et_assert(_data);
+		if(pv_bezier_get_is_close(_data->bezier)){
+			// if already closed is goto new anchor_point
+			_element = NULL;
+		}else{
+			if(0 < pv_bezier_get_anchor_point_num(_data->bezier)){
+				const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(_data->bezier, 0);
+				if(_is_bound_point(
+							PX_SENSITIVE_OF_TOUCH,
+							ap->points[PvAnchorPointIndex_Point],
+							mouse_action.point)
+				  ){
+					// ** do close anchor_point
+					is_closed = true;
+					pv_bezier_set_is_close(_data->bezier, is_closed);
+					pv_focus_clear_set_element_index(focus, _element, 0);
+				}
+			}
+		}
+	}
+
+	// ** new anchor_point
+	if(!is_closed){
+		int index = _et_tool_curve_add_anchor_point(
+				doc, &_element,
+				mouse_action.point.x, mouse_action.point.y);
+		et_assert(0 <= index);
+		pv_focus_clear_set_element_index(focus, _element, index);
+	}
+}
+
+static bool add_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action)
+{
+	if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
+		return true;
+	}
+
+	PvElement *_element = pv_focus_get_first_element(focus);
+	et_assert(_element);
+	if(PvElementKind_Curve != _element->kind){
+		et_error("");
+		return false;
+	}
+
+	PvElementCurveData *_data =(PvElementCurveData *) _element->data;
+	et_assert(_data);
+
+	PvAnchorPoint *ap = NULL;
+	if(pv_bezier_get_is_close(_data->bezier)){
+		ap = pv_bezier_get_anchor_point_from_index(_data->bezier, 0);
+	}else{
+		size_t num = pv_bezier_get_anchor_point_num(_data->bezier);
+		ap = pv_bezier_get_anchor_point_from_index(_data->bezier, ((int)num - 1));
+	}
+
+	PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
+	PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
+	if(fabs(p_diff.x) < PX_SENSITIVE_OF_TOUCH
+			&& fabs(p_diff.y) < PX_SENSITIVE_OF_TOUCH)
+	{
+		pv_anchor_point_set_handle_zero(
+				ap,
+				PvAnchorPointIndex_Point);
+	}else{
+		pv_anchor_point_set_handle(
+				ap,
+				PvAnchorPointIndex_Point,
+				mouse_action.point);
+	}
+
+	return true;
+}
+
 static bool _func_add_anchor_point_mouse_action(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
-	bool result = true;
-
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
-	if(NULL == doc){
-		et_error("");
-		result = false;
-		goto finally;
-	}
-
+	et_assertf(doc, "%d", doc_id);
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-	if(NULL == focus){
-		et_error("");
-		result = false;
-		goto finally;
-	}
+	et_assertf(focus, "%d", doc_id);
+
+	bool result = true;
 
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
 			{
-				et_debug(" x:%d, y:%d,",
-						(int)mouse_action.point.x,
-						(int)mouse_action.point.y);
-
-				PvElement *_element = pv_focus_get_first_element(focus);
-
-				bool is_closed = false;
-				if(NULL != _element && PvElementKind_Curve == _element->kind){
-					PvElementCurveData *_data = (PvElementCurveData *) _element->data;
-					if(NULL == _data){
-						et_error("");
-						result = false;
-						goto finally;
-					}
-					if(pv_bezier_get_is_close(_data->bezier)){
-						// if already closed is goto new anchor_point
-						_element = NULL;
-					}else{
-						if(0 < pv_bezier_get_anchor_point_num(_data->bezier)){
-							const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(_data->bezier, 0);
-							if(_is_bound_point(
-										PX_SENSITIVE_OF_TOUCH,
-										ap->points[PvAnchorPointIndex_Point],
-										mouse_action.point)
-							  ){
-								// ** do close anchor_point
-								is_closed = true;
-								pv_bezier_set_is_close(_data->bezier, is_closed);
-								pv_focus_clear_set_element_index(focus, _element, 0);
-							}
-						}
-					}
-				}
-
-				// ** new anchor_point
-				if(!is_closed){
-					int index = _et_tool_curve_add_anchor_point(
-							doc, &_element,
-							mouse_action.point.x, mouse_action.point.y);
-					if(0 > index){
-						et_error("");
-						result = false;
-						goto finally;
-					}else{
-						pv_focus_clear_set_element_index(focus, _element, index);
-					}
-				}
-
+				add_anchor_point_down_(doc, focus, mouse_action);
 			}
 			break;
 		case EtMouseAction_Up:
 			break;
 		case EtMouseAction_Move:
 			{
-				if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
-					break;
-				}
-
-				PvElement *_element = pv_focus_get_first_element(focus);
-				if(NULL == _element || PvElementKind_Curve != _element->kind){
-					et_error("");
-					result = false;
-					goto finally;
-				}
-
-				PvElementCurveData *_data =(PvElementCurveData *) _element->data;
-				if(NULL == _data){
-					et_error("");
-					result = false;
-					goto finally;
-				}
-				PvAnchorPoint *ap = NULL;
-				if(pv_bezier_get_is_close(_data->bezier)){
-					ap = pv_bezier_get_anchor_point_from_index(_data->bezier, 0);
-				}else{
-					size_t num = pv_bezier_get_anchor_point_num(_data->bezier);
-					ap = pv_bezier_get_anchor_point_from_index(_data->bezier, ((int)num - 1));
-				}
-
-				PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
-				PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
-				if(fabs(p_diff.x) < PX_SENSITIVE_OF_TOUCH
-						&& fabs(p_diff.y) < PX_SENSITIVE_OF_TOUCH)
-				{
-					pv_anchor_point_set_handle_zero(
-							ap,
-							PvAnchorPointIndex_Point);
-				}else{
-					pv_anchor_point_set_handle(
-							ap,
-							PvAnchorPointIndex_Point,
-							mouse_action.point);
-				}
+				result = add_anchor_point_move_(doc, focus, mouse_action);
 			}
 			break;
 		case EtMouseAction_Unknown:
@@ -1019,7 +1005,6 @@ static bool _func_add_anchor_point_mouse_action(
 			break;
 	}
 
-finally:
 	et_doc_set_element_group_edit_draw_from_id(doc_id, NULL);
 
 	return result;
