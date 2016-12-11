@@ -598,7 +598,8 @@ static PvElement *_element_new_from_circle(PvPoint center, double size)
 	return pv_element_curve_new_from_rect(rect);
 }
 
-static bool _et_tool_focus_element_mouse_action(EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
+static bool _func_edit_element_mouse_action(
+		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
 	static PvElement *_touch_element = NULL;
 	static bool _is_already_focus = false;
@@ -895,7 +896,8 @@ static int _et_tool_curve_add_anchor_point(EtDoc *doc, PvElement **_element, dou
 	return (pv_element_curve_get_num_anchor_point(*_element) - 1);
 }
 
-static bool _et_tool_curve_mouse_action(EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
+static bool _func_add_anchor_point_mouse_action(
+		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
 	bool result = true;
 
@@ -1116,7 +1118,7 @@ static bool _move_elements_anchor_points(EtDocId doc_id, EtMouseAction mouse_act
 	return true;
 }
 
-static bool _et_tool_edit_anchor_point_mouse_action(
+static bool _func_edit_anchor_point_mouse_action(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
 	bool result = true;
@@ -1270,7 +1272,7 @@ static int _edit_anchor_point_handle_grub_focus(PvFocus *focus, EtMouseAction mo
 	return handle;
 }
 
-static bool _et_tool_edit_anchor_point_handle_mouse_action(
+static bool _func_edit_anchor_point_handle_mouse_action(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
 	bool result = true;
@@ -1373,7 +1375,7 @@ static void curve_element_split_from_index_(PvElement *elements[2], PvElement *e
 	}
 }
 
-static bool _et_tool_anchor_point_knife_mouse_action(
+static bool _func_knife_anchor_point_mouse_action(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
@@ -1443,7 +1445,7 @@ EtToolInfo _et_tool_infos[] = {
 		.icon_cursor = NULL,
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_element_allow_24x24.svg",
-		.func_mouse_action = _et_tool_focus_element_mouse_action,
+		.func_mouse_action = _func_edit_element_mouse_action,
 		.mouse_cursor = NULL,
 	},
 	{
@@ -1454,7 +1456,7 @@ EtToolInfo _et_tool_infos[] = {
 		.icon_cursor = NULL,
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_put_allow_24x24.svg",
-		.func_mouse_action = _et_tool_curve_mouse_action,
+		.func_mouse_action = _func_add_anchor_point_mouse_action,
 		.mouse_cursor = NULL,
 	},
 	{
@@ -1465,7 +1467,7 @@ EtToolInfo _et_tool_infos[] = {
 		.icon_cursor = NULL,
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_edit_allow_24x24.svg",
-		.func_mouse_action = _et_tool_edit_anchor_point_mouse_action,
+		.func_mouse_action = _func_edit_anchor_point_mouse_action,
 		.mouse_cursor = NULL,
 	},
 	{
@@ -1476,7 +1478,7 @@ EtToolInfo _et_tool_infos[] = {
 		.icon_cursor = NULL,
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_handle_allow_24x24.svg",
-		.func_mouse_action = _et_tool_edit_anchor_point_handle_mouse_action,
+		.func_mouse_action = _func_edit_anchor_point_handle_mouse_action,
 		.mouse_cursor = NULL,
 	},
 	{
@@ -1487,7 +1489,7 @@ EtToolInfo _et_tool_infos[] = {
 		.icon_cursor = NULL,
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_knife_24x24.svg",
-		.func_mouse_action = _et_tool_anchor_point_knife_mouse_action,
+		.func_mouse_action = _func_knife_anchor_point_mouse_action,
 		.mouse_cursor = NULL,
 	},
 };
