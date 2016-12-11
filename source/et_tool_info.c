@@ -339,10 +339,10 @@ static EdgeKind _resize_elements(
 
 	//! @todo delta needed?
 	/*
-	const double DELTA_OF_RESIZE = 0.001;
-	resize.x = ((fabs(resize.x) > DELTA_OF_RESIZE) ? resize.x : DELTA_OF_RESIZE);
-	resize.y = ((fabs(resize.y) > DELTA_OF_RESIZE) ? resize.y : DELTA_OF_RESIZE);
-	*/
+	   const double DELTA_OF_RESIZE = 0.001;
+	   resize.x = ((fabs(resize.x) > DELTA_OF_RESIZE) ? resize.x : DELTA_OF_RESIZE);
+	   resize.y = ((fabs(resize.y) > DELTA_OF_RESIZE) ? resize.y : DELTA_OF_RESIZE);
+	 */
 
 	int num = pv_general_get_parray_num((void **)focus->elements);
 	for(int i = 0; i < num; i++){
@@ -1348,6 +1348,92 @@ finally:
 	return result;
 }
 
+static void curve_element_split_from_index_(PvElement *elements[2], PvElement *element, int index)
+{
+	et_assertf(PvElementKind_Curve == element->kind, "%d", element->kind);
+
+	PvElementCurveData *data = element->data;
+	PvBezier *bezier = data->bezier;
+	if(pv_bezier_get_is_close(bezier)){
+		bool ret = pv_bezier_split_anchor_point_from_index(bezier, index);
+		et_assert(ret);
+
+		elements[0] = NULL;
+		elements[1] = NULL;
+	}else{
+		PvElement *head_element = pv_element_curve_copy_new_range(element, 0, index);
+		et_assert(head_element);
+
+		size_t num = pv_bezier_get_anchor_point_num(bezier);
+		PvElement *foot_element = pv_element_curve_copy_new_range(element, index, ((int)num - 1));
+		et_assert(foot_element);
+
+		elements[0] = head_element;
+		elements[1] = foot_element;
+	}
+}
+
+static bool _et_tool_anchor_point_knife_mouse_action(
+		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
+{
+	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
+	et_assertf(doc, "%d", doc_id);
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	et_assertf(focus, "%d", doc_id);
+
+	PvElement *element = pv_focus_get_first_element(focus);
+	et_assertf(element, "%d", doc_id);
+
+	switch(mouse_action.action){
+		case EtMouseAction_Down:
+			{
+				const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+				if(PvElementKind_Curve != element->kind){
+					//! check element able edit and open path
+					return true;
+				}
+
+				int index = -1;
+				int num = info->func_get_num_anchor_point(element);
+				for(int i = 0; i < num; i++){
+					const PvAnchorPoint ap = info->func_get_anchor_point(element, i);
+					if(_is_bound_point(
+								PX_SENSITIVE_OF_TOUCH,
+								ap.points[PvAnchorPointIndex_Point],
+								mouse_action.point)){
+						index = i;
+						break;
+					}
+				}
+				if(-1 == index){
+					return true;
+				}
+
+				PvElement *elements[2] = {NULL, NULL,};
+				curve_element_split_from_index_(elements, element, index);
+				if(NULL != elements[0] && NULL != elements[1]){
+					pv_focus_clear_to_first_layer(focus);
+					PvElement *parent_layer = pv_focus_get_first_layer(focus);
+					pv_element_append_child(parent_layer, element, elements[0]);
+					pv_element_append_child(parent_layer, element, elements[1]);
+					pv_element_remove_free_recursive(element);
+					pv_focus_add_element(focus, elements[0]);
+					pv_focus_add_element(focus, elements[1]);
+				}
+			}
+			break;
+		case EtMouseAction_Up:
+			{
+				et_doc_save_from_id(doc_id);
+			}
+			break;
+		default:
+			break;
+	}
+
+	return true;
+}
+
 EtToolInfo _et_tool_infos[] = {
 	{
 		.tool_id = EtToolId_FocusElement, 
@@ -1391,6 +1477,17 @@ EtToolInfo _et_tool_infos[] = {
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_handle_allow_24x24.svg",
 		.func_mouse_action = _et_tool_edit_anchor_point_handle_mouse_action,
+		.mouse_cursor = NULL,
+	},
+	{
+		.tool_id = 4,
+		.name = "Knife Anchor Point",
+		.icon = NULL,
+		.icon_focus = NULL,
+		.icon_cursor = NULL,
+		.filepath_icon = NULL,
+		.filepath_cursor = "resource/tool/tool_anchor_point_knife_24x24.svg",
+		.func_mouse_action = _et_tool_anchor_point_knife_mouse_action,
 		.mouse_cursor = NULL,
 	},
 };

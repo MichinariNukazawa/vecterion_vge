@@ -674,6 +674,25 @@ PvElement *pv_element_curve_new_from_rect(PvRect rect)
 	return self;
 }
 
+PvElement *pv_element_curve_copy_new_range(const PvElement *src_element, int head, int foot)
+{
+	PvElementCurveData *src_data = src_element->data;
+	PvBezier *src_bezier = src_data->bezier;
+
+	PvElement *dst_element = _pv_element_copy_single(src_element);
+	pv_assert(dst_element);
+
+	PvBezier *dst_bezier = pv_bezier_copy_new_range(src_bezier, head, foot);
+	pv_assert(dst_bezier);
+
+	PvElementCurveData *dst_data = dst_element->data;
+	PvBezier *old_bezier = dst_data->bezier;
+	dst_data->bezier = dst_bezier;
+	pv_bezier_free(old_bezier);
+
+	return dst_element;
+}
+
 bool pv_element_curve_add_anchor_point(PvElement *self, const PvAnchorPoint anchor_point)
 {
 	pv_assert(self);
