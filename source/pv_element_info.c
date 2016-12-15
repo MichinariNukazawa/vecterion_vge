@@ -405,7 +405,7 @@ static PvElement *_curve_simplify_new(
 	for(int i = 0; i < (int)num; i++){
 		PvPoint point = {0, 0};
 		PvPoint scale = {render_context.scale, render_context.scale};
-		PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(simplify_data->bezier, i);
+		PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(simplify_data->bezier, i, PvBezierIndexTurn_Disable);
 		_curve_rescale_anchor_point(ap, point, scale);
 	}
 
@@ -453,7 +453,7 @@ void _curve_command_path(
 
 	// ** path stroking
 	for(int i = 0; i < (int)num; i++){
-		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
+		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i, PvBezierIndexTurn_Disable);
 		PvPoint point = pv_anchor_point_get_point(ap);
 		if(0 == i){
 			if(1 == num){
@@ -463,7 +463,7 @@ void _curve_command_path(
 				cairo_move_to(cr, point.x, point.y);
 			}
 		}else{
-			const PvAnchorPoint *ap_prev = pv_bezier_get_anchor_point_from_index(data->bezier, (i - 1));
+			const PvAnchorPoint *ap_prev = pv_bezier_get_anchor_point_from_index(data->bezier, (i - 1), PvBezierIndexTurn_Disable);
 
 			PvPoint first_point = pv_anchor_point_get_handle(ap_prev, PvAnchorPointIndex_HandleNext);
 			PvPoint second_point = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandlePrev);
@@ -477,12 +477,12 @@ void _curve_command_path(
 
 	}
 	if(pv_bezier_get_is_close(data->bezier)){
-		PvPoint point = pv_anchor_point_get_point(pv_bezier_get_anchor_point_from_index(data->bezier, 0));
+		PvPoint point = pv_anchor_point_get_point(pv_bezier_get_anchor_point_from_index(data->bezier, 0, PvBezierIndexTurn_Disable));
 
-		const PvAnchorPoint *ap_last = pv_bezier_get_anchor_point_from_index(data->bezier, ((int)num - 1));
+		const PvAnchorPoint *ap_last = pv_bezier_get_anchor_point_from_index(data->bezier, ((int)num - 1), PvBezierIndexTurn_Disable);
 		PvPoint first_point = pv_anchor_point_get_handle(ap_last, PvAnchorPointIndex_HandleNext);
 
-		const PvAnchorPoint *ap_first = pv_bezier_get_anchor_point_from_index(data->bezier, 0);
+		const PvAnchorPoint *ap_first = pv_bezier_get_anchor_point_from_index(data->bezier, 0, PvBezierIndexTurn_Disable);
 		PvPoint second_point = pv_anchor_point_get_handle(ap_first, PvAnchorPointIndex_HandlePrev);
 
 		cairo_curve_to(
@@ -618,7 +618,7 @@ static void _curve_rotate(PvElement *element, double degree, PvPoint center)
 
 	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
 	for(int i = 0; i < (int)num; i++){
-		PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
+		PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i, PvBezierIndexTurn_Disable);
 		_anchor_point_rotate(ap, degree, center);
 	}
 }
@@ -700,7 +700,7 @@ static int _func_curve_write_svg(
 	char *str_current = NULL;
 	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
 	for(int i = 0; i < (int)num; i++){
-		const PvAnchorPoint *ap_ = pv_bezier_get_anchor_point_from_index(data->bezier, i);
+		const PvAnchorPoint *ap_ = pv_bezier_get_anchor_point_from_index(data->bezier, i, PvBezierIndexTurn_Disable);
 		const PvAnchorPoint ap = *ap_;
 
 		char *str_point = NULL;
@@ -713,7 +713,7 @@ static int _func_curve_write_svg(
 					);
 		}else{
 			// other (not first)(true last)
-			const PvAnchorPoint *ap_prev_ = pv_bezier_get_anchor_point_from_index(data->bezier, (i - 1));
+			const PvAnchorPoint *ap_prev_ = pv_bezier_get_anchor_point_from_index(data->bezier, (i - 1), PvBezierIndexTurn_Disable);
 			const PvAnchorPoint ap_prev = *ap_prev_;
 			str_point = _curve_new_str_from_anchor(ap, ap_prev);
 		}
@@ -738,8 +738,8 @@ static int _func_curve_write_svg(
 	}
 
 	if(pv_bezier_get_is_close(data->bezier) && 0 < num){
-		const PvAnchorPoint *ap_first = pv_bezier_get_anchor_point_from_index(data->bezier, 0);
-		const PvAnchorPoint *ap_last = pv_bezier_get_anchor_point_from_index(data->bezier, (num - 1));
+		const PvAnchorPoint *ap_first = pv_bezier_get_anchor_point_from_index(data->bezier, 0, PvBezierIndexTurn_Disable);
+		const PvAnchorPoint *ap_last = pv_bezier_get_anchor_point_from_index(data->bezier, (num - 1), PvBezierIndexTurn_Disable);
 		char *str_end = _curve_new_str_from_anchor(*ap_first, *ap_last);
 		char *str_prev = str_current;
 		str_current = g_strjoin(" ", str_current, str_end, "Z", NULL);
@@ -824,7 +824,7 @@ static bool _func_curve_draw_focusing(
 	for(int i = 0; i < (int)num; i++){
 		int ofs_index = (i - focus->index);
 		if(-1 != focus->index){
-			const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(simplify_data->bezier, i);
+			const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(simplify_data->bezier, i, PvBezierIndexTurn_Disable);
 			if(abs(ofs_index) <= 1){
 				// * anchor handle. draw to focus and +-1
 				_curve_draw_anchor_handle(cr, *ap, ofs_index);
@@ -836,7 +836,7 @@ static bool _func_curve_draw_focusing(
 		}
 
 		// draw AnchorPoint
-		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(simplify_data->bezier, i);
+		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(simplify_data->bezier, i, PvBezierIndexTurn_Disable);
 		PvPoint p = ap->points[PvAnchorPointIndex_Point];
 		PvElementPointKind kind = ((i == focus->index)?
 				PvElementPointKind_Selected : PvElementPointKind_Normal);
@@ -904,7 +904,7 @@ static bool _func_curve_is_overlap_rect(
 
 	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
 	for(int i = 0; i < (int)num; i++){
-		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
+		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i, PvBezierIndexTurn_Disable);
 		PvPoint a_point = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
 		if(pv_rect_is_inside(rect_offseted, a_point)){
 			*is_overlap = true;
@@ -954,7 +954,7 @@ static bool _func_curve_move_element(
 
 	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
 	for(int i = 0; i < (int)num; i++){
-		PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
+		PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i, PvBezierIndexTurn_Disable);
 		ap->points[PvAnchorPointIndex_Point].x += gx;
 		ap->points[PvAnchorPointIndex_Point].y += gy;
 	}
@@ -994,7 +994,7 @@ static PvAnchorPoint _func_curve_get_anchor_point(
 
 	PvElementCurveData *data = element->data;
 
-	const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, index);
+	const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, index, PvBezierIndexTurn_Disable);
 	return *ap;
 }
 
@@ -1009,7 +1009,7 @@ static bool _func_curve_set_anchor_point_point(
 	PvElementCurveData *data = element->data;
 	assert(data);
 
-	PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, index);
+	PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, index, PvBezierIndexTurn_Disable);
 	pv_anchor_point_set_point(ap, point);
 
 	return true;
@@ -1026,7 +1026,7 @@ static bool _func_curve_move_anchor_point(
 	PvElementCurveData *data = element->data;
 	assert(data);
 
-	PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, index);
+	PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, index, PvBezierIndexTurn_Disable);
 	ap->points[PvAnchorPointIndex_Point].x += move.x;
 	ap->points[PvAnchorPointIndex_Point].y += move.y;
 
@@ -1044,7 +1044,7 @@ static PvRect _func_curve_get_rect_by_anchor_points(
 	PvPoint min = (PvPoint){0, 0};
 	PvPoint max = (PvPoint){0, 0};
 	for(int i = 0; i < (int)num; i++){
-		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
+		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i, PvBezierIndexTurn_Disable);
 		PvPoint point = ap->points[PvAnchorPointIndex_Point];
 		if(0 == i){
 			min = point;
@@ -1072,7 +1072,7 @@ static PvPoint _curve_get_point_by_anchor_points(
 	PvPoint point = PvPoint_Default;
 	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
 	for(int i = 0; i < (int)num; i++){
-		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
+		const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i, PvBezierIndexTurn_Disable);
 		PvPoint a_point = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
 
 		if(0 == i){
@@ -1100,7 +1100,7 @@ static void _curve_set_point_by_anchor_points(
 
 	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
 	for(int i = 0; i < (int)num; i++){
-		PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
+		PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i, PvBezierIndexTurn_Disable);
 
 		pv_anchor_point_move_point(ap, move);
 	}
@@ -1128,7 +1128,7 @@ static bool _func_curve_set_rect_by_anchor_points(
 
 	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
 	for(int i = 0; i < (int)num; i++){
-		PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i);
+		PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, i, PvBezierIndexTurn_Disable);
 		_curve_rescale_anchor_point(ap, point, scale);
 	}
 

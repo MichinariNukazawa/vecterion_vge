@@ -78,6 +78,32 @@ PvPoint pv_point_abs(PvPoint p)
 	return ret;
 }
 
+PvPoint pv_point_exchange(PvPoint p)
+{
+	PvPoint ret = {
+		.x = p.y,
+		.y = p.x,
+	};
+
+	return ret;
+}
+
+PvPoint pv_point_subdivide(PvPoint start, PvPoint end, double percent)
+{
+	PvPoint diff = pv_point_sub(end, start);
+	PvPoint ret = pv_point_add(start, pv_point_mul_value(diff, (percent / 100.0)));
+
+	return ret;
+}
+
+double pv_point_distance(PvPoint p0, PvPoint p1)
+{
+	PvPoint p = pv_point_abs(pv_point_sub(p0, p1));
+	double ret = sqrt((p.x * p.x) + (p.y * p.y));
+
+	return ret;
+}
+
 bool pv_point_is_diff(PvPoint point0, PvPoint point1)
 {
 	if(point0.x != point1.x){

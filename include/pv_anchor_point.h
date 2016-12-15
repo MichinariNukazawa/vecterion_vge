@@ -25,6 +25,13 @@ static const PvAnchorPoint PvAnchorPoint_Default = {
 	.points = {{0,0}, {0,0}, {0,0}, },
 };
 
+typedef struct{
+	PvPoint points[4];
+}PvAnchorPointP4;
+static const PvAnchorPointP4 PvAnchorPointP4_Default = {
+	.points = {{0,0}, {0,0}, {0,0}, {0,0}, },
+};
+
 
 
 PvAnchorPoint pv_anchor_point_from_point(PvPoint);

@@ -909,7 +909,7 @@ static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mou
 			_element = NULL;
 		}else{
 			if(0 < pv_bezier_get_anchor_point_num(_data->bezier)){
-				const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(_data->bezier, 0);
+				const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(_data->bezier, 0, PvBezierIndexTurn_Disable);
 				if(_is_bound_point(
 							PX_SENSITIVE_OF_TOUCH,
 							ap->points[PvAnchorPointIndex_Point],
@@ -934,7 +934,7 @@ static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mou
 	}
 }
 
-static bool add_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action)
+static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action)
 {
 	if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
 		return true;
@@ -947,16 +947,19 @@ static bool add_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction mou
 		return false;
 	}
 
-	PvElementCurveData *_data =(PvElementCurveData *) _element->data;
+	PvElementCurveData *_data = (PvElementCurveData *) _element->data;
 	et_assert(_data);
 
-	PvAnchorPoint *ap = NULL;
-	if(pv_bezier_get_is_close(_data->bezier)){
-		ap = pv_bezier_get_anchor_point_from_index(_data->bezier, 0);
-	}else{
-		size_t num = pv_bezier_get_anchor_point_num(_data->bezier);
-		ap = pv_bezier_get_anchor_point_from_index(_data->bezier, ((int)num - 1));
+	int index = pv_focus_get_index(focus);
+	if(-1 == index){
+		if(pv_bezier_get_is_close(_data->bezier)){
+			index = 0;
+		}else{
+			size_t num = pv_bezier_get_anchor_point_num(_data->bezier);
+			index = (int)num;
+		}
 	}
+	PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(_data->bezier, index, PvBezierIndexTurn_Disable);
 
 	PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
 	PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
@@ -996,7 +999,7 @@ static bool _func_add_anchor_point_mouse_action(
 			break;
 		case EtMouseAction_Move:
 			{
-				result = add_anchor_point_move_(doc, focus, mouse_action);
+				result = focused_anchor_point_move_(doc, focus, mouse_action);
 			}
 			break;
 		case EtMouseAction_Unknown:
@@ -1186,7 +1189,7 @@ PvAnchorPoint *_get_focus_anchor_point(const PvFocus *focus){
 	PvElementCurveData *data = element->data;
 	int num_ap = pv_element_curve_get_num_anchor_point(element);
 	assert(focus->index < num_ap);
-	PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, focus->index);
+	PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, focus->index, PvBezierIndexTurn_Disable);
 
 	return ap;
 }
@@ -1421,6 +1424,204 @@ static bool _func_knife_anchor_point_mouse_action(
 	return true;
 }
 
+PvPoint pv_bezier_get_subdivide_point_from_percent(PvBezier *bezier, int index, double per)
+{
+	PvAnchorPointP4 p4;
+	bool ret = pv_bezier_get_anchor_point_p4_from_index(bezier, &p4, index);
+	et_assert(ret);
+
+	double t = per / 100.0;
+	double tp = 1 - t;
+	PvPoint p = {
+		.x = t*t*t*p4.points[3].x + 3*t*t*tp*p4.points[2].x
+			+ 3*t*tp*tp*p4.points[1].x + tp*tp*tp*p4.points[0].x,
+		.y = t*t*t*p4.points[3].y + 3*t*t*tp*p4.points[2].y
+			+ 3*t*tp*tp*p4.points[1].y + tp*tp*tp*p4.points[0].y,
+	};
+
+	return p;
+}
+
+/*
+{
+	PvAnchorPointP4 p4;
+	bool ret = pv_bezier_get_anchor_point_p4_from_index(bezier, &p4, index);
+	et_assert(ret);
+
+	double t = per / 100.0;
+	double tp = 1 - t;
+	PvPoint p = {
+		.x = 3*(t*t*(p4.points[3].x-p4.points[2].x)
+				+2*t*tp*(p4.points[2].x-p4.points[1].x)
+				+tp*tp*(p4.points[1].x-p4.points[0].x)),
+		.y = 3*(t*t*(p4.points[3].y-p4.points[2].y)
+				+2*t*tp*(p4.points[2].y-p4.points[1].y)
+				+tp*tp*(p4.points[1].y-p4.points[0].y)),
+	};
+
+	return p;
+}
+*/
+
+static void element_curve_get_nearest_index_percent_(
+		int *index,
+		int *percent,
+		double px_sensitive,
+		const PvElement *element,
+		EtMouseAction mouse_action)
+{
+	double near_diff = px_sensitive + 1.0;
+	*index = -1;
+	*percent = -1;
+	size_t num = pv_element_curve_get_num_anchor_point(element);
+	for(int ix = 0; ix < (int)num; ix++){
+		for(int per = 1; per <= 99; per++){
+			PvElementCurveData *data = (PvElementCurveData *)element->data;
+			et_assert(data);
+
+			PvPoint point = pv_bezier_get_subdivide_point_from_percent(data->bezier, ix, per);
+			double diff = pv_point_distance(point, mouse_action.point);
+			if(diff < near_diff){
+				near_diff = diff;
+				*index = ix;
+				*percent = per;
+			}
+		}
+	}
+
+	return;
+}
+
+void pv_bezier_get_subdivide_anchor_ponts_form_percent(
+		PvAnchorPoint dst_aps[3],
+		PvBezier *bezier,
+		int index,
+		double percent)
+{
+	PvAnchorPoint *ap_prev = pv_bezier_get_anchor_point_from_index(bezier, index, PvBezierIndexTurn_Disable);
+	et_assert(ap_prev);
+	PvAnchorPoint *ap_next = pv_bezier_get_anchor_point_from_index(bezier, index + 1, PvBezierIndexTurn_OnlyLastInClosed);
+	et_assert(ap_next);
+	dst_aps[0] = *ap_prev;
+	dst_aps[1] = PvAnchorPoint_Default;
+	dst_aps[2] = *ap_next;
+
+	PvPoint p0 = pv_anchor_point_get_point(ap_prev);
+	PvPoint pn = pv_bezier_get_subdivide_point_from_percent(bezier, index, percent);
+	PvPoint p1 = pv_anchor_point_get_point(ap_next);
+
+	PvPoint p0_handle_next = pv_anchor_point_get_handle(ap_prev, PvAnchorPointIndex_HandleNext);
+	PvPoint p1_handle_prev = pv_anchor_point_get_handle(ap_next, PvAnchorPointIndex_HandlePrev);
+
+	PvPoint p0_handle_next_dst = pv_point_subdivide(p0, p0_handle_next, percent);
+	PvPoint p1_handle_prev_dst = pv_point_subdivide(p1, p1_handle_prev, (100.0 - percent));
+
+	PvPoint handle_center = pv_point_subdivide(p0_handle_next, p1_handle_prev, percent);
+	PvPoint pn_handle_prev = pv_point_subdivide(p0_handle_next_dst, handle_center, percent);
+	PvPoint pn_handle_next = pv_point_subdivide(handle_center, p1_handle_prev_dst, percent);
+
+	pv_anchor_point_set_handle(&dst_aps[0], PvAnchorPointIndex_HandleNext, p0_handle_next_dst);
+	pv_anchor_point_set_point(&dst_aps[1], pn);
+	pv_anchor_point_set_handle(&dst_aps[1], PvAnchorPointIndex_HandlePrev, pn_handle_prev);
+	pv_anchor_point_set_handle(&dst_aps[1], PvAnchorPointIndex_HandleNext, pn_handle_next);
+	pv_anchor_point_set_handle(&dst_aps[2], PvAnchorPointIndex_HandlePrev, p1_handle_prev_dst);
+}
+
+int element_curve_insert_anchor_point_from_index_percent_(
+		PvElement *element, int index, double percent)
+{
+	PvElementCurveData *data = (PvElementCurveData *)element->data;
+	et_assert(data);
+
+	PvAnchorPoint dst_aps[3];
+	pv_bezier_get_subdivide_anchor_ponts_form_percent(dst_aps, data->bezier, index, percent);
+	int new_index = pv_bezier_insert_anchor_point(data->bezier, dst_aps[1], index);
+
+	// last anchor_point -> first anchor_point
+	int prev_index = new_index - 1;
+	int next_index = new_index + 1;
+	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
+	if(next_index == (int)num){
+		next_index = 0;
+	}
+
+	bool ret;
+	ret = pv_bezier_set_anchor_point_from_index(data->bezier, prev_index, dst_aps[0]);
+	et_assert(ret);
+	ret = pv_bezier_set_anchor_point_from_index(data->bezier, next_index, dst_aps[2]);
+	et_assert(ret);
+
+	/*
+	   PvPoint point = pv_bezier_get_subdivide_point_from_percent(data->bezier, index, percent);
+	   PvAnchorPoint ap = PvAnchorPoint_Default;
+	   pv_anchor_point_set_point(&ap, point);
+	   int new_index = pv_bezier_insert_anchor_point(data->bezier, ap, index);
+	 */
+	// @todo handle.
+
+	et_debug("%d", new_index);
+	return new_index;
+}
+
+static int insert_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action)
+{
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < (int)num; i++){
+		if(PvElementKind_Curve != focus->elements[i]->kind){
+			continue;
+		}
+
+		int percent = -1;
+		int index = -1;
+		element_curve_get_nearest_index_percent_(
+				&index, &percent,
+				PX_SENSITIVE_OF_TOUCH,
+				focus->elements[i], mouse_action);
+		if(-1 != index){
+			int new_index = element_curve_insert_anchor_point_from_index_percent_(
+					focus->elements[i], index, percent);
+			if(-1 != new_index){
+				bool ret = pv_focus_clear_set_element_index(
+						focus,
+						pv_focus_get_first_element(focus),
+						new_index);
+				et_assertf(ret, "%d", new_index);
+			}
+			return new_index;
+		}
+	}
+
+	return -1;
+}
+
+static bool _func_insert_anchor_point_mouse_action(
+		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
+{
+	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
+	et_assertf(doc, "%d", doc_id);
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	et_assertf(focus, "%d", doc_id);
+
+	switch(mouse_action.action){
+		case EtMouseAction_Down:
+			{
+				insert_anchor_point_down_(doc, focus, mouse_action);
+			}
+			break;
+		case EtMouseAction_Move:
+			break;
+		case EtMouseAction_Up:
+			{
+				et_doc_save_from_id(doc_id);
+			}
+			break;
+		default:
+			break;
+	}
+
+	return true;
+}
+
 EtToolInfo _et_tool_infos[] = {
 	{
 		.tool_id = EtToolId_FocusElement, 
@@ -1475,6 +1676,17 @@ EtToolInfo _et_tool_infos[] = {
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_knife_24x24.svg",
 		.func_mouse_action = _func_knife_anchor_point_mouse_action,
+		.mouse_cursor = NULL,
+	},
+	{
+		.tool_id = 5,
+		.name = "Insert Anchor Point",
+		.icon = NULL,
+		.icon_focus = NULL,
+		.icon_cursor = NULL,
+		.filepath_icon = NULL,
+		.filepath_cursor = "resource/tool/tool_anchor_point_put_allow_plus_24x24.svg",
+		.func_mouse_action = _func_insert_anchor_point_mouse_action,
 		.mouse_cursor = NULL,
 	},
 };

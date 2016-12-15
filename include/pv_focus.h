@@ -19,6 +19,7 @@ bool pv_focus_remove_element(PvFocus *focus, PvElement *element);
 // void pv_focus_detouch_element(PvFocus *focus, const PvElement *element);
 PvElement *pv_focus_get_first_element(const PvFocus *focus);
 PvElement *pv_focus_get_first_layer(const PvFocus *focus);
+int pv_focus_get_index(const PvFocus *focus);
 bool pv_focus_clear_set_element(PvFocus *focus, PvElement *element);
 bool pv_focus_clear_set_element_index(PvFocus *focus, PvElement *element, int index);
 bool pv_focus_clear_to_first_layer(PvFocus *focus);

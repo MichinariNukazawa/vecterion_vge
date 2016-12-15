@@ -187,6 +187,12 @@ PvElement *pv_focus_get_first_layer(const PvFocus *focus)
 	return element;
 }
 
+int pv_focus_get_index(const PvFocus *focus)
+{
+	pv_assert(focus);
+	return focus->index;
+}
+
 bool pv_focus_clear_set_element_index(PvFocus *focus, PvElement *element, int index)
 {
 	if(NULL == focus){

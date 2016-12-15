@@ -53,11 +53,25 @@ PvBezier *pv_bezier_copy_new(const PvBezier *self)
 	return new_;
 }
 
-void pv_anchor_points_copy_(PvAnchorPoint *dst_aps, PvAnchorPoint *src_aps, size_t num)
+void pv_anchor_points_copy_(PvAnchorPoint *dst_aps, const PvAnchorPoint *src_aps, size_t num)
 {
 	for(int i = 0; i < (int)num; i++){
 		dst_aps[i] = src_aps[i];
 	}
+}
+
+//! @todo need handling "&srd|dst_aps[0]" if "NULL == src|dst_aps" ...?
+void pv_anchor_points_copy_range_(
+		PvAnchorPoint *dst_aps, int dst_head,
+		const PvAnchorPoint *src_aps, int src_head,
+		size_t num)
+{
+	if(NULL == src_aps || NULL == dst_aps){
+		pv_assertf(0 == num, "%zu", num);
+		return;
+	}
+
+	pv_anchor_points_copy_(&dst_aps[dst_head], &src_aps[src_head], num);
 }
 
 PvBezier *pv_bezier_copy_new_range(const PvBezier *src_bezier, int head, int foot)
@@ -94,9 +108,86 @@ void pv_bezier_add_anchor_point(PvBezier *self, PvAnchorPoint anchor_point)
 	(self->anchor_points_num) += 1;
 }
 
-PvAnchorPoint *pv_bezier_get_anchor_point_from_index(PvBezier *self, int index)
+static bool pv_bezier_duplicating_anchor_point_(PvBezier *self, int index)
+{
+	PvAnchorPoint *aps = malloc(sizeof(PvAnchorPoint) * (self->anchor_points_num + 1));
+	pv_assert(aps);
+	pv_anchor_points_copy_range_(aps, 0, self->anchor_points, 0, index);
+	aps[index] = self->anchor_points[index];
+	pv_anchor_points_copy_range_(
+			aps, index + 1,
+			self->anchor_points, index,
+			((self->anchor_points_num) - index));
+
+	PvAnchorPoint *old_aps = self->anchor_points;
+	self->anchor_points = aps;
+	free(old_aps);
+
+	self->anchor_points_num += 1;
+
+	return true;
+}
+
+int pv_bezier_insert_anchor_point(PvBezier *self, PvAnchorPoint ap, int index)
+{
+	bool ret = pv_bezier_duplicating_anchor_point_(self, index);
+	pv_assert(ret);
+
+	int new_index = index + 1;
+	self->anchor_points[new_index] = ap;
+
+	return new_index;
+}
+
+PvAnchorPoint *pv_bezier_get_anchor_point_from_index(PvBezier *self, int index, PvBezierIndexTurn turn)
+{
+	switch(turn){
+		case PvBezierIndexTurn_Disable:
+			{
+				if(index < 0 || (int)self->anchor_points_num <= index){
+					pv_bug("");
+					return NULL;
+				}else{
+					return &(self->anchor_points[index]);
+				}
+			}
+			break;
+		case PvBezierIndexTurn_OnlyLastInClosed:
+			{
+				int index_ = index;
+				if(index < 0){
+					pv_bug("");
+					return NULL;
+				}else if((int)self->anchor_points_num == index){
+					index_ = 0;
+				}else if((int)self->anchor_points_num < index){
+					pv_bug("");
+					return NULL;
+				}
+				return &(self->anchor_points[index_]);
+			}
+			break;
+		default:
+			pv_assertf(false, "%d", turn);
+	}
+}
+
+const PvAnchorPoint *pv_bezier_get_anchor_point_from_index_const(const PvBezier *self, int index)
 {
 	return &(self->anchor_points[index]);
+}
+
+bool pv_bezier_set_anchor_point_from_index(PvBezier *self, int index, PvAnchorPoint ap)
+{
+	PvAnchorPoint *ap_ = pv_bezier_get_anchor_point_from_index(self, index, PvBezierIndexTurn_Disable);
+	if(NULL == ap_){
+		pv_bug("");
+		return false;
+	}
+
+	*ap_ = ap;
+
+	return true;
 }
 
 size_t pv_bezier_get_anchor_point_num(const PvBezier *self)
@@ -140,9 +231,9 @@ bool pv_bezier_is_diff(const PvBezier *bezier0, const PvBezier *bezier1)
 }
 
 static void pv_anchor_points_change_head_index_(
-	PvAnchorPoint *anchor_points,
-	size_t anchor_points_num,
-	int head)
+		PvAnchorPoint *anchor_points,
+		size_t anchor_points_num,
+		int head)
 {
 	PvAnchorPoint *aps = malloc(sizeof(PvAnchorPoint) * anchor_points_num);
 	pv_assert(aps);
@@ -159,22 +250,6 @@ static void pv_anchor_points_change_head_index_(
 	free(aps);
 }
 
-static PvAnchorPoint *pv_anchor_points_new_duplicating_(
-	PvAnchorPoint *anchor_points,
-	size_t *anchor_points_num,
-	int index)
-{
-	PvAnchorPoint *aps = malloc(sizeof(PvAnchorPoint) * ((*anchor_points_num) + 1));
-	pv_assert(aps);
-	memcpy(&aps[0], &anchor_points[0], sizeof(PvAnchorPoint) * index);
-	aps[index] = anchor_points[index];
-	memcpy(&aps[index + 1], &anchor_points[index], sizeof(PvAnchorPoint) * ((*anchor_points_num) - index));
-
-	(*anchor_points_num) += 1;
-
-	return aps;
-}
-
 bool pv_bezier_split_anchor_point_from_index(PvBezier *self, int index)
 {
 	size_t num = pv_bezier_get_anchor_point_num(self);
@@ -188,14 +263,29 @@ bool pv_bezier_split_anchor_point_from_index(PvBezier *self, int index)
 		return false;
 	}
 
-	PvAnchorPoint *aps = pv_anchor_points_new_duplicating_(self->anchor_points, &self->anchor_points_num, index);
-	pv_assert(aps);
-	PvAnchorPoint *old_aps = self->anchor_points;
-	self->anchor_points = aps;
-	free(old_aps);
+	bool ret = pv_bezier_duplicating_anchor_point_(self, index);
+	pv_assert(ret);
 
 	pv_anchor_points_change_head_index_(self->anchor_points, self->anchor_points_num, index + 1);
 	self->is_close = false;
+
+	return true;
+}
+
+bool pv_bezier_get_anchor_point_p4_from_index(const PvBezier *self, PvAnchorPointP4 *p4, int index)
+{
+	const PvAnchorPoint *current_ap = pv_bezier_get_anchor_point_from_index_const(self, index);
+	pv_assert(current_ap);
+
+	size_t num = pv_bezier_get_anchor_point_num(self);
+	int next_index = ((index + 1) % (int)num);
+	const PvAnchorPoint *next_ap = pv_bezier_get_anchor_point_from_index_const(self, next_index);
+	pv_assert(next_ap);
+
+	p4->points[0] = pv_anchor_point_get_handle(current_ap, PvAnchorPointIndex_Point);
+	p4->points[1] = pv_anchor_point_get_handle(current_ap, PvAnchorPointIndex_HandleNext);
+	p4->points[2] = pv_anchor_point_get_handle(next_ap, PvAnchorPointIndex_HandlePrev);
+	p4->points[3] = pv_anchor_point_get_handle(next_ap, PvAnchorPointIndex_Point);
 
 	return true;
 }

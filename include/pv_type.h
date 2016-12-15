@@ -31,6 +31,9 @@ PvPoint pv_point_mul_value(PvPoint, double);
 PvPoint pv_point_div_value(PvPoint, double);
 
 PvPoint pv_point_abs(PvPoint);
+PvPoint pv_point_exchange(PvPoint);
+PvPoint pv_point_subdivide(PvPoint, PvPoint, double percent);
+double pv_point_distance(PvPoint, PvPoint);
 
 bool pv_point_is_diff(PvPoint, PvPoint);
 
