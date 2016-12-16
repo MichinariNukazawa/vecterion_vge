@@ -10,7 +10,7 @@ struct EtSnapPanel{
 	GtkWidget *box;
 	GtkWidget *frame_snap;
 	GtkWidget *box_snap;
-	GtkWidget *toggle_snap_for_pixel;
+	GtkWidget *check_button_snap_for_pixel;
 };
 
 EtSnapPanel *snap_panel = NULL;
@@ -45,11 +45,11 @@ EtSnapPanel *et_snap_panel_init()
 	self->box_snap = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
 	gtk_container_add(GTK_CONTAINER(self->frame_snap), self->box_snap);
 
-	self->toggle_snap_for_pixel = gtk_toggle_button_new_with_mnemonic("SnapForPixel");
-	assert(self->toggle_snap_for_pixel);
-	gtk_box_pack_start(GTK_BOX(self->box_snap), self->toggle_snap_for_pixel, false, true, 1);
+	self->check_button_snap_for_pixel = gtk_check_button_new_with_mnemonic("SnapForPixel");
+	assert(self->check_button_snap_for_pixel);
+	gtk_box_pack_start(GTK_BOX(self->box_snap), self->check_button_snap_for_pixel, false, true, 1);
 
-	g_signal_connect(self->toggle_snap_for_pixel, "toggled",
+	g_signal_connect(self->check_button_snap_for_pixel, "toggled",
 			G_CALLBACK(_cb_toggled_from_check_snap_for_pixel), NULL);
 
 	self->widget = self->box;
@@ -78,7 +78,7 @@ EtSnap et_snap_panel_get_snap()
 
 	EtSnap snap = EtSnap_Default;
 	snap.is_snap_for_pixel = gtk_toggle_button_get_active(
-			GTK_TOGGLE_BUTTON(self->toggle_snap_for_pixel));
+			GTK_TOGGLE_BUTTON(self->check_button_snap_for_pixel));
 
 	return snap;
 }
