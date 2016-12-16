@@ -1363,6 +1363,8 @@ static void curve_element_split_from_index_(PvElement *elements[2], PvElement *e
 	}
 }
 
+static int insert_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action);
+
 static bool knife_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action)
 {
 	PvElement *element = pv_focus_get_first_element(focus);
@@ -1385,6 +1387,9 @@ static bool knife_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction m
 			index = i;
 			break;
 		}
+	}
+	if(-1 == index){
+		index = insert_anchor_point_down_(doc, focus, mouse_action);
 	}
 	if(-1 == index){
 		return true;
