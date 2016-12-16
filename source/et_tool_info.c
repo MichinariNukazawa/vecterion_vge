@@ -1363,6 +1363,48 @@ static void curve_element_split_from_index_(PvElement *elements[2], PvElement *e
 	}
 }
 
+static bool knife_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action)
+{
+	PvElement *element = pv_focus_get_first_element(focus);
+	et_assert(element);
+
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	if(PvElementKind_Curve != element->kind){
+		//! check element able edit and open path
+		return true;
+	}
+
+	int index = -1;
+	int num = info->func_get_num_anchor_point(element);
+	for(int i = 0; i < num; i++){
+		const PvAnchorPoint ap = info->func_get_anchor_point(element, i);
+		if(_is_bound_point(
+					PX_SENSITIVE_OF_TOUCH,
+					ap.points[PvAnchorPointIndex_Point],
+					mouse_action.point)){
+			index = i;
+			break;
+		}
+	}
+	if(-1 == index){
+		return true;
+	}
+
+	PvElement *elements[2] = {NULL, NULL,};
+	curve_element_split_from_index_(elements, element, index);
+	if(NULL != elements[0] && NULL != elements[1]){
+		pv_focus_clear_to_first_layer(focus);
+		PvElement *parent_layer = pv_focus_get_first_layer(focus);
+		pv_element_append_child(parent_layer, element, elements[0]);
+		pv_element_append_child(parent_layer, element, elements[1]);
+		pv_element_remove_free_recursive(element);
+		pv_focus_add_element(focus, elements[0]);
+		pv_focus_add_element(focus, elements[1]);
+	}
+
+	return true;
+}
+
 static bool _func_knife_anchor_point_mouse_action(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
@@ -1371,45 +1413,10 @@ static bool _func_knife_anchor_point_mouse_action(
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
 
-	PvElement *element = pv_focus_get_first_element(focus);
-	et_assertf(element, "%d", doc_id);
-
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
 			{
-				const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
-				if(PvElementKind_Curve != element->kind){
-					//! check element able edit and open path
-					return true;
-				}
-
-				int index = -1;
-				int num = info->func_get_num_anchor_point(element);
-				for(int i = 0; i < num; i++){
-					const PvAnchorPoint ap = info->func_get_anchor_point(element, i);
-					if(_is_bound_point(
-								PX_SENSITIVE_OF_TOUCH,
-								ap.points[PvAnchorPointIndex_Point],
-								mouse_action.point)){
-						index = i;
-						break;
-					}
-				}
-				if(-1 == index){
-					return true;
-				}
-
-				PvElement *elements[2] = {NULL, NULL,};
-				curve_element_split_from_index_(elements, element, index);
-				if(NULL != elements[0] && NULL != elements[1]){
-					pv_focus_clear_to_first_layer(focus);
-					PvElement *parent_layer = pv_focus_get_first_layer(focus);
-					pv_element_append_child(parent_layer, element, elements[0]);
-					pv_element_append_child(parent_layer, element, elements[1]);
-					pv_element_remove_free_recursive(element);
-					pv_focus_add_element(focus, elements[0]);
-					pv_focus_add_element(focus, elements[1]);
-				}
+				knife_anchor_point_down_(doc, focus, mouse_action);
 			}
 			break;
 		case EtMouseAction_Up:
@@ -1443,25 +1450,25 @@ PvPoint pv_bezier_get_subdivide_point_from_percent(PvBezier *bezier, int index, 
 }
 
 /*
-{
-	PvAnchorPointP4 p4;
-	bool ret = pv_bezier_get_anchor_point_p4_from_index(bezier, &p4, index);
-	et_assert(ret);
+   {
+   PvAnchorPointP4 p4;
+   bool ret = pv_bezier_get_anchor_point_p4_from_index(bezier, &p4, index);
+   et_assert(ret);
 
-	double t = per / 100.0;
-	double tp = 1 - t;
-	PvPoint p = {
-		.x = 3*(t*t*(p4.points[3].x-p4.points[2].x)
-				+2*t*tp*(p4.points[2].x-p4.points[1].x)
-				+tp*tp*(p4.points[1].x-p4.points[0].x)),
-		.y = 3*(t*t*(p4.points[3].y-p4.points[2].y)
-				+2*t*tp*(p4.points[2].y-p4.points[1].y)
-				+tp*tp*(p4.points[1].y-p4.points[0].y)),
-	};
+   double t = per / 100.0;
+   double tp = 1 - t;
+   PvPoint p = {
+   .x = 3*(t*t*(p4.points[3].x-p4.points[2].x)
+   +2*t*tp*(p4.points[2].x-p4.points[1].x)
+   +tp*tp*(p4.points[1].x-p4.points[0].x)),
+   .y = 3*(t*t*(p4.points[3].y-p4.points[2].y)
+   +2*t*tp*(p4.points[2].y-p4.points[1].y)
+   +tp*tp*(p4.points[1].y-p4.points[0].y)),
+   };
 
-	return p;
-}
-*/
+   return p;
+   }
+ */
 
 static void element_curve_get_nearest_index_percent_(
 		int *index,
