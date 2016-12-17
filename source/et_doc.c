@@ -63,7 +63,6 @@ EtDoc *et_doc_new_from_vg(const PvVg *vg)
 	}
 
 	self->filepath = NULL;
-	self->latest_saved_vg = NULL;
 	self->element_group_edit_draw = NULL;
 
 	self->history_hive = et_doc_history_hive_new(vg);
@@ -71,6 +70,12 @@ EtDoc *et_doc_new_from_vg(const PvVg *vg)
 		et_error("");
 		return NULL;
 	}
+
+	// new document has not save needed difference
+	const EtDocHistory *hist = et_doc_history_hive_get_current(self->history_hive);
+	et_assert(hist);
+	et_assert(hist->vg);
+	self->latest_saved_vg = pv_vg_copy_new(hist->vg);
 
 	self->slot_change_infos =
 		(EtDocSlotChangeInfo *)malloc(sizeof(EtDocSlotChangeInfo) * 1);
