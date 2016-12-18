@@ -258,20 +258,22 @@ static void _update_focus_elements_from_local()
 	EtStrokePanel *self = stroke_panel;
 	assert(self);
 
-	EtDocId doc_id = et_etaion_get_current_doc_id();
-	if(doc_id < 0){
-		//! when start app.
-		et_debug("doc is noting. %d", doc_id);
-		return;
-	}
-	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-	assert(focus);
+	if(!self->is_multi){
+		EtDocId doc_id = et_etaion_get_current_doc_id();
+		if(doc_id < 0){
+			//! when start app.
+			et_debug("doc is noting. %d", doc_id);
+			return;
+		}
+		PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+		assert(focus);
 
-	int num = pv_general_get_parray_num((void **)focus->elements);
-	for(int i = 0; i < num; i++){
-		focus->elements[i]->stroke = self->stroke;
-	}
+		int num = pv_general_get_parray_num((void **)focus->elements);
+		for(int i = 0; i < num; i++){
+			focus->elements[i]->stroke = self->stroke;
+		}
 
-	et_doc_signal_update_from_id(doc_id);
-	et_doc_save_from_id(doc_id);
+		et_doc_signal_update_from_id(doc_id);
+		et_doc_save_from_id(doc_id);
+	}
 }
