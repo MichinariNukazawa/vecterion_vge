@@ -704,7 +704,7 @@ bool pv_element_curve_add_anchor_point(PvElement *self, const PvAnchorPoint anch
 	}
 
 	PvElementCurveData *data = self->data;
-	pv_anchor_path_add_anchor_point(data->anchor_path, anchor_point);
+	pv_anchor_path_add_anchor_point(data->anchor_path, &anchor_point);
 
 	return true;
 }

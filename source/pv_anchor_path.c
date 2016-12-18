@@ -97,13 +97,13 @@ PvAnchorPath *pv_anchor_path_copy_new_range(const PvAnchorPath *src_anchor_path,
 	return dst_anchor_path;
 }
 
-void pv_anchor_path_add_anchor_point(PvAnchorPath *self, PvAnchorPoint anchor_point)
+void pv_anchor_path_add_anchor_point(PvAnchorPath *self, const PvAnchorPoint *anchor_point)
 {
 	PvAnchorPoint *anchor_points = (PvAnchorPoint *)realloc(self->anchor_points,
 			sizeof(PvAnchorPoint) * (self->anchor_points_num + 1));
 	pv_assert(anchor_points);
 
-	anchor_points[self->anchor_points_num] = anchor_point;
+	anchor_points[self->anchor_points_num] = *anchor_point;
 	self->anchor_points = anchor_points;
 	(self->anchor_points_num) += 1;
 }
@@ -128,13 +128,13 @@ static bool pv_anchor_path_duplicating_anchor_point_(PvAnchorPath *self, int ind
 	return true;
 }
 
-int pv_anchor_path_insert_anchor_point(PvAnchorPath *self, PvAnchorPoint ap, int index)
+int pv_anchor_path_insert_anchor_point(PvAnchorPath *self, const PvAnchorPoint *ap, int index)
 {
 	bool ret = pv_anchor_path_duplicating_anchor_point_(self, index);
 	pv_assert(ret);
 
 	int new_index = index + 1;
-	self->anchor_points[new_index] = ap;
+	self->anchor_points[new_index] = *ap;
 
 	return new_index;
 }
@@ -177,7 +177,7 @@ const PvAnchorPoint *pv_anchor_path_get_anchor_point_from_index_const(const PvAn
 	return &(self->anchor_points[index]);
 }
 
-bool pv_anchor_path_set_anchor_point_from_index(PvAnchorPath *self, int index, PvAnchorPoint ap)
+bool pv_anchor_path_set_anchor_point_from_index(PvAnchorPath *self, int index, const PvAnchorPoint *ap)
 {
 	PvAnchorPoint *ap_ = pv_anchor_path_get_anchor_point_from_index(self, index, PvAnchorPathIndexTurn_Disable);
 	if(NULL == ap_){
@@ -185,7 +185,7 @@ bool pv_anchor_path_set_anchor_point_from_index(PvAnchorPath *self, int index, P
 		return false;
 	}
 
-	*ap_ = ap;
+	*ap_ = *ap;
 
 	return true;
 }

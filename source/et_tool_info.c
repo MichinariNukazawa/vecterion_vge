@@ -869,9 +869,7 @@ static int _et_tool_curve_add_anchor_point(EtDoc *doc, PvElement **_element, dou
 		element->stroke = et_stroke_panel_get_stroke();
 	}
 
-	PvAnchorPoint anchor_point = {
-		.points = {{0,0}, {x, y,}, {0,0}},
-	};
+	PvAnchorPoint anchor_point = pv_anchor_point_from_point((PvPoint){x, y,});
 	if(!pv_element_curve_add_anchor_point(element, anchor_point)){
 		et_error("");
 		return -1;
@@ -1549,7 +1547,7 @@ int element_curve_insert_anchor_point_from_index_percent_(
 
 	PvAnchorPoint dst_aps[3];
 	pv_anchor_path_get_subdivide_anchor_ponts_form_percent(dst_aps, data->anchor_path, index, percent);
-	int new_index = pv_anchor_path_insert_anchor_point(data->anchor_path, dst_aps[1], index);
+	int new_index = pv_anchor_path_insert_anchor_point(data->anchor_path, &dst_aps[1], index);
 
 	// last anchor_point -> first anchor_point
 	int prev_index = new_index - 1;
@@ -1560,9 +1558,9 @@ int element_curve_insert_anchor_point_from_index_percent_(
 	}
 
 	bool ret;
-	ret = pv_anchor_path_set_anchor_point_from_index(data->anchor_path, prev_index, dst_aps[0]);
+	ret = pv_anchor_path_set_anchor_point_from_index(data->anchor_path, prev_index, &dst_aps[0]);
 	et_assert(ret);
-	ret = pv_anchor_path_set_anchor_point_from_index(data->anchor_path, next_index, dst_aps[2]);
+	ret = pv_anchor_path_set_anchor_point_from_index(data->anchor_path, next_index, &dst_aps[2]);
 	et_assert(ret);
 
 	/*
