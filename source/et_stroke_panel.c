@@ -73,22 +73,22 @@ EtStrokePanel *et_stroke_panel_init()
 		self->label_linecap = gtk_label_new_with_mnemonic("linecap ");
 		gtk_box_pack_start(GTK_BOX(self->box_linecap), self->label_linecap, false, true, 3);
 		// self->combo_linecap = gtk_combo_box_new();
-	//	GtkListStore *liststore = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_INT);
+		//	GtkListStore *liststore = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_INT);
 		GtkListStore *liststore = gtk_list_store_new(1, G_TYPE_STRING);
 		int num = get_num_stroke_linecap_infos();
 		for(int i = 0; i < num; i++){
 			const PvStrokeLinecapInfo *info = get_stroke_linecap_info_from_id(i);
 			gtk_list_store_insert_with_values(liststore, NULL, -1,
-							0, info->name,
-	//						1, info->linecap,
-							-1);
+					0, info->name,
+					//						1, info->linecap,
+					-1);
 		}
 		self->combo_linecap = gtk_combo_box_new_with_model(GTK_TREE_MODEL(liststore));
 		g_object_unref(liststore);
 		GtkCellRenderer *column = gtk_cell_renderer_text_new();
 		gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(self->combo_linecap), column, TRUE);
 		gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(self->combo_linecap), column,
-					"text", 0, NULL);
+				"text", 0, NULL);
 		gtk_combo_box_set_active(GTK_COMBO_BOX(self->combo_linecap), 0);
 		gtk_box_pack_start(GTK_BOX(self->box_linecap), self->combo_linecap, false, true, 3);
 	}
@@ -100,22 +100,22 @@ EtStrokePanel *et_stroke_panel_init()
 		self->label_linejoin = gtk_label_new_with_mnemonic("linejoin ");
 		gtk_box_pack_start(GTK_BOX(self->box_linejoin), self->label_linejoin, false, true, 3);
 		// self->combo_linejoin = gtk_combo_box_new();
-	//	GtkListStore *liststore = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_INT);
+		//	GtkListStore *liststore = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_INT);
 		GtkListStore *liststore = gtk_list_store_new(1, G_TYPE_STRING);
 		int num = get_num_stroke_linejoin_infos();
 		for(int i = 0; i < num; i++){
 			const PvStrokeLinejoinInfo *info = get_stroke_linejoin_info_from_id(i);
 			gtk_list_store_insert_with_values(liststore, NULL, -1,
-							0, info->name,
-	//						1, info->linejoin,
-							-1);
+					0, info->name,
+					//						1, info->linejoin,
+					-1);
 		}
 		self->combo_linejoin = gtk_combo_box_new_with_model(GTK_TREE_MODEL(liststore));
 		g_object_unref(liststore);
 		GtkCellRenderer *column = gtk_cell_renderer_text_new();
 		gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(self->combo_linejoin), column, TRUE);
 		gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(self->combo_linejoin), column,
-					"text", 0, NULL);
+				"text", 0, NULL);
 		gtk_combo_box_set_active(GTK_COMBO_BOX(self->combo_linejoin), 0);
 		gtk_box_pack_start(GTK_BOX(self->box_linejoin), self->combo_linejoin, false, true, 3);
 	}
