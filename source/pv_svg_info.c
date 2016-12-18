@@ -131,9 +131,9 @@ static bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const ch
 				ap.points[PvAnchorPointIndex_Point].y = args[5];
 				ap.points[PvAnchorPointIndex_HandleNext].x = 0;
 				ap.points[PvAnchorPointIndex_HandleNext].y = 0;
-				size_t num = pv_bezier_get_anchor_point_num(data->bezier);
+				size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
 				if(0 < num){
-					PvAnchorPoint *ap_prev = pv_bezier_get_anchor_point_from_index(data->bezier, (num - 1), PvBezierIndexTurn_Disable);
+					PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, (num - 1), PvAnchorPathIndexTurn_Disable);
 					PvPoint gpoint_next = {args[0], args[1]};
 					pv_anchor_point_set_handle(ap_prev,
 							PvAnchorPointIndex_HandleNext, gpoint_next);
@@ -157,7 +157,7 @@ static bool _pv_svg_path_set_anchor_points_from_str(PvElement *element, const ch
 			case 'Z':
 			case 'z':
 				p++;
-				pv_bezier_set_is_close(data->bezier, true);
+				pv_anchor_path_set_is_close(data->anchor_path, true);
 				break;
 			case ' ':
 			case ',':

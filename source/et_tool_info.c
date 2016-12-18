@@ -7,7 +7,7 @@
 #include "pv_element_info.h"
 #include "pv_focus.h"
 #include "pv_rotate.h"
-#include "pv_bezier.h"
+#include "pv_anchor_path.h"
 #include "et_doc.h"
 #include "et_doc_manager.h"
 #include "et_etaion.h"
@@ -906,12 +906,12 @@ static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mou
 	if(NULL != _element && PvElementKind_Curve == _element->kind){
 		PvElementCurveData *_data = (PvElementCurveData *) _element->data;
 		et_assert(_data);
-		if(pv_bezier_get_is_close(_data->bezier)){
+		if(pv_anchor_path_get_is_close(_data->anchor_path)){
 			// if already closed is goto new anchor_point
 			_element = NULL;
 		}else{
-			if(0 < pv_bezier_get_anchor_point_num(_data->bezier)){
-				const PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(_data->bezier, 0, PvBezierIndexTurn_Disable);
+			if(0 < pv_anchor_path_get_anchor_point_num(_data->anchor_path)){
+				const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(_data->anchor_path, 0, PvAnchorPathIndexTurn_Disable);
 				if(_is_bound_point(
 							PX_SENSITIVE_OF_TOUCH,
 							ap->points[PvAnchorPointIndex_Point],
@@ -919,7 +919,7 @@ static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mou
 				  ){
 					// ** do close anchor_point
 					is_closed = true;
-					pv_bezier_set_is_close(_data->bezier, is_closed);
+					pv_anchor_path_set_is_close(_data->anchor_path, is_closed);
 					pv_focus_clear_set_element_index(focus, _element, 0);
 				}
 			}
@@ -954,14 +954,14 @@ static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction
 
 	int index = pv_focus_get_index(focus);
 	if(-1 == index){
-		if(pv_bezier_get_is_close(_data->bezier)){
+		if(pv_anchor_path_get_is_close(_data->anchor_path)){
 			index = 0;
 		}else{
-			size_t num = pv_bezier_get_anchor_point_num(_data->bezier);
+			size_t num = pv_anchor_path_get_anchor_point_num(_data->anchor_path);
 			index = (int)num;
 		}
 	}
-	PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(_data->bezier, index, PvBezierIndexTurn_Disable);
+	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(_data->anchor_path, index, PvAnchorPathIndexTurn_Disable);
 
 	PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
 	PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
@@ -1191,7 +1191,7 @@ PvAnchorPoint *_get_focus_anchor_point(const PvFocus *focus){
 	PvElementCurveData *data = element->data;
 	int num_ap = pv_element_curve_get_num_anchor_point(element);
 	assert(focus->index < num_ap);
-	PvAnchorPoint *ap = pv_bezier_get_anchor_point_from_index(data->bezier, focus->index, PvBezierIndexTurn_Disable);
+	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, focus->index, PvAnchorPathIndexTurn_Disable);
 
 	return ap;
 }
@@ -1345,9 +1345,9 @@ static void curve_element_split_from_index_(PvElement *elements[2], PvElement *e
 	et_assertf(PvElementKind_Curve == element->kind, "%d", element->kind);
 
 	PvElementCurveData *data = element->data;
-	PvBezier *bezier = data->bezier;
-	if(pv_bezier_get_is_close(bezier)){
-		bool ret = pv_bezier_split_anchor_point_from_index(bezier, index);
+	PvAnchorPath *anchor_path = data->anchor_path;
+	if(pv_anchor_path_get_is_close(anchor_path)){
+		bool ret = pv_anchor_path_split_anchor_point_from_index(anchor_path, index);
 		et_assert(ret);
 
 		elements[0] = NULL;
@@ -1356,7 +1356,7 @@ static void curve_element_split_from_index_(PvElement *elements[2], PvElement *e
 		PvElement *head_element = pv_element_curve_copy_new_range(element, 0, index);
 		et_assert(head_element);
 
-		size_t num = pv_bezier_get_anchor_point_num(bezier);
+		size_t num = pv_anchor_path_get_anchor_point_num(anchor_path);
 		PvElement *foot_element = pv_element_curve_copy_new_range(element, index, ((int)num - 1));
 		et_assert(foot_element);
 
@@ -1438,10 +1438,10 @@ static bool _func_knife_anchor_point_mouse_action(
 	return true;
 }
 
-PvPoint pv_bezier_get_subdivide_point_from_percent(PvBezier *bezier, int index, double per)
+PvPoint pv_anchor_path_get_subdivide_point_from_percent(PvAnchorPath *anchor_path, int index, double per)
 {
 	PvAnchorPointP4 p4;
-	bool ret = pv_bezier_get_anchor_point_p4_from_index(bezier, &p4, index);
+	bool ret = pv_anchor_path_get_anchor_point_p4_from_index(anchor_path, &p4, index);
 	et_assert(ret);
 
 	double t = per / 100.0;
@@ -1459,7 +1459,7 @@ PvPoint pv_bezier_get_subdivide_point_from_percent(PvBezier *bezier, int index, 
 /*
    {
    PvAnchorPointP4 p4;
-   bool ret = pv_bezier_get_anchor_point_p4_from_index(bezier, &p4, index);
+   bool ret = pv_anchor_path_get_anchor_point_p4_from_index(anchor_path, &p4, index);
    et_assert(ret);
 
    double t = per / 100.0;
@@ -1493,7 +1493,7 @@ static void element_curve_get_nearest_index_percent_(
 			PvElementCurveData *data = (PvElementCurveData *)element->data;
 			et_assert(data);
 
-			PvPoint point = pv_bezier_get_subdivide_point_from_percent(data->bezier, ix, per);
+			PvPoint point = pv_anchor_path_get_subdivide_point_from_percent(data->anchor_path, ix, per);
 			double diff = pv_point_distance(point, mouse_action.point);
 			if(diff < near_diff){
 				near_diff = diff;
@@ -1506,22 +1506,22 @@ static void element_curve_get_nearest_index_percent_(
 	return;
 }
 
-void pv_bezier_get_subdivide_anchor_ponts_form_percent(
+void pv_anchor_path_get_subdivide_anchor_ponts_form_percent(
 		PvAnchorPoint dst_aps[3],
-		PvBezier *bezier,
+		PvAnchorPath *anchor_path,
 		int index,
 		double percent)
 {
-	PvAnchorPoint *ap_prev = pv_bezier_get_anchor_point_from_index(bezier, index, PvBezierIndexTurn_Disable);
+	PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(anchor_path, index, PvAnchorPathIndexTurn_Disable);
 	et_assert(ap_prev);
-	PvAnchorPoint *ap_next = pv_bezier_get_anchor_point_from_index(bezier, index + 1, PvBezierIndexTurn_OnlyLastInClosed);
+	PvAnchorPoint *ap_next = pv_anchor_path_get_anchor_point_from_index(anchor_path, index + 1, PvAnchorPathIndexTurn_OnlyLastInClosed);
 	et_assert(ap_next);
 	dst_aps[0] = *ap_prev;
 	dst_aps[1] = PvAnchorPoint_Default;
 	dst_aps[2] = *ap_next;
 
 	PvPoint p0 = pv_anchor_point_get_point(ap_prev);
-	PvPoint pn = pv_bezier_get_subdivide_point_from_percent(bezier, index, percent);
+	PvPoint pn = pv_anchor_path_get_subdivide_point_from_percent(anchor_path, index, percent);
 	PvPoint p1 = pv_anchor_point_get_point(ap_next);
 
 	PvPoint p0_handle_next = pv_anchor_point_get_handle(ap_prev, PvAnchorPointIndex_HandleNext);
@@ -1548,28 +1548,28 @@ int element_curve_insert_anchor_point_from_index_percent_(
 	et_assert(data);
 
 	PvAnchorPoint dst_aps[3];
-	pv_bezier_get_subdivide_anchor_ponts_form_percent(dst_aps, data->bezier, index, percent);
-	int new_index = pv_bezier_insert_anchor_point(data->bezier, dst_aps[1], index);
+	pv_anchor_path_get_subdivide_anchor_ponts_form_percent(dst_aps, data->anchor_path, index, percent);
+	int new_index = pv_anchor_path_insert_anchor_point(data->anchor_path, dst_aps[1], index);
 
 	// last anchor_point -> first anchor_point
 	int prev_index = new_index - 1;
 	int next_index = new_index + 1;
-	size_t num = pv_bezier_get_anchor_point_num(data->bezier);
+	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
 	if(next_index == (int)num){
 		next_index = 0;
 	}
 
 	bool ret;
-	ret = pv_bezier_set_anchor_point_from_index(data->bezier, prev_index, dst_aps[0]);
+	ret = pv_anchor_path_set_anchor_point_from_index(data->anchor_path, prev_index, dst_aps[0]);
 	et_assert(ret);
-	ret = pv_bezier_set_anchor_point_from_index(data->bezier, next_index, dst_aps[2]);
+	ret = pv_anchor_path_set_anchor_point_from_index(data->anchor_path, next_index, dst_aps[2]);
 	et_assert(ret);
 
 	/*
-	   PvPoint point = pv_bezier_get_subdivide_point_from_percent(data->bezier, index, percent);
+	   PvPoint point = pv_anchor_path_get_subdivide_point_from_percent(data->anchor_path, index, percent);
 	   PvAnchorPoint ap = PvAnchorPoint_Default;
 	   pv_anchor_point_set_point(&ap, point);
-	   int new_index = pv_bezier_insert_anchor_point(data->bezier, ap, index);
+	   int new_index = pv_anchor_path_insert_anchor_point(data->anchor_path, ap, index);
 	 */
 	// @todo handle.
 

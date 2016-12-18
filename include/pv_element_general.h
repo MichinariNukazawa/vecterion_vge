@@ -7,7 +7,7 @@
 
 #include "pv_type.h"
 #include "pv_general.h"
-#include "pv_bezier.h"
+#include "pv_anchor_path.h"
 #include "pv_appearance.h"
 
 
@@ -56,7 +56,7 @@ struct PvElementRasterData{
 struct PvElementCurveData;
 typedef struct PvElementCurveData PvElementCurveData;
 struct PvElementCurveData{
-	PvBezier *bezier;
+	PvAnchorPath *anchor_path;
 };
 
 // ** ElementKind定数

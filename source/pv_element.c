@@ -677,18 +677,18 @@ PvElement *pv_element_curve_new_from_rect(PvRect rect)
 PvElement *pv_element_curve_copy_new_range(const PvElement *src_element, int head, int foot)
 {
 	PvElementCurveData *src_data = src_element->data;
-	PvBezier *src_bezier = src_data->bezier;
+	PvAnchorPath *src_anchor_path = src_data->anchor_path;
 
 	PvElement *dst_element = _pv_element_copy_single(src_element);
 	pv_assert(dst_element);
 
-	PvBezier *dst_bezier = pv_bezier_copy_new_range(src_bezier, head, foot);
-	pv_assert(dst_bezier);
+	PvAnchorPath *dst_anchor_path = pv_anchor_path_copy_new_range(src_anchor_path, head, foot);
+	pv_assert(dst_anchor_path);
 
 	PvElementCurveData *dst_data = dst_element->data;
-	PvBezier *old_bezier = dst_data->bezier;
-	dst_data->bezier = dst_bezier;
-	pv_bezier_free(old_bezier);
+	PvAnchorPath *old_anchor_path = dst_data->anchor_path;
+	dst_data->anchor_path = dst_anchor_path;
+	pv_anchor_path_free(old_anchor_path);
 
 	return dst_element;
 }
@@ -704,7 +704,7 @@ bool pv_element_curve_add_anchor_point(PvElement *self, const PvAnchorPoint anch
 	}
 
 	PvElementCurveData *data = self->data;
-	pv_bezier_add_anchor_point(data->bezier, anchor_point);
+	pv_anchor_path_add_anchor_point(data->anchor_path, anchor_point);
 
 	return true;
 }
@@ -716,13 +716,13 @@ int pv_element_curve_get_num_anchor_point(const PvElement *self)
 	assert(PvElementKind_Curve == self->kind);
 
 	PvElementCurveData *data = self->data;
-	return pv_bezier_get_anchor_point_num(data->bezier);
+	return pv_anchor_path_get_anchor_point_num(data->anchor_path);
 }
 
 void pv_element_curve_set_close_anchor_point(PvElement *self, bool is_close)
 {
 	PvElementCurveData *data = self->data;
-	pv_bezier_set_is_close(data->bezier, is_close);
+	pv_anchor_path_set_is_close(data->anchor_path, is_close);
 }
 
 static bool pv_element_raster_read_file(PvElement *self, const char *path)
@@ -837,6 +837,6 @@ void pv_element_debug_print(const PvElement *element)
 		return;
 	}
 
-	pv_bezier_debug_print(data->bezier);
+	pv_anchor_path_debug_print(data->anchor_path);
 }
 
