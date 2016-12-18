@@ -12,6 +12,7 @@
 #include "et_doc_manager.h"
 #include "et_etaion.h"
 #include "et_color_panel.h"
+#include "et_stroke_panel.h"
 #include "et_mouse_cursor.h"
 
 
@@ -865,6 +866,7 @@ static int _et_tool_curve_add_anchor_point(EtDoc *doc, PvElement **_element, dou
 		}
 
 		element->color_pair = et_color_panel_get_color_pair();
+		element->stroke = et_stroke_panel_get_stroke();
 	}
 
 	PvAnchorPoint anchor_point = {
