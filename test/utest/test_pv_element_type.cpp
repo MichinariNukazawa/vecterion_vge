@@ -60,6 +60,7 @@ TEST(Test, PvVg_OnAllElementKind){
 		.points = {{0,0},{10,20},{0,0}},
 	};
 	assert(pv_element_curve_add_anchor_point(element_curve0, ap));
+	assert(1 == pv_element_curve_get_num_anchor_point(element_curve0));
 	ASSERT_TRUE(pv_element_append_child(element_parent, NULL, element_curve0));
 	// ** raster
 	PvElement *element_raster1 = pv_element_raster_new_from_filepath(RASTER_FILEPATH_1);
