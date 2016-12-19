@@ -12,25 +12,23 @@
 struct EtCanvas;
 typedef struct EtCanvas EtCanvas;
 
-typedef void (*EtCanvasSlotChange)(EtCanvas *canvas, gpointer data);
-typedef bool (*EtCanvasSlotMouseAction)(EtDocId doc_id, EtMouseAction mouse_action);
+typedef void (*EtCanvasSlotChange)(EtCanvas *, gpointer data);
+typedef bool (*EtCanvasSlotMouseAction)(EtDocId, EtMouseAction mouse_action);
 
 
-EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id);
+EtCanvas *et_canvas_new_from_doc_id(EtDocId);
 void et_canvas_delete(EtCanvas *);
-GtkWidget *et_canvas_get_widget_frame(EtCanvas *self);
-PvRenderContext et_canvas_get_render_context(EtCanvas *self, bool *isError);
-EtDocId et_canvas_get_doc_id(EtCanvas *self);
-bool et_canvas_set_doc_id(EtCanvas *self, EtDocId doc_id);
-bool et_canvas_draw_pixbuf(EtCanvas *self, GdkPixbuf *pixbuf);
-int et_canvas_set_slot_change(EtCanvas *self,
-		EtCanvasSlotChange slot, gpointer data);
-int et_canvas_set_slot_mouse_action(EtCanvas *self,
-		EtCanvasSlotMouseAction slot, gpointer data);
-void slot_et_canvas_from_doc_change(EtDoc *doc, gpointer data);
+GtkWidget *et_canvas_get_widget_frame(EtCanvas *);
+PvRenderContext et_canvas_get_render_context(EtCanvas *, bool *isError);
+EtDocId et_canvas_get_doc_id(EtCanvas *);
+bool et_canvas_set_doc_id(EtCanvas *, EtDocId);
+bool et_canvas_draw_pixbuf(EtCanvas *, GdkPixbuf *pixbuf);
+int et_canvas_set_slot_change(EtCanvas *, EtCanvasSlotChange slot, gpointer data);
+int et_canvas_set_slot_mouse_action(EtCanvas *, EtCanvasSlotMouseAction slot, gpointer data);
+void slot_et_canvas_from_doc_change(EtDoc *, gpointer data);
 
 // ** use thumbnail.
-void et_canvas_set_is_thumbnail(EtCanvas *self, bool is_thumbnail);
+void et_canvas_set_is_thumbnail(EtCanvas *, bool is_thumbnail);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST
