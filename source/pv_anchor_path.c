@@ -74,8 +74,10 @@ void pv_anchor_path_add_anchor_point(PvAnchorPath *self, const PvAnchorPoint *an
 			sizeof(PvAnchorPoint *) * (num + 2));
 	pv_assert(anchor_points);
 
+	PvAnchorPoint *ap = pv_anchor_point_copy_new(anchor_point);
+	pv_assert(ap);
 	anchor_points[num + 1] = NULL;
-	anchor_points[num + 0] = pv_anchor_point_copy_new(anchor_point);
+	anchor_points[num + 0] = ap;
 	self->anchor_points = anchor_points;
 }
 
