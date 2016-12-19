@@ -1547,7 +1547,9 @@ int element_curve_insert_anchor_point_from_index_percent_(
 
 	PvAnchorPoint dst_aps[3];
 	pv_anchor_path_get_subdivide_anchor_ponts_form_percent(dst_aps, data->anchor_path, index, percent);
-	int new_index = pv_anchor_path_insert_anchor_point(data->anchor_path, &dst_aps[1], index);
+	PvAnchorPoint *ap = pv_anchor_path_insert_anchor_point(data->anchor_path, &dst_aps[1], index);
+	et_assert(ap);
+	int new_index = index + 1;
 
 	// last anchor_point -> first anchor_point
 	int prev_index = new_index - 1;

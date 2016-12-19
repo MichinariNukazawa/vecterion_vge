@@ -3,6 +3,29 @@
 #include "pv_error.h"
 
 
+PvAnchorPoint *pv_anchor_point_new_from_point(PvPoint point)
+{
+	PvAnchorPoint src = pv_anchor_point_from_point(point);
+
+	return pv_anchor_point_copy_new(&src);
+}
+
+PvAnchorPoint *pv_anchor_point_copy_new(const PvAnchorPoint *src)
+{
+	pv_assert(src);
+
+	PvAnchorPoint *dst = malloc(sizeof(PvAnchorPoint));
+	pv_assert(dst);
+
+	*dst = *src;
+
+	return dst;
+}
+
+void pv_anchor_point_free(PvAnchorPoint *self)
+{
+	free(self);
+}
 
 PvAnchorPoint pv_anchor_point_from_point(PvPoint point)
 {

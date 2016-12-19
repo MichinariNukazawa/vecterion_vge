@@ -34,6 +34,10 @@ static const PvAnchorPointP4 PvAnchorPointP4_Default = {
 
 
 
+PvAnchorPoint *pv_anchor_point_new_from_point(PvPoint);
+PvAnchorPoint *pv_anchor_point_copy_new(const PvAnchorPoint *);
+void pv_anchor_point_free(PvAnchorPoint *);
+
 PvAnchorPoint pv_anchor_point_from_point(PvPoint);
 
 /*! @brief handle set to zero.

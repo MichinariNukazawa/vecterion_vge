@@ -18,7 +18,7 @@ void pv_anchor_path_free(PvAnchorPath *);
 PvAnchorPath *pv_anchor_path_copy_new(const PvAnchorPath *);
 PvAnchorPath *pv_anchor_path_copy_new_range(const PvAnchorPath *, int head, int foot);
 void pv_anchor_path_add_anchor_point(PvAnchorPath *, const PvAnchorPoint *);
-int pv_anchor_path_insert_anchor_point(PvAnchorPath *, const PvAnchorPoint *, int index);
+PvAnchorPoint *pv_anchor_path_insert_anchor_point(PvAnchorPath *, const PvAnchorPoint *, int index);
 PvAnchorPoint *pv_anchor_path_get_anchor_point_from_index(PvAnchorPath *, int index, PvAnchorPathIndexTurn);
 const PvAnchorPoint *pv_anchor_path_get_anchor_point_from_index_const(const PvAnchorPath *, int index);
 bool pv_anchor_path_set_anchor_point_from_index(PvAnchorPath *, int index, const PvAnchorPoint *);
