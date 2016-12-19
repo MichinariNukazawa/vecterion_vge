@@ -1,9 +1,9 @@
 
 #### etaion
 DOXYFILE_ENCODING	= UTF-8
-PROJECT_NAME		= "Etaion -Vector Graphic Editor-"
+PROJECT_NAME		= "Vecterion -Vector Graphic Editor-"
 PROJECT_NUMBER		= "Unit 00 is the Prototype"
-PROJECT_BRIEF		= "The Etaion is true a vector graphic editor for linux (and other)."
+PROJECT_BRIEF		= "The Vecterion is true a vector graphic editor for linux (and other)."
 # PROJECT_LOGO		=
 OUTPUT_DIRECTORY	= doxygen/
 OUTPUT_LANGUAGE		= English

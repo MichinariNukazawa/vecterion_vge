@@ -38,7 +38,7 @@
 #include "pv_file_format.h"
 #include "et_doc_relation.h"
 
-const char *APP_NAME = "Etaion Vector Graphic Editor";
+const char *APP_NAME = "Vecterion Vector Graphic Editor";
 
 typedef struct{
 	GtkWindow *window;
@@ -134,7 +134,7 @@ static void usage()
 			" -o output_filepath		output file and exit this app.\n"
 			" 				depend -i option.\n"
 			" 				file format from filename extension.\n",
-			"etaion"
+			"vecterion"
 	       );
 	fprintf(stderr, "output_filepath format(extension):\n");
 

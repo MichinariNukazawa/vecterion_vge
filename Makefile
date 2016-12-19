@@ -4,7 +4,7 @@
 #
 
 CC		:= gcc
-TARGET_NAME	:= etaion_vector
+TARGET_NAME	:= vecterion_vge
 SOURCE_DIR	:= source
 OBJECT_DIR	:= object
 BUILD_DIR	:= build
