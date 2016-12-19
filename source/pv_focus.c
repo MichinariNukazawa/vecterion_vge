@@ -152,7 +152,7 @@ PvElement *pv_focus_get_first_element(const PvFocus *focus)
 	return focus->elements[0];
 }
 
-bool pv_focus_is_layer_root_null_from_element(const PvElement *element)
+static bool pv_focus_is_layer_root_null_from_element_(const PvElement *element)
 {
 	if(NULL == element){
 		return true;
@@ -180,7 +180,7 @@ PvElement *pv_focus_get_first_layer(const PvFocus *focus)
 		return NULL;
 	}
 
-	while(!pv_focus_is_layer_root_null_from_element(element)){
+	while(!pv_focus_is_layer_root_null_from_element_(element)){
 		element = element->parent;
 	}
 
