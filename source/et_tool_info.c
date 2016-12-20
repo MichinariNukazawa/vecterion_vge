@@ -940,6 +940,10 @@ static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction
 		return true;
 	}
 
+	if(-1 == focus->index){
+		return true;
+	}
+
 	PvElement *_element = pv_focus_get_first_element(focus);
 	et_assert(_element);
 	if(PvElementKind_Curve != _element->kind){
@@ -950,30 +954,15 @@ static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction
 	PvElementCurveData *_data = (PvElementCurveData *) _element->data;
 	et_assert(_data);
 
-	int index = pv_focus_get_index(focus);
-	if(-1 == index){
-		if(pv_anchor_path_get_is_close(_data->anchor_path)){
-			index = 0;
-		}else{
-			size_t num = pv_anchor_path_get_anchor_point_num(_data->anchor_path);
-			index = (int)num;
-		}
-	}
-	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(_data->anchor_path, index, PvAnchorPathIndexTurn_Disable);
+	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(_data->anchor_path, focus->index, PvAnchorPathIndexTurn_Disable);
+	et_assertf(ap, "%d", focus->index);
 
 	PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
 	PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
-	if(fabs(p_diff.x) < PX_SENSITIVE_OF_TOUCH
-			&& fabs(p_diff.y) < PX_SENSITIVE_OF_TOUCH)
-	{
-		pv_anchor_point_set_handle_zero(
-				ap,
-				PvAnchorPointIndex_Point);
+	if(fabs(p_diff.x) < PX_SENSITIVE_OF_TOUCH && fabs(p_diff.y) < PX_SENSITIVE_OF_TOUCH){
+		pv_anchor_point_set_handle_zero(ap, PvAnchorPointIndex_Point);
 	}else{
-		pv_anchor_point_set_handle(
-				ap,
-				PvAnchorPointIndex_Point,
-				mouse_action.point);
+		pv_anchor_point_set_handle(ap, PvAnchorPointIndex_Point, mouse_action.point);
 	}
 
 	return true;
