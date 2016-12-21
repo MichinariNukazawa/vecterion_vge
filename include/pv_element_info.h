@@ -60,18 +60,21 @@ typedef bool (*PvElementFuncMoveElement)(
 		double gy);
 typedef int (*PvElementFuncGetNumAnchorPoint)(
 		const PvElement *element);
+typedef bool (*PvElementFuncIsExistAnchorPoint)(
+		PvElement *element,
+		PvAnchorPoint *ap);
 typedef PvAnchorPoint *(*PvElementFuncNewAnchorPoints)(
 		const PvElement *element);
 typedef PvAnchorPoint (*PvElementFuncGetAnchorPoint)(
 		const PvElement *element,
 		const int index);
 typedef bool (*PvElementFuncSetAnchorPointPoint)(
-		const PvElement *element,
-		const int index,
+		PvElement *element,
+		PvAnchorPoint *ap,
 		const PvPoint point);
 typedef bool (*PvElementFuncMoveAnchorPointPoint)(
-		const PvElement *element,
-		const int index,
+		PvElement *element,
+		PvAnchorPoint *ap,
 		const PvPoint move);
 typedef PvRect (*PvElementFuncGetRectByAnchorPoints)(
 		const PvElement *element);
@@ -100,6 +103,7 @@ typedef struct PvElementInfo{
 	PvElementFuncSetPointByAnchorPoints	func_set_point_by_anchor_points;
 	PvElementFuncMoveElement		func_move_element;
 	PvElementFuncGetNumAnchorPoint		func_get_num_anchor_point;
+	PvElementFuncIsExistAnchorPoint		func_is_exist_anchor_point;
 	PvElementFuncNewAnchorPoints		func_new_anchor_points;
 	PvElementFuncGetAnchorPoint		func_get_anchor_point;
 	PvElementFuncSetAnchorPointPoint	func_set_anchor_point_point;

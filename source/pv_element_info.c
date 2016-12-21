@@ -79,6 +79,13 @@ static int _func_zero_get_num_anchor_point(
 	return 0;
 }
 
+static bool _func_nop_is_exist_anchor_point(
+		PvElement *element,
+		PvAnchorPoint *ap)
+{
+	return false;
+}
+
 static PvAnchorPoint *_func_null_new_anchor_points(
 		const PvElement *element)
 {
@@ -95,16 +102,16 @@ static PvAnchorPoint _func_notimpl_get_anchor_point(
 }
 
 static bool _func_notimpl_set_anchor_point_point(
-		const PvElement *element,
-		const int index,
+		PvElement *element,
+		PvAnchorPoint *ap,
 		const PvPoint point)
 {
 	return true;
 }
 
 static bool _func_notimpl_move_anchor_point(
-		const PvElement *element,
-		const int index,
+		PvElement *element,
+		PvAnchorPoint *ap,
 		const PvPoint move)
 {
 	return true;
@@ -820,16 +827,21 @@ static bool _func_curve_draw_focusing(
 	cairo_stroke(cr);
 
 	// ** anchor points
+	int focus_index = pv_anchor_path_get_anchor_point_index(
+			data->anchor_path, pv_focus_get_first_anchor_point(focus));
 	size_t num = _func_curve_get_num_anchor_point(simplify);
 	for(int i = 0; i < (int)num; i++){
-		int ofs_index = (i - focus->index);
-		if(-1 != focus->index){
-			const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(simplify_data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
+		if(-1 != focus_index){
+			const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(
+					simplify_data->anchor_path,
+					i,
+					PvAnchorPathIndexTurn_Disable);
+			int ofs_index = (i - focus_index);
 			if(abs(ofs_index) <= 1){
 				// * anchor handle. draw to focus and +-1
 				_curve_draw_anchor_handle(cr, *ap, ofs_index);
 			}
-			if(0 == focus->index && i == ((int)num - 1) && pv_anchor_path_get_is_close(simplify_data->anchor_path)){
+			if(0 == focus_index && i == ((int)num - 1) && pv_anchor_path_get_is_close(simplify_data->anchor_path)){
 				// *anchor handle. to last AnchorPoint
 				_curve_draw_anchor_handle(cr, *ap, -1);
 			}
@@ -838,7 +850,8 @@ static bool _func_curve_draw_focusing(
 		// draw AnchorPoint
 		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(simplify_data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
 		PvPoint p = ap->points[PvAnchorPointIndex_Point];
-		PvElementPointKind kind = ((i == focus->index)?
+		pv_debug("#### %p %p", ap, pv_focus_get_first_anchor_point(focus));
+		PvElementPointKind kind = ((i == focus_index)?
 				PvElementPointKind_Selected : PvElementPointKind_Normal);
 		_curve_draw_point(cr, p, kind);
 	}
@@ -978,6 +991,23 @@ int _func_curve_get_num_anchor_point(
 	return pv_anchor_path_get_anchor_point_num(data->anchor_path);
 }
 
+static bool _func_curve_is_exist_anchor_point(
+		PvElement *element,
+		PvAnchorPoint *ap)
+{
+	PvElementCurveData *data = element->data;
+
+	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+	for(int i = 0; i < (int)num; i++){
+		PvAnchorPoint *ap_ = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
+		if(ap_ == ap){
+			return true;
+		}
+	}
+
+	return false;
+}
+
 PvAnchorPoint *_func_curve_new_anchor_points(
 		const PvElement *element)
 {
@@ -999,8 +1029,8 @@ static PvAnchorPoint _func_curve_get_anchor_point(
 }
 
 static bool _func_curve_set_anchor_point_point(
-		const PvElement *element,
-		const int index,
+		PvElement *element,
+		PvAnchorPoint *ap,
 		const PvPoint point)
 {
 	assert(element);
@@ -1009,15 +1039,19 @@ static bool _func_curve_set_anchor_point_point(
 	PvElementCurveData *data = element->data;
 	assert(data);
 
-	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, index, PvAnchorPathIndexTurn_Disable);
+	if(!pv_anchor_path_is_exist_anchor_point(data->anchor_path, ap)){
+		pv_bug("");
+		return false;
+	}
+
 	pv_anchor_point_set_point(ap, point);
 
 	return true;
 }
 
 static bool _func_curve_move_anchor_point(
-		const PvElement *element,
-		const int index,
+		PvElement *element,
+		PvAnchorPoint *ap,
 		const PvPoint move)
 {
 	assert(element);
@@ -1026,7 +1060,11 @@ static bool _func_curve_move_anchor_point(
 	PvElementCurveData *data = element->data;
 	assert(data);
 
-	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, index, PvAnchorPathIndexTurn_Disable);
+	if(!pv_anchor_path_is_exist_anchor_point(data->anchor_path, ap)){
+		pv_bug("");
+		return false;
+	}
+
 	ap->points[PvAnchorPointIndex_Point].x += move.x;
 	ap->points[PvAnchorPointIndex_Point].y += move.y;
 
@@ -1318,7 +1356,7 @@ static PvPoint get_pixbuf_size_(const GdkPixbuf *pb)
 {
 	PvPoint ret = {
 		.x = gdk_pixbuf_get_width(pb),
-	.y = gdk_pixbuf_get_height(pb),
+		.y = gdk_pixbuf_get_height(pb),
 	};
 
 	return ret;
@@ -1551,8 +1589,8 @@ static PvAnchorPoint _func_raster_get_anchor_point(
 }
 
 static bool _func_raster_set_anchor_point_point(
-		const PvElement *element,
-		const int index,
+		PvElement *element,
+		PvAnchorPoint *ap,
 		const PvPoint point)
 {
 	assert(element);
@@ -1569,8 +1607,8 @@ static bool _func_raster_set_anchor_point_point(
 }
 
 static bool _func_raster_move_anchor_point(
-		const PvElement *element,
-		const int index,
+		PvElement *element,
+		PvAnchorPoint *ap,
 		const PvPoint move)
 {
 	assert(element);
@@ -1579,21 +1617,12 @@ static bool _func_raster_move_anchor_point(
 	PvElementRasterData *data = element->data;
 	assert(data);
 
-	switch(index){
-		case 0:
-			{
-				PvPoint position = data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move;
-				position.x += move.x;
-				position.y += move.y;
-				data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move = position;
-			}
-			break;
-		default:
-			{
-				pv_debug("Not implement.");
-				return true;
-			}
-			break;
+	//! @todo not implement, already implement is only upleft anchor_point.
+	{
+		PvPoint position = data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move;
+		position.x += move.x;
+		position.y += move.y;
+		data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move = position;
 	}
 
 	return true;
@@ -1750,6 +1779,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_diff_one			= _func_group_is_diff_one,
 		.func_move_element			= _func_group_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
+		.func_is_exist_anchor_point		= _func_nop_is_exist_anchor_point,
 		.func_new_anchor_points			= _func_null_new_anchor_points,
 		.func_get_anchor_point			= _func_notimpl_get_anchor_point,
 		.func_set_anchor_point_point		= _func_notimpl_set_anchor_point_point,
@@ -1771,6 +1801,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_diff_one			= _func_group_is_diff_one,
 		.func_move_element			= _func_group_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
+		.func_is_exist_anchor_point		= _func_nop_is_exist_anchor_point,
 		.func_new_anchor_points			= _func_null_new_anchor_points,
 		.func_get_anchor_point			= _func_notimpl_get_anchor_point,
 		.func_set_anchor_point_point		= _func_notimpl_set_anchor_point_point,
@@ -1792,6 +1823,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_diff_one			= _func_group_is_diff_one,
 		.func_move_element			= _func_group_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
+		.func_is_exist_anchor_point		= _func_nop_is_exist_anchor_point,
 		.func_new_anchor_points			= _func_null_new_anchor_points,
 		.func_get_anchor_point			= _func_notimpl_get_anchor_point,
 		.func_set_anchor_point_point		= _func_notimpl_set_anchor_point_point,
@@ -1813,6 +1845,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_diff_one			= _func_curve_is_diff_one,
 		.func_move_element			= _func_curve_move_element,
 		.func_get_num_anchor_point		= _func_curve_get_num_anchor_point,
+		.func_is_exist_anchor_point		= _func_curve_is_exist_anchor_point,
 		.func_new_anchor_points			= _func_curve_new_anchor_points,
 		.func_get_anchor_point			= _func_curve_get_anchor_point,
 		.func_set_anchor_point_point		= _func_curve_set_anchor_point_point,
@@ -1834,6 +1867,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_diff_one			= _func_raster_is_diff_one,
 		.func_move_element			= _func_raster_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
+		.func_is_exist_anchor_point		= _func_nop_is_exist_anchor_point,
 		.func_new_anchor_points			= _func_null_new_anchor_points,
 		.func_get_anchor_point			= _func_raster_get_anchor_point,
 		.func_set_anchor_point_point		= _func_raster_set_anchor_point_point,

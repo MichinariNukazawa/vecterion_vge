@@ -918,7 +918,8 @@ static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mou
 					// ** do close anchor_point
 					is_closed = true;
 					pv_anchor_path_set_is_close(_data->anchor_path, is_closed);
-					pv_focus_clear_set_element_index(focus, _element, 0);
+					bool ret = pv_focus_clear_set_element_index(focus, _element, 0);
+					et_assert(ret);
 				}
 			}
 		}
@@ -940,7 +941,8 @@ static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction
 		return true;
 	}
 
-	if(-1 == focus->index){
+	PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
+	if(NULL == ap){
 		return true;
 	}
 
@@ -953,9 +955,6 @@ static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction
 
 	PvElementCurveData *_data = (PvElementCurveData *) _element->data;
 	et_assert(_data);
-
-	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(_data->anchor_path, focus->index, PvAnchorPathIndexTurn_Disable);
-	et_assertf(ap, "%d", focus->index);
 
 	PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
 	PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
@@ -1075,20 +1074,18 @@ static bool _move_elements_anchor_points(EtDocId doc_id, EtMouseAction mouse_act
 	 * else sub focusing AnchorPoints position is move difference
 	 *		from current focusing AnchorPoint
 	 */
-	PvPoint move = PvPoint_Default;
+	PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
+	if(NULL == ap){
+		return true;
+	}
 	int num = pv_general_get_parray_num((void **)focus->elements);
 	for(int i = 0; i < num; i++){
 		const PvElementInfo *info = pv_element_get_info_from_kind(focus->elements[i]->kind);
 		assert(info);
-		if(0 == i){
-			assert(info->func_get_anchor_point);
-			PvAnchorPoint prev = info->func_get_anchor_point(focus->elements[i], focus->index);
-			move = pv_point_sub(mouse_action.point, prev.points[PvAnchorPointIndex_Point]);
-			assert(info->func_set_anchor_point_point);
-			info->func_set_anchor_point_point(focus->elements[i], focus->index, mouse_action.point);
-		}else{
-			assert(info->func_move_anchor_point_point);
-			info->func_move_anchor_point_point(focus->elements[i], focus->index, move);
+		if(info->func_is_exist_anchor_point(focus->elements[i], ap)){
+
+			info->func_set_anchor_point_point(focus->elements[i], ap, mouse_action.point);
+			return true;
 		}
 	}
 
@@ -1160,29 +1157,6 @@ finally:
 	return result;
 }
 
-/*! 
- * @fixme implement and usable only to PvElementKind_Curve
- * @return anchor points of focusing. Not focus:NULL.
- */
-PvAnchorPoint *_get_focus_anchor_point(const PvFocus *focus){
-	// ** get focusing AnchorPoint
-	int num = pv_general_get_parray_num((void **)focus->elements);
-	if(num < 1){
-		return NULL;
-	}
-	PvElement *element = focus->elements[0];
-	if(PvElementKind_Curve != element->kind){
-		return NULL;
-	}
-	assert(element->data);
-	PvElementCurveData *data = element->data;
-	int num_ap = pv_element_curve_get_num_anchor_point(element);
-	assert(focus->index < num_ap);
-	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, focus->index, PvAnchorPathIndexTurn_Disable);
-
-	return ap;
-}
-
 /*! @return handle(PvAnchorPointHandle) not grub: -1 */
 int _edit_anchor_point_handle_bound_handle(PvAnchorPoint ap, EtMouseAction mouse_action)
 {
@@ -1223,7 +1197,7 @@ static int _edit_anchor_point_handle_grub_focus(PvFocus *focus, EtMouseAction mo
 	int handle = -1; //!< Handle not grub.
 
 	//! first check already focus AnchorPoint.
-	PvAnchorPoint *ap = _get_focus_anchor_point(focus);
+	PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
 	if(NULL != ap){
 		handle = _edit_anchor_point_handle_bound_handle(*ap, mouse_action);
 		if(-1 != handle){
@@ -1275,7 +1249,7 @@ static bool _func_edit_anchor_point_handle_mouse_action(
 		case EtMouseAction_Down:
 			{
 				handle = _edit_anchor_point_handle_grub_focus(focus, mouse_action);
-				PvAnchorPoint *ap = _get_focus_anchor_point(focus);
+				PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
 				if(NULL != ap && PvAnchorPointIndex_Point == handle){
 					pv_anchor_point_set_handle_zero(
 							ap,
@@ -1289,7 +1263,7 @@ static bool _func_edit_anchor_point_handle_mouse_action(
 					break;
 				}
 
-				PvAnchorPoint *ap = _get_focus_anchor_point(focus);
+				PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
 				if(NULL == ap){
 					break;
 				}

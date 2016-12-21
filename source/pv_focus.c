@@ -4,6 +4,7 @@
 #include <string.h>
 #include "pv_error.h"
 #include "pv_general.h"
+#include "pv_element_info.h"
 
 PvFocus *pv_focus_new(const PvVg *vg)
 {
@@ -31,7 +32,11 @@ PvFocus *pv_focus_new(const PvVg *vg)
 	self->elements[0] = vg->element_root->childs[0];
 	self->elements[1] = NULL;
 
-	self->index = -1;
+	self->anchor_points = malloc(sizeof(PvAnchorPoint *) * 2);
+	pv_assert(self->anchor_points);
+	self->anchor_points[1] = NULL;
+	self->anchor_points[0] = NULL;
+
 
 	return self;
 
@@ -199,15 +204,27 @@ bool pv_focus_clear_set_element_index(PvFocus *focus, PvElement *element, int in
 	}
 
 	PvElement **new = realloc(focus->elements, sizeof(PvElement *) * 2);
-	if(NULL == focus->elements){
-		pv_critical("");
-		return false;
-	}
+	pv_assert(new);
 
-	new[0] = element;
 	new[1] = NULL;
+	new[0] = element;
 	focus->elements = new;
-	focus->index = index;
+
+	if(0 <= index){
+		if(PvElementKind_Curve != element->kind){
+			pv_error("%d", element->kind);
+			return false;
+		}
+
+		PvElementCurveData *data = element->data;
+		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, index, PvAnchorPathIndexTurn_Disable);
+		pv_assertf(ap, "%d", index);
+
+		PvAnchorPoint **aps = realloc(focus->anchor_points, sizeof(PvAnchorPoint *) * 2);
+		aps[1] = NULL;
+		aps[0] = ap;
+		focus->anchor_points = aps;
+	}
 
 	return true;
 }
@@ -237,5 +254,42 @@ void pv_focus_free(PvFocus *focus)
 {
 	free(focus->elements);
 	free(focus);
+}
+
+/*
+   bool pv_focus_remove_anchor_point(PvFocus *focus, PvAnchorPoint *ap)
+   {
+   size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
+   for(int i = 0; i < (int)num; i++){
+   if(focus->anchor_points[i] == ap){
+   memmove(&focus->anchor_points[i], &focus->anchor_points[i + 1],
+   sizeof(PvAnchorPoint *) * (num - i - 1));
+   focus->anchor_points[num] = NULL;
+   return true;
+   }
+   }
+
+   return false;
+   }
+ */
+
+PvAnchorPoint *pv_focus_get_first_anchor_point(const PvFocus *focus)
+{
+	size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
+	if(0 == num){
+		return NULL;
+	}
+
+	size_t num_elements = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < (int)num_elements; i++){
+		const PvElementInfo *info = pv_element_get_info_from_kind(focus->elements[i]->kind);
+		pv_assertf(info, "%d", focus->elements[i]->kind);
+
+		if(info->func_is_exist_anchor_point(focus->elements[i], focus->anchor_points[0])){
+			return focus->anchor_points[0];
+		}
+	}
+
+	return NULL;
 }
 

@@ -170,6 +170,25 @@ size_t pv_anchor_path_get_anchor_point_num(const PvAnchorPath *self)
 	return num;
 }
 
+int pv_anchor_path_get_anchor_point_index(const PvAnchorPath *anchor_path, const PvAnchorPoint *ap)
+{
+	size_t num = pv_general_get_parray_num((void **)anchor_path->anchor_points);
+	for(int i = 0; i < (int)num; i++){
+		if(ap == anchor_path->anchor_points[i]){
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+bool pv_anchor_path_is_exist_anchor_point(const PvAnchorPath *anchor_path, const PvAnchorPoint *ap)
+{
+	int index = pv_anchor_path_get_anchor_point_index(anchor_path, ap);
+
+	return (-1 != index);
+}
+
 void pv_anchor_path_set_is_close(PvAnchorPath *self, bool is_close)
 {
 	self->is_close = is_close;
