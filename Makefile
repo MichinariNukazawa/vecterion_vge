@@ -51,10 +51,14 @@ $(OBJECT_DIR)/%.o : $(SOURCE_DIR)/%.c
 	$(MKDIR_P) $(dir $@)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
 
+
+$(OBJECT_DIR)/main.o : include/version.h
 $(TARGET) : $(OBJECTS)
+	bash ./version.sh $(OBJECT_DIR)
 	$(MKDIR_P) $(dir $@)
 	$(CC) \
 		$^ \
+		$(OBJECT_DIR)/version.c \
 		$(CFLAGS) \
 		$(INCLUDE) \
 		-o $(TARGET)

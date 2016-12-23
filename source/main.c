@@ -37,8 +37,11 @@
 #include "et_snap_panel.h"
 #include "pv_file_format.h"
 #include "et_doc_relation.h"
+#include "version.h"
 
-const char *APP_NAME = "Vecterion Vector Graphic Editor";
+#define VECTERION_FULLNAME "Vecterion Vector Graphic Editor"
+
+
 
 typedef struct{
 	GtkWindow *window;
@@ -142,6 +145,9 @@ static void usage()
 		const PvFileFormat *format = get_file_format_from_index(i);
 		fprintf(stderr, "	'%s'\n", format->extension);
 	}
+
+	fprintf(stderr, "\n");
+	fprintf(stderr, "`%s`\n%s", VECTERION_FULLNAME, get_vecterion_build());
 }
 
 static bool et_args(EtArgs *args, int argc, char **argv)
@@ -470,6 +476,8 @@ int main (int argc, char **argv){
 		return -1;
 	}
 
+	char *window_title = g_strdup_printf("%s %s", "Vecterion", SHOW_VERSION);
+	gtk_window_set_title(GTK_WINDOW(window), window_title);
 	_pvui_app_set_style();
 	gtk_widget_show_all(window);
 	gtk_main();
@@ -1555,8 +1563,9 @@ static void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
 			flags,
 			GTK_MESSAGE_QUESTION,
 			GTK_BUTTONS_CLOSE,
-			"This is :'%s'",
-			APP_NAME);
+			"`%s`\n%s",
+			VECTERION_FULLNAME,
+			get_vecterion_build());
 	gtk_dialog_run (GTK_DIALOG (dialog));
 	gtk_widget_destroy (dialog);
 }
