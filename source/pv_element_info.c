@@ -850,7 +850,6 @@ static bool _func_curve_draw_focusing(
 		// draw AnchorPoint
 		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(simplify_data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
 		PvPoint p = ap->points[PvAnchorPointIndex_Point];
-		pv_debug("#### %p %p", ap, pv_focus_get_first_anchor_point(focus));
 		PvElementPointKind kind = ((i == focus_index)?
 				PvElementPointKind_Selected : PvElementPointKind_Normal);
 		_curve_draw_point(cr, p, kind);
