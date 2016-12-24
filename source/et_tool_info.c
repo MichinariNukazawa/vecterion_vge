@@ -599,6 +599,57 @@ static PvElement *_element_new_from_circle(PvPoint center, double size)
 	return pv_element_curve_new_from_rect(rect);
 }
 
+static void group_edit_(EtDocId doc_id, EtFocusElementMouseActionMode _mode, PvRect focusing_mouse_rect, double scale)
+{
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	et_assertf(focus, "%d", doc_id);
+
+	PvElement *element_group_edit_draw = pv_element_new(PvElementKind_Group);
+	et_assert(element_group_edit_draw);
+
+	PvRect _after_extent_rect = _get_rect_extent_from_elements(focus->elements);
+	if(pv_focus_is_focused(focus)){
+		int size = 5.0 / scale;
+		for(int i = 0; i < 4; i++){
+			PvPoint center = pv_rect_get_edge_point(_after_extent_rect, i);
+			PvRect rect = get_square_rect_from_center_point_(center, size);
+			PvElement *element_curve = pv_element_curve_new_from_rect(rect);
+			et_assert(element_curve);
+			pv_element_append_child(element_group_edit_draw, NULL, element_curve);
+		}
+	}
+
+	switch(_mode){
+		case EtFocusElementMouseActionMode_Rotate:
+			{
+				if(pv_focus_is_focused(focus)){
+					// rotate center mark
+					PvPoint center = pv_rect_get_center(_after_extent_rect);
+					int diameter = 8.0 / scale;
+					PvElement *element_center = _element_new_from_circle(center, diameter);
+					et_assert(element_center);
+					pv_element_append_child(element_group_edit_draw, NULL, element_center);
+				}
+			}
+			break;
+		case EtFocusElementMouseActionMode_FocusingByArea:
+			{
+				PvElement *element_curve = pv_element_curve_new_from_rect(focusing_mouse_rect);
+				et_assert(element_curve);
+				element_curve->color_pair.colors[PvColorPairGround_ForGround] = PvColor_Working;
+				element_curve->color_pair.colors[PvColorPairGround_BackGround] = PvColor_None;
+				element_curve->stroke.width = 1.0 / scale;
+				pv_element_append_child(element_group_edit_draw, NULL, element_curve);
+			}
+		default:
+			break;
+	}
+
+
+	et_doc_set_element_group_edit_draw_from_id(doc_id, element_group_edit_draw);
+	pv_element_remove_free_recursive(element_group_edit_draw);
+}
+
 static bool _func_edit_element_mouse_action(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
@@ -616,12 +667,9 @@ static bool _func_edit_element_mouse_action(
 	EdgeKind _edge = EdgeKind_None;
 
 	if(pv_focus_is_focused(focus)){
-		int num = pv_general_get_parray_num((void **)focus->elements);
-		if(0 < num){
-			_src_extent_rect = _get_rect_extent_from_elements(focus->elements);
-			_edge = _get_outside_touch_edge_kind_from_rect(
-					_src_extent_rect, mouse_action.point, mouse_action.scale);
-		}
+		_src_extent_rect = _get_rect_extent_from_elements(focus->elements);
+		_edge = _get_outside_touch_edge_kind_from_rect(
+				_src_extent_rect, mouse_action.point, mouse_action.scale);
 	}
 
 	if(EtFocusElementMouseActionMode_None == _mode){
@@ -778,53 +826,7 @@ static bool _func_edit_element_mouse_action(
 			break;
 	}
 
-	// edit draw
-	{
-		PvElement *element_group_edit_draw = pv_element_new(PvElementKind_Group);
-		et_assert(element_group_edit_draw);
-
-		PvRect _after_extent_rect = _get_rect_extent_from_elements(focus->elements);
-		if(pv_focus_is_focused(focus)){
-			int size = 5.0 / mouse_action.scale;
-			for(int i = 0; i < 4; i++){
-				PvPoint center = pv_rect_get_edge_point(_after_extent_rect, i);
-				PvRect rect = get_square_rect_from_center_point_(center, size);
-				PvElement *element_curve = pv_element_curve_new_from_rect(rect);
-				et_assert(element_curve);
-				pv_element_append_child(element_group_edit_draw, NULL, element_curve);
-			}
-		}
-
-		switch(_mode){
-			case EtFocusElementMouseActionMode_Rotate:
-				{
-					if(pv_focus_is_focused(focus)){
-						// rotate center mark
-						PvPoint center = pv_rect_get_center(_after_extent_rect);
-						int diameter = 8.0 / mouse_action.scale;
-						PvElement *element_center = _element_new_from_circle(center, diameter);
-						et_assert(element_center);
-						pv_element_append_child(element_group_edit_draw, NULL, element_center);
-					}
-				}
-				break;
-			case EtFocusElementMouseActionMode_FocusingByArea:
-				{
-					PvElement *element_curve = pv_element_curve_new_from_rect(focusing_mouse_rect);
-					et_assert(element_curve);
-					element_curve->color_pair.colors[PvColorPairGround_ForGround] = PvColor_Working;
-					element_curve->color_pair.colors[PvColorPairGround_BackGround] = PvColor_None;
-					element_curve->stroke.width = 1.0 / mouse_action.scale;
-					pv_element_append_child(element_group_edit_draw, NULL, element_curve);
-				}
-			default:
-				break;
-		}
-
-
-		et_doc_set_element_group_edit_draw_from_id(doc_id, element_group_edit_draw);
-		pv_element_remove_free_recursive(element_group_edit_draw);
-	}
+	group_edit_(doc_id, _mode, focusing_mouse_rect, mouse_action.scale);
 
 	return true;
 }
