@@ -1214,22 +1214,8 @@ static int _edit_anchor_point_handle_grub_focus(PvFocus *focus, EtMouseAction mo
 static bool _func_edit_anchor_point_handle_mouse_action(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
-	bool result = true;
-
-	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
-	if(NULL == doc){
-		et_error("");
-		result = false;
-		goto finally;
-	}
-
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-	if(NULL == focus){
-		et_error("");
-		result = false;
-		goto finally;
-	}
-
+	et_assert(focus);
 
 	// static PvAnchorPointIndex handle = PvAnchorPointIndex_Point; //!< Handle not grub.
 	static int handle = -1;
@@ -1283,10 +1269,9 @@ static bool _func_edit_anchor_point_handle_mouse_action(
 			break;
 	}
 
-finally:
 	et_doc_set_element_group_edit_draw_from_id(doc_id, NULL);
 
-	return result;
+	return true;
 }
 
 static void curve_element_split_from_index_(PvElement *elements[2], PvElement *element, int index)
