@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NAME="etaion"
+NAME="vecterion"
 
 if [ -d ./${NAME} ] ; then
 	echo "error: ./sweepが既に存在する" 
