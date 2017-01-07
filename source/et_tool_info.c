@@ -672,12 +672,6 @@ static bool _func_edit_element_mouse_action(
 				_src_extent_rect, mouse_action.point, mouse_action.scale);
 	}
 
-	if(EtFocusElementMouseActionMode_None == _mode){
-		*cursor = _get_cursor_from_edge(_edge);
-	}else{
-		*cursor = _get_cursor_from_edge(_mode_edge);
-	}
-
 	PvRect focusing_mouse_rect;
 
 	switch(mouse_action.action){
@@ -760,17 +754,13 @@ static bool _func_edit_element_mouse_action(
 					case EtFocusElementMouseActionMode_Resize:
 						{
 
-							EdgeKind _edge_kind = _resize_elements(doc_id, mouse_action, _mode_edge, src_extent_rect);
-
-							*cursor = _get_cursor_from_edge(_edge_kind);
+							_resize_elements(doc_id, mouse_action, _mode_edge, src_extent_rect);
 						}
 						break;
 					case EtFocusElementMouseActionMode_Rotate:
 						{
 
-							EdgeKind _edge_kind = _rotate_elements(doc_id, mouse_action, _mode_edge, src_extent_rect);
-
-							*cursor = _get_cursor_from_edge(_edge_kind);
+							_rotate_elements(doc_id, mouse_action, _mode_edge, src_extent_rect);
 						}
 						break;
 					case EtFocusElementMouseActionMode_FocusingByArea:
@@ -826,6 +816,14 @@ static bool _func_edit_element_mouse_action(
 			break;
 	}
 
+	// ** mouse cursor
+	if(EtFocusElementMouseActionMode_None == _mode){ // tool is not active
+		*cursor = _get_cursor_from_edge(_edge);
+	}else{
+		*cursor = _get_cursor_from_edge(_mode_edge);
+	}
+
+	// ** focusing view by tool
 	group_edit_(doc_id, _mode, focusing_mouse_rect, mouse_action.scale);
 
 	return true;
