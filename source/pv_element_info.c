@@ -92,13 +92,11 @@ static PvAnchorPoint *_func_null_new_anchor_points(
 	return NULL;
 }
 
-static PvAnchorPoint _func_notimpl_get_anchor_point(
+static PvAnchorPoint *_func_notimpl_get_anchor_point(
 		const PvElement *element,
 		const int index)
 {
-	PvAnchorPoint ap = PvAnchorPoint_Default;
-
-	return ap;
+	return NULL;
 }
 
 static bool _func_notimpl_set_anchor_point_point(
@@ -1014,7 +1012,7 @@ PvAnchorPoint *_func_curve_new_anchor_points(
 	return NULL;
 }
 
-static PvAnchorPoint _func_curve_get_anchor_point(
+static PvAnchorPoint *_func_curve_get_anchor_point(
 		const PvElement *element,
 		const int index)
 {
@@ -1023,8 +1021,8 @@ static PvAnchorPoint _func_curve_get_anchor_point(
 
 	PvElementCurveData *data = element->data;
 
-	const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, index, PvAnchorPathIndexTurn_Disable);
-	return *ap;
+	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, index, PvAnchorPathIndexTurn_Disable);
+	return ap;
 }
 
 static bool _func_curve_set_anchor_point_point(
@@ -1262,6 +1260,13 @@ static gpointer _func_raster_new_data()
 	data->raster_appearances[PvElementRasterAppearanceIndex_Resize]->kind = PvAppearanceKind_Resize;
 	data->raster_appearances[PvElementRasterAppearanceIndex_Resize]->resize.resize = (PvPoint){1,1};
 	data->raster_appearances[PvElementRasterAppearanceIndex_Rotate]->kind = PvAppearanceKind_Rotate;
+
+	data->anchor_path = pv_anchor_path_new();
+	pv_assert(data->anchor_path);
+	PvAnchorPoint ap = PvAnchorPoint_Default;
+	for(int i = 0; i < 4; i++){
+		pv_anchor_path_add_anchor_point(data->anchor_path, &ap);
+	}
 
 	return (gpointer)data;
 }
@@ -1565,7 +1570,7 @@ static bool _func_raster_move_element(
 	return true;
 }
 
-static PvAnchorPoint _func_raster_get_anchor_point(
+static PvAnchorPoint *_func_raster_get_anchor_point(
 		const PvElement *element,
 		const int index)
 {
@@ -1577,12 +1582,14 @@ static PvAnchorPoint _func_raster_get_anchor_point(
 
 	PvPoint position = data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move;
 
-	PvAnchorPoint ap = PvAnchorPoint_Default;
+	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, index, PvAnchorPathIndexTurn_Disable);
+	pv_assert(ap);
+
 	PvPoint point = {
 		.x = position.x,
 		.y = position.y,
 	};
-	pv_anchor_point_set_handle(&ap, PvAnchorPointIndex_Point, point);
+	pv_anchor_point_set_handle(ap, PvAnchorPointIndex_Point, point);
 
 	return ap;
 }

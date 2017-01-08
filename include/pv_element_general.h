@@ -46,6 +46,8 @@ typedef enum{
 struct PvElementRasterData;
 typedef struct PvElementRasterData PvElementRasterData;
 struct PvElementRasterData{
+	PvAnchorPath *anchor_path;
+
 	char *path;
 	GdkPixbuf *pixbuf;
 

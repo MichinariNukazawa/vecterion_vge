@@ -65,7 +65,7 @@ typedef bool (*PvElementFuncIsExistAnchorPoint)(
 		PvAnchorPoint *ap);
 typedef PvAnchorPoint *(*PvElementFuncNewAnchorPoints)(
 		const PvElement *element);
-typedef PvAnchorPoint (*PvElementFuncGetAnchorPoint)(
+typedef PvAnchorPoint *(*PvElementFuncGetAnchorPoint)(
 		const PvElement *element,
 		const int index);
 typedef bool (*PvElementFuncSetAnchorPointPoint)(

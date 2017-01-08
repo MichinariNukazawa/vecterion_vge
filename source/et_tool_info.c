@@ -1013,11 +1013,11 @@ static bool _get_touch_element_and_index(
 
 	size_t num = info->func_get_num_anchor_point(element);
 	for(int i = 0; i < (int)num; i++){
-		PvAnchorPoint ap = info->func_get_anchor_point(element, i);
+		const PvAnchorPoint *ap = info->func_get_anchor_point(element, i);
 
 		if(_is_bound_point(
 					PX_SENSITIVE_OF_TOUCH,
-					ap.points[PvAnchorPointIndex_Point],
+					ap->points[PvAnchorPointIndex_Point],
 					_data->g_point))
 		{
 			index = i;
@@ -1144,12 +1144,12 @@ static bool _func_edit_anchor_point_mouse_action(
 }
 
 /*! @return handle(PvAnchorPointHandle) not grub: -1 */
-int _edit_anchor_point_handle_bound_handle(PvAnchorPoint ap, EtMouseAction mouse_action)
+int _edit_anchor_point_handle_bound_handle(const PvAnchorPoint *ap, EtMouseAction mouse_action)
 {
 	// ** grub handle.
-	PvPoint p_point = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_Point);
-	PvPoint p_prev = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_HandlePrev);
-	PvPoint p_next = pv_anchor_point_get_handle(&ap, PvAnchorPointIndex_HandleNext);
+	PvPoint p_point = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
+	PvPoint p_prev = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandlePrev);
+	PvPoint p_next = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandleNext);
 
 	if(_is_bound_point(
 				PX_SENSITIVE_OF_TOUCH,
@@ -1183,9 +1183,9 @@ static int _edit_anchor_point_handle_grub_focus(PvFocus *focus, EtMouseAction mo
 	int handle = -1; //!< Handle not grub.
 
 	//! first check already focus AnchorPoint.
-	PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
+	const PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
 	if(NULL != ap){
-		handle = _edit_anchor_point_handle_bound_handle(*ap, mouse_action);
+		handle = _edit_anchor_point_handle_bound_handle(ap, mouse_action);
 		if(-1 != handle){
 			return handle;
 		}
@@ -1197,7 +1197,7 @@ static int _edit_anchor_point_handle_grub_focus(PvFocus *focus, EtMouseAction mo
 
 	int num = info->func_get_num_anchor_point(focus->elements[0]);
 	for(int i = 0; i < num; i++){
-		const PvAnchorPoint ap_ = info->func_get_anchor_point(focus->elements[0], i);
+		const PvAnchorPoint *ap_ = info->func_get_anchor_point(focus->elements[0], i);
 		handle = _edit_anchor_point_handle_bound_handle(ap_, mouse_action);
 		if(-1 != handle){
 			// ** change focus.
@@ -1313,10 +1313,10 @@ static bool knife_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction m
 	int index = -1;
 	int num = info->func_get_num_anchor_point(element);
 	for(int i = 0; i < num; i++){
-		const PvAnchorPoint ap = info->func_get_anchor_point(element, i);
+		const PvAnchorPoint *ap = info->func_get_anchor_point(element, i);
 		if(_is_bound_point(
 					PX_SENSITIVE_OF_TOUCH,
-					ap.points[PvAnchorPointIndex_Point],
+					ap->points[PvAnchorPointIndex_Point],
 					mouse_action.point)){
 			index = i;
 			break;
