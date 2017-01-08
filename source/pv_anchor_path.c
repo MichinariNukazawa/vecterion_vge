@@ -39,7 +39,6 @@ PvAnchorPath *pv_anchor_path_copy_new(const PvAnchorPath *self)
 {
 	size_t num = pv_anchor_path_get_anchor_point_num(self);
 	int num_ = (int)num - 1;
-	pv_assertf((0 <= num_), "%zu", num)
 	return pv_anchor_path_copy_new_range(self, 0, num_);
 }
 
@@ -49,7 +48,7 @@ PvAnchorPath *pv_anchor_path_copy_new_range(const PvAnchorPath *src, int head, i
 	size_t src_num = pv_anchor_path_get_anchor_point_num(src);
 	pv_assertf((head <= (int)src_num && foot <= (int)src_num), "%zu %d %d", src_num , head, foot);
 	int num = foot - head + 1;
-	pv_assertf((0 < num), "%zu %d %d", src_num , head, foot);
+	pv_assertf((0 <= num), "%zu %d %d", src_num , head, foot);
 
 	PvAnchorPath *dst = pv_anchor_path_new();
 	pv_assert(dst);
