@@ -15,15 +15,19 @@ struct PvFocus{
 PvFocus *pv_focus_new(const PvVg *vg);
 bool pv_focus_is_focused(const PvFocus *);
 bool pv_focus_is_exist_element(const PvFocus *, const PvElement *);
+bool pv_focus_is_exist_anchor_point(const PvFocus *, const PvElement *, const PvAnchorPoint *);
 bool pv_focus_add_element(PvFocus *, PvElement *);
+bool pv_focus_add_anchor_point(PvFocus *, PvElement *, PvAnchorPoint *);
 bool pv_focus_remove_element(PvFocus *, PvElement *);
+bool pv_focus_remove_anchor_point(PvFocus *, PvElement *, PvAnchorPoint *);
 PvElement *pv_focus_get_first_element(const PvFocus *);
+PvAnchorPoint *pv_focus_get_first_anchor_point(const PvFocus *);
 PvElement *pv_focus_get_first_layer(const PvFocus *);
 bool pv_focus_clear_set_element(PvFocus *, PvElement *);
 bool pv_focus_clear_set_element_index(PvFocus *, PvElement *, int index);
+bool pv_focus_clear_set_anchor_point(PvFocus *, PvElement *, PvAnchorPoint *);
 bool pv_focus_clear_to_first_layer(PvFocus *);
 void pv_focus_free(PvFocus *);
-PvAnchorPoint *pv_focus_get_first_anchor_point(const PvFocus *);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

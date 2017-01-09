@@ -88,6 +88,18 @@ bool pv_focus_is_exist_element(const PvFocus *focus, const PvElement *element)
 	return false;
 }
 
+bool pv_focus_is_exist_anchor_point(const PvFocus *focus, const PvElement *element, const PvAnchorPoint *anchor_point)
+{
+	size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
+	for(int i = 0; i < (int)num; i++){
+		if(anchor_point == focus->anchor_points[i]){
+			return true;
+		}
+	}
+
+	return false;
+}
+
 bool pv_focus_add_element(PvFocus *focus, PvElement *element)
 {
 	if(NULL == focus){
@@ -123,6 +135,34 @@ bool pv_focus_add_element(PvFocus *focus, PvElement *element)
 	return true;
 }
 
+bool pv_focus_add_anchor_point(PvFocus *focus, PvElement *element, PvAnchorPoint *anchor_point)
+{
+	if(!pv_focus_add_element(focus, element)){
+		pv_bug("");
+		return false;
+	}
+
+	// check already exist in focus
+	pv_focus_remove_anchor_point(focus, element, anchor_point);
+
+	// add anchor_point.
+	int num = pv_general_get_parray_num((void **)focus->anchor_points);
+	if(!pv_focus_is_focused(focus)){
+		return pv_focus_clear_set_anchor_point(focus, element, anchor_point);
+	}else{
+		PvAnchorPoint **anchor_points = realloc(focus->anchor_points, sizeof(PvAnchorPoint *) * (num + 2));
+		pv_assert(anchor_points);
+
+		memmove(&(anchor_points[1]), &(anchor_points[0]), sizeof(PvAnchorPoint *) * num);
+		anchor_points[num + 1] = NULL;
+		anchor_points[0] = anchor_point;
+
+		focus->anchor_points = anchor_points;
+	}
+
+	return true;
+}
+
 bool pv_focus_remove_element(PvFocus *focus, PvElement *element)
 {
 	int num = pv_general_get_parray_num((void **)focus->elements);
@@ -141,6 +181,72 @@ bool pv_focus_remove_element(PvFocus *focus, PvElement *element)
 	return true;
 }
 
+bool _remove_anchor_point(PvFocus *focus, PvElement *element, PvAnchorPoint *anchor_point)
+{
+	int num = pv_general_get_parray_num((void **)focus->anchor_points);
+	for(int i = 0; i < num; i++){
+		if(anchor_point == focus->anchor_points[i]){
+			memmove(&focus->anchor_points[i], &focus->anchor_points[i + 1],
+					sizeof(PvElement *) * (num - i));
+			focus->anchor_points[num - 1] = NULL;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+const PvAnchorPath *_element_get_anchor_path(const PvElement *element)
+{
+/*
+	const PvElementInfo *info = pv_element_info_get_from_kind(element->kind);
+	PvAnchorPoint **anchor_points = info->get_anchor_points(element);
+*/
+
+	if(PvElementKind_Curve != element->kind){
+		return NULL;
+	}else{
+		PvElementCurveData *data = element->data;
+		return data->anchor_path;
+	}
+}
+
+bool _pv_element_is_exist_anchor_point(const PvElement *element, const PvAnchorPoint *anchor_point)
+{
+	const PvAnchorPath *anchor_path = _element_get_anchor_path(element);
+	size_t num = pv_anchor_path_get_anchor_point_num(anchor_path);
+	for(int i = 0; i < (int)num; i++){
+		if(anchor_point == pv_anchor_path_get_anchor_point_from_index_const(anchor_path, i)){
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool pv_focus_remove_anchor_point(PvFocus *focus, PvElement *element, PvAnchorPoint *anchor_point)
+{
+	if(! _remove_anchor_point(focus, element, anchor_point)){
+		pv_bug("");
+		return false;
+	}
+
+	// check element remove?
+	bool is_exist = false;
+	size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
+	for(int i = 0; i < (int)num; i++){
+		if(_pv_element_is_exist_anchor_point(element, focus->anchor_points[i])){
+			is_exist = true;
+			break;
+		}
+	}
+
+	if(!is_exist){
+		pv_focus_remove_element(focus, element);
+	}
+
+	return true;
+}
 
 PvElement *pv_focus_get_first_element(const PvFocus *focus)
 {
@@ -155,6 +261,15 @@ PvElement *pv_focus_get_first_element(const PvFocus *focus)
 		return NULL;
 	}
 	return focus->elements[0];
+}
+
+PvAnchorPoint *pv_focus_get_first_anchor_point(const PvFocus *focus)
+{
+	int num = pv_general_get_parray_num((void **)focus->anchor_points);
+	if(0 == num){
+		return NULL;
+	}
+	return focus->anchor_points[0];
 }
 
 static bool pv_focus_is_layer_root_null_from_element_(const PvElement *element)
@@ -194,6 +309,21 @@ PvElement *pv_focus_get_first_layer(const PvFocus *focus)
 
 bool pv_focus_clear_set_element_index(PvFocus *focus, PvElement *element, int index)
 {
+	PvAnchorPoint *anchor_point = NULL;
+	if(0 <= index){
+		PvElementCurveData *data = element->data;
+		anchor_point = pv_anchor_path_get_anchor_point_from_index(
+				data->anchor_path,
+				index,
+				PvAnchorPathIndexTurn_Disable);
+		pv_assertf(anchor_point, "%d", index);
+	}
+
+	return pv_focus_clear_set_anchor_point(focus, element, anchor_point);
+}
+
+bool pv_focus_clear_set_anchor_point(PvFocus *focus, PvElement *element, PvAnchorPoint *anchor_point)
+{
 	if(NULL == focus){
 		pv_error("");
 		return false;
@@ -210,19 +340,14 @@ bool pv_focus_clear_set_element_index(PvFocus *focus, PvElement *element, int in
 	new[0] = element;
 	focus->elements = new;
 
-	if(0 <= index){
-		if(PvElementKind_Curve != element->kind){
-			pv_error("%d", element->kind);
-			return false;
-		}
-
-		PvElementCurveData *data = element->data;
-		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, index, PvAnchorPathIndexTurn_Disable);
-		pv_assertf(ap, "%d", index);
-
+	if(NULL == anchor_point){
+		free(focus->anchor_points);
+		focus->anchor_points = NULL;
+	}else{
 		PvAnchorPoint **aps = realloc(focus->anchor_points, sizeof(PvAnchorPoint *) * 2);
+		pv_assert(aps);
 		aps[1] = NULL;
-		aps[0] = ap;
+		aps[0] = anchor_point;
 		focus->anchor_points = aps;
 	}
 
@@ -273,6 +398,7 @@ void pv_focus_free(PvFocus *focus)
    }
  */
 
+/*
 PvAnchorPoint *pv_focus_get_first_anchor_point(const PvFocus *focus)
 {
 	size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
@@ -292,4 +418,5 @@ PvAnchorPoint *pv_focus_get_first_anchor_point(const PvFocus *focus)
 
 	return NULL;
 }
+*/
 
