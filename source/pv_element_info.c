@@ -346,6 +346,7 @@ static bool _func_group_move_element(
 typedef enum{
 	PvElementPointKind_Normal,
 	PvElementPointKind_Selected,
+	PvElementPointKind_SubSelected,
 	PvElementPointKind_AnchorHandle,
 }PvElementPointKind;
 
@@ -424,11 +425,17 @@ void _curve_simplify_free(PvElement *self)
 
 static void _curve_draw_point(cairo_t *cr, PvPoint gp, PvElementPointKind kind)
 {
-	cairo_arc (cr, gp.x, gp.y, 2.0, 0., 2 * M_PI);
+	cairo_arc (cr, gp.x, gp.y, 3.0, 0., 2 * M_PI);
 
-	cairo_set_source_rgba (cr, 1, 1, 1, 1.0); // white
-	if(PvElementPointKind_Selected == kind){
-		pv_cairo_set_source_rgba_workingcolor(cr);
+	switch(kind){
+		case PvElementPointKind_Selected:
+			pv_cairo_set_source_rgba_workingcolor(cr);
+			break;
+		case PvElementPointKind_SubSelected:
+			pv_cairo_set_source_rgba_subworkingcolor(cr);
+			break;
+		default:
+			cairo_set_source_rgba (cr, 1, 1, 1, 1.0); // white
 	}
 	cairo_fill_preserve (cr);
 
@@ -829,27 +836,34 @@ static bool _func_curve_draw_focusing(
 			data->anchor_path, pv_focus_get_first_anchor_point(focus));
 	size_t num = _func_curve_get_num_anchor_point(simplify);
 	for(int i = 0; i < (int)num; i++){
+		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(
+				data->anchor_path,
+				i,
+				PvAnchorPathIndexTurn_Disable);
+		const PvAnchorPoint *ap_simplify = pv_anchor_path_get_anchor_point_from_index(
+				simplify_data->anchor_path,
+				i,
+				PvAnchorPathIndexTurn_Disable);
 		if(-1 != focus_index){
-			const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(
-					simplify_data->anchor_path,
-					i,
-					PvAnchorPathIndexTurn_Disable);
 			int ofs_index = (i - focus_index);
 			if(abs(ofs_index) <= 1){
 				// * anchor handle. draw to focus and +-1
-				_curve_draw_anchor_handle(cr, *ap, ofs_index);
+				_curve_draw_anchor_handle(cr, *ap_simplify, ofs_index);
 			}
 			if(0 == focus_index && i == ((int)num - 1) && pv_anchor_path_get_is_close(simplify_data->anchor_path)){
 				// *anchor handle. to last AnchorPoint
-				_curve_draw_anchor_handle(cr, *ap, -1);
+				_curve_draw_anchor_handle(cr, *ap_simplify, -1);
 			}
 		}
 
 		// draw AnchorPoint
-		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(simplify_data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
-		PvPoint p = ap->points[PvAnchorPointIndex_Point];
-		PvElementPointKind kind = ((i == focus_index)?
-				PvElementPointKind_Selected : PvElementPointKind_Normal);
+		PvElementPointKind kind = PvElementPointKind_Normal;
+		if(i == focus_index){
+			kind = PvElementPointKind_Selected;
+		}else if(pv_focus_is_exist_anchor_point(focus, NULL, ap)){
+			kind = PvElementPointKind_SubSelected;
+		}
+		PvPoint p = ap_simplify->points[PvAnchorPointIndex_Point];
 		_curve_draw_point(cr, p, kind);
 	}
 

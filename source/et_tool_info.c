@@ -1058,23 +1058,11 @@ static bool _translate_anchor_points(EtDocId doc_id, EtMouseAction mouse_action)
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	assert(focus);
 
-	/*! current focusing AnchorPoint (0 == index) direct set mouse position.
-	 * else sub focusing AnchorPoints position is move difference
-	 *		from current focusing AnchorPoint
-	 */
-	PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
-	if(NULL == ap){
-		return true;
-	}
-	int num = pv_general_get_parray_num((void **)focus->elements);
-	for(int i = 0; i < num; i++){
-		const PvElementInfo *info = pv_element_get_info_from_kind(focus->elements[i]->kind);
-		assert(info);
-		if(info->func_is_exist_anchor_point(focus->elements[i], ap)){
-
-			info->func_set_anchor_point_point(focus->elements[i], ap, mouse_action.point);
-			return true;
-		}
+	size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
+	for(int i = 0; i < (int)num; i++){
+		// info->func_set_anchor_point_point(focus->anchor_points[i], ap, mouse_action.point);
+		pv_anchor_point_move_point(focus->anchor_points[i], mouse_action.move);
+		//! @todo use element_kind.func of AnchorPoint
 	}
 
 	return true;
@@ -1122,11 +1110,10 @@ static bool _func_edit_anchor_point_mouse_action(
 						mouse_action.point);
 				if(NULL != touch_anchor_point_){
 					is_already_focus_ = pv_focus_is_exist_anchor_point(focus, touch_element_, touch_anchor_point_);
-					pv_focus_add_anchor_point(focus, touch_element_, touch_anchor_point_);
+					et_assert(pv_focus_add_anchor_point(focus, touch_element_, touch_anchor_point_));
 
 					mode_edge_ = EdgeKind_None;
 					mode_ = EtFocusElementMouseActionMode_Translate;
-
 					break;
 				}
 

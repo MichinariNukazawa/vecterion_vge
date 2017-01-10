@@ -6,6 +6,7 @@
 #include <gdk/gdk.h>
 
 void pv_cairo_set_source_rgba_workingcolor(cairo_t *cr);
+void pv_cairo_set_source_rgba_subworkingcolor(cairo_t *cr);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

@@ -137,19 +137,25 @@ bool pv_focus_add_element(PvFocus *focus, PvElement *element)
 
 bool pv_focus_add_anchor_point(PvFocus *focus, PvElement *element, PvAnchorPoint *anchor_point)
 {
-	if(!pv_focus_add_element(focus, element)){
-		pv_bug("");
-		return false;
+	// check already exist in focus
+	if(pv_focus_is_exist_anchor_point(focus, element, anchor_point)){
+		pv_debug("already");
+		pv_focus_remove_anchor_point(focus, element, anchor_point);
 	}
 
-	// check already exist in focus
-	pv_focus_remove_anchor_point(focus, element, anchor_point);
+	if(!pv_focus_is_exist_element(focus, element)){
+		if(!pv_focus_add_element(focus, element)){
+			pv_debug("");
+			return false;
+		}
+	}
 
 	// add anchor_point.
-	int num = pv_general_get_parray_num((void **)focus->anchor_points);
 	if(!pv_focus_is_focused(focus)){
+		pv_debug("");
 		return pv_focus_clear_set_anchor_point(focus, element, anchor_point);
 	}else{
+		int num = pv_general_get_parray_num((void **)focus->anchor_points);
 		PvAnchorPoint **anchor_points = realloc(focus->anchor_points, sizeof(PvAnchorPoint *) * (num + 2));
 		pv_assert(anchor_points);
 
@@ -193,6 +199,7 @@ bool _remove_anchor_point(PvFocus *focus, PvElement *element, PvAnchorPoint *anc
 		}
 	}
 
+	// AnchorPoint is not exist.
 	return false;
 }
 
@@ -227,7 +234,6 @@ bool _pv_element_is_exist_anchor_point(const PvElement *element, const PvAnchorP
 bool pv_focus_remove_anchor_point(PvFocus *focus, PvElement *element, PvAnchorPoint *anchor_point)
 {
 	if(! _remove_anchor_point(focus, element, anchor_point)){
-		pv_bug("");
 		return false;
 	}
 
