@@ -487,6 +487,15 @@ static bool _recursive_inline_focusing_by_area(PvElement *element, gpointer data
 	}
 	if(is_overlap){
 		pv_focus_add_element(focus, element);
+		size_t num = info->func_get_num_anchor_point(element);
+		for(int i = 0; i < (int)num; i++){
+			PvAnchorPoint *anchor_point = info->func_get_anchor_point(element, i);
+			et_assert(anchor_point);
+
+			if(pv_rect_is_inside(rect, pv_anchor_point_get_point(anchor_point))){
+				pv_focus_add_anchor_point(focus, element, anchor_point);
+			}
+		}
 	}
 
 	return true;
@@ -1182,6 +1191,7 @@ static bool _func_edit_anchor_point_mouse_action(
 						break;
 					case EtFocusElementMouseActionMode_FocusingByArea:
 						{
+							focusing_mouse_rect = _focusing_by_area(doc_id, mouse_action);
 						}
 						break;
 					default:
@@ -1234,7 +1244,6 @@ static bool _func_edit_anchor_point_mouse_action(
 
 	// ** focusing view by tool
 	group_edit_(doc_id, mode_, focusing_mouse_rect, mouse_action.scale); //! @todo to AnchorPoint Edit
-	et_doc_set_element_group_edit_draw_from_id(doc_id, NULL);
 
 	return true;
 }
