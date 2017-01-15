@@ -37,6 +37,7 @@ double pv_point_distance(PvPoint, PvPoint);
 
 bool pv_point_is_diff(PvPoint, PvPoint);
 
+PvPoint pv_point_rescale(PvPoint point, PvPoint scale, PvPoint center);
 
 // ******** ********
 // PvRect

@@ -37,6 +37,7 @@ typedef enum{
 	EdgeKind_Rotate_DownLeft,
 }EdgeKind;
 
+
 static EdgeKind _get_outside_touch_edge_kind_from_rect(PvRect rect, PvPoint point, double scale);
 
 
@@ -294,19 +295,13 @@ static PvPoint pv_resize_diff_(PvPoint size, PvPoint resize)
 	return diff_;
 }
 
-static EdgeKind _resize_elements(
-		EtDocId doc_id,
-		EtMouseAction mouse_action,
-		EdgeKind _src_edge_kind,
-		PvRect src_extent_rect)
+static void get_resize_in_rect_(
+		PvPoint *move_upleft_,
+		PvPoint *resize_,
+		EdgeKind dst_edge_kind,
+		PvRect src_extent_rect,
+		PvPoint move)
 {
-	EdgeKind dst_edge_kind = _src_edge_kind;
-
-	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-	et_assertf(focus, "%d", doc_id);
-
-	PvPoint move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
-
 	PvPoint move_upleft = (PvPoint){0,0};
 	PvPoint size_after;
 	switch(dst_edge_kind){
@@ -339,6 +334,26 @@ static EdgeKind _resize_elements(
 		.x = size_after.x / src_extent_rect.w,
 		.y = size_after.y / src_extent_rect.h,
 	};
+
+	*move_upleft_ = move_upleft;
+	*resize_ = resize;
+}
+static EdgeKind _resize_elements(
+		EtDocId doc_id,
+		EtMouseAction mouse_action,
+		EdgeKind _src_edge_kind,
+		PvRect src_extent_rect)
+{
+	EdgeKind dst_edge_kind = _src_edge_kind;
+
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	et_assertf(focus, "%d", doc_id);
+
+	PvPoint move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
+
+	PvPoint move_upleft;
+	PvPoint resize;
+	get_resize_in_rect_(&move_upleft, &resize, dst_edge_kind, src_extent_rect, move);
 
 	//! @todo delta needed?
 	/*
@@ -1069,13 +1084,14 @@ static bool _translate_anchor_points(EtDocId doc_id, EtMouseAction mouse_action)
 
 	size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
 	for(int i = 0; i < (int)num; i++){
+		//! @todo use element_kind.func of AnchorPoint
 		// info->func_set_anchor_point_point(focus->anchor_points[i], ap, mouse_action.point);
 		pv_anchor_point_move_point(focus->anchor_points[i], mouse_action.move);
-		//! @todo use element_kind.func of AnchorPoint
 	}
 
 	return true;
 }
+
 
 static bool _func_edit_anchor_point_mouse_action(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
@@ -1110,7 +1126,7 @@ static bool _func_edit_anchor_point_mouse_action(
 				is_already_focus_ = false;
 				is_move_ = false;
 				mode_edge_ = edge;
-//				src_extent_rect_ = src_extent_rect;
+				//				src_extent_rect_ = src_extent_rect;
 
 				_get_touch_anchor_point(
 						&touch_element_,

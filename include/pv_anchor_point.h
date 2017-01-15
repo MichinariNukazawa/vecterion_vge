@@ -68,6 +68,8 @@ PvPoint pv_anchor_point_get_handle_relate(const PvAnchorPoint *ap, PvAnchorPoint
 
 PvPoint *pv_anchor_point_get_point_ref(PvAnchorPoint *ap, PvAnchorPointIndex ap_index);
 
+void pv_anchor_point_rescale(PvAnchorPoint *ap, PvPoint scale, PvPoint center);
+
 #ifdef include_ET_TEST
 #endif // include_ET_TEST
 

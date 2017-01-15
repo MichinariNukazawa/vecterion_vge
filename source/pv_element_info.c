@@ -372,23 +372,6 @@ static void _func_curve_apply_appearances(
 		PvElement *element,
 		PvAppearance **appearances);
 
-static void _curve_rescale_anchor_point(PvAnchorPoint *ap, PvPoint point, PvPoint scale)
-{
-	PvPoint pp = pv_anchor_point_get_point(ap);
-	pp = pv_point_sub(pp, point);
-	pp = pv_point_mul(pp, scale);
-	pp = pv_point_add(pp, point);
-	pv_anchor_point_set_point(ap, pp);
-
-	PvPoint hp = pv_anchor_point_get_handle_relate(ap, PvAnchorPointIndex_HandlePrev);
-	hp = pv_point_mul(hp, scale);
-	pv_anchor_point_set_handle_relate(ap, PvAnchorPointIndex_HandlePrev, hp);
-
-	PvPoint hn = pv_anchor_point_get_handle_relate(ap, PvAnchorPointIndex_HandleNext);
-	hn = pv_point_mul(hn, scale);
-	pv_anchor_point_set_handle_relate(ap, PvAnchorPointIndex_HandleNext, hn);
-}
-
 static PvElement *_curve_simplify_new(
 		const PvElement *element,
 		PvRenderContext render_context,
@@ -412,7 +395,7 @@ static PvElement *_curve_simplify_new(
 		PvPoint point = {0, 0};
 		PvPoint scale = {render_context.scale, render_context.scale};
 		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(simplify_data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
-		_curve_rescale_anchor_point(ap, point, scale);
+		pv_anchor_point_rescale(ap, scale, point);
 	}
 
 	return simplify;
@@ -1178,7 +1161,7 @@ static bool _func_curve_set_rect_by_anchor_points(
 	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
 	for(int i = 0; i < (int)num; i++){
 		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
-		_curve_rescale_anchor_point(ap, point, scale);
+		pv_anchor_point_rescale(ap, scale, point);
 	}
 
 	return true;

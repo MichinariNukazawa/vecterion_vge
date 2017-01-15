@@ -117,6 +117,15 @@ bool pv_point_is_diff(PvPoint point0, PvPoint point1)
 }
 
 
+PvPoint pv_point_rescale(PvPoint point, PvPoint scale, PvPoint center)
+{
+	point = pv_point_sub(point, center);
+	point = pv_point_mul(point, scale);
+	point = pv_point_add(point, center);
+	return point;
+}
+
+
 // ******** ********
 // PvRect
 // ******** ********

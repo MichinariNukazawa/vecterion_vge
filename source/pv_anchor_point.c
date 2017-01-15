@@ -182,3 +182,18 @@ PvPoint *pv_anchor_point_get_point_ref(PvAnchorPoint *ap, PvAnchorPointIndex ap_
 	return &(ap->points[ap_index]);
 }
 
+void pv_anchor_point_rescale(PvAnchorPoint *ap, PvPoint scale, PvPoint center)
+{
+	PvPoint pp = pv_anchor_point_get_point(ap);
+	pp = pv_point_rescale(pp, scale, center);
+	pv_anchor_point_set_point(ap, pp);
+
+	PvPoint hp = pv_anchor_point_get_handle_relate(ap, PvAnchorPointIndex_HandlePrev);
+	hp = pv_point_mul(hp, scale);
+	pv_anchor_point_set_handle_relate(ap, PvAnchorPointIndex_HandlePrev, hp);
+
+	PvPoint hn = pv_anchor_point_get_handle_relate(ap, PvAnchorPointIndex_HandleNext);
+	hn = pv_point_mul(hn, scale);
+	pv_anchor_point_set_handle_relate(ap, PvAnchorPointIndex_HandleNext, hn);
+}
+
