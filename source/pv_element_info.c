@@ -815,7 +815,7 @@ static bool _func_curve_draw_focusing(
 	cairo_stroke(cr);
 
 	// ** anchor points
-	int focus_index = pv_anchor_path_get_anchor_point_index(
+	int focus_index = pv_anchor_path_get_index_from_anchor_point(
 			data->anchor_path, pv_focus_get_first_anchor_point(focus));
 	size_t num = _func_curve_get_num_anchor_point(simplify);
 	for(int i = 0; i < (int)num; i++){

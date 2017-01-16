@@ -23,7 +23,7 @@ PvAnchorPoint *pv_anchor_path_get_anchor_point_from_index(PvAnchorPath *, int in
 const PvAnchorPoint *pv_anchor_path_get_anchor_point_from_index_const(const PvAnchorPath *, int index);
 bool pv_anchor_path_set_anchor_point_from_index(PvAnchorPath *, int index, const PvAnchorPoint *);
 size_t pv_anchor_path_get_anchor_point_num(const PvAnchorPath *);
-int pv_anchor_path_get_anchor_point_index(const PvAnchorPath *, const PvAnchorPoint *);
+int pv_anchor_path_get_index_from_anchor_point(const PvAnchorPath *, const PvAnchorPoint *);
 bool pv_anchor_path_is_exist_anchor_point(const PvAnchorPath *, const PvAnchorPoint *);
 void pv_anchor_path_set_is_close(PvAnchorPath *, bool is_close);
 bool pv_anchor_path_get_is_close(const PvAnchorPath *);
