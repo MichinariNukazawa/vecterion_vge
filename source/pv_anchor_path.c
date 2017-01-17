@@ -110,6 +110,33 @@ PvAnchorPoint *pv_anchor_path_insert_anchor_point(PvAnchorPath *self, const PvAn
 	return ap_;
 }
 
+bool pv_anchor_path_remove_delete_range(PvAnchorPath *anchor_path, int head, int foot)
+{
+	pv_assertf(0 < head, "%d", head);
+
+	size_t num = pv_anchor_path_get_anchor_point_num(anchor_path);
+	if(-1 == foot){
+		foot = num;
+	}
+
+	for(int i = foot; head <= i; i--){
+		pv_anchor_point_free(anchor_path->anchor_points[i]);
+	}
+
+	memmove(
+			&anchor_path->anchor_points[head],
+			&anchor_path->anchor_points[foot + 1],
+			sizeof(PvAnchorPoint *) * (num - foot));
+	anchor_path->anchor_points[head] = NULL;
+
+	size_t num_aft = pv_anchor_path_get_anchor_point_num(anchor_path);
+	PvAnchorPoint **aps = realloc(anchor_path->anchor_points, sizeof(PvAnchorPoint *) * (num_aft + 1));
+	pv_assert(aps);
+	anchor_path->anchor_points = aps;
+
+	return true;
+}
+
 PvAnchorPoint *pv_anchor_path_get_anchor_point_from_index(PvAnchorPath *self, int index, PvAnchorPathIndexTurn turn)
 {
 	size_t num = pv_anchor_path_get_anchor_point_num(self);

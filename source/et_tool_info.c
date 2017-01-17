@@ -1393,28 +1393,23 @@ static bool _func_edit_anchor_point_handle_mouse_action(
 	return true;
 }
 
-static void curve_element_split_from_index_(PvElement *elements[2], PvElement *element, int index)
+static void curve_element_split_from_index_(PvElement *element, PvElement **p_element_post, int index)
 {
 	et_assertf(PvElementKind_Curve == element->kind, "%d", element->kind);
 
 	PvElementCurveData *data = element->data;
-	PvAnchorPath *anchor_path = data->anchor_path;
-	if(pv_anchor_path_get_is_close(anchor_path)){
-		bool ret = pv_anchor_path_split_anchor_point_from_index(anchor_path, index);
+	if(pv_anchor_path_get_is_close(data->anchor_path)){
+		bool ret = pv_anchor_path_split_anchor_point_from_index(data->anchor_path, index);
 		et_assert(ret);
 
-		elements[0] = NULL;
-		elements[1] = NULL;
+		*p_element_post = NULL;
 	}else{
-		PvElement *head_element = pv_element_curve_copy_new_range(element, 0, index);
-		et_assert(head_element);
+		size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+		*p_element_post = pv_element_curve_copy_new_range(element, index, ((int)num - 1));
+		et_assert(*p_element_post);
 
-		size_t num = pv_anchor_path_get_anchor_point_num(anchor_path);
-		PvElement *foot_element = pv_element_curve_copy_new_range(element, index, ((int)num - 1));
-		et_assert(foot_element);
-
-		elements[0] = head_element;
-		elements[1] = foot_element;
+		bool ret = pv_anchor_path_remove_delete_range(data->anchor_path, index + 1, -1);
+		et_assert(ret);
 	}
 }
 
@@ -1450,16 +1445,14 @@ static bool knife_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction m
 		return true;
 	}
 
-	PvElement *elements[2] = {NULL, NULL,};
-	curve_element_split_from_index_(elements, element, index);
-	if(NULL != elements[0] && NULL != elements[1]){
+	PvElement *element_post = NULL;
+	curve_element_split_from_index_(element, &element_post, index);
+	if(NULL != element_post){
 		pv_focus_clear_to_first_layer(focus);
 		PvElement *parent_layer = pv_focus_get_first_layer(focus);
-		pv_element_append_child(parent_layer, element, elements[0]);
-		pv_element_append_child(parent_layer, element, elements[1]);
-		pv_element_remove_free_recursive(element);
-		pv_focus_add_element(focus, elements[0]);
-		pv_focus_add_element(focus, elements[1]);
+		pv_element_append_child(parent_layer, element, element_post);
+		pv_focus_add_element(focus, element);
+		pv_focus_add_element(focus, element_post);
 	}
 
 	return true;
