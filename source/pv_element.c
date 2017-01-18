@@ -529,6 +529,12 @@ bool pv_element_remove_free_recursive(PvElement *self)
 	return true;
 }
 
+void pv_element_copy_property(PvElement *dst, PvElement *src)
+{
+	dst->color_pair = src->color_pair;
+	dst->stroke = src->stroke;
+}
+
 typedef struct PvElementIsDiffRecursiveData{
 	bool is_diff;
 }PvElementIsDiffRecursiveData;

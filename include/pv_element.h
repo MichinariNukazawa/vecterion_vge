@@ -60,6 +60,8 @@ void pv_element_free(PvElement *);
 PvElement *pv_element_copy_recursive(const PvElement *);
 bool pv_element_remove_free_recursive(PvElement *);
 
+void pv_element_copy_property(PvElement *dst, PvElement *src);
+
 bool pv_element_append_child(PvElement *parent, const PvElement *prev, PvElement *element);
 
 /*! @brief

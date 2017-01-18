@@ -1408,6 +1408,7 @@ static void curve_element_split_from_index_(PvElement *element, PvElement **p_el
 		et_assert(anchor_path_post);
 		*p_element_post = pv_element_curve_new_set_anchor_path(anchor_path_post);
 		et_assert(*p_element_post);
+		pv_element_copy_property(*p_element_post, element);
 
 		bool ret = pv_anchor_path_remove_delete_range(data->anchor_path, index + 1, -1);
 		et_assert(ret);
