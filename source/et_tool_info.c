@@ -1399,7 +1399,7 @@ static void curve_element_split_from_index_(PvElement *element, PvElement **p_el
 
 	PvElementCurveData *data = element->data;
 	if(pv_anchor_path_get_is_close(data->anchor_path)){
-		bool ret = pv_anchor_path_split_anchor_point_from_index(data->anchor_path, index);
+		bool ret = pv_anchor_path_reorder_open_from_index(data->anchor_path, index);
 		et_assert(ret);
 
 		*p_element_post = NULL;

@@ -298,7 +298,7 @@ bool pv_anchor_path_is_diff(const PvAnchorPath *anchor_path0, const PvAnchorPath
 	return false;
 }
 
-static void pv_anchor_points_change_head_index_(
+static void pv_anchor_path_change_head_index_(
 		PvAnchorPath *self,
 		int head)
 {
@@ -318,7 +318,7 @@ static void pv_anchor_points_change_head_index_(
 	free(aps);
 }
 
-bool pv_anchor_path_split_anchor_point_from_index(PvAnchorPath *self, int index)
+bool pv_anchor_path_reorder_open_from_index(PvAnchorPath *self, int index)
 {
 	size_t num = pv_anchor_path_get_anchor_point_num(self);
 	if(index < 0 || (int)num <= index){
@@ -334,7 +334,7 @@ bool pv_anchor_path_split_anchor_point_from_index(PvAnchorPath *self, int index)
 	PvAnchorPoint *ap = pv_anchor_path_duplicating_anchor_point_(self, index);
 	pv_assert(ap);
 
-	pv_anchor_points_change_head_index_(self, index + 1);
+	pv_anchor_path_change_head_index_(self, index + 1);
 	self->is_close = false;
 
 	return true;
