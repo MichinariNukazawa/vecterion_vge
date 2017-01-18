@@ -674,25 +674,6 @@ PvElement *pv_element_curve_new_from_rect(PvRect rect)
 	return self;
 }
 
-PvElement *pv_element_curve_copy_new_range(const PvElement *src_element, int head, int foot)
-{
-	PvElementCurveData *src_data = src_element->data;
-	PvAnchorPath *src_anchor_path = src_data->anchor_path;
-
-	PvElement *dst_element = _pv_element_copy_single(src_element);
-	pv_assert(dst_element);
-
-	PvAnchorPath *dst_anchor_path = pv_anchor_path_copy_new_range(src_anchor_path, head, foot);
-	pv_assert(dst_anchor_path);
-
-	PvElementCurveData *dst_data = dst_element->data;
-	PvAnchorPath *old_anchor_path = dst_data->anchor_path;
-	dst_data->anchor_path = dst_anchor_path;
-	pv_anchor_path_free(old_anchor_path);
-
-	return dst_element;
-}
-
 PvElement *pv_element_curve_new_set_anchor_path(PvAnchorPath *anchor_path)
 {
 	PvElement *element = pv_element_new(PvElementKind_Curve);

@@ -53,14 +53,7 @@ void pv_anchor_path_free(PvAnchorPath *self)
 	free(self);
 }
 
-PvAnchorPath *pv_anchor_path_copy_new(const PvAnchorPath *self)
-{
-	size_t num = pv_anchor_path_get_anchor_point_num(self);
-	int num_ = (int)num - 1;
-	return pv_anchor_path_copy_new_range(self, 0, num_);
-}
-
-PvAnchorPath *pv_anchor_path_copy_new_range(const PvAnchorPath *src, int head, int foot)
+static PvAnchorPath *pv_anchor_path_copy_new_range(const PvAnchorPath *src, int head, int foot)
 {
 	pv_assert(src);
 	size_t src_num = pv_anchor_path_get_anchor_point_num(src);
@@ -82,6 +75,20 @@ PvAnchorPath *pv_anchor_path_copy_new_range(const PvAnchorPath *src, int head, i
 	dst->anchor_points[num] = NULL;
 
 	return dst;
+}
+
+PvAnchorPath *pv_anchor_path_copy_new(const PvAnchorPath *src_anchor_path)
+{
+	size_t num = pv_anchor_path_get_anchor_point_num(src_anchor_path);
+	int num_ = (int)num - 1;
+	PvAnchorPath *dst_anchor_path = pv_anchor_path_copy_new_range(src_anchor_path, 0, num_);
+	if(NULL == dst_anchor_path){
+		return NULL;
+	}
+
+	dst_anchor_path->is_close = src_anchor_path->is_close;
+
+	return dst_anchor_path;
 }
 
 PvAnchorPath *pv_anchor_path_split_new_from_index(PvAnchorPath *src_anchor_path, int index)
