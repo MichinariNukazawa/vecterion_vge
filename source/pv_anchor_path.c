@@ -11,6 +11,29 @@ struct PvAnchorPath{
 	PvAnchorPoint **anchor_points;
 };
 
+void pv_anchor_points_free_(PvAnchorPoint **anchor_points)
+{
+	size_t num = pv_general_get_parray_num((void **)anchor_points);
+	for(int i = 0; i < (int)num; i++){
+		pv_anchor_point_free(anchor_points[i]);
+	}
+
+	free(anchor_points);
+}
+void pv_anchor_path_realloc_anchor_points_(PvAnchorPath *anchor_path)
+{
+	size_t num = pv_anchor_path_get_anchor_point_num(anchor_path);
+	if(0 == num){
+		pv_anchor_points_free_(anchor_path->anchor_points);
+		anchor_path->anchor_points = NULL;
+	}else{
+		PvAnchorPoint **anchor_points = realloc(anchor_path->anchor_points, sizeof(PvAnchorPoint *) * (num + 1));
+		pv_assert(anchor_points);
+		anchor_path->anchor_points = anchor_points;
+	}
+
+	return;
+}
 
 PvAnchorPath *pv_anchor_path_new()
 {
@@ -25,12 +48,7 @@ PvAnchorPath *pv_anchor_path_new()
 
 void pv_anchor_path_free(PvAnchorPath *self)
 {
-	size_t num = pv_anchor_path_get_anchor_point_num(self);
-	for(int i = 0; i < (int)num; i++){
-		pv_anchor_point_free(self->anchor_points[i]);
-	}
-
-	free(self->anchor_points);
+	pv_anchor_points_free_(self->anchor_points);
 
 	free(self);
 }
@@ -64,6 +82,35 @@ PvAnchorPath *pv_anchor_path_copy_new_range(const PvAnchorPath *src, int head, i
 	dst->anchor_points[num] = NULL;
 
 	return dst;
+}
+
+PvAnchorPath *pv_anchor_path_split_new_from_index(PvAnchorPath *src_anchor_path, int index)
+{
+	size_t num = pv_anchor_path_get_anchor_point_num(src_anchor_path);
+	pv_assertf(0 <= index, "%d %zu", index, num);
+	pv_assertf(index < (int)num, "%d %zu", index, num);
+
+	int dst_num = (int)num - index;
+	PvAnchorPoint **dst_anchor_points = malloc(sizeof(PvAnchorPoint *) * (dst_num + 1));
+	pv_assert(dst_anchor_points);
+	for(int i = 0; i < dst_num; i++){
+		dst_anchor_points[i + 0] = src_anchor_path->anchor_points[index + i];
+		dst_anchor_points[i + 1] = NULL;
+	}
+
+	src_anchor_path->anchor_points[index] = NULL;
+	pv_anchor_path_realloc_anchor_points_(src_anchor_path);
+
+	PvAnchorPath *dst_anchor_path = pv_anchor_path_new();
+	pv_assert(dst_anchor_path);
+	free(dst_anchor_path->anchor_points);
+	dst_anchor_path->anchor_points = dst_anchor_points;
+
+	const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index_const(dst_anchor_path, 0);
+	pv_assert(ap);
+	pv_anchor_path_add_anchor_point(src_anchor_path, ap);
+
+	return dst_anchor_path;
 }
 
 void pv_anchor_path_add_anchor_point(PvAnchorPath *self, const PvAnchorPoint *anchor_point)

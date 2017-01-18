@@ -1404,8 +1404,9 @@ static void curve_element_split_from_index_(PvElement *element, PvElement **p_el
 
 		*p_element_post = NULL;
 	}else{
-		size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
-		*p_element_post = pv_element_curve_copy_new_range(element, index, ((int)num - 1));
+		PvAnchorPath *anchor_path_post = pv_anchor_path_split_new_from_index(data->anchor_path, index);
+		et_assert(anchor_path_post);
+		*p_element_post = pv_element_curve_new_set_anchor_path(anchor_path_post);
 		et_assert(*p_element_post);
 
 		bool ret = pv_anchor_path_remove_delete_range(data->anchor_path, index + 1, -1);

@@ -693,6 +693,18 @@ PvElement *pv_element_curve_copy_new_range(const PvElement *src_element, int hea
 	return dst_element;
 }
 
+PvElement *pv_element_curve_new_set_anchor_path(PvAnchorPath *anchor_path)
+{
+	PvElement *element = pv_element_new(PvElementKind_Curve);
+	pv_assert(element);
+
+	PvElementCurveData *data = element->data;
+	pv_anchor_path_free(data->anchor_path);
+	data->anchor_path = anchor_path;
+
+	return element;
+}
+
 bool pv_element_curve_add_anchor_point(PvElement *self, const PvAnchorPoint anchor_point)
 {
 	pv_assert(self);
