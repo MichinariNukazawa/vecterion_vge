@@ -1004,6 +1004,9 @@ static bool _func_add_anchor_point_mouse_action(
 			}
 			break;
 		case EtMouseAction_Up:
+			{
+				et_doc_save_from_id(doc_id);
+			}
 			break;
 		case EtMouseAction_Move:
 			{
