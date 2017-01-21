@@ -10,7 +10,7 @@ TEST(Test, Test){
 	EXPECT_EQ(1,1);
 }
 
-TEST(Test, Focus){
+TEST(Test, FocusElement){
 	PvVg *vg = pv_vg_new();
 	PvFocus *focus = pv_focus_new(vg);
 	EXPECT_TRUE(NULL != focus);
@@ -215,3 +215,27 @@ TEST(Test, Invalid){
 	// free
 	pv_focus_free(focus);
 }
+
+TEST(Test, FocusAnchorPoint){
+	PvVg *vg = pv_vg_new();
+	PvFocus *focus = pv_focus_new(vg);
+	EXPECT_TRUE(NULL != focus);
+
+	PvElement *curve_0 = pv_element_curve_new_from_rect((PvRect){0,0,0,0});
+	if(!pv_element_append_child(vg->element_root->childs[0], NULL, curve_0)){
+		FAIL();
+	}
+
+	PvElementCurveData *data = (PvElementCurveData *)curve_0->data;
+	PvAnchorPoint *anchor_point = pv_anchor_path_get_anchor_point_from_index(
+			data->anchor_path,
+			1,
+			PvAnchorPathIndexTurn_Disable);
+
+	EXPECT_TRUE(pv_focus_add_anchor_point(focus, curve_0, anchor_point));
+	EXPECT_TRUE(pv_focus_is_exist_anchor_point(focus, NULL, anchor_point));
+
+	pv_focus_add_element(focus, curve_0);
+	EXPECT_TRUE(pv_focus_is_exist_anchor_point(focus, NULL, anchor_point));
+}
+

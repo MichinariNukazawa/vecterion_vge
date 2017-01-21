@@ -100,6 +100,27 @@ bool pv_focus_is_exist_anchor_point(const PvFocus *focus, const PvElement *eleme
 	return false;
 }
 
+bool elements_change_head_element_(PvElement **elements, PvElement *element)
+{
+	int num = pv_general_get_parray_num((void **)elements);
+
+	int index = -1;
+	for(int i = 0; i < num; i++){
+		if(element == elements[i]){
+			index = i;
+		}
+	}
+	if(-1 == index){
+		return false;
+	}
+
+	memmove(&(elements[1]), &(elements[0]), sizeof(PvElement *) * (index));
+	elements[0] = element;
+	elements[num] = NULL;
+
+	return true;
+}
+
 bool pv_focus_add_element(PvFocus *focus, PvElement *element)
 {
 	if(NULL == focus){
@@ -111,10 +132,10 @@ bool pv_focus_add_element(PvFocus *focus, PvElement *element)
 		return false;
 	}
 
-	// check already exist in focus
-	if(! pv_focus_remove_element(focus, element)){
-		pv_bug("");
-		return false;
+	// reorder if already exist in focus
+	if(pv_focus_is_exist_element(focus, element)){
+		elements_change_head_element_(focus->elements, element);
+		return true;
 	}
 
 	// add element.
