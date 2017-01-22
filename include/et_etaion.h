@@ -14,6 +14,7 @@
 struct EtEtaion;
 typedef struct EtEtaion EtEtaion;
 
+//! @ ChangeState is signaling when change (current) doc_id, document (content), focus.
 typedef void (*EtEtaionSlotChangeState)(EtState state, gpointer data);
 
 struct EtEtaion{
@@ -25,15 +26,12 @@ struct EtEtaion{
 };
 
 EtEtaion *et_etaion_init();
+
 bool et_etaion_set_current_doc_id(EtDocId doc_id);
 EtDocId et_etaion_get_current_doc_id();
 bool et_etaion_set_is_extent_view(bool is_extent_view);
 bool et_etaion_get_is_extent_view();
 EtToolId et_etaion_get_tool_id();
-bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action);
-bool et_etaion_slot_key_action(EtKeyAction key_action);
-int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data);
-
 EtDocId et_etaion_get_current_doc_id();
 
 // @brief focus(Layer)の姉妹Layerを追加
@@ -44,11 +42,14 @@ bool et_etaion_append_new_layer_child(EtDocId doc_id);
 bool et_etaion_copy_layer(EtDocId doc_id);
 /** @brief focus(Layer)および子Elementを削除 */
 bool et_etaion_remove_delete_layer(EtDocId doc_id);
-
 /** @brief focus(非Layer)Elementsを削除 */
 bool et_etaion_remove_delete_by_focusing(EtDocId doc_id);
 
+bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action);
+bool et_etaion_slot_key_action(EtKeyAction key_action);
 bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data);
+
+int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST
