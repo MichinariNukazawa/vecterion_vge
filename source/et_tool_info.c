@@ -847,7 +847,7 @@ static bool _func_edit_element_mouse_action(
 	return true;
 }
 
-static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action)
+static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action, bool *is_reverse)
 {
 	PvElement *_element = pv_focus_get_first_element(focus);
 	et_assert(_element);
@@ -856,8 +856,17 @@ static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mou
 
 	PvAnchorPoint *anchor_point = pv_focus_get_first_anchor_point(focus);
 
+	int index = 0;
+	size_t num = 0;
+
+	if(PvElementKind_Curve == _element->kind){
+		index = pv_anchor_path_get_index_from_anchor_point(_data->anchor_path, anchor_point);
+		num = pv_anchor_path_get_anchor_point_num(_data->anchor_path);
+	}
+
 	if(PvElementKind_Curve != _element->kind
 			|| NULL == anchor_point
+			|| (!((0 == index) || index == ((int)num - 1)))
 			|| pv_anchor_path_get_is_close(_data->anchor_path)){
 		// add new ElementCurve.
 
@@ -872,11 +881,24 @@ static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mou
 
 		_element = new_element;
 	}else{
-		// edit focusing ElementCurve
-		PvAnchorPoint *head_ap = pv_anchor_path_get_anchor_point_from_index(
+		// edit focused ElementCurve
+		int index_end = 0;
+		PvAnchorPoint *head_ap = NULL;
+		if(0 == index && 1 < num){
+			index_end = (num - 1);
+			*is_reverse = true;
+		}else if(index == ((int)num - 1)){
+			index_end = 0;
+			index = num;
+			*is_reverse = false;
+		}else{
+			et_assertf(false, "%d %zu", index, num);
+		}
+		head_ap = pv_anchor_path_get_anchor_point_from_index(
 				_data->anchor_path,
-				0,
+				index_end,
 				PvAnchorPathIndexTurn_Disable);
+		et_assertf(head_ap, "%d %d %zu", index_end, index, num);
 
 		if(_is_bound_point(
 					PX_SENSITIVE_OF_TOUCH,
@@ -889,14 +911,15 @@ static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mou
 			// add AnchorPoint for ElementCurve.
 			anchor_point = pv_anchor_point_new_from_point(mouse_action.point);
 			et_assert(anchor_point);
-			pv_element_curve_append_anchor_point(_element, anchor_point);
+
+			pv_element_curve_append_anchor_point(_element, anchor_point, index);
 		}
 	}
 
 	pv_focus_clear_set_anchor_point(focus, _element, anchor_point);
 }
 
-static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action)
+static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action, bool is_reverse)
 {
 	if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
 		return true;
@@ -923,6 +946,11 @@ static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction
 		pv_anchor_point_set_handle_zero(ap, PvAnchorPointIndex_Point);
 	}else{
 		pv_anchor_point_set_handle(ap, PvAnchorPointIndex_Point, mouse_action.point);
+
+		if(is_reverse){
+			// AnchorPoint is head in AnchorPath
+			pv_anchor_point_reverse_handle(ap);
+		}
 	}
 
 	return true;
@@ -938,10 +966,12 @@ static bool _func_add_anchor_point_mouse_action(
 
 	bool result = true;
 
+	static bool is_reverse;
+
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
 			{
-				add_anchor_point_down_(doc, focus, mouse_action);
+				add_anchor_point_down_(doc, focus, mouse_action, &is_reverse);
 			}
 			break;
 		case EtMouseAction_Up:
@@ -951,7 +981,7 @@ static bool _func_add_anchor_point_mouse_action(
 			break;
 		case EtMouseAction_Move:
 			{
-				result = focused_anchor_point_move_(doc, focus, mouse_action);
+				result = focused_anchor_point_move_(doc, focus, mouse_action, is_reverse);
 			}
 			break;
 		case EtMouseAction_Unknown:

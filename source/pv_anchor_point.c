@@ -110,6 +110,13 @@ void pv_anchor_point_set_handle_relate(PvAnchorPoint *ap,
 	}
 }
 
+void pv_anchor_point_reverse_handle(PvAnchorPoint *ap)
+{
+	PvPoint p = ap->points[PvAnchorPointIndex_HandleNext];
+	ap->points[PvAnchorPointIndex_HandleNext] = ap->points[PvAnchorPointIndex_HandlePrev];
+	ap->points[PvAnchorPointIndex_HandlePrev] = p;
+}
+
 PvPoint pv_anchor_point_get_point(const PvAnchorPoint *ap)
 {
 	return ap->points[PvAnchorPointIndex_Point];

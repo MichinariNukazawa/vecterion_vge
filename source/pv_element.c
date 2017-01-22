@@ -722,15 +722,15 @@ PvElement *pv_element_curve_new_set_anchor_point(PvAnchorPoint *anchor_point)
 	PvElement *element = pv_element_new(PvElementKind_Curve);
 	pv_assert(element);
 
-	pv_element_curve_append_anchor_point(element, anchor_point);
+	pv_element_curve_append_anchor_point(element, anchor_point, -1);
 
 	return element;
 }
 
-void pv_element_curve_append_anchor_point(PvElement *element, PvAnchorPoint *anchor_point)
+void pv_element_curve_append_anchor_point(PvElement *element, PvAnchorPoint *anchor_point, int index)
 {
 	PvElementCurveData *data = element->data;
-	pv_anchor_path_append_anchor_point(data->anchor_path, anchor_point);
+	pv_anchor_path_append_anchor_point(data->anchor_path, anchor_point, index);
 }
 
 bool pv_element_curve_add_anchor_point(PvElement *self, const PvAnchorPoint anchor_point)

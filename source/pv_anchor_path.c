@@ -151,20 +151,25 @@ PvAnchorPath *pv_anchor_path_split_new_from_index_remove_delete(PvAnchorPath *sr
 void pv_anchor_path_add_anchor_point(PvAnchorPath *self, const PvAnchorPoint *anchor_point)
 {
 	PvAnchorPoint *ap = pv_anchor_point_copy_new(anchor_point);
-	pv_anchor_path_append_anchor_point(self, ap);
+	pv_anchor_path_append_anchor_point(self, ap, -1);
 }
 
-void pv_anchor_path_append_anchor_point(PvAnchorPath *self, PvAnchorPoint *anchor_point)
+void pv_anchor_path_append_anchor_point(PvAnchorPath *self, PvAnchorPoint *anchor_point, int index)
 {
 	size_t num = pv_anchor_path_get_anchor_point_num(self);
-	PvAnchorPoint **anchor_points = (PvAnchorPoint **)realloc(
-			self->anchor_points,
-			sizeof(PvAnchorPoint *) * (num + 2));
+
+	pv_assertf(index <= (int)num, "%d %zu", index, num);
+
+	if(-1 == index){
+		index = (int)num;
+	}
+
+	PvAnchorPoint **anchor_points = realloc(self->anchor_points, sizeof(PvAnchorPoint *) * (num + 2));
 	pv_assert(anchor_points);
 
-	pv_assert(anchor_point);
+	memmove(&(anchor_points[index + 1]), &(anchor_points[index + 0]), sizeof(PvAnchorPoint *) * ((int)num - index));
+	anchor_points[index] = anchor_point;
 	anchor_points[num + 1] = NULL;
-	anchor_points[num + 0] = anchor_point;
 	self->anchor_points = anchor_points;
 }
 
@@ -184,16 +189,11 @@ PvAnchorPoint *pv_anchor_path_insert_anchor_point(PvAnchorPath *self, const PvAn
 	PvAnchorPoint *ap_ = pv_anchor_point_copy_new(ap);
 	pv_assert(ap_);
 
-	size_t num = pv_anchor_path_get_anchor_point_num(self);
-	PvAnchorPoint **aps = realloc(self->anchor_points, sizeof(PvAnchorPoint *) * (num + 2));
-	pv_assert(aps);
-
-	// memmove(&(aps[0]), &(aps[0]), sizeof(PvElement *) * index);
-	memmove(&(aps[index + 1]), &(aps[index + 0]), sizeof(PvAnchorPoint *) * ((int)num - index));
-	aps[index + 1] = ap_;
-	aps[num + 1] = NULL;
-
-	self->anchor_points = aps;
+	index -= 1;
+	if(index < 0){
+		index = 0;
+	}
+	pv_anchor_path_append_anchor_point(self, ap_, index);
 
 	return ap_;
 }
@@ -298,6 +298,12 @@ size_t pv_anchor_path_get_anchor_point_num(const PvAnchorPath *self)
 
 int pv_anchor_path_get_index_from_anchor_point(const PvAnchorPath *anchor_path, const PvAnchorPoint *ap)
 {
+	pv_assert(anchor_path);
+
+	if(NULL == ap){
+		return -1;
+	}
+
 	size_t num = pv_general_get_parray_num((void **)anchor_path->anchor_points);
 	for(int i = 0; i < (int)num; i++){
 		if(ap == anchor_path->anchor_points[i]){

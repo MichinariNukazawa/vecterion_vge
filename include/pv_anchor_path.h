@@ -20,7 +20,7 @@ PvAnchorPath *pv_anchor_path_split_new_from_index(PvAnchorPath *, int index);
 PvAnchorPath *pv_anchor_path_split_new_from_index_remove_delete(PvAnchorPath *, int index);
 
 void pv_anchor_path_add_anchor_point(PvAnchorPath *, const PvAnchorPoint *);
-void pv_anchor_path_append_anchor_point(PvAnchorPath *, PvAnchorPoint *);
+void pv_anchor_path_append_anchor_point(PvAnchorPath *, PvAnchorPoint *, int index);
 PvAnchorPoint *pv_anchor_path_insert_anchor_point(PvAnchorPath *, const PvAnchorPoint *, int index);
 bool pv_anchor_path_remove_delete_range(PvAnchorPath *, int head, int foot);
 bool pv_anchor_path_remove_delete_anchor_point(PvAnchorPath *, const PvAnchorPoint *);

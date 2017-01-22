@@ -53,6 +53,7 @@ void pv_anchor_point_set_handle(PvAnchorPoint *ap,
 		PvAnchorPointIndex ap_index, PvPoint gpoint);
 void pv_anchor_point_set_handle_relate(PvAnchorPoint *ap,
 		PvAnchorPointIndex ap_index, PvPoint gpoint);
+void pv_anchor_point_reverse_handle(PvAnchorPoint *ap);
 
 PvPoint pv_anchor_point_get_point(const PvAnchorPoint *ap);
 void pv_anchor_point_set_point(PvAnchorPoint *ap, PvPoint point);
