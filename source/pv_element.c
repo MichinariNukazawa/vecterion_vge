@@ -388,6 +388,31 @@ bool pv_element_append_child(PvElement *parent, const PvElement *prev, PvElement
 	return true;
 }
 
+bool pv_element_append_on_focusing(PvElement *focusing_element, PvElement *element)
+{
+	PvElement *parent = NULL;
+	PvElement *sister = NULL;
+	switch(focusing_element->kind){
+		case PvElementKind_Root:
+		case PvElementKind_Layer:
+		case PvElementKind_Group:
+			{
+				parent = focusing_element;
+				sister = NULL;
+			}
+			break;
+		default:
+			{
+				pv_assert(focusing_element->parent);
+				parent = focusing_element->parent;
+				sister = focusing_element;
+			}
+			break;
+	}
+
+	return pv_element_append_child(parent, sister, element);
+}
+
 static bool _pv_element_free_single(PvElement *self)
 {
 	if(NULL == self){
@@ -690,6 +715,22 @@ PvElement *pv_element_curve_new_set_anchor_path(PvAnchorPath *anchor_path)
 	data->anchor_path = anchor_path;
 
 	return element;
+}
+
+PvElement *pv_element_curve_new_set_anchor_point(PvAnchorPoint *anchor_point)
+{
+	PvElement *element = pv_element_new(PvElementKind_Curve);
+	pv_assert(element);
+
+	pv_element_curve_append_anchor_point(element, anchor_point);
+
+	return element;
+}
+
+void pv_element_curve_append_anchor_point(PvElement *element, PvAnchorPoint *anchor_point)
+{
+	PvElementCurveData *data = element->data;
+	pv_anchor_path_append_anchor_point(data->anchor_path, anchor_point);
 }
 
 bool pv_element_curve_add_anchor_point(PvElement *self, const PvAnchorPoint anchor_point)

@@ -63,6 +63,7 @@ bool pv_element_remove_free_recursive(PvElement *);
 void pv_element_copy_property(PvElement *dst, PvElement *src);
 
 bool pv_element_append_child(PvElement *parent, const PvElement *prev, PvElement *element);
+bool pv_element_append_on_focusing(PvElement *focusing_element, PvElement *element);
 
 /*! @brief
  * @return false: error from self function.
@@ -97,6 +98,8 @@ bool pv_element_kind_is_object(PvElementKind kind);
 // ******** ********
 PvElement *pv_element_curve_new_from_rect(PvRect);
 PvElement *pv_element_curve_new_set_anchor_path(PvAnchorPath *);
+PvElement *pv_element_curve_new_set_anchor_point(PvAnchorPoint *);
+void pv_element_curve_append_anchor_point(PvElement *, PvAnchorPoint *);
 bool pv_element_curve_add_anchor_point(PvElement *, const PvAnchorPoint);
 int pv_element_curve_get_num_anchor_point(const PvElement *);
 void pv_element_curve_set_close_anchor_point(PvElement *, bool);

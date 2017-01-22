@@ -152,8 +152,6 @@ bool et_tool_info_init()
 	return true;
 }
 
-
-
 static bool _is_bound_point(int radius, PvPoint p1, PvPoint p2)
 {
 	if(
@@ -849,110 +847,53 @@ static bool _func_edit_element_mouse_action(
 	return true;
 }
 
-/** @return new AnchorPoint index number. error:-1 */
-static int _et_tool_curve_add_anchor_point(EtDoc *doc, PvElement **_element, double x, double y)
-{
-	bool is_new = true;
-	PvElement *element = *_element;
-	PvElement *parent = NULL;
-	if(NULL == element){
-		parent = NULL;
-		//element = NULL;
-	}else{
-		switch(element->kind){
-			case PvElementKind_Curve:
-				parent = element->parent;
-				//element = element;
-				is_new = false;
-				break;
-			case PvElementKind_Layer:
-			case PvElementKind_Group:
-				parent = *_element;
-				element = NULL;
-				break;
-			default:
-				parent = element->parent;
-				element = NULL;
-		}
-	}
-
-	if(is_new){
-		et_doc_save_from_id(et_doc_get_id(doc));
-
-		element = pv_element_new(PvElementKind_Curve);
-		if(NULL == element){
-			et_error("");
-			return -1;
-		}
-
-		element->color_pair = et_color_panel_get_color_pair();
-		element->stroke = et_stroke_panel_get_stroke();
-	}
-
-	PvAnchorPoint anchor_point = pv_anchor_point_from_point((PvPoint){x, y,});
-	if(!pv_element_curve_add_anchor_point(element, anchor_point)){
-		et_error("");
-		return -1;
-	}
-
-	if(is_new){
-		if(NULL == parent){
-			parent = pv_vg_get_layer_top(et_doc_get_vg_ref(doc));
-			if(NULL == parent){
-				et_error("");
-				return -1;
-			}
-		}
-
-		if(!pv_element_append_child(parent, 
-					NULL, element)){
-			et_error("");
-			return -1;
-		}
-	}
-
-	*_element = element;
-
-	return (pv_element_curve_get_num_anchor_point(*_element) - 1);
-}
-
 static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action)
 {
 	PvElement *_element = pv_focus_get_first_element(focus);
+	et_assert(_element);
+	PvElementCurveData *_data = (PvElementCurveData *) _element->data;
+	et_assert(_data);
 
-	bool is_closed = false;
-	if(NULL != _element && PvElementKind_Curve == _element->kind){
-		PvElementCurveData *_data = (PvElementCurveData *) _element->data;
-		et_assert(_data);
-		if(pv_anchor_path_get_is_close(_data->anchor_path)){
-			// if already closed is goto new anchor_point
-			_element = NULL;
+	PvAnchorPoint *anchor_point = pv_focus_get_first_anchor_point(focus);
+
+	if(PvElementKind_Curve != _element->kind
+			|| NULL == anchor_point
+			|| pv_anchor_path_get_is_close(_data->anchor_path)){
+		// add new ElementCurve.
+
+		anchor_point = pv_anchor_point_new_from_point(mouse_action.point);
+		et_assert(anchor_point);
+		PvElement *new_element = pv_element_curve_new_set_anchor_point(anchor_point);
+		et_assert(new_element);
+		pv_element_append_on_focusing(_element, new_element);
+
+		new_element->color_pair = et_color_panel_get_color_pair();
+		new_element->stroke = et_stroke_panel_get_stroke();
+
+		_element = new_element;
+	}else{
+		// edit focusing ElementCurve
+		PvAnchorPoint *head_ap = pv_anchor_path_get_anchor_point_from_index(
+				_data->anchor_path,
+				0,
+				PvAnchorPathIndexTurn_Disable);
+
+		if(_is_bound_point(
+					PX_SENSITIVE_OF_TOUCH,
+					head_ap->points[PvAnchorPointIndex_Point],
+					mouse_action.point)){
+			// ** do close anchor_point
+			pv_anchor_path_set_is_close(_data->anchor_path, true);
+			anchor_point = head_ap;
 		}else{
-			if(0 < pv_anchor_path_get_anchor_point_num(_data->anchor_path)){
-				const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(_data->anchor_path, 0, PvAnchorPathIndexTurn_Disable);
-				if(_is_bound_point(
-							PX_SENSITIVE_OF_TOUCH,
-							ap->points[PvAnchorPointIndex_Point],
-							mouse_action.point)
-				  ){
-					// ** do close anchor_point
-					is_closed = true;
-					pv_anchor_path_set_is_close(_data->anchor_path, is_closed);
-					bool ret = pv_focus_clear_set_element_index(focus, _element, 0);
-					et_assert(ret);
-				}
-			}
+			// add AnchorPoint for ElementCurve.
+			anchor_point = pv_anchor_point_new_from_point(mouse_action.point);
+			et_assert(anchor_point);
+			pv_element_curve_append_anchor_point(_element, anchor_point);
 		}
 	}
 
-	// ** new anchor_point
-	if(!is_closed){
-		int index = _et_tool_curve_add_anchor_point(
-				doc, &_element,
-				mouse_action.point.x, mouse_action.point.y);
-		et_assert(0 <= index);
-		pv_focus_clear_set_element_index(focus, _element, index);
-	}
+	pv_focus_clear_set_anchor_point(focus, _element, anchor_point);
 }
 
 static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action)

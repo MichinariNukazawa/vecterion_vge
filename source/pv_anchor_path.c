@@ -150,15 +150,21 @@ PvAnchorPath *pv_anchor_path_split_new_from_index_remove_delete(PvAnchorPath *sr
 
 void pv_anchor_path_add_anchor_point(PvAnchorPath *self, const PvAnchorPoint *anchor_point)
 {
+	PvAnchorPoint *ap = pv_anchor_point_copy_new(anchor_point);
+	pv_anchor_path_append_anchor_point(self, ap);
+}
+
+void pv_anchor_path_append_anchor_point(PvAnchorPath *self, PvAnchorPoint *anchor_point)
+{
 	size_t num = pv_anchor_path_get_anchor_point_num(self);
-	PvAnchorPoint **anchor_points = (PvAnchorPoint **)realloc(self->anchor_points,
+	PvAnchorPoint **anchor_points = (PvAnchorPoint **)realloc(
+			self->anchor_points,
 			sizeof(PvAnchorPoint *) * (num + 2));
 	pv_assert(anchor_points);
 
-	PvAnchorPoint *ap = pv_anchor_point_copy_new(anchor_point);
-	pv_assert(ap);
+	pv_assert(anchor_point);
 	anchor_points[num + 1] = NULL;
-	anchor_points[num + 0] = ap;
+	anchor_points[num + 0] = anchor_point;
 	self->anchor_points = anchor_points;
 }
 
