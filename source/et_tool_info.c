@@ -557,6 +557,7 @@ typedef enum{
 	EtFocusElementMouseActionMode_FocusingByArea,
 	EtFocusElementMouseActionMode_Resize,
 	EtFocusElementMouseActionMode_Rotate,
+	EtFocusElementMouseActionMode_Handle,
 }EtFocusElementMouseActionMode;
 
 static GdkCursor *_get_cursor_from_edge(EdgeKind edge)
@@ -1051,193 +1052,6 @@ void _get_touch_anchor_point(
 	return;
 }
 
-static bool _translate_anchor_points(EtDocId doc_id, EtMouseAction mouse_action)
-{
-	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-	assert(focus);
-
-	size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
-	for(int i = 0; i < (int)num; i++){
-		//! @todo use element_kind.func of AnchorPoint
-		// info->func_set_anchor_point_point(focus->anchor_points[i], ap, mouse_action.point);
-		pv_anchor_point_move_point(focus->anchor_points[i], mouse_action.move);
-	}
-
-	return true;
-}
-
-
-static bool _func_edit_anchor_point_mouse_action(
-		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
-{
-	static PvElement *touch_element_ = NULL;
-	static PvAnchorPoint *touch_anchor_point_ = NULL;
-	static bool is_already_focus_ = false;
-	static bool is_move_ = false;
-	static EtFocusElementMouseActionMode mode_ = EtFocusElementMouseActionMode_None;
-	static EdgeKind mode_edge_ = EdgeKind_None;
-	//	static PvRect src_extent_rect_;
-
-	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-	et_assert(focus);
-
-	PvRect src_extent_rect = PvRect_Default;
-	EdgeKind edge = EdgeKind_None;
-
-	if(pv_focus_is_focused(focus)){
-		src_extent_rect = _get_rect_extent_from_elements(focus->elements);
-		edge = _get_outside_touch_edge_kind_from_rect(
-				src_extent_rect, mouse_action.point, mouse_action.scale);
-	}
-
-	PvRect focusing_mouse_rect;
-
-	switch(mouse_action.action){
-		case EtMouseAction_Down:
-			{
-				touch_element_ = NULL;
-				touch_anchor_point_ = NULL;
-				is_already_focus_ = false;
-				is_move_ = false;
-				mode_edge_ = edge;
-				//				src_extent_rect_ = src_extent_rect;
-
-				_get_touch_anchor_point(
-						&touch_element_,
-						&touch_anchor_point_,
-						doc_id,
-						mouse_action.point);
-				if(NULL != touch_anchor_point_){
-					is_already_focus_ = pv_focus_is_exist_anchor_point(focus, touch_element_, touch_anchor_point_);
-					et_assert(pv_focus_add_anchor_point(focus, touch_element_, touch_anchor_point_));
-
-					mode_edge_ = EdgeKind_None;
-					mode_ = EtFocusElementMouseActionMode_Translate;
-					break;
-				}
-
-				switch(edge){
-					case EdgeKind_Resize_UpLeft:
-					case EdgeKind_Resize_UpRight:
-					case EdgeKind_Resize_DownLeft:
-					case EdgeKind_Resize_DownRight:
-						{
-							mode_ = EtFocusElementMouseActionMode_Resize;
-						}
-						break;
-					case EdgeKind_Rotate_UpLeft:
-					case EdgeKind_Rotate_UpRight:
-					case EdgeKind_Rotate_DownLeft:
-					case EdgeKind_Rotate_DownRight:
-						{
-							mode_ = EtFocusElementMouseActionMode_Rotate;
-						}
-						break;
-					case EdgeKind_None:
-					default:
-						{
-							et_assertf(pv_focus_clear_to_first_layer(focus), "%d", doc_id);
-							mode_ = EtFocusElementMouseActionMode_FocusingByArea;
-						}
-				}
-			}
-			break;
-		case EtMouseAction_Move:
-			{
-				if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
-					break;
-				}
-
-				if(!is_move_)
-				{
-					if( PX_SENSITIVE_OF_MOVE > abs(mouse_action.diff_down.x)
-							&& PX_SENSITIVE_OF_MOVE > abs(mouse_action.diff_down.y))
-					{
-						break;
-					}else{
-						is_move_ = true;
-						if(EtFocusElementMouseActionMode_Translate == mode_ && !is_already_focus_){
-							pv_focus_clear_set_anchor_point(
-									focus,
-									touch_element_,
-									touch_anchor_point_);
-						}
-					}
-				}
-
-				switch(mode_){
-					case EtFocusElementMouseActionMode_Translate:
-						{
-							_translate_anchor_points(doc_id, mouse_action);
-						}
-						break;
-					case EtFocusElementMouseActionMode_Resize:
-						{
-						}
-						break;
-					case EtFocusElementMouseActionMode_Rotate:
-						{
-						}
-						break;
-					case EtFocusElementMouseActionMode_FocusingByArea:
-						{
-							focusing_mouse_rect = _focusing_by_area(doc_id, mouse_action);
-						}
-						break;
-					default:
-						break;
-				}
-			}
-			break;
-		case EtMouseAction_Up:
-			{
-				switch(mode_){
-					case EtFocusElementMouseActionMode_Translate:
-						{
-							if(is_move_){
-								// NOP
-							}else{
-								if(0 == (mouse_action.state & GDK_SHIFT_MASK)){
-									et_assertf(pv_focus_clear_set_anchor_point(focus, touch_element_, touch_anchor_point_), "%d", doc_id);
-								}else{
-									if(!is_already_focus_){
-										// NOP
-									}else{
-										et_assertf(pv_focus_remove_anchor_point(focus, touch_element_, touch_anchor_point_), "%d", doc_id);
-									}
-								}
-							}
-						}
-						break;
-					default:
-						break;
-				}
-
-				mode_edge_ = EdgeKind_None;
-				mode_ = EtFocusElementMouseActionMode_None;
-
-				et_doc_save_from_id(doc_id);
-			}
-			break;
-		case EtMouseAction_Unknown:
-		default:
-			et_bug("0x%x", mouse_action.action);
-			break;
-	}
-
-	// ** mouse cursor
-	if(EtFocusElementMouseActionMode_None == mode_){ // tool is not active
-		*cursor = _get_cursor_from_edge(edge);
-	}else{
-		*cursor = _get_cursor_from_edge(mode_edge_);
-	}
-
-	// ** focusing view by tool
-	group_edit_(doc_id, mode_, focusing_mouse_rect, mouse_action.scale); //! @todo to AnchorPoint Edit
-
-	return true;
-}
-
 /*! @return handle(PvAnchorPointHandle) not grub: -1 */
 int _edit_anchor_point_handle_bound_handle(const PvAnchorPoint *ap, EtMouseAction mouse_action)
 {
@@ -1304,6 +1118,242 @@ static int _edit_anchor_point_handle_grub_focus(PvFocus *focus, EtMouseAction mo
 	return handle;
 }
 
+static bool _translate_anchor_points(EtDocId doc_id, EtMouseAction mouse_action)
+{
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	assert(focus);
+
+	size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
+	for(int i = 0; i < (int)num; i++){
+		//! @todo use element_kind.func of AnchorPoint
+		// info->func_set_anchor_point_point(focus->anchor_points[i], ap, mouse_action.point);
+		pv_anchor_point_move_point(focus->anchor_points[i], mouse_action.move);
+	}
+
+	return true;
+}
+
+static void edit_anchor_point_handle_down_(int *handle, PvFocus *focus, EtMouseAction mouse_action)
+{
+	*handle = _edit_anchor_point_handle_grub_focus(focus, mouse_action);
+	PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
+	if(NULL != ap && PvAnchorPointIndex_Point == *handle){
+		pv_anchor_point_set_handle_zero(
+				ap,
+				PvAnchorPointIndex_Point);
+	}
+}
+
+static void edit_anchor_point_handle_move_(int handle, PvFocus *focus, EtMouseAction mouse_action)
+{
+	if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
+		return;
+	}
+
+	PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
+	if(NULL == ap){
+		return;
+	}
+
+	PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
+	PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
+	if(fabs(p_diff.x) < PX_SENSITIVE_OF_TOUCH
+			&& fabs(p_diff.y) < PX_SENSITIVE_OF_TOUCH)
+	{
+		pv_anchor_point_set_handle_zero(
+				ap,
+				handle);
+	}else{
+		pv_anchor_point_set_handle(
+				ap,
+				handle,
+				mouse_action.point);
+	}
+}
+
+static bool _func_edit_anchor_point_mouse_action(
+		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
+{
+	static PvElement *touch_element_ = NULL;
+	static PvAnchorPoint *touch_anchor_point_ = NULL;
+	static bool is_already_focus_ = false;
+	static bool is_move_ = false;
+	static EtFocusElementMouseActionMode mode_ = EtFocusElementMouseActionMode_None;
+	static EdgeKind mode_edge_ = EdgeKind_None;
+	static int handle = -1;
+	//	static PvRect src_extent_rect_;
+
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	et_assert(focus);
+
+	PvRect src_extent_rect = PvRect_Default;
+	EdgeKind edge = EdgeKind_None;
+
+	if(pv_focus_is_focused(focus)){
+		src_extent_rect = _get_rect_extent_from_elements(focus->elements);
+		edge = _get_outside_touch_edge_kind_from_rect(
+				src_extent_rect, mouse_action.point, mouse_action.scale);
+	}
+
+	PvRect focusing_mouse_rect;
+
+	switch(mouse_action.action){
+		case EtMouseAction_Down:
+			{
+				touch_element_ = NULL;
+				touch_anchor_point_ = NULL;
+				is_already_focus_ = false;
+				is_move_ = false;
+				mode_edge_ = edge;
+				handle = -1;
+				//				src_extent_rect_ = src_extent_rect;
+
+				_get_touch_anchor_point(
+						&touch_element_,
+						&touch_anchor_point_,
+						doc_id,
+						mouse_action.point);
+				if(NULL != touch_anchor_point_){
+					is_already_focus_ = pv_focus_is_exist_anchor_point(focus, touch_element_, touch_anchor_point_);
+					et_assert(pv_focus_add_anchor_point(focus, touch_element_, touch_anchor_point_));
+
+					mode_edge_ = EdgeKind_None;
+					mode_ = EtFocusElementMouseActionMode_Translate;
+					break;
+				}
+
+				switch(edge){
+					case EdgeKind_Resize_UpLeft:
+					case EdgeKind_Resize_UpRight:
+					case EdgeKind_Resize_DownLeft:
+					case EdgeKind_Resize_DownRight:
+						{
+							mode_ = EtFocusElementMouseActionMode_Resize;
+						}
+						break;
+					case EdgeKind_Rotate_UpLeft:
+					case EdgeKind_Rotate_UpRight:
+					case EdgeKind_Rotate_DownLeft:
+					case EdgeKind_Rotate_DownRight:
+						{
+							mode_ = EtFocusElementMouseActionMode_Rotate;
+						}
+						break;
+					case EdgeKind_None:
+					default:
+						{
+							edit_anchor_point_handle_down_(&handle, focus, mouse_action);
+							if(-1 != handle){
+								mode_ = EtFocusElementMouseActionMode_Handle;
+							}else{
+								et_assertf(pv_focus_clear_to_first_layer(focus), "%d", doc_id);
+								mode_ = EtFocusElementMouseActionMode_FocusingByArea;
+							}
+						}
+				}
+			}
+			break;
+		case EtMouseAction_Move:
+			{
+				if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
+					break;
+				}
+
+				if(!is_move_)
+				{
+					if( PX_SENSITIVE_OF_MOVE > abs(mouse_action.diff_down.x)
+							&& PX_SENSITIVE_OF_MOVE > abs(mouse_action.diff_down.y))
+					{
+						break;
+					}else{
+						is_move_ = true;
+						if(EtFocusElementMouseActionMode_Translate == mode_ && !is_already_focus_){
+							pv_focus_clear_set_anchor_point(
+									focus,
+									touch_element_,
+									touch_anchor_point_);
+						}
+					}
+				}
+
+				switch(mode_){
+					case EtFocusElementMouseActionMode_Translate:
+						{
+							_translate_anchor_points(doc_id, mouse_action);
+						}
+						break;
+					case EtFocusElementMouseActionMode_Resize:
+						{
+						}
+						break;
+					case EtFocusElementMouseActionMode_Rotate:
+						{
+						}
+						break;
+					case EtFocusElementMouseActionMode_FocusingByArea:
+						{
+							focusing_mouse_rect = _focusing_by_area(doc_id, mouse_action);
+						}
+						break;
+					case EtFocusElementMouseActionMode_Handle:
+						{
+							edit_anchor_point_handle_move_(handle, focus, mouse_action);
+						}
+						break;
+					default:
+						break;
+				}
+			}
+			break;
+		case EtMouseAction_Up:
+			{
+				switch(mode_){
+					case EtFocusElementMouseActionMode_Translate:
+						{
+							if(is_move_){
+								// NOP
+							}else{
+								if(0 == (mouse_action.state & GDK_SHIFT_MASK)){
+									et_assertf(pv_focus_clear_set_anchor_point(focus, touch_element_, touch_anchor_point_), "%d", doc_id);
+								}else{
+									if(!is_already_focus_){
+										// NOP
+									}else{
+										et_assertf(pv_focus_remove_anchor_point(focus, touch_element_, touch_anchor_point_), "%d", doc_id);
+									}
+								}
+							}
+						}
+						break;
+					default:
+						break;
+				}
+
+				mode_edge_ = EdgeKind_None;
+				mode_ = EtFocusElementMouseActionMode_None;
+
+				et_doc_save_from_id(doc_id);
+			}
+			break;
+		case EtMouseAction_Unknown:
+		default:
+			et_bug("0x%x", mouse_action.action);
+			break;
+	}
+
+	// ** mouse cursor
+	if(EtFocusElementMouseActionMode_None == mode_){ // tool is not active
+		*cursor = _get_cursor_from_edge(edge);
+	}else{
+		*cursor = _get_cursor_from_edge(mode_edge_);
+	}
+
+	// ** focusing view by tool
+	group_edit_(doc_id, mode_, focusing_mouse_rect, mouse_action.scale); //! @todo to AnchorPoint Edit
+
+	return true;
+}
+
 static bool _func_edit_anchor_point_handle_mouse_action(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
@@ -1315,40 +1365,12 @@ static bool _func_edit_anchor_point_handle_mouse_action(
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
 			{
-				handle = _edit_anchor_point_handle_grub_focus(focus, mouse_action);
-				PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
-				if(NULL != ap && PvAnchorPointIndex_Point == handle){
-					pv_anchor_point_set_handle_zero(
-							ap,
-							PvAnchorPointIndex_Point);
-				}
+				edit_anchor_point_handle_down_(&handle, focus, mouse_action);
 			}
 			break;
 		case EtMouseAction_Move:
 			{
-				if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
-					break;
-				}
-
-				PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
-				if(NULL == ap){
-					break;
-				}
-
-				PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
-				PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
-				if(fabs(p_diff.x) < PX_SENSITIVE_OF_TOUCH
-						&& fabs(p_diff.y) < PX_SENSITIVE_OF_TOUCH)
-				{
-					pv_anchor_point_set_handle_zero(
-							ap,
-							handle);
-				}else{
-					pv_anchor_point_set_handle(
-							ap,
-							handle,
-							mouse_action.point);
-				}
+				edit_anchor_point_handle_move_(handle, focus, mouse_action);
 			}
 			break;
 		case EtMouseAction_Up:
