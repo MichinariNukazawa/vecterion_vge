@@ -302,6 +302,18 @@ static bool _func_nop_is_overlap_rect(
 	return true;
 }
 
+bool _func_nop_remove_delete_anchor_point(
+		PvElement *element,
+		const PvAnchorPoint *anchor_point,
+		PvElement **p_foot_element,
+		bool *is_deleted_element)
+{
+	*p_foot_element = NULL;
+	*is_deleted_element = false;
+
+	return true;
+}
+
 static bool _pv_general_strcmp(char *str0, char *str1)
 {
 	if(NULL == str0 && NULL == str1){
@@ -917,6 +929,53 @@ static bool _func_curve_is_overlap_rect(
 			*is_overlap = true;
 			return true;
 		}
+	}
+
+	return true;
+}
+
+bool _func_curve_remove_delete_anchor_point(
+		PvElement *element,
+		const PvAnchorPoint *anchor_point,
+		PvElement **p_foot_element,
+		bool *is_deleted_element)
+{
+	*p_foot_element = NULL;
+	*is_deleted_element = false;
+
+	const PvElementCurveData *data = element->data;
+	pv_assert(data);
+
+	pv_assert(element->parent);
+
+	if(pv_anchor_path_get_is_close(data->anchor_path)){
+		int index = pv_anchor_path_get_index_from_anchor_point(data->anchor_path, anchor_point);
+		pv_assert(0 <= index);
+
+		bool ret = pv_anchor_path_reorder_open_from_index(data->anchor_path, index);
+		pv_assert(ret);
+		pv_anchor_path_set_is_close(data->anchor_path, false);
+		pv_anchor_path_remove_delete_anchor_point(data->anchor_path, anchor_point);
+		pv_anchor_path_remove_delete_range(data->anchor_path, 0, 0);
+	}else{
+		int index = pv_anchor_path_get_index_from_anchor_point(data->anchor_path, anchor_point);
+		pv_assert(0 <= index);
+
+		PvAnchorPath *anchor_path = pv_anchor_path_split_new_from_index_remove_delete(
+				data->anchor_path,
+				index);
+		if(NULL != anchor_path){
+			PvElement *element_2 = pv_element_curve_new_set_anchor_path(anchor_path);
+			pv_assert(element_2);
+			pv_element_copy_property(element_2, element);
+			pv_element_append_child(element->parent, element, element_2);
+			*p_foot_element = element_2;
+		}
+	}
+
+	if(0 == pv_anchor_path_get_anchor_point_num(data->anchor_path)){
+		pv_element_remove_free_recursive(element);
+		*is_deleted_element = true;
 	}
 
 	return true;
@@ -1779,6 +1838,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw_focusing			= _func_group_draw,
 		.func_is_touch_element			= _func_group_is_touch_element,
 		.func_is_overlap_rect			= _func_nop_is_overlap_rect,
+		.func_remove_delete_anchor_point	= _func_nop_remove_delete_anchor_point,
 		.func_is_diff_one			= _func_group_is_diff_one,
 		.func_move_element			= _func_group_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
@@ -1801,6 +1861,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw_focusing			= _func_group_draw,
 		.func_is_touch_element			= _func_group_is_touch_element,
 		.func_is_overlap_rect			= _func_nop_is_overlap_rect,
+		.func_remove_delete_anchor_point	= _func_nop_remove_delete_anchor_point,
 		.func_is_diff_one			= _func_group_is_diff_one,
 		.func_move_element			= _func_group_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
@@ -1823,6 +1884,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw_focusing			= _func_group_draw,
 		.func_is_touch_element			= _func_group_is_touch_element,
 		.func_is_overlap_rect			= _func_nop_is_overlap_rect,
+		.func_remove_delete_anchor_point	= _func_nop_remove_delete_anchor_point,
 		.func_is_diff_one			= _func_group_is_diff_one,
 		.func_move_element			= _func_group_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
@@ -1845,6 +1907,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw_focusing			= _func_curve_draw_focusing,
 		.func_is_touch_element			= _func_curve_is_touch_element,
 		.func_is_overlap_rect			= _func_curve_is_overlap_rect,
+		.func_remove_delete_anchor_point	= _func_curve_remove_delete_anchor_point,
 		.func_is_diff_one			= _func_curve_is_diff_one,
 		.func_move_element			= _func_curve_move_element,
 		.func_get_num_anchor_point		= _func_curve_get_num_anchor_point,
@@ -1867,6 +1930,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_draw_focusing			= _func_raster_draw_focusing,
 		.func_is_touch_element			= _func_raster_is_touch_element,
 		.func_is_overlap_rect			= _func_raster_is_overlap_rect,
+		.func_remove_delete_anchor_point	= _func_nop_remove_delete_anchor_point,
 		.func_is_diff_one			= _func_raster_is_diff_one,
 		.func_move_element			= _func_raster_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,

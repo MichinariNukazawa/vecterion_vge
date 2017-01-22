@@ -1693,6 +1693,7 @@ EtToolInfo _et_tool_infos[] = {
 	{
 		.tool_id = EtToolId_FocusElement, 
 		.name = "Focus Element",
+		.is_element_tool = true,
 		.icon = NULL,
 		.icon_focus = NULL,
 		.icon_cursor = NULL,
@@ -1704,6 +1705,7 @@ EtToolInfo _et_tool_infos[] = {
 	{
 		.tool_id = 1, 
 		.name = "Add Anchor Point",
+		.is_element_tool = false,
 		.icon = NULL,
 		.icon_focus = NULL,
 		.icon_cursor = NULL,
@@ -1715,6 +1717,7 @@ EtToolInfo _et_tool_infos[] = {
 	{
 		.tool_id = 2,
 		.name = "Edit Anchor Point",
+		.is_element_tool = false,
 		.icon = NULL,
 		.icon_focus = NULL,
 		.icon_cursor = NULL,
@@ -1726,6 +1729,7 @@ EtToolInfo _et_tool_infos[] = {
 	{
 		.tool_id = 3,
 		.name = "Edit Anchor Point Handle",
+		.is_element_tool = false,
 		.icon = NULL,
 		.icon_focus = NULL,
 		.icon_cursor = NULL,
@@ -1737,6 +1741,7 @@ EtToolInfo _et_tool_infos[] = {
 	{
 		.tool_id = 4,
 		.name = "Knife Anchor Point",
+		.is_element_tool = false,
 		.icon = NULL,
 		.icon_focus = NULL,
 		.icon_cursor = NULL,
@@ -1748,6 +1753,7 @@ EtToolInfo _et_tool_infos[] = {
 	{
 		.tool_id = 5,
 		.name = "Insert Anchor Point",
+		.is_element_tool = false,
 		.icon = NULL,
 		.icon_focus = NULL,
 		.icon_cursor = NULL,

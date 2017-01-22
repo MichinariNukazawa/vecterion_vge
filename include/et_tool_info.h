@@ -15,6 +15,7 @@ typedef bool (*EtToolFuncMouseAction)(EtDocId doc_id, EtMouseAction mouse_action
 typedef struct EtToolInfo{
 	EtToolId tool_id;
 	const char *name;
+	bool is_element_tool; //<! Element tool or AnchorPoint tool.
 	GdkPixbuf *icon;
 	GdkPixbuf *icon_focus;
 	GdkPixbuf *icon_cursor;

@@ -1,6 +1,7 @@
 #include "et_etaion.h"
 
 #include <stdlib.h>
+#include "pv_element_info.h"
 #include "et_error.h"
 #include "et_doc_manager.h"
 #include "et_tool_info.h"
@@ -400,7 +401,24 @@ bool et_etaion_remove_delete_layer(EtDocId doc_id)
 	return true;
 }
 
-bool et_etaion_remove_delete_object_elements(EtDocId doc_id)
+static PvElement *get_element_from_anchor_point_(PvElement **elements, PvAnchorPoint *anchor_point)
+{
+	size_t num = pv_general_get_parray_num((void **)elements);
+	for(int i = 0; i < (int)num; i++){
+		PvElement *element = elements[i];
+
+		const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+		et_assert(info);
+
+		if(info->func_is_exist_anchor_point(element, anchor_point)){
+			return element;
+		}
+	}
+
+	return NULL;
+}
+
+bool et_etaion_remove_delete_by_focusing(EtDocId doc_id)
 {
 	EtEtaion *self = current_state;
 	et_assert(self);
@@ -416,28 +434,62 @@ bool et_etaion_remove_delete_object_elements(EtDocId doc_id)
 		return true;
 	}
 
-	size_t num = pv_general_get_parray_num((void **)focus->elements);
-	for(int i = ((int)num) - 1; 0 <= i; i--){
-		if(!pv_element_kind_is_object(focus->elements[i]->kind)){
-			et_bug("");
-			goto failure;
+	const EtToolInfo *tool_info = et_tool_get_info_from_id(current_state->tool_id);
+	et_assertf(tool_info, "%u", current_state->tool_id);
+
+	if(tool_info->is_element_tool){
+		size_t num = pv_general_get_parray_num((void **)focus->elements);
+		for(int i = ((int)num) - 1; 0 <= i; i--){
+			if(!pv_element_kind_is_object(focus->elements[i]->kind)){
+				et_bug("");
+				goto failure;
+			}
+
+			bool ret;
+			PvElement *element = NULL;
+			if(0 == i){
+				element = pv_focus_get_first_element(focus);
+				ret = pv_focus_clear_to_first_layer(focus);
+				et_assertf(ret, "%d", doc_id);
+				et_assert(element != pv_focus_get_first_layer(focus));
+			}else{
+				element = focus->elements[i];
+				ret = pv_focus_remove_element(focus, element);
+				et_assertf(ret, "%d", doc_id);
+			}
+
+			ret = pv_element_remove_free_recursive(element);
+			et_assertf(ret, "%d", doc_id);
+		}
+	}else{
+		size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
+		PvAnchorPoint **anchor_points = malloc(sizeof(PvAnchorPoint *) * (num + 1));
+		et_assert(anchor_points);
+		memcpy(anchor_points, focus->anchor_points, sizeof(PvAnchorPoint *) * (num + 1));
+
+		for(int i = ((int)num) - 1; 0 <= i; i--){
+			PvAnchorPoint *anchor_point = anchor_points[i];
+			PvElement *element = get_element_from_anchor_point_(focus->elements, anchor_point);
+			et_assert(element);
+			const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+			et_assert(info);
+
+			pv_focus_remove_anchor_point(focus, element, anchor_point);
+			bool is_delete = false;
+			PvElement *foot_element = NULL;
+			info->func_remove_delete_anchor_point(element, anchor_point, &foot_element, &is_delete);
+
+			if(NULL != foot_element){
+				pv_focus_add_element(focus, foot_element);
+			}
+			if(is_delete){
+				pv_focus_remove_element(focus, element);
+			}else{
+				pv_focus_add_element(focus, element); // to top focus.
+			}
 		}
 
-		bool ret;
-		PvElement *element = NULL;
-		if(0 == i){
-			element = pv_focus_get_first_element(focus);
-			ret = pv_focus_clear_to_first_layer(focus);
-			et_assertf(ret, "%d", doc_id);
-			et_assert(element != pv_focus_get_first_layer(focus));
-		}else{
-			element = focus->elements[i];
-			ret = pv_focus_remove_element(focus, element);
-			et_assertf(ret, "%d", doc_id);
-		}
-
-		ret = pv_element_remove_free_recursive(element);
-		et_assertf(ret, "%d", doc_id);
+		free(anchor_points);
 	}
 
 failure:

@@ -17,10 +17,12 @@ PvAnchorPath *pv_anchor_path_new();
 void pv_anchor_path_free(PvAnchorPath *);
 PvAnchorPath *pv_anchor_path_copy_new(const PvAnchorPath *);
 PvAnchorPath *pv_anchor_path_split_new_from_index(PvAnchorPath *, int index);
+PvAnchorPath *pv_anchor_path_split_new_from_index_remove_delete(PvAnchorPath *, int index);
 
 void pv_anchor_path_add_anchor_point(PvAnchorPath *, const PvAnchorPoint *);
 PvAnchorPoint *pv_anchor_path_insert_anchor_point(PvAnchorPath *, const PvAnchorPoint *, int index);
 bool pv_anchor_path_remove_delete_range(PvAnchorPath *, int head, int foot);
+bool pv_anchor_path_remove_delete_anchor_point(PvAnchorPath *, const PvAnchorPoint *);
 
 PvAnchorPoint *pv_anchor_path_get_anchor_point_from_index(PvAnchorPath *, int index, PvAnchorPathIndexTurn);
 const PvAnchorPoint *pv_anchor_path_get_anchor_point_from_index_const(const PvAnchorPath *, int index);

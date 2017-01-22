@@ -117,6 +117,34 @@ PvAnchorPath *pv_anchor_path_split_new_from_index(PvAnchorPath *src_anchor_path,
 	pv_assert(ap);
 	pv_anchor_path_add_anchor_point(src_anchor_path, ap);
 
+	src_anchor_path->is_close = false;
+	dst_anchor_path->is_close = false;
+
+	return dst_anchor_path;
+}
+
+PvAnchorPath *pv_anchor_path_split_new_from_index_remove_delete(PvAnchorPath *src_anchor_path, int index)
+{
+	size_t num = pv_anchor_path_get_anchor_point_num(src_anchor_path);
+	pv_assertf(0 <= index, "%d %zu", index, num);
+	pv_assertf(index < (int)num, "%d %zu", index, num);
+
+	src_anchor_path->is_close = false;
+
+	PvAnchorPath *dst_anchor_path = NULL;
+	if(0 == index){
+		pv_anchor_path_remove_delete_range(src_anchor_path, 0, 0);
+	}else if(index == ((int)num - 1)){
+		int src_foot = (int)num - 1;
+		pv_anchor_path_remove_delete_range(src_anchor_path, src_foot, src_foot);
+		//! need check if anchor_points zero to delete element by parent caller function.
+	}else{
+		dst_anchor_path = pv_anchor_path_split_new_from_index(src_anchor_path, index);
+		int src_foot = pv_anchor_path_get_anchor_point_num(src_anchor_path) - 1;
+		pv_anchor_path_remove_delete_range(src_anchor_path, src_foot, src_foot);
+		pv_anchor_path_remove_delete_range(dst_anchor_path, 0, 0);
+	}
+
 	return dst_anchor_path;
 }
 
@@ -166,7 +194,7 @@ PvAnchorPoint *pv_anchor_path_insert_anchor_point(PvAnchorPath *self, const PvAn
 
 bool pv_anchor_path_remove_delete_range(PvAnchorPath *anchor_path, int head, int foot)
 {
-	pv_assertf(0 < head, "%d", head);
+	pv_assertf(0 <= head, "%d", head);
 
 	size_t num = pv_anchor_path_get_anchor_point_num(anchor_path);
 	if(-1 == foot){
@@ -181,7 +209,7 @@ bool pv_anchor_path_remove_delete_range(PvAnchorPath *anchor_path, int head, int
 			&anchor_path->anchor_points[head],
 			&anchor_path->anchor_points[foot + 1],
 			sizeof(PvAnchorPoint *) * (num - foot));
-	anchor_path->anchor_points[head] = NULL;
+	anchor_path->anchor_points[head + (num - foot)] = NULL;
 
 	size_t num_aft = pv_anchor_path_get_anchor_point_num(anchor_path);
 	PvAnchorPoint **aps = realloc(anchor_path->anchor_points, sizeof(PvAnchorPoint *) * (num_aft + 1));
@@ -189,6 +217,18 @@ bool pv_anchor_path_remove_delete_range(PvAnchorPath *anchor_path, int head, int
 	anchor_path->anchor_points = aps;
 
 	return true;
+}
+
+bool pv_anchor_path_remove_delete_anchor_point(PvAnchorPath *anchor_path, const PvAnchorPoint *anchor_point)
+{
+	int index = pv_anchor_path_get_index_from_anchor_point(anchor_path, anchor_point);
+	if(index < 0){
+		return false;
+	}
+
+	bool ret = pv_anchor_path_remove_delete_range(anchor_path, index, index);
+
+	return ret;
 }
 
 PvAnchorPoint *pv_anchor_path_get_anchor_point_from_index(PvAnchorPath *self, int index, PvAnchorPathIndexTurn turn)

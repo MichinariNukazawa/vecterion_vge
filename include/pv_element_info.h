@@ -49,6 +49,11 @@ typedef bool (*PvElementFuncIsDiffOne)(
 		bool *is_diff,
 		const PvElement *element0,
 		const PvElement *element1);
+typedef bool (*PvElementFuncRemoveDeleteAnchorPoint)(
+		PvElement *element,
+		const PvAnchorPoint *anchor_point,
+		PvElement **p_foot_element,
+		bool *is_deleted_element);
 typedef PvPoint (*PvElementFuncGetPointByAnchorPoints)(
 		const PvElement *element);
 typedef void (*PvElementFuncSetPointByAnchorPoints)(
@@ -99,6 +104,7 @@ typedef struct PvElementInfo{
 	PvElementFuncIsTouchElement		func_is_touch_element;
 	PvElementFuncIsOverlapRect		func_is_overlap_rect;
 	PvElementFuncIsDiffOne			func_is_diff_one;
+	PvElementFuncRemoveDeleteAnchorPoint	func_remove_delete_anchor_point;
 	PvElementFuncGetPointByAnchorPoints	func_get_point_by_anchor_points;
 	PvElementFuncSetPointByAnchorPoints	func_set_point_by_anchor_points;
 	PvElementFuncMoveElement		func_move_element;
