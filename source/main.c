@@ -328,7 +328,8 @@ int main (int argc, char **argv){
 	GtkWidget *toolpanel_widget = et_tool_panel_get_widget_frame();
 	gtk_box_pack_start(GTK_BOX(hbox_left), toolpanel_widget, false, false, 3);
 
-	if(!et_tool_panel_set_slot_change(slot_et_etaion_change_tool, NULL)){
+	if(!et_tool_panel_set_slot_change(
+				slot_et_etaion_change_tool, NULL)){
 		et_bug("");
 		return -1;
 	}
@@ -347,7 +348,7 @@ int main (int argc, char **argv){
 		et_bug("");
 		return -1;
 	}
-	if(0 > et_etaion_set_slot_change_state(
+	if(0 > et_etaion_add_slot_change_state(
 				slot_et_color_panel_from_etaion_change_state, NULL)){
 		et_bug("");
 		return -1;
@@ -361,7 +362,7 @@ int main (int argc, char **argv){
 		et_bug("");
 		return -1;
 	}
-	if(0 > et_etaion_set_slot_change_state(
+	if(0 > et_etaion_add_slot_change_state(
 				slot_et_stroke_panel_from_etaion_change_state, NULL)){
 		et_bug("");
 		return -1;
@@ -372,7 +373,7 @@ int main (int argc, char **argv){
 
 	EtPositionPanel *position_panel = et_position_panel_init();
 	assert(position_panel);
-	if(0 > et_etaion_set_slot_change_state(
+	if(0 > et_etaion_add_slot_change_state(
 				slot_et_position_panel_from_etaion_change_state, NULL)){
 		et_bug("");
 		return -1;
@@ -386,7 +387,7 @@ int main (int argc, char **argv){
 		et_bug("");
 		return -1;
 	}
-	if(0 > et_etaion_set_slot_change_state(
+	if(0 > et_etaion_add_slot_change_state(
 				et_layer_view_slot_from_etaion_change_state, NULL)){
 		et_bug("");
 		return -1;
@@ -1194,7 +1195,7 @@ static bool _pv_element_append_near_first_parrent_layer(PvFocus *focus, PvElemen
 	PvElement *sister_layer = NULL;
 	PvElement *parent_layer = NULL;
 	if(element->kind == PvElementKind_Layer
-		&& first_parent->kind != PvElementKind_Root){
+			&& first_parent->kind != PvElementKind_Root){
 		//! PvElementKind_Layer is append sister level on current layer
 		sister_layer = first_parent;
 		parent_layer = sister_layer->parent;

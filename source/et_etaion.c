@@ -200,7 +200,7 @@ bool et_etaion_slot_key_action(EtKeyAction key_action)
 	return true;
 }
 
-int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data)
+int et_etaion_add_slot_change_state(EtEtaionSlotChangeState slot, gpointer data)
 {
 	EtEtaion *self = current_state;
 	if(NULL == self){

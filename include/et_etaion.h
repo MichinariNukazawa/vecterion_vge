@@ -49,7 +49,7 @@ bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action);
 bool et_etaion_slot_key_action(EtKeyAction key_action);
 bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data);
 
-int et_etaion_set_slot_change_state(EtEtaionSlotChangeState slot, gpointer data);
+int et_etaion_add_slot_change_state(EtEtaionSlotChangeState slot, gpointer data);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST
