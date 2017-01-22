@@ -60,7 +60,7 @@ static bool _output_svg_from_doc_id(const char *filepath, EtDocId doc_id);
 
 
 
-static bool _slot_mouse_action(EtDocId, EtMouseAction);
+static bool slot_from_mouse_action_(EtDocId, EtMouseAction);
 
 #define _show_error_dialog(fmt, ...) \
 	do{ \
@@ -102,7 +102,7 @@ static gboolean _cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer u
 		.action = EtKeyAction_Down,
 		.state = event->state,
 	};
-	et_etaion_slot_key_action(ka);
+	slot_et_etaion_from_key_action(ka);
 
 	return FALSE;
 }
@@ -388,7 +388,7 @@ int main (int argc, char **argv){
 		return -1;
 	}
 	if(0 > et_etaion_add_slot_change_state(
-				et_layer_view_slot_from_etaion_change_state, NULL)){
+				slot_et_layer_view_from_etaion_change_state, NULL)){
 		et_bug("");
 		return -1;
 	}
@@ -403,13 +403,13 @@ int main (int argc, char **argv){
 	}
 
 	if(!et_pointing_manager_add_slot_mouse_action(
-				et_etaion_slot_mouse_action)){
+				slot_et_etaion_from_mouse_action)){
 		et_error("");
 		return -1;
 	}
 
 	if(!et_pointing_manager_add_slot_mouse_action(
-				_slot_mouse_action)){
+				slot_from_mouse_action_)){
 		et_error("");
 		return -1;
 	}
@@ -431,7 +431,7 @@ int main (int argc, char **argv){
 
 
 	if(0 > et_canvas_set_slot_mouse_action(canvas_thumbnail,
-				et_pointing_manager_slot_mouse_action, NULL)){
+				slot_et_pointing_manager_from_mouse_action, NULL)){
 		et_error("");
 		return -1;
 	}
@@ -1858,7 +1858,7 @@ static bool _init_menu(GtkWidget *window, GtkWidget *box_root)
 	return true;
 }
 
-static bool _slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
+static bool slot_from_mouse_action_(EtDocId doc_id, EtMouseAction mouse_action)
 {
 	assert(self);
 

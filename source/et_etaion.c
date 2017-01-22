@@ -117,7 +117,7 @@ EtToolId et_etaion_get_tool_id()
 	return self->tool_id;
 }
 
-bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
+bool slot_et_etaion_from_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 {
 	EtEtaion *self = current_state;
 	if(NULL == self){
@@ -168,7 +168,7 @@ bool et_etaion_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 	return true;
 }
 
-bool et_etaion_slot_key_action(EtKeyAction key_action)
+bool slot_et_etaion_from_key_action(EtKeyAction key_action)
 {
 	EtEtaion *self = current_state;
 	if(NULL == self){

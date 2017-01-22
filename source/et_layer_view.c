@@ -380,7 +380,7 @@ void et_layer_view_slot_from_doc_change(EtDoc *doc, gpointer data)
 	}
 }
 
-void et_layer_view_slot_from_etaion_change_state(EtState state, gpointer data)
+void slot_et_layer_view_from_etaion_change_state(EtState state, gpointer data)
 {
 	EtLayerView *self = layer_view;
 	if(NULL == self){

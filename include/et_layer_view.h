@@ -18,7 +18,7 @@ EtLayerView *et_layer_view_init();
 GtkWidget *et_layer_view_get_widget_frame();
 bool et_layer_view_set_doc_id(EtDocId doc_id);
 void et_layer_view_slot_from_doc_change(EtDoc *doc, gpointer data);
-void et_layer_view_slot_from_etaion_change_state(EtState state, gpointer data);
+void slot_et_layer_view_from_etaion_change_state(EtState state, gpointer data);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

@@ -19,7 +19,7 @@ struct EtPointingManager{
 
 EtPointingManager *et_pointing_manager_init();
 bool et_pointing_manager_add_slot_mouse_action(EtPointingManagerSlotMouseAction slot);
-bool et_pointing_manager_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action);
+bool slot_et_pointing_manager_from_mouse_action(EtDocId doc_id, EtMouseAction mouse_action);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

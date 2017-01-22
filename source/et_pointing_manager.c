@@ -45,7 +45,7 @@ bool et_pointing_manager_add_slot_mouse_action(EtPointingManagerSlotMouseAction 
 	return true;
 }
 
-bool et_pointing_manager_slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
+bool slot_et_pointing_manager_from_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 {
 	EtPointingManager *self = pointing_manager;
 	assert(self);

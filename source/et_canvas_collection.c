@@ -133,7 +133,7 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 	GtkWidget *canvas_frame = et_canvas_get_widget_frame(canvas);
 	et_assertf(canvas_frame, "%d", doc_id);
 
-	if(0 > et_canvas_set_slot_mouse_action(canvas, et_pointing_manager_slot_mouse_action, NULL)){
+	if(0 > et_canvas_set_slot_mouse_action(canvas, slot_et_pointing_manager_from_mouse_action, NULL)){
 		et_error("");
 		return NULL;
 	}
