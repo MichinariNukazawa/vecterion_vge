@@ -12,7 +12,6 @@
 #include "et_color_panel.h"
 #include "et_stroke_panel.h"
 #include "et_position_panel.h"
-#include "et_snap_panel.h"
 #include "et_etaion.h"
 
 static bool _confirm_dialog_run(
@@ -52,11 +51,6 @@ EtDocId open_doc_new(PvVg *vg_src)
 	}
 
 	if(!et_doc_add_slot_change(doc_id, slot_et_position_panel_from_doc_change, NULL)){
-		et_error("");
-		return -1;
-	}
-
-	if(!et_doc_add_slot_change(doc_id, slot_et_snap_panel_from_doc_change, NULL)){
 		et_error("");
 		return -1;
 	}

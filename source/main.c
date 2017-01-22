@@ -34,7 +34,6 @@
 #include "et_color_panel.h"
 #include "et_stroke_panel.h"
 #include "et_position_panel.h"
-#include "et_snap_panel.h"
 #include "pv_file_format.h"
 #include "et_doc_relation.h"
 #include "version.h"
@@ -380,17 +379,6 @@ int main (int argc, char **argv){
 	}
 	gtk_box_pack_start(GTK_BOX(box_underbar),
 			et_position_panel_get_widget_frame(),
-			true, true, 3);
-
-	EtSnapPanel *snap_panel = et_snap_panel_init();
-	assert(snap_panel);
-	if(0 > et_etaion_set_slot_change_state(
-				slot_et_snap_panel_from_etaion_change_state, NULL)){
-		et_bug("");
-		return -1;
-	}
-	gtk_box_pack_start(GTK_BOX(box_underbar),
-			et_snap_panel_get_widget_frame(),
 			true, true, 3);
 
 	EtLayerView *layer_view = et_layer_view_init();
@@ -1874,11 +1862,10 @@ static bool _slot_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
 	assert(self);
 
 	char s[256];
-	snprintf(s, sizeof(s), "%7.2f,%7.2f(%6.1f,%6.1f)",
+	snprintf(s, sizeof(s),
+			"%7.2f,%7.2f",
 			mouse_action.point.x,
-			mouse_action.point.y,
-			mouse_action.raw.x,
-			mouse_action.raw.y);
+			mouse_action.point.y);
 	gtk_statusbar_push(GTK_STATUSBAR(self->status_bar), 1, s);
 
 	return true;
