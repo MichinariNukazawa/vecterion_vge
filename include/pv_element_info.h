@@ -66,8 +66,8 @@ typedef bool (*PvElementFuncMoveElement)(
 typedef int (*PvElementFuncGetNumAnchorPoint)(
 		const PvElement *element);
 typedef bool (*PvElementFuncIsExistAnchorPoint)(
-		PvElement *element,
-		PvAnchorPoint *ap);
+		const PvElement *element,
+		const PvAnchorPoint *ap);
 typedef PvAnchorPoint *(*PvElementFuncNewAnchorPoints)(
 		const PvElement *element);
 typedef PvAnchorPoint *(*PvElementFuncGetAnchorPoint)(

@@ -80,8 +80,8 @@ static int _func_zero_get_num_anchor_point(
 }
 
 static bool _func_nop_is_exist_anchor_point(
-		PvElement *element,
-		PvAnchorPoint *ap)
+		const PvElement *element,
+		const PvAnchorPoint *ap)
 {
 	return false;
 }
@@ -1045,8 +1045,8 @@ int _func_curve_get_num_anchor_point(
 }
 
 static bool _func_curve_is_exist_anchor_point(
-		PvElement *element,
-		PvAnchorPoint *ap)
+		const PvElement *element,
+		const PvAnchorPoint *ap)
 {
 	PvElementCurveData *data = element->data;
 
