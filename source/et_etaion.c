@@ -30,6 +30,8 @@ EtEtaion *et_etaion_init()
 
 	self->slot_change_states = NULL;
 	self->slot_change_state_datas = NULL;
+	self->slot_change_tool_ids = NULL;
+	self->slot_change_tool_id_datas = NULL;
 	et_state_unfocus(&(self->state));
 
 	current_state = self;
@@ -43,6 +45,15 @@ static void _signal_et_etaion_change_state(EtEtaion *self)
 	et_debug("%d", num);
 	for(int i = 0; i < num; i++){
 		self->slot_change_states[i](self->state, self->slot_change_state_datas[i]);
+	}
+}
+
+static void _signal_et_etaion_change_tool_id(EtEtaion *self)
+{
+	int num = pv_general_get_parray_num((void **)self->slot_change_tool_ids);
+	et_debug("%d", num);
+	for(int i = 0; i < num; i++){
+		self->slot_change_tool_ids[i](self->tool_id, self->slot_change_tool_id_datas[i]);
 	}
 }
 
@@ -220,7 +231,32 @@ int et_etaion_add_slot_change_state(EtEtaionSlotChangeState slot, gpointer data)
 	self->slot_change_states = new_slots;
 	self->slot_change_state_datas = new_datas;
 
-	return 1; // Todo: return callback id
+	return 1; //! @todo return callback id
+}
+
+int et_etaion_add_slot_change_tool_id(EtEtaionSlotChangeToolId slot, gpointer data)
+{
+	EtEtaion *self = current_state;
+	if(NULL == self){
+		et_bug("");
+		exit(-1);
+	}
+
+	int num = pv_general_get_parray_num((void **)self->slot_change_tool_ids);
+	EtEtaionSlotChangeToolId *new_slots = realloc(
+			self->slot_change_tool_ids,
+			sizeof(self->slot_change_tool_ids[0]) * (num + 2));
+	gpointer *new_datas = realloc(
+			self->slot_change_tool_id_datas,
+			sizeof(self->slot_change_tool_id_datas[0]) * (num + 2));
+	new_slots[num] = slot;
+	new_slots[num + 1] = NULL;
+	new_datas[num] = data;
+	new_datas[num + 1] = NULL;
+	self->slot_change_tool_ids = new_slots;
+	self->slot_change_tool_id_datas = new_datas;
+
+	return 1; //! @todo return callback id
 }
 
 bool et_etaion_append_new_layer(EtDocId doc_id)
@@ -401,23 +437,6 @@ bool et_etaion_remove_delete_layer(EtDocId doc_id)
 	return true;
 }
 
-static PvElement *get_element_from_anchor_point_(PvElement **elements, PvAnchorPoint *anchor_point)
-{
-	size_t num = pv_general_get_parray_num((void **)elements);
-	for(int i = 0; i < (int)num; i++){
-		PvElement *element = elements[i];
-
-		const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
-		et_assert(info);
-
-		if(info->func_is_exist_anchor_point(element, anchor_point)){
-			return element;
-		}
-	}
-
-	return NULL;
-}
-
 bool et_etaion_remove_delete_by_focusing(EtDocId doc_id)
 {
 	EtEtaion *self = current_state;
@@ -469,7 +488,9 @@ bool et_etaion_remove_delete_by_focusing(EtDocId doc_id)
 
 		for(int i = ((int)num) - 1; 0 <= i; i--){
 			PvAnchorPoint *anchor_point = anchor_points[i];
-			PvElement *element = get_element_from_anchor_point_(focus->elements, anchor_point);
+			PvElement *element = pv_element_get_in_elements_from_member_anchor_point(
+					focus->elements,
+					anchor_point);
 			et_assert(element);
 			const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 			et_assert(info);
@@ -516,15 +537,14 @@ bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data)
 
 	if(self->tool_id != tool_id){
 		et_debug("tool:%d->%d", self->tool_id, tool_id);
-#include "et_tool_panel.h"
-		if(!et_tool_panel_set_current_tool_id(tool_id)){
-			et_bug("");
-			return false;
-		}
 
 		self->tool_id = tool_id;
-		// TODO: tool_id change after work.
 
+#include "et_tool_panel.h"
+		bool ret = et_tool_panel_set_current_tool_id(tool_id);
+		et_assertf(ret, "%d", tool_id);
+
+		_signal_et_etaion_change_tool_id(self);
 		et_doc_signal_update_from_id((self->state).doc_id);
 	}
 

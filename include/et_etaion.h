@@ -16,6 +16,7 @@ typedef struct EtEtaion EtEtaion;
 
 //! @ ChangeState is signaling when change (current) doc_id, document (content), focus.
 typedef void (*EtEtaionSlotChangeState)(EtState state, gpointer data);
+typedef void (*EtEtaionSlotChangeToolId)(EtToolId tool_id, gpointer data);
 
 struct EtEtaion{
 	EtState state;
@@ -23,6 +24,8 @@ struct EtEtaion{
 
 	EtEtaionSlotChangeState *slot_change_states;
 	gpointer *slot_change_state_datas;
+	EtEtaionSlotChangeToolId *slot_change_tool_ids;
+	gpointer *slot_change_tool_id_datas;
 };
 
 EtEtaion *et_etaion_init();
@@ -50,6 +53,7 @@ bool slot_et_etaion_from_key_action(EtKeyAction key_action);
 bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data);
 
 int et_etaion_add_slot_change_state(EtEtaionSlotChangeState slot, gpointer data);
+int et_etaion_add_slot_change_tool_id(EtEtaionSlotChangeToolId slot, gpointer data);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

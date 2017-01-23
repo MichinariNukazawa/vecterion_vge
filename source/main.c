@@ -378,6 +378,11 @@ int main (int argc, char **argv){
 		et_bug("");
 		return -1;
 	}
+	if(0 > et_etaion_add_slot_change_tool_id(
+				slot_et_position_panel_from_etaion_change_tool_id, NULL)){
+		et_bug("");
+		return -1;
+	}
 	gtk_box_pack_start(GTK_BOX(box_underbar),
 			et_position_panel_get_widget_frame(),
 			true, true, 3);

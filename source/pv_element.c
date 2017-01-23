@@ -413,6 +413,25 @@ bool pv_element_append_on_focusing(PvElement *focusing_element, PvElement *eleme
 	return pv_element_append_child(parent, sister, element);
 }
 
+PvElement *pv_element_get_in_elements_from_member_anchor_point(
+		PvElement **elements,
+		const PvAnchorPoint *anchor_point)
+{
+	size_t num = pv_general_get_parray_num((void **)elements);
+	for(int i = 0; i < (int)num; i++){
+		PvElement *element = elements[i];
+
+		const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+		pv_assert(info);
+
+		if(info->func_is_exist_anchor_point(element, anchor_point)){
+			return element;
+		}
+	}
+
+	return NULL;
+}
+
 static bool _pv_element_free_single(PvElement *self)
 {
 	if(NULL == self){

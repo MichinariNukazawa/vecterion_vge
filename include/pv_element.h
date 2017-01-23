@@ -65,6 +65,8 @@ void pv_element_copy_property(PvElement *dst, PvElement *src);
 bool pv_element_append_child(PvElement *parent, const PvElement *prev, PvElement *element);
 bool pv_element_append_on_focusing(PvElement *focusing_element, PvElement *element);
 
+PvElement *pv_element_get_in_elements_from_member_anchor_point(PvElement **elements, const PvAnchorPoint *);
+
 /*! @brief
  * @return false: error from self function.
  */
