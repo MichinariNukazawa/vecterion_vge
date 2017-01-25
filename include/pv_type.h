@@ -12,6 +12,8 @@
 #define M_PI 3.14159265358979323846264338327
 #endif
 
+#define DELTA_OF_RESIZE (0.000001)
+
 
 // ******** ********
 // PvPoint

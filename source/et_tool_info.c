@@ -333,6 +333,13 @@ static void get_resize_in_rect_(
 		.y = size_after.y / src_extent_rect.h,
 	};
 
+	if(src_extent_rect.w < DELTA_OF_RESIZE){
+		resize.x = 1;
+	}
+	if(src_extent_rect.h < DELTA_OF_RESIZE){
+		resize.y = 1;
+	}
+
 	*move_upleft_ = move_upleft;
 	*resize_ = resize;
 }

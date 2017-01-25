@@ -1216,6 +1216,13 @@ static bool _func_curve_set_rect_by_anchor_points(
 		.x = rect.w / rect_src.w,
 		.y = rect.h / rect_src.h,
 	};
+	if(rect_src.w < DELTA_OF_RESIZE){
+		scale.x = 1;
+	}
+	if(rect_src.h < DELTA_OF_RESIZE){
+		scale.y = 1;
+	}
+
 
 	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
 	for(int i = 0; i < (int)num; i++){
