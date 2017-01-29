@@ -19,10 +19,13 @@ GIT_STATUS_SHORT=$(git diff --stat | tail -1)
 
 # version
 ## show version: "yy.mm" (ex. ubuntu)
-SHOW_VERSION=$(date '+%y.%m')
-## Major.Miner.Micro-git_hash
+GIT_TIMESTAMP=$(git log -n1 --format="%at")
+SHOW_VERSION=$(date -u -d @${GIT_TIMESTAMP} +%Y.%m | sed -e 's/^[0-9][0-9]\(.*\)/\1/')
+## Major.Miner.Micro-git_hash_short : YYYY.mmddHHMMSS.PatchNumber
 MICRO_VERSION=0
-FULL_VERSION="$(date '+%Y%m.%d%H%M%S').${MICRO_VERSION}-${GIT_HASH}"
+MAJOR_MINER_VERSION=$(date -u -d @${GIT_TIMESTAMP} +%Y.%m%d%H%M%S)
+FULL_VERSION="${MAJOR_MINER_VERSION}.${MICRO_VERSION}-${GIT_HASH}"
+
 
 BUILD_DATETIME=$(date '+%Y-%m-%d %H:%M:%S')
 BUILD_DATETIME=$(date --iso-8601=seconds)
