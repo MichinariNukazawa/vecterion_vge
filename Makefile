@@ -3,12 +3,15 @@
 # michinari.nukazawa@gmail.com
 #
 
-CC		:= gcc
-TARGET_NAME	:= vecterion_vge
+APP_NAME	:= vecterion_vge
 SOURCE_DIR	:= source
 OBJECT_DIR	:= object
 BUILD_DIR	:= build
+APP_FILE	:= $(BUILD_DIR)/$(APP_NAME).exe
+
+CC		:= gcc
 PKG_CONFIG	:= pkg-config
+
 CFLAGS		:= -W -Wall -Wextra
 CFLAGS		+= -MMD -MP -g -std=c11
 CFLAGS		+= -lm
@@ -25,7 +28,6 @@ CFLAGS		+= -Wunused -Wimplicit-function-declaration \
 #CFLAGS		+= -Wmissing-declarations -Wcast-qual -Wconversion -Wno-sign-conversion
 #		 -Wswitch-enum -Wjump-misses-init
 INCLUDE		:= -I./include
-TARGET		:= $(BUILD_DIR)/$(TARGET_NAME).exe
 INCLUDE		+= $(shell $(PKG_CONFIG) --libs --cflags gtk+-3.0)
 
 ifeq ($(OS),Windows_NT)
@@ -45,7 +47,7 @@ DEPENDS		:= $(OBJECTS:.o=.d)
 
 .PHONY : all run gdb clean dist_clean
 
-all : $(TARGET)
+all : $(APP_FILE)
 
 $(OBJECT_DIR)/%.o : $(SOURCE_DIR)/%.c
 	$(MKDIR_P) $(dir $@)
@@ -53,7 +55,7 @@ $(OBJECT_DIR)/%.o : $(SOURCE_DIR)/%.c
 
 
 $(OBJECT_DIR)/main.o : include/version.h
-$(TARGET) : $(OBJECTS)
+$(APP_FILE) : $(OBJECTS)
 	bash ./version.sh $(OBJECT_DIR)
 	$(MKDIR_P) $(dir $@)
 	$(CC) \
@@ -61,16 +63,16 @@ $(TARGET) : $(OBJECTS)
 		$(OBJECT_DIR)/version.c \
 		$(CFLAGS) \
 		$(INCLUDE) \
-		-o $(TARGET)
+		-o $(APP_FILE)
 
-run : $(TARGET)
-	./$(TARGET) -i ./library/23.svg
+run : $(APP_FILE)
+	./$(APP_FILE) -i ./library/23.svg
 
-gdb : $(TARGET)
-	gdb ./$(TARGET)
+gdb : $(APP_FILE)
+	gdb ./$(APP_FILE)
 
 clean :
-	$(RM) $(TARGET)
+	$(RM) $(APP_FILE)
 	$(RM) $(OBJECTS)
 	$(RM) -r $(OBJECT_DIR) $(BUILD_DIR)
 
