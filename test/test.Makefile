@@ -40,7 +40,7 @@ $(TEST_OBJECT_DIR)/%.o : $(TEST_SOURCE_DIR)/%.cpp
 	$(CXX) $(INCLUDE) $(TEST_INCLUDE) $(CXX_FLAGS) $(TEST_FLAGS) \
 		-c $< -o $@
 
-$(TEST_BUILD_DIR)/test_%.exe : $(TEST_OBJECT_DIR)/test_%.o $(TEST_O_OBJECTS)
+$(TEST_BUILD_DIR)/test_%.exe : $(TEST_OBJECT_DIR)/test_%.o $(TEST_O_OBJECTS) $(GTEST_LIBS)
 	$(MKDIR_P) $(dir $@)
 	$(CXX) \
 		$^ \
@@ -66,6 +66,9 @@ test_clean :
 	$(RM) -r $(TEST_OBJECT_DIR)
 	$(RM) -r $(TEST_BUILD_DIR)
 
+
+$(GTEST_LIBS) :
+	bash test/googletest.sh
 
 
 -include $(TEST_DEPENDS)
