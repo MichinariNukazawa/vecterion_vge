@@ -189,6 +189,11 @@ bool slot_et_etaion_from_key_action(EtKeyAction key_action)
 
 	// et_debug("key:%04x", key_action.key);
 
+	if(0 > (self->state).doc_id){
+		et_debug("no current document. %d", (self->state).doc_id);
+		return true;
+	}
+
 	PvFocus *focus = et_doc_get_focus_ref_from_id((self->state).doc_id);
 	if(NULL == focus){
 		et_error("");
