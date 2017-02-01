@@ -260,6 +260,8 @@ int main (int argc, char **argv){
 		return -1;
 	}
 
+	et_etaion_set_application_base_dir_from_execute_path(argv[0]);
+
 	EtDocManager *doc_manager = et_doc_manager_init();
 	if(NULL == doc_manager){
 		et_error("");

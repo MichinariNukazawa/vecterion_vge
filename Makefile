@@ -2,6 +2,8 @@
 # License: BSD clause-2
 # michinari.nukazawa@gmail.com
 #
+prefix = /usr/local
+
 
 APP_NAME	:= vecterion_vge
 SOURCE_DIR	:= source
@@ -66,7 +68,9 @@ $(APP_FILE) : $(OBJECTS)
 		-o $(APP_FILE)
 
 run : $(APP_FILE)
-	./$(APP_FILE) -i ./library/23.svg
+	$(MKDIR_P) $(OBJECT_DIR)/install
+	make install prefix=$(OBJECT_DIR)/install
+	./$(OBJECT_DIR)/install/bin/vecterion_vge -i ./library/23.svg
 
 gdb : $(APP_FILE)
 	gdb ./$(APP_FILE)
@@ -79,6 +83,10 @@ clean :
 dist_clean :
 	$(MAKE) clean
 	$(MAKE) test_clean
+
+install: $(APP_FILE)
+	install -D $(APP_FILE) $(DESTDIR)$(prefix)/bin/vecterion_vge
+	cp -r resource/ $(DESTDIR)$(prefix)/
 
 # test
 include test/test.Makefile

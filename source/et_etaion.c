@@ -28,6 +28,8 @@ EtEtaion *et_etaion_init()
 	}
 	self->tool_id = 0; // default tool.
 
+	self->application_path = NULL;
+
 	self->slot_change_states = NULL;
 	self->slot_change_state_datas = NULL;
 	self->slot_change_tool_ids = NULL;
@@ -94,6 +96,35 @@ EtDocId et_etaion_get_current_doc_id()
 	}
 
 	return (self->state).doc_id;
+}
+
+static const char *get_new_application_path_from_execute_path_(const char *execute_path)
+{
+	char *path0 = g_path_get_dirname(execute_path);
+	et_assertf(path0, "'%s'", execute_path);
+	char *path1 = g_path_get_dirname(path0);
+	et_assertf(path1, "'%s'", execute_path);
+	free(path0);
+	return path1;
+}
+
+void et_etaion_set_application_base_dir_from_execute_path(const char *execute_path)
+{
+	EtEtaion *self = current_state;
+	et_assert(self);
+	et_assert(execute_path);
+	et_assert(NULL == self->application_path);
+	self->application_path = get_new_application_path_from_execute_path_(execute_path);
+	et_debug("dir:'%s'", self->application_path);
+}
+
+const char *et_etaion_get_application_base_dir()
+{
+	EtEtaion *self = current_state;
+	et_assert(self);
+	et_assert(self->application_path);
+
+	return self->application_path;
 }
 
 static bool _et_etaion_is_extent_view = false;

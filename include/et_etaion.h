@@ -22,6 +22,8 @@ struct EtEtaion{
 	EtState state;
 	EtToolId tool_id;
 
+	const char *application_path;
+
 	EtEtaionSlotChangeState *slot_change_states;
 	gpointer *slot_change_state_datas;
 	EtEtaionSlotChangeToolId *slot_change_tool_ids;
@@ -36,6 +38,9 @@ bool et_etaion_set_is_extent_view(bool is_extent_view);
 bool et_etaion_get_is_extent_view();
 EtToolId et_etaion_get_tool_id();
 EtDocId et_etaion_get_current_doc_id();
+
+void et_etaion_set_application_base_dir_from_execute_path(const char *execute_path);
+const char *et_etaion_get_application_base_dir();
 
 // @brief focus(Layer)の姉妹Layerを追加
 bool et_etaion_append_new_layer(EtDocId doc_id);

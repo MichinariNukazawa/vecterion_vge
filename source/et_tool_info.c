@@ -129,9 +129,12 @@ bool et_tool_info_init()
 		et_assertf(info, "%d", tool_id);
 
 		// ** make image(cursor,icons)
+		char *path = g_strdup_printf("%s/%s", et_etaion_get_application_base_dir(), info->filepath_cursor);
+		et_assertf(path, "%s", info->filepath_cursor)
 		GError *error = NULL;
-		info->icon_cursor = gdk_pixbuf_new_from_file(info->filepath_cursor, &error);
+		info->icon_cursor = gdk_pixbuf_new_from_file(path, &error);
 		et_assertf(info->icon_cursor, "%d, %s", tool_id, error->message);
+		free(path);
 
 		info->icon = info->icon_cursor;
 		info->icon_focus = _conv_new_icon_focus(info->icon);

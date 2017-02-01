@@ -8,7 +8,6 @@
 #include "et_mouse_util.h"
 #include "et_etaion.h"
 
-static const char *DIRECTORY_RESOURCE = "./resource";
 
 typedef struct EtLayerViewLayerCtrl{
 	const char * const name;
@@ -64,8 +63,10 @@ static bool _et_layer_view_set_layer_ctrl(EtLayerView *self, int index)
 	GError *error = NULL;
 	GdkPixbuf *pixbuf = NULL;
 	char tmp[1024];
-	snprintf(tmp, sizeof(tmp), "%s/%s",
-			DIRECTORY_RESOURCE, _et_layer_view_layer_ctrls[index].filename_image);
+	snprintf(tmp, sizeof(tmp),
+			"%s/resource/%s",
+			et_etaion_get_application_base_dir(),
+			_et_layer_view_layer_ctrls[index].filename_image);
 	pixbuf = gdk_pixbuf_new_from_file(tmp, &error);
 	if(NULL == pixbuf){
 		et_error("%d, '%s'\n", index, tmp);
