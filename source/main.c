@@ -254,10 +254,6 @@ int main (int argc, char **argv){
 	}
 
 	// ** The etaion core modules initialize.
-	if(!et_tool_info_init()){
-		et_bug("");
-		return -1;
-	}
 	EtEtaion *current_state = et_etaion_init();
 	if(NULL == current_state){
 		et_bug("");
@@ -320,6 +316,11 @@ int main (int argc, char **argv){
 
 
 	// ** The etaion gui modules initialize.
+	if(!et_tool_info_init()){
+		et_bug("");
+		return -1;
+	}
+
 	EtToolPanel *tool_panel = et_tool_panel_init();
 	if(NULL == tool_panel){
 		et_bug("");
