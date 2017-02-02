@@ -1,6 +1,7 @@
 #include "et_etaion.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include "pv_element_info.h"
 #include "et_error.h"
 #include "et_doc_manager.h"
@@ -102,8 +103,11 @@ static const char *get_new_application_path_from_execute_path_(const char *execu
 {
 	char *path0 = g_path_get_dirname(execute_path);
 	et_assertf(path0, "'%s'", execute_path);
-	char *path1 = g_path_get_dirname(path0);
-	et_assertf(path1, "'%s'", execute_path);
+	const char *path1 = "..";
+	if(0 != strcmp(".", path0)){
+		path1 = g_path_get_dirname(path0);
+		et_assertf(path1, "'%s'", execute_path);
+	}
 	free(path0);
 	return path1;
 }
