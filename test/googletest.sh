@@ -17,12 +17,13 @@ CACHE_DIR=${LIBRARY_DIR}/download_cache
 
 
 # # download
-if [ ! -e ${CACHE_DIR}/googletest.zip ] ; then
+if [ ! -e ${CACHE_DIR}/release-1.8.0.tar.gz ] ; then
 	mkdir -p ${CACHE_DIR}
 	wget --tries=3 --wait=5 --continue \
 		https://github.com/google/googletest/archive/master.zip \
 		-P ${CACHE_DIR}
-	mv ${CACHE_DIR}/master.zip ${CACHE_DIR}/googletest.zip
+	[ -e ${CACHE_DIR}/release-1.8.0.tar.gz ]
+	mv ${CACHE_DIR}/release-1.8.0.tar.gz ${CACHE_DIR}/googletest.tar.gz
 fi
 
 # # decompress
@@ -31,8 +32,8 @@ pushd ${LIBRARY_DIR}
 
 [ ! -d googletest/ ] # skip if directory already exist
 
-unzip ${CACHE_DIR}/googletest.zip > /dev/null
-mv googletest-master googletest
+tar zxvf ${CACHE_DIR}/googletest.tar.gz > /dev/null
+mv googletest-release-1.8.0 googletest
 
 # build
 pushd googletest/googletest

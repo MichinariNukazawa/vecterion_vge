@@ -35,7 +35,7 @@ TEST_COMMAND := true $(foreach TEST_TARGET,$(TEST_TARGETS), && $(TEST_TARGET))
 .PHONY : test argtest_run unittest_run test_clean
 test : unittest_run argtest_run
 
-$(TEST_OBJECT_DIR)/%.o : $(TEST_SOURCE_DIR)/%.cpp
+$(TEST_OBJECT_DIR)/%.o : $(TEST_SOURCE_DIR)/%.cpp $(GTEST_LIBS)
 	$(MKDIR_P) $(dir $@)
 	$(CXX) $(INCLUDE) $(TEST_INCLUDE) $(CXX_FLAGS) $(TEST_FLAGS) \
 		-c $< -o $@
