@@ -5,10 +5,12 @@
 prefix = /usr/local
 
 
+TARGET_ARCH	:= linux
+
 APP_NAME	:= vecterion_vge
 SOURCE_DIR	:= source
-OBJECT_DIR	:= object
-BUILD_DIR	:= build
+OBJECT_DIR	:= object/$(TARGET_ARCH)
+BUILD_DIR	:= build/$(TARGET_ARCH)
 APP_FILE	:= $(BUILD_DIR)/$(APP_NAME).exe
 
 CC		:= gcc
