@@ -525,9 +525,12 @@ bool et_etaion_remove_delete_by_focusing(EtDocId doc_id)
 		}
 	}else{
 		size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
-		PvAnchorPoint **anchor_points = malloc(sizeof(PvAnchorPoint *) * (num + 1));
-		et_assert(anchor_points);
-		memcpy(anchor_points, focus->anchor_points, sizeof(PvAnchorPoint *) * (num + 1));
+		PvAnchorPoint **anchor_points = NULL;
+		if(0 != num){
+			anchor_points = malloc(sizeof(PvAnchorPoint *) * (num + 1));
+			et_assert(anchor_points);
+			memcpy(anchor_points, focus->anchor_points, sizeof(PvAnchorPoint *) * (num + 1));
+		}
 
 		for(int i = ((int)num) - 1; 0 <= i; i--){
 			PvAnchorPoint *anchor_point = anchor_points[i];
