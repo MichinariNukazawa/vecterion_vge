@@ -268,7 +268,7 @@ PvAnchorPoint *pv_anchor_path_get_anchor_point_from_index(PvAnchorPath *self, in
 			}
 			break;
 		default:
-			pv_assertf(false, "%d", turn);
+			pv_abortf("%d", turn);
 	}
 }
 

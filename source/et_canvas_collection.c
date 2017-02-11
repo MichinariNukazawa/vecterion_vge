@@ -9,6 +9,13 @@
 #include "et_pointing_manager.h"
 #include "et_doc_relation.h"
 
+#ifdef TARGET_ARCH_WIN
+static void gtk_notebook_detach_tab (GtkNotebook *notebook, GtkWidget *child)
+{
+	gtk_container_remove (GTK_CONTAINER (notebook), child);
+}
+#endif
+
 static EtCanvasCollection *_canvas_collection = NULL;
 
 struct EtCanvasCollectionCollect;
@@ -222,7 +229,7 @@ EtDocId et_canvas_collection_get_other_doc_id(EtDocId doc_id)
 		}
 	}
 
-	et_assert(false);
+	et_abortf("");
 }
 
 void et_canvas_collection_delete_canvases_from_doc_id(EtDocId doc_id)

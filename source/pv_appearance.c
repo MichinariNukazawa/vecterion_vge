@@ -81,7 +81,7 @@ bool pv_appearance_is_diff(const PvAppearance *appearance0, const PvAppearance *
 			}
 			break;
 		default:
-			pv_assertf(false, "%d", appearance0->kind);
+			pv_abortf("%d", appearance0->kind);
 	}
 }
 

@@ -133,7 +133,7 @@ bool et_tool_info_init()
 		et_assertf(path, "%s", info->filepath_cursor)
 		GError *error = NULL;
 		info->icon_cursor = gdk_pixbuf_new_from_file(path, &error);
-		et_assertf(info->icon_cursor, "%d, %s", tool_id, error->message);
+		et_assertf(info->icon_cursor, "%d, '%s'", tool_id, error->message);
 		free(path);
 
 		info->icon = info->icon_cursor;

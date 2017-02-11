@@ -277,7 +277,7 @@ int main (int argc, char **argv){
 
 	// ** window and container(box)s application base.
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_widget_set_size_request (window, 900,700);
+	gtk_widget_set_size_request (window, 900, 650);
 	self->window = GTK_WINDOW(window);
 
 	GtkWidget *box_root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);

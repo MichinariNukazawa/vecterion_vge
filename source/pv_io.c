@@ -526,7 +526,7 @@ static double _get_double_from_str(const char *str)
 
 
 // PvColorPair _pv_io_get_pv_color_pair_from_xmlnode_simple(const xmlNode *xmlnode)
-ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, const xmlNode *xmlnode)
+ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, xmlNode *xmlnode)
 {
 	PvColorPair color_pair = conf->color_pair;
 	double stroke_width = conf->stroke_width;

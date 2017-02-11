@@ -197,7 +197,7 @@ PvPoint pv_rect_get_edge_point(PvRect rect, PvRectEdgeKind edgeKind)
 		case PvRectEdgeKind_DownRight:
 			return (PvPoint){(rect.x + rect.w), (rect.y + rect.h)};
 		default:
-			pv_assertf(false, "%d", edgeKind);
+			pv_abortf("%d", edgeKind);
 	}
 }
 

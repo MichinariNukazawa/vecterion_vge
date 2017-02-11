@@ -144,7 +144,7 @@ EtLayerView *et_layer_view_init()
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (self->text));
 	gtk_text_buffer_set_text (buffer, "<Nothing document>", -1);
 	gtk_text_view_set_editable (GTK_TEXT_VIEW(self->text), false);
-#ifndef OS_Windows
+#ifndef TARGET_ARCH_WIN
 	gtk_text_view_set_monospace (GTK_TEXT_VIEW(self->text), TRUE);
 #endif
 	gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW(self->text), false);

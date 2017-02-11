@@ -7,6 +7,13 @@ prefix = /usr/local
 
 TARGET_ARCH	:= linux
 
+ifeq ($(OS),Windows_NT)
+TARGET_ARCH	:= win
+MKDIR_P		:= mkdir
+else
+MKDIR_P		:= mkdir -p
+endif
+
 APP_NAME	:= vecterion_vge
 SOURCE_DIR	:= source
 OBJECT_DIR	:= object/$(TARGET_ARCH)
@@ -18,6 +25,7 @@ PKG_CONFIG	:= pkg-config
 
 CFLAGS		:= -W -Wall -Wextra
 CFLAGS		+= -MMD -MP -g -std=c11
+CFLAGS		+= -posix
 CFLAGS		+= -lm
 CFLAGS		+= -Werror
 CFLAGS		+= -Wno-unused-parameter
@@ -31,16 +39,14 @@ CFLAGS		+= -Wunused -Wimplicit-function-declaration \
 		 -Wwrite-strings -Wunused-macros
 #CFLAGS		+= -Wmissing-declarations -Wcast-qual -Wconversion -Wno-sign-conversion
 #		 -Wswitch-enum -Wjump-misses-init
-INCLUDE		:= -I./include
-INCLUDE		+= $(shell $(PKG_CONFIG) --libs --cflags gtk+-3.0)
+CFLAGS		+= $(CFLAGS_APPEND)
 
-ifeq ($(OS),Windows_NT)
-INCLUDE		+= -I./library/libxml2/win32/include/libxml2 -lxml2
-MKDIR_P		:= mkdir
-CFLAGS		+= -DOS_Windows=1
-else
-INCLUDE		+= $(shell xml2-config --cflags --libs)
-MKDIR_P		:= mkdir -p
+INCLUDE		:= -I./include
+INCLUDE		+= $(shell $(PKG_CONFIG) --libs --cflags gtk+-3.0 libxml-2.0)
+INCLUDE		+= $(INCLUDE_APPEND)
+
+ifeq ($(TARGET_ARCH),win)
+CFLAGS		+= -DTARGET_ARCH_WIN
 endif
 
 SOURCES		:= $(wildcard $(SOURCE_DIR)/*.c) 
@@ -60,8 +66,8 @@ $(OBJECT_DIR)/%.o : $(SOURCE_DIR)/%.c
 
 $(OBJECT_DIR)/main.o : include/version.h
 $(APP_FILE) : $(OBJECTS)
-	bash ./version.sh $(OBJECT_DIR)
 	$(MKDIR_P) $(dir $@)
+	bash ./version.sh $(OBJECT_DIR)
 	$(CC) \
 		$^ \
 		$(OBJECT_DIR)/version.c \
@@ -80,7 +86,7 @@ gdb : $(APP_FILE)
 clean :
 	$(RM) $(APP_FILE)
 	$(RM) $(OBJECTS)
-	$(RM) -r $(OBJECT_DIR) $(BUILD_DIR)
+	$(RM) -r object/ build/
 
 dist_clean :
 	$(MAKE) clean

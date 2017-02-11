@@ -67,6 +67,7 @@ static size_t _et_mouse_cursor_get_num()
 	return sizeof(_mouse_cursor_infos) / sizeof(_mouse_cursor_infos[0]);
 }
 
+#ifndef TARGET_ARCH_WIN
 static GdkPixbuf *_copy_new_pixbuf_reverse_horizontal(const GdkPixbuf *pb_src)
 {
 	double w = gdk_pixbuf_get_width(pb_src);
@@ -119,6 +120,7 @@ static GdkPixbuf *_copy_new_pixbuf_rotate(const GdkPixbuf *pb_src, int rotate)
 
 	return pb;
 }
+#endif
 
 bool et_mouse_cursor_info_init()
 {
@@ -126,6 +128,7 @@ bool et_mouse_cursor_info_init()
 
 	et_assertf(gdk_display_get_default(), "GdkDisplay not grub");
 
+#ifndef TARGET_ARCH_WIN
 	size_t num = _et_mouse_cursor_get_num();
 	for(int i = 0; i < (int)num; i++){
 		EtMouseCursorInfo *info = &(_mouse_cursor_infos[i]);
@@ -207,6 +210,7 @@ bool et_mouse_cursor_info_init()
 				info->center_x, info->center_y);
 		et_assert(info->cursor);
 	}
+#endif
 
 	_is_init_mouse_cursor_infos = true;
 
