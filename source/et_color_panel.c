@@ -6,7 +6,7 @@
 #include "et_etaion.h"
 
 const int W_PALLET = 200;
-const int H_PALLET = 100;
+const int H_PALLET = 60;
 const int BORDER_PALLET = 4;
 
 struct EtColorPanel{
@@ -107,6 +107,7 @@ EtColorPanel *et_color_panel_init()
 	g_signal_connect (G_OBJECT (self->pallet), "draw",
 			G_CALLBACK (_cb_expose_event_pallet), NULL);
 	gtk_container_add(GTK_CONTAINER(self->event_box_pallet), self->pallet);
+	gtk_widget_set_size_request(self->pallet, (W_PALLET * 2), (H_PALLET * 1.5));
 
 	self->is_multi_colors[PvColorPairGround_ForGround] = false;
 	self->is_multi_colors[PvColorPairGround_BackGround] = false;
