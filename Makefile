@@ -81,7 +81,9 @@ run : $(APP_FILE)
 	./$(OBJECT_DIR)/install/bin/vecterion_vge -i ./library/23.svg
 
 gdb : $(APP_FILE)
-	gdb ./$(APP_FILE)
+	make install prefix=$(OBJECT_DIR)/install
+	gdb ./$(OBJECT_DIR)/install/bin/vecterion_vge
+	#gdb ./$(APP_FILE)
 
 clean :
 	$(RM) $(APP_FILE)
