@@ -289,7 +289,7 @@ static bool _et_layer_view_draw(EtLayerView *self)
 			strncat(buf, str_tmp, (sizeof(buf) - 1) - strlen(buf));
 			buf[sizeof(buf)-1] = '\0';
 			if(!(strlen(buf) < (sizeof(buf) - 2))){
-				et_warning("%lu/%lu\n", strlen(buf), sizeof(buf));
+				et_warning("%zu/%zu\n", strlen(buf), sizeof(buf));
 			}
 		}
 	}

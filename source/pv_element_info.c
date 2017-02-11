@@ -156,7 +156,7 @@ char *pv_general_new_str(const char *src)
 	}
 
 	if(2000 < strlen(src)){
-		pv_debug("len:%lu '%s'", strlen(src), src);
+		pv_debug("len:%zu '%s'", strlen(src), src);
 	}
 
 	char *dst = (char *)malloc(sizeof(char) * (strlen(src) + 1));

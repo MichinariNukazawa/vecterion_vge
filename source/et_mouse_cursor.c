@@ -218,7 +218,7 @@ const EtMouseCursorInfo *et_mouse_cursor_get_info_from_id(EtMouseCursorId id)
 	et_assert(_is_init_mouse_cursor_infos);
 
 	size_t num = _et_mouse_cursor_get_num();
-	et_assertf((0 <= id && id < num), "%u, %lu", id, num);
+	et_assertf((0 <= id && id < num), "%u, %zu", id, num);
 
 	return &(_mouse_cursor_infos[id]);
 }
