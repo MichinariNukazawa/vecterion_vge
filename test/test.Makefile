@@ -5,7 +5,9 @@
 
 
 CXX			:= g++
-CXX_FLAGS		:= -std=c++11 -g -MMD -MP -W -Wall -Wextra
+CXX_FLAGS		:= -std=c++11 -g -MMD -MP
+CXXFLAGS		+= -W -Wall -Wextra
+CXXFLAGS		+= -Werror
 
 
 
