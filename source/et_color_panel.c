@@ -111,7 +111,7 @@ EtColorPanel *et_color_panel_init()
 
 	self->is_multi_colors[PvColorPairGround_ForGround] = false;
 	self->is_multi_colors[PvColorPairGround_BackGround] = false;
-	self->color_pair = PvColorPair_Black;
+	self->color_pair = PvColorPair_Default;
 	self->color_pair_ground = PvColorPairGround_ForGround;
 
 	self->widget = self->box;
