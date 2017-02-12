@@ -27,7 +27,7 @@ TEST_DEPENDS		:= $(TEST_OBJECTS:.o=.d)
 TEST_BINS		:= $(TEST_OBJECTS:.o=.exe)
 TEST_TARGETS		:= $(TEST_BINS)
 
-TEST_O_OBJECTS		:= $(filter-out object/main.o,$(OBJECTS))
+TEST_O_OBJECTS		:= $(filter-out $(OBJECT_DIR)/main.o,$(OBJECTS))
 TEST_COMMAND := true $(foreach TEST_TARGET,$(TEST_TARGETS), && $(TEST_TARGET))
 
 
