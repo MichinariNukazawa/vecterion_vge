@@ -34,7 +34,9 @@ bool pv_anchor_path_is_exist_anchor_point(const PvAnchorPath *, const PvAnchorPo
 void pv_anchor_path_set_is_close(PvAnchorPath *, bool is_close);
 bool pv_anchor_path_get_is_close(const PvAnchorPath *);
 bool pv_anchor_path_is_diff(const PvAnchorPath *, const PvAnchorPath *);
-bool pv_anchor_path_reorder_open_from_index(PvAnchorPath *, int index);
+bool pv_anchor_path_change_head_index(PvAnchorPath *, int head);
+// @todo rename this function.
+bool pv_anchor_path_reorder_duplicate_open_from_index(PvAnchorPath *, int index);
 bool pv_anchor_path_get_anchor_point_p4_from_index(const PvAnchorPath *, PvAnchorPointP4 *, int index);
 
 void pv_anchor_path_debug_print(const PvAnchorPath *);

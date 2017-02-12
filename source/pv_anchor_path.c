@@ -357,7 +357,29 @@ bool pv_anchor_path_is_diff(const PvAnchorPath *anchor_path0, const PvAnchorPath
 	return false;
 }
 
-static void pv_anchor_path_change_head_index_(
+bool pv_anchor_path_reorder_duplicate_open_from_index(PvAnchorPath *self, int index)
+{
+	size_t num = pv_anchor_path_get_anchor_point_num(self);
+	if(index < 0 || (int)num <= index){
+		pv_bug("");
+		return false;
+	}
+
+	if(!self->is_close){
+		pv_bug("");
+		return false;
+	}
+
+	PvAnchorPoint *ap = pv_anchor_path_duplicating_anchor_point_(self, index);
+	pv_assert(ap);
+
+	pv_anchor_path_change_head_index(self, index + 1);
+	self->is_close = false;
+
+	return true;
+}
+
+bool pv_anchor_path_change_head_index(
 		PvAnchorPath *self,
 		int head)
 {
@@ -375,26 +397,6 @@ static void pv_anchor_path_change_head_index_(
 	}
 
 	free(aps);
-}
-
-bool pv_anchor_path_reorder_open_from_index(PvAnchorPath *self, int index)
-{
-	size_t num = pv_anchor_path_get_anchor_point_num(self);
-	if(index < 0 || (int)num <= index){
-		pv_bug("");
-		return false;
-	}
-
-	if(!self->is_close){
-		pv_bug("");
-		return false;
-	}
-
-	PvAnchorPoint *ap = pv_anchor_path_duplicating_anchor_point_(self, index);
-	pv_assert(ap);
-
-	pv_anchor_path_change_head_index_(self, index + 1);
-	self->is_close = false;
 
 	return true;
 }

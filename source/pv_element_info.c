@@ -952,11 +952,12 @@ bool _func_curve_remove_delete_anchor_point(
 		int index = pv_anchor_path_get_index_from_anchor_point(data->anchor_path, anchor_point);
 		pv_assert(0 <= index);
 
-		bool ret = pv_anchor_path_reorder_open_from_index(data->anchor_path, index);
+		bool ret;
+		ret = pv_anchor_path_change_head_index(data->anchor_path, index);
 		pv_assert(ret);
 		pv_anchor_path_set_is_close(data->anchor_path, false);
 		pv_anchor_path_remove_delete_anchor_point(data->anchor_path, anchor_point);
-		pv_anchor_path_remove_delete_range(data->anchor_path, 0, 0);
+		pv_assert(ret);
 	}else{
 		int index = pv_anchor_path_get_index_from_anchor_point(data->anchor_path, anchor_point);
 		pv_assert(0 <= index);
