@@ -3,7 +3,7 @@
 NAME="vecterion"
 
 if [ -d ./${NAME} ] ; then
-	echo "error: ./sweepが既に存在する" 
+	echo "error: ./${NAME} already exist."
 	exit
 fi
 git clone . ./${NAME}
