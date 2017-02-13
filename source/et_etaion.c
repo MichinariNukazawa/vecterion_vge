@@ -239,7 +239,8 @@ bool slot_et_etaion_from_key_action(EtKeyAction key_action)
 	}
 
 	switch(key_action.key){
-		case EtKeyType_Enter:
+		// case EtKeyType_Enter:
+		case GDK_KEY_p:
 			pv_focus_clear_to_first_layer(focus);
 
 			_signal_et_etaion_change_state(self);

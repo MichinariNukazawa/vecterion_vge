@@ -94,7 +94,7 @@ static gpointer _worker_func(gpointer data)
 
 static gboolean _cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer user_data)
 {
-	et_debug("keyval=%04x status=%04x",
+	et_debug("keyval=0x%04x status=0x%04x",
 			event->keyval, event->state/*, event->string*/);
 
 	EtKeyAction ka = {
