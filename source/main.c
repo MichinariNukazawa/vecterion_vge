@@ -854,7 +854,12 @@ static gboolean _cb_menu_file_save(gpointer data)
 		// ** change to default extension
 		const PvFileFormat *format = get_file_format_from_filepath(filepath);
 		if(NULL == format || false == format->is_native){
-			char *next_filepath = pv_file_format_change_new_extension_from_filepath(filepath, "svg");
+			char *next_filepath = NULL;
+			next_filepath = pv_file_format_change_new_extension_from_filepath(filepath, "svg");
+			g_free(filepath);
+			filepath = next_filepath;
+
+			next_filepath = _save_dialog_run("Save File", _("_Save"), filepath);
 			g_free(filepath);
 			filepath = next_filepath;
 		}
@@ -863,11 +868,11 @@ static gboolean _cb_menu_file_save(gpointer data)
 	if(NULL == filepath){
 		// ** user select filepath
 		filepath = _save_dialog_run("Save File", _("_Save"), _("untitled_document.svg"));
+	}
 
-		if(NULL == filepath){
-			et_debug("Cancel");
-			goto finally;
-		}
+	if(NULL == filepath){
+		et_debug("Cancel");
+		goto finally;
 	}
 
 	// ** check extension
