@@ -1559,8 +1559,24 @@ finally:
 	et_doc_signal_update_from_id(doc_id);
 }
 
+#include <libxml/xmlversion.h>
 static void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
 {
+	gchar *gtk_version = g_strdup_printf("libgtk:%d.%2d.%2d %s",
+			gtk_get_major_version(),
+			gtk_get_minor_version(),
+			gtk_get_micro_version(),
+			"LGPL"
+			);
+	gchar *libxml_version = g_strdup_printf("libxml:%s %s",
+			LIBXML_DOTTED_VERSION,
+			"MIT License"
+			);
+	gchar *versions = g_strdup_printf("%s\n%s",
+			gtk_version,
+			libxml_version
+			);
+
 	GtkWindow *parent_window = NULL;
 	GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
 	GtkWidget *dialog = gtk_message_dialog_new (parent_window,
@@ -1570,8 +1586,30 @@ static void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
 			"`%s`\n%s",
 			VECTERION_FULLNAME,
 			get_vecterion_build());
+	GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+	et_assert(content_area);
+	GtkWidget *frame_ = gtk_frame_new (NULL);
+	gtk_frame_set_label(GTK_FRAME (frame_), "Library");
+	gtk_container_add(GTK_CONTAINER(content_area), frame_);
+	GtkWidget *scroll = gtk_scrolled_window_new(NULL, NULL);
+	gtk_widget_set_hexpand(GTK_WIDGET(scroll), TRUE);
+	gtk_widget_set_vexpand(GTK_WIDGET(scroll), TRUE);
+	gtk_widget_set_size_request(scroll, 300, 100);
+	gtk_container_add(GTK_CONTAINER(frame_), scroll);
+	GtkWidget *text = gtk_text_view_new();
+	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW(text));
+	gtk_text_buffer_set_text (buffer, versions, -1);
+	gtk_text_view_set_editable (GTK_TEXT_VIEW(text), false);
+	gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW(text), false);
+	gtk_container_add(GTK_CONTAINER(scroll), text);
+
+	gtk_widget_show_all(dialog);
 	gtk_dialog_run (GTK_DIALOG (dialog));
 	gtk_widget_destroy (dialog);
+
+	g_free(versions);
+	g_free(libxml_version);
+	g_free(gtk_version);
 }
 
 static GtkWidget *_pv_get_menuitem_new_tree_of_select(GtkAccelGroup *accel_group){
