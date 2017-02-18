@@ -21,8 +21,6 @@ bool et_tool_panel_set_current_tool_id(EtToolId tool_id);
 //EtToolId et_tool_panel_get_current_tool_id();
 bool et_tool_panel_set_slot_change(EtToolPanelSlotChange slot, gpointer data);
 
-bool et_tool_panel_set_cursor(GdkCursor *cursor);
-
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

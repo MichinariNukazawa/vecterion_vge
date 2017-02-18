@@ -318,6 +318,16 @@ int main (int argc, char **argv){
 
 
 	// ** The etaion gui modules initialize.
+	EtCanvasCollection *canvas_collection = et_canvas_collection_init();
+	if(NULL == canvas_collection){
+		et_bug("");
+		return -1;
+	}
+	GtkWidget *cancol_widget = et_canvas_collection_get_widget_frame();
+	gtk_paned_pack1 (GTK_PANED (hpaned), cancol_widget, TRUE, FALSE);
+
+	et_etaion_set_widget_on_mouse_cursor(cancol_widget);
+
 	if(!et_tool_info_init()){
 		et_bug("");
 		return -1;
@@ -336,15 +346,6 @@ int main (int argc, char **argv){
 		et_bug("");
 		return -1;
 	}
-
-	EtCanvasCollection *canvas_collection = et_canvas_collection_init();
-	if(NULL == canvas_collection){
-		et_bug("");
-		return -1;
-	}
-	GtkWidget *cancol_widget = et_canvas_collection_get_widget_frame();
-	gtk_paned_pack1 (GTK_PANED (hpaned), cancol_widget, TRUE, FALSE);
-
 
 	EtColorPanel *color_panel = et_color_panel_init();
 	if(NULL == color_panel){

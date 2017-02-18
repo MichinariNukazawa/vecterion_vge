@@ -23,6 +23,7 @@ struct EtEtaion{
 	EtToolId tool_id;
 
 	const char *application_path;
+	GtkWidget *widget_on_mouse_cursor;
 
 	EtEtaionSlotChangeState *slot_change_states;
 	gpointer *slot_change_state_datas;
@@ -56,6 +57,8 @@ bool et_etaion_remove_delete_by_focusing(EtDocId doc_id);
 bool slot_et_etaion_from_mouse_action(EtDocId doc_id, EtMouseAction mouse_action);
 bool slot_et_etaion_from_key_action(EtKeyAction key_action);
 bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data);
+
+void et_etaion_set_widget_on_mouse_cursor(GtkWidget *);
 
 int et_etaion_add_slot_change_state(EtEtaionSlotChangeState slot, gpointer data);
 int et_etaion_add_slot_change_tool_id(EtEtaionSlotChangeToolId slot, gpointer data);

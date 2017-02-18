@@ -30,6 +30,7 @@ EtEtaion *et_etaion_init()
 	self->tool_id = 0; // default tool.
 
 	self->application_path = NULL;
+	self->widget_on_mouse_cursor = NULL;
 
 	self->slot_change_states = NULL;
 	self->slot_change_state_datas = NULL;
@@ -126,12 +127,13 @@ const char *et_etaion_get_application_base_dir()
 {
 #ifdef TARGET_ARCH_WIN
 	return ".";
-#endif
+#else
 	EtEtaion *self = current_state;
 	et_assert(self);
 	et_assert(self->application_path);
 
 	return self->application_path;
+#endif
 }
 
 static bool _et_etaion_is_extent_view = false;
@@ -148,7 +150,8 @@ bool et_etaion_set_is_extent_view(bool is_extent_view)
 	return true;
 }
 
-bool et_etaion_get_is_extent_view(){
+bool et_etaion_get_is_extent_view()
+{
 	EtEtaion *self = current_state;
 	assert(self);
 
@@ -164,6 +167,23 @@ EtToolId et_etaion_get_tool_id()
 	}
 
 	return self->tool_id;
+}
+
+static bool set_mouse_cursor_(GdkCursor *cursor)
+{
+	EtEtaion *self = current_state;
+	et_assert(self);
+
+	et_assert(cursor);
+
+	GdkWindow *window = gtk_widget_get_parent_window(self->widget_on_mouse_cursor);
+	if(!window){
+		et_debug("GdkWindow not grub");
+		return false;
+	}
+
+	gdk_window_set_cursor(window, cursor);
+	return true;
 }
 
 bool slot_et_etaion_from_mouse_action(EtDocId doc_id, EtMouseAction mouse_action)
@@ -203,7 +223,7 @@ bool slot_et_etaion_from_mouse_action(EtDocId doc_id, EtMouseAction mouse_action
 	}
 	et_assert(cursor);
 
-	et_assert(et_tool_panel_set_cursor(cursor));
+	et_assert(set_mouse_cursor_(cursor));
 
 	/*
 	   if(EtMouseAction_Up == mouse_action.action){
@@ -596,5 +616,14 @@ bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data)
 	}
 
 	return true;
+}
+
+void et_etaion_set_widget_on_mouse_cursor(GtkWidget *widget)
+{
+	EtEtaion *self = current_state;
+	et_assert(self);
+
+	et_assert(NULL == self->widget_on_mouse_cursor);
+	self->widget_on_mouse_cursor = widget;
 }
 
