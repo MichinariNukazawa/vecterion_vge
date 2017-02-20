@@ -50,13 +50,17 @@ if [ ! -e ${GTK3LIBRARY_DIR}/lib/pkgconfig/gtk+-3.0.pc ] ; then
 fi
 
 
+# make resource(icon and other)
+TARGET_ARCH_WIN_RESOURCE=${OBJECT_DIR}/vecterion.res
+x86_64-w64-mingw32-windres ${ROOT_DIR}/deploy/win/vecterion.rc -O coff -o ${TARGET_ARCH_WIN_RESOURCE}
+
 
 # build app source
 CFLAGS_APPEND=-Wno-missing-include-dirs
 
 [ -d ${GTK3LIBRARY_DIR}/lib/pkgconfig ]
 export PKG_CONFIG_PATH=${GTK3LIBRARY_DIR}/lib/pkgconfig
-make TARGET_ARCH=win CC=x86_64-w64-mingw32-gcc CFLAGS_APPEND=${CFLAGS_APPEND} INCLUDE_APPEND="-mwindows"
+make TARGET_ARCH=win CC=x86_64-w64-mingw32-gcc CFLAGS_APPEND=${CFLAGS_APPEND} INCLUDE_APPEND="-mwindows" TARGET_ARCH_WIN_RESOURCE=${TARGET_ARCH_WIN_RESOURCE}
 
 
 

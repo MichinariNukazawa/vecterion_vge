@@ -71,6 +71,7 @@ $(APP_FILE) : $(OBJECTS)
 	$(CC) \
 		$^ \
 		$(OBJECT_DIR)/version.c \
+		$(TARGET_ARCH_WIN_RESOURCE) \
 		$(CFLAGS) \
 		$(INCLUDE) \
 		-o $(APP_FILE)
