@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#define RASTER_FILEPATH_1 "./test/testdata/daisy_bell_header_r2.jpg"
+#define RASTER_FILEPATH_1 "./resource/vecterion/daisy_bell_header_r2.jpg"
 
 extern "C"
 {

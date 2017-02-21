@@ -62,7 +62,7 @@ argtest_run : $(APP_FILE)
 	bash test/argtest.sh ./$(OBJECT_DIR)/install/bin/vecterion_vge \
 		library/23.svg $(ARGTEST_OUTPUT_BASE)
 	bash test/argtest_import_raster.sh ./$(OBJECT_DIR)/install/bin/vecterion_vge \
-		test/testdata $(ARGTEST_OUTPUT_BASE)
+		$(ARGTEST_OUTPUT_BASE)
 	# bash test/argtest.sh $(APP_FILE) library/23.svg $(ARGTEST_OUTPUT_BASE)
 	# bash test/argtest_import_raster.sh $(APP_FILE) test/testdata $(ARGTEST_OUTPUT_BASE)
 

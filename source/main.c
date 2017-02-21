@@ -1604,6 +1604,35 @@ static void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
 	gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW(text), false);
 	gtk_container_add(GTK_CONTAINER(scroll), text);
 
+	static GdkPixbuf *daisy_bell_header = NULL;
+	if(NULL == daisy_bell_header){
+		char *filepath = g_strdup_printf(
+				"%s/%s",
+				et_etaion_get_application_base_dir(),
+				"resource/vecterion/daisy_bell_header_r2.jpg"
+				);
+		GError *error = NULL;
+		et_assert(filepath);
+
+		GdkPixbuf *t_daisy_bell_header = gdk_pixbuf_new_from_file(filepath, &error);
+		if(NULL == t_daisy_bell_header){
+			et_error("'%s'", error->message);
+			g_clear_error(&error);
+		}
+		free(filepath);
+
+		daisy_bell_header = gdk_pixbuf_scale_simple(
+				t_daisy_bell_header,
+				960 * 0.4, 500 * 0.4,
+				GDK_INTERP_HYPER);
+		et_assert(daisy_bell_header);
+	}
+	if(NULL != daisy_bell_header){
+		GtkWidget *image = gtk_image_new_from_pixbuf(daisy_bell_header);
+		et_assert(image);
+		gtk_container_add(GTK_CONTAINER(content_area), image);
+	}
+
 	gtk_widget_show_all(dialog);
 	gtk_dialog_run (GTK_DIALOG (dialog));
 	gtk_widget_destroy (dialog);
