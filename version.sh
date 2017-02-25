@@ -27,8 +27,8 @@ MAJOR_MINER_VERSION=$(date -u -d @${GIT_TIMESTAMP} +%Y.%m%d%H%M%S)
 FULL_VERSION="${MAJOR_MINER_VERSION}.${MICRO_VERSION}-${GIT_HASH}"
 
 
-BUILD_DATETIME=$(date '+%Y-%m-%d %H:%M:%S')
-BUILD_DATETIME=$(date --iso-8601=seconds)
+#BUILD_DATETIME=$(date '+%Y-%m-%d %H:%M:%S')
+#BUILD_DATETIME=$(date --iso-8601=seconds)
 
 
 VERSION_C=${OBJECT_DIR}/version.c
@@ -46,7 +46,6 @@ const char *GIT_STATUS_SHORT	= "${GIT_STATUS_SHORT}";
 const char *SHOW_VERSION	= "${SHOW_VERSION}";
 const char *FULL_VERSION	= "${FULL_VERSION}";
 
-const char *BUILD_DATETIME	= "${BUILD_DATETIME}";
 
 const char *get_vecterion_build()
 {
@@ -59,7 +58,6 @@ const char *get_vecterion_build()
 			"show_version		: ${SHOW_VERSION}\n"
 			"full_version		: ${FULL_VERSION}\n"
 			"\n"
-			"build_datetime		: ${BUILD_DATETIME}\n"
 			;
 }
 
