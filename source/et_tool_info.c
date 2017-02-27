@@ -1595,7 +1595,7 @@ void pv_anchor_path_get_subdivide_anchor_ponts_form_percent(
 	pv_anchor_point_set_handle(&dst_aps[2], PvAnchorPointIndex_HandlePrev, p1_handle_prev_dst);
 }
 
-int element_curve_insert_anchor_point_from_index_percent_(
+static int element_curve_insert_anchor_point_from_index_percent_(
 		PvElement *element, int index, double percent)
 {
 	PvElementCurveData *data = (PvElementCurveData *)element->data;
@@ -1625,7 +1625,7 @@ int element_curve_insert_anchor_point_from_index_percent_(
 	   PvPoint point = pv_anchor_path_get_subdivide_point_from_percent(data->anchor_path, index, percent);
 	   PvAnchorPoint ap = PvAnchorPoint_Default;
 	   pv_anchor_point_set_point(&ap, point);
-	   int new_index = pv_anchor_path_insert_anchor_point(data->anchor_path, ap, index);
+	   int new_index = pv_anchor_path_insert_anchor_point(data->anchor_path, ap, index - 1);
 	 */
 	// @todo handle.
 

@@ -85,3 +85,94 @@ TEST(Test, Split){
 	pv_anchor_path_free(path_src);
 }
 
+TEST(Test, append){
+	PvAnchorPath *path_src = pv_anchor_path_new();
+	pv_assert(path_src);
+
+	size_t num;
+	for(int i = 0; i < 6; i++){
+		PvAnchorPoint ap = pv_anchor_point_from_point((PvPoint){0, (double)i});
+		pv_anchor_path_add_anchor_point(path_src, &ap);
+		PvAnchorPoint *ap_dst = pv_anchor_path_get_anchor_point_from_index(path_src, i, PvAnchorPathIndexTurn_Disable);
+		EXPECT_TRUE(NULL != ap_dst);
+		EXPECT_NE(&ap, ap_dst);
+
+		num = pv_anchor_path_get_anchor_point_num(path_src);
+		EXPECT_EQ(i + 1, (int)num);
+	}
+
+	PvAnchorPath *path = NULL;
+	/*
+	PvAnchorPath *path_t = NULL;
+	const PvAnchorPoint *ap_h = NULL;
+	const PvAnchorPoint *ap_f = NULL;
+	*/
+
+	// append
+	path = pv_anchor_path_new();
+	pv_assert(path);
+	for(int i = 0; i < 6; i++){
+		PvAnchorPoint *ap = pv_anchor_point_new_from_point((PvPoint){1, (double)i});
+		pv_anchor_path_append_anchor_point(path, ap, i);
+		PvAnchorPoint *ap_dst = pv_anchor_path_get_anchor_point_from_index(path, i, PvAnchorPathIndexTurn_Disable);
+		EXPECT_TRUE(NULL != ap_dst);
+		EXPECT_EQ(ap, ap_dst);
+
+		num = pv_anchor_path_get_anchor_point_num(path);
+		EXPECT_EQ(i + 1, (int)num);
+	}
+
+	for(int i = 0; i < 6; i++){
+		PvAnchorPoint *ap = pv_anchor_point_new_from_point((PvPoint){2, (double)i});
+		pv_anchor_path_append_anchor_point(path, ap, i * 2);
+		PvAnchorPoint *ap_dst = pv_anchor_path_get_anchor_point_from_index(path, i * 2, PvAnchorPathIndexTurn_Disable);
+		EXPECT_TRUE(NULL != ap_dst);
+		EXPECT_EQ(ap, ap_dst);
+
+		num = pv_anchor_path_get_anchor_point_num(path);
+		EXPECT_EQ(6 + i + 1, (int)num);
+	}
+
+	pv_anchor_path_free(path);
+
+	// insert
+	path = pv_anchor_path_new();
+	pv_assert(path);
+	for(int i = 0; i < 6; i++){
+		PvAnchorPoint *ap = pv_anchor_point_new_from_point((PvPoint){1, (double)i});
+		pv_anchor_path_insert_anchor_point(path, ap, i);
+		PvAnchorPoint *ap_dst = pv_anchor_path_get_anchor_point_from_index(path, i, PvAnchorPathIndexTurn_Disable);
+		EXPECT_TRUE(NULL != ap_dst);
+		EXPECT_NE(ap, ap_dst);
+		bool b = pv_point_is_diff(ap->points[PvAnchorPointIndex_Point],
+				ap_dst->points[PvAnchorPointIndex_Point]);
+		EXPECT_TRUE(!b);
+
+		num = pv_anchor_path_get_anchor_point_num(path);
+		EXPECT_EQ(i + 1, (int)num);
+
+		pv_anchor_point_free(ap);
+	}
+
+	for(int i = 0; i < 6; i++){
+		PvAnchorPoint *ap = pv_anchor_point_new_from_point((PvPoint){2, (double)i});
+		pv_anchor_path_insert_anchor_point(path, ap, i * 2);
+		PvAnchorPoint *ap_dst = pv_anchor_path_get_anchor_point_from_index(path, i * 2, PvAnchorPathIndexTurn_Disable);
+		EXPECT_TRUE(NULL != ap_dst);
+		EXPECT_NE(ap, ap_dst);
+		bool b = pv_point_is_diff(ap->points[PvAnchorPointIndex_Point],
+				ap_dst->points[PvAnchorPointIndex_Point]);
+		EXPECT_TRUE(!b);
+
+		num = pv_anchor_path_get_anchor_point_num(path);
+		EXPECT_EQ(6 + i + 1, (int)num);
+
+		pv_anchor_point_free(ap);
+	}
+
+	pv_anchor_path_free(path);
+
+
+	pv_anchor_path_free(path_src);
+}
+

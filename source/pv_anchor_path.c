@@ -157,7 +157,6 @@ void pv_anchor_path_add_anchor_point(PvAnchorPath *self, const PvAnchorPoint *an
 void pv_anchor_path_append_anchor_point(PvAnchorPath *self, PvAnchorPoint *anchor_point, int index)
 {
 	size_t num = pv_anchor_path_get_anchor_point_num(self);
-
 	pv_assertf(index <= (int)num, "%d %zu", index, num);
 
 	if(-1 == index){
@@ -186,13 +185,13 @@ static PvAnchorPoint *pv_anchor_path_duplicating_anchor_point_(PvAnchorPath *sel
 
 PvAnchorPoint *pv_anchor_path_insert_anchor_point(PvAnchorPath *self, const PvAnchorPoint *ap, int index)
 {
+	size_t num = pv_anchor_path_get_anchor_point_num(self);
+	pv_assertf(index <= (int)num, "%d %zu", index, num);
+	pv_assertf(0 <= index, "%d %zu", index, num);
+
 	PvAnchorPoint *ap_ = pv_anchor_point_copy_new(ap);
 	pv_assert(ap_);
 
-	index -= 1;
-	if(index < 0){
-		index = 0;
-	}
 	pv_anchor_path_append_anchor_point(self, ap_, index);
 
 	return ap_;
