@@ -5,6 +5,33 @@
 #include "et_doc.h"
 #include "et_etaion.h"
 
+typedef enum{
+	STROKE_PROPERTY_WIDTH,
+	STROKE_PROPERTY_LINECAP,
+	STROKE_PROPERTY_LINEJOIN,
+	STROKE_PROPERTY_NUM,		// number
+}STROKE_PROPERTY;
+
+
+void init_stroke_diffs_(bool *is_stroke_diffs)
+{
+	for(int i = 0; i < STROKE_PROPERTY_NUM; i++){
+		is_stroke_diffs[i] = false;
+	}
+}
+
+bool is_stroke_diffs_(bool *is_stroke_diffs)
+{
+	for(int i = 0; i < STROKE_PROPERTY_NUM; i++){
+		if(is_stroke_diffs[i]){
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
 struct EtStrokePanel{
 	GtkWidget *widget; // Top widget pointer.
 	GtkWidget *box;
@@ -21,7 +48,7 @@ struct EtStrokePanel{
 	GtkWidget *combo_linejoin;
 
 	//! PvStroke with focus elements is not compared.
-	bool is_multi;
+	bool is_stroke_diffs[STROKE_PROPERTY_NUM];
 	//! current PvStroke
 	PvStroke stroke;
 };
@@ -60,7 +87,7 @@ EtStrokePanel *et_stroke_panel_init()
 
 	self->box_width = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 	gtk_box_pack_start(GTK_BOX(self->box_stroke), self->box_width, false, true, 3);
-	self->label_width = gtk_label_new_with_mnemonic("width ");
+	self->label_width = gtk_label_new_with_mnemonic("width  ");
 	gtk_box_pack_start(GTK_BOX(self->box_width), self->label_width, false, true, 3);
 	self->spin_width = gtk_spin_button_new_with_range(0, 20000, 1);
 	gtk_spin_button_set_digits (GTK_SPIN_BUTTON(self->spin_width), 3);
@@ -70,7 +97,7 @@ EtStrokePanel *et_stroke_panel_init()
 	{
 		self->box_linecap = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 		gtk_box_pack_start(GTK_BOX(self->box_stroke), self->box_linecap, false, true, 3);
-		self->label_linecap = gtk_label_new_with_mnemonic("linecap ");
+		self->label_linecap = gtk_label_new_with_mnemonic("linecap  ");
 		gtk_box_pack_start(GTK_BOX(self->box_linecap), self->label_linecap, false, true, 3);
 		// self->combo_linecap = gtk_combo_box_new();
 		//	GtkListStore *liststore = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_INT);
@@ -97,7 +124,7 @@ EtStrokePanel *et_stroke_panel_init()
 	{
 		self->box_linejoin = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 		gtk_box_pack_start(GTK_BOX(self->box_stroke), self->box_linejoin, false, true, 3);
-		self->label_linejoin = gtk_label_new_with_mnemonic("linejoin ");
+		self->label_linejoin = gtk_label_new_with_mnemonic("linejoin  ");
 		gtk_box_pack_start(GTK_BOX(self->box_linejoin), self->label_linejoin, false, true, 3);
 		// self->combo_linejoin = gtk_combo_box_new();
 		//	GtkListStore *liststore = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_INT);
@@ -213,7 +240,7 @@ static void _slot_change_doc_or_focus(EtDocId doc_id)
 	}
 
 	//! read stroke pair from focus element. update stroke pair.
-	self->is_multi = false;
+	init_stroke_diffs_(self->is_stroke_diffs);
 	PvStroke stroke = self->stroke;
 	const PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	bool is_first = true;
@@ -229,9 +256,19 @@ static void _slot_change_doc_or_focus(EtDocId doc_id)
 			stroke = focus->elements[i]->stroke;
 		}else{
 			// compare stroke other focus elements
-			if(!pv_stroke_is_equal(stroke, focus->elements[i]->stroke)){
-				self->is_multi = true;
+			PvStroke stroke0 = stroke;
+			PvStroke stroke1 = focus->elements[i]->stroke;
+
+			if(stroke0.width != stroke1.width){
+				self->is_stroke_diffs[STROKE_PROPERTY_WIDTH] = true;
 			}
+			if(stroke0.linecap != stroke1.linecap){
+				self->is_stroke_diffs[STROKE_PROPERTY_LINECAP] = true;
+			}
+			if(stroke0.linejoin != stroke1.linejoin){
+				self->is_stroke_diffs[STROKE_PROPERTY_LINEJOIN] = true;
+			}
+
 		}
 	}
 	self->stroke = stroke;
@@ -249,8 +286,12 @@ static void _update_ui_from_local()
 	gtk_combo_box_set_active(GTK_COMBO_BOX(self->combo_linejoin), self->stroke.linejoin);
 
 	//! @todo is_multi (ui design)
-	gtk_label_set_text(GTK_LABEL(self->label_width), self->is_multi? "width *":"width  " );
-	gtk_label_set_use_underline (GTK_LABEL(self->label_width), self->is_multi);
+	gtk_label_set_text(GTK_LABEL(self->label_width),
+			self->is_stroke_diffs[STROKE_PROPERTY_WIDTH]? "width *":"width  " );
+	gtk_label_set_text(GTK_LABEL(self->label_linecap),
+			self->is_stroke_diffs[STROKE_PROPERTY_LINECAP]? "linecap *":"linecap  " );
+	gtk_label_set_text(GTK_LABEL(self->label_linejoin),
+			self->is_stroke_diffs[STROKE_PROPERTY_LINEJOIN]? "linejoin *":"linejoin  " );
 }
 
 static void _update_focus_elements_from_local()
@@ -258,7 +299,7 @@ static void _update_focus_elements_from_local()
 	EtStrokePanel *self = stroke_panel;
 	assert(self);
 
-	if(!self->is_multi){
+	if(!is_stroke_diffs_(self->is_stroke_diffs)){
 		EtDocId doc_id = et_etaion_get_current_doc_id();
 		if(doc_id < 0){
 			//! when start app.
@@ -277,3 +318,4 @@ static void _update_focus_elements_from_local()
 		et_doc_save_from_id(doc_id);
 	}
 }
+
