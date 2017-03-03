@@ -47,6 +47,7 @@ struct EtStrokePanel{
 	GtkWidget *label_linejoin;
 	GtkWidget *combo_linejoin;
 
+	gulong stroke_property_signal_handler_id[STROKE_PROPERTY_NUM];
 	//! PvStroke with focus elements is not compared.
 	bool is_stroke_diffs[STROKE_PROPERTY_NUM];
 	//! current PvStroke
@@ -147,12 +148,15 @@ EtStrokePanel *et_stroke_panel_init()
 		gtk_box_pack_start(GTK_BOX(self->box_linejoin), self->combo_linejoin, false, true, 3);
 	}
 
-	g_signal_connect(self->spin_width, "value-changed",
-			G_CALLBACK(_cb_value_changed_stroke_width_spin), NULL);
-	g_signal_connect(self->combo_linecap, "changed",
-			G_CALLBACK(_cb_changed_linecap_with_combo), NULL);
-	g_signal_connect(self->combo_linejoin, "changed",
-			G_CALLBACK(_cb_changed_linejoin_with_combo), NULL);
+	self->stroke_property_signal_handler_id[STROKE_PROPERTY_WIDTH] = 
+		g_signal_connect(self->spin_width, "value-changed",
+				G_CALLBACK(_cb_value_changed_stroke_width_spin), NULL);
+	self->stroke_property_signal_handler_id[STROKE_PROPERTY_LINECAP] = 
+		g_signal_connect(self->combo_linecap, "changed",
+				G_CALLBACK(_cb_changed_linecap_with_combo), NULL);
+	self->stroke_property_signal_handler_id[STROKE_PROPERTY_LINEJOIN] = 
+		g_signal_connect(self->combo_linejoin, "changed",
+				G_CALLBACK(_cb_changed_linejoin_with_combo), NULL);
 
 	self->widget = self->box;
 	stroke_panel = self;
@@ -281,9 +285,17 @@ static void _update_ui_from_local()
 	EtStrokePanel *self = stroke_panel;
 	assert(self);
 
+	g_signal_handler_block(self->spin_width, self->stroke_property_signal_handler_id[STROKE_PROPERTY_WIDTH]);
+	g_signal_handler_block(self->combo_linecap, self->stroke_property_signal_handler_id[STROKE_PROPERTY_LINECAP]);
+	g_signal_handler_block(self->combo_linejoin, self->stroke_property_signal_handler_id[STROKE_PROPERTY_LINEJOIN]);
+
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(self->spin_width), self->stroke.width);
 	gtk_combo_box_set_active(GTK_COMBO_BOX(self->combo_linecap), self->stroke.linecap);
 	gtk_combo_box_set_active(GTK_COMBO_BOX(self->combo_linejoin), self->stroke.linejoin);
+
+	g_signal_handler_unblock(self->spin_width, self->stroke_property_signal_handler_id[STROKE_PROPERTY_WIDTH]);
+	g_signal_handler_unblock(self->combo_linecap, self->stroke_property_signal_handler_id[STROKE_PROPERTY_LINECAP]);
+	g_signal_handler_unblock(self->combo_linejoin, self->stroke_property_signal_handler_id[STROKE_PROPERTY_LINEJOIN]);
 
 	//! @todo is_multi (ui design)
 	gtk_label_set_text(GTK_LABEL(self->label_width),
@@ -299,23 +311,21 @@ static void _update_focus_elements_from_local()
 	EtStrokePanel *self = stroke_panel;
 	assert(self);
 
-	if(!is_stroke_diffs_(self->is_stroke_diffs)){
-		EtDocId doc_id = et_etaion_get_current_doc_id();
-		if(doc_id < 0){
-			//! when start app.
-			et_debug("doc is noting. %d", doc_id);
-			return;
-		}
-		PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-		assert(focus);
-
-		int num = pv_general_get_parray_num((void **)focus->elements);
-		for(int i = 0; i < num; i++){
-			focus->elements[i]->stroke = self->stroke;
-		}
-
-		et_doc_signal_update_from_id(doc_id);
-		et_doc_save_from_id(doc_id);
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		//! when start app.
+		et_debug("doc is noting. %d", doc_id);
+		return;
 	}
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	assert(focus);
+
+	int num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < num; i++){
+		focus->elements[i]->stroke = self->stroke;
+	}
+
+	et_doc_signal_update_from_id(doc_id);
+	et_doc_save_from_id(doc_id);
 }
 
