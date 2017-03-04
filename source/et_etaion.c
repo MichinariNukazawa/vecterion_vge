@@ -345,6 +345,8 @@ bool et_etaion_append_new_layer(EtDocId doc_id)
 	pv_focus_clear_set_element(focus, layer);
 
 	_signal_et_etaion_change_state(self);
+
+	et_doc_save_from_id((self->state).doc_id);
 	et_doc_signal_update_from_id((self->state).doc_id);
 
 	return true;
@@ -372,6 +374,8 @@ bool et_etaion_append_new_layer_child(EtDocId doc_id)
 	pv_focus_clear_set_element(focus, layer);
 
 	_signal_et_etaion_change_state(self);
+
+	et_doc_save_from_id((self->state).doc_id);
 	et_doc_signal_update_from_id((self->state).doc_id);
 
 	return true;
@@ -426,6 +430,8 @@ bool et_etaion_copy_layer(EtDocId doc_id)
 	pv_focus_clear_set_element(focus, new_element_tree);
 
 	_signal_et_etaion_change_state(self);
+
+	et_doc_save_from_id((self->state).doc_id);
 	et_doc_signal_update_from_id((self->state).doc_id);
 
 	return true;
@@ -496,6 +502,8 @@ bool et_etaion_remove_delete_layer(EtDocId doc_id)
 	}
 
 	_signal_et_etaion_change_state(self);
+
+	et_doc_save_from_id((self->state).doc_id);
 	et_doc_signal_update_from_id((self->state).doc_id);
 
 	return true;
@@ -582,6 +590,8 @@ bool et_etaion_remove_delete_by_focusing(EtDocId doc_id)
 
 failure:
 	_signal_et_etaion_change_state(self);
+
+	et_doc_save_from_id((self->state).doc_id);
 	et_doc_signal_update_from_id((self->state).doc_id);
 
 	return true;
@@ -612,6 +622,8 @@ bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data)
 		et_assertf(ret, "%d", tool_id);
 
 		_signal_et_etaion_change_tool_id(self);
+
+		et_doc_save_from_id((self->state).doc_id);
 		et_doc_signal_update_from_id((self->state).doc_id);
 	}
 
