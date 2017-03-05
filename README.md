@@ -1,4 +1,4 @@
-vecterion_vge - vecterion vector graphic editor -
+vecterion_vge - Vecterion vector graphics editor -
 ====
 
 The Vecterion is true vector graphics editor for linux (and other).  
@@ -8,7 +8,7 @@ Vecterionは、Linuxに本物のベクタ・グラフィックス・エディタ
 ついでにWindows版も作成しています。  
 
 # Detail
-Vecterion　is not Adobe Illustrator.  
+Vecterion is not Adobe Illustrator.  
 
 # Screenshot/Image
 ![vecterion](document/image/vecterion_vge_17.03.png)
@@ -40,25 +40,25 @@ In Windows is [README_win.md](README_win.md).
 
 ## Develop
 `bash setup/setup.sh`
-read to [test/release_test.md]().  
+read to [test/release_test.md](test/release_test.md).  
 
 ## Depend
 External dependency in library/ directory.  
-`cd library/`
+`cd library/`  
 
 ### gtk3
 https://www.gtk.org/  
-`sudo apt-get install libgtk3-dev -y`
+`sudo apt-get install libgtk3-dev -y`  
 
 ### libxml2
 http://www.xmlsoft.org/  
-`git clone git://git.gnome.org/libxml2`
+`git clone git://git.gnome.org/libxml2`  
 
 ### googletest
 https://github.com/google/googletest  
-`git clone --depth=1 https://github.com/google/googletest.git`
-`cd googletest/googletst/`
-`cmake && make`
+`git clone --depth=1 https://github.com/google/googletest.git`  
+`cd googletest/googletst/`  
+`cmake && make`  
 
 Make up libgtest.a libgtest_main.a in googletest directory.  
 Need for test.  
@@ -104,7 +104,7 @@ benchmark is [railmaps](https://github.com/hashcc/railmaps).
 - auto update
 
 ## License
-[LICENSE.md]()  
+[LICENSE.md](LICENSE.md)  
 
 # Contact
 mail: [michinari.nukazawa@gmail.com][mailto]  
