@@ -11,7 +11,7 @@ Vecterionは、Linuxに本物のベクタ・グラフィックス・エディタ
 Vecterion is not Adobe Illustrator.  
 
 # Screenshot/Image
-![vecterion](document/image/vecterion_vge_17.03.png)
+![vecterion](document/image/vecterion_vge_17.03.png)  
 
 # Project goal
 - I makes money for happy life and enjoy develop!
@@ -19,7 +19,7 @@ Vecterion is not Adobe Illustrator.
 - Font editor for the [project daisy bell][pixiv_booth_project_daisy_bell].
 
 # Get Vecterion
-get source: `git clone https://github.com/MichianriNukazawa/vecterion_vge`
+get source: `git clone https://github.com/MichianriNukazawa/vecterion_vge`  
 
 Download windows binary @todo  
 Download ubuntu package(.deb) @todo  
@@ -35,11 +35,11 @@ In Linux. (Ubuntu 16.04LTS+)
 In Windows is [README_win.md](README_win.md).  
 
 ## Build
-`make`
-`make run`
+`make`  
+`make run`  
 
 ## Develop
-`bash setup/setup.sh`
+`bash setup/setup.sh`  
 read to [test/release_test.md](test/release_test.md).  
 
 ## Depend
