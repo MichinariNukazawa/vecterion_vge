@@ -81,6 +81,7 @@ mkdir -p ${PACKAGE_DIR}
 cp ${BUILD_DIR}/vecterion_vge.exe ${PACKAGE_DIR}/
 cp -r ${ROOT_DIR}/resource ${PACKAGE_DIR}/
 cp ${ROOT_DIR}/deploy/\!cons.bat ${PACKAGE_DIR}/
+cp ${ROOT_DIR}/deploy/win/README_win_ja.txt ${PACKAGE_DIR}/
 cp ${GTK3LIBRARY_DIR}/bin/*.dll ${PACKAGE_DIR}/
 #cp ${GTK3LIBRARY_DIR}/lib/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-svg.dll ${PACKAGE_DIR}/
 mkdir -p ${PACKAGE_DIR}/lib/gdk-pixbuf-2.0/2.10.0/loaders/
