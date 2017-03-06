@@ -73,7 +73,7 @@ EX=""
 if [ -n "${GIT_STATUS_SHORT}" ] ; then
 EX="develop"
 fi
-PACKAGE_NAME=vecterion-${SHOW_VERSION}${EX}-${GIT_HASH}
+PACKAGE_NAME=vecterion_vge-win64-${SHOW_VERSION}${EX}-${GIT_HASH}
 PACKAGE_DIR=${BUILD_DIR}/${PACKAGE_NAME}
 
 rm -rf ${PACKAGE_DIR}
