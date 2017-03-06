@@ -48,7 +48,7 @@ External dependency in library/ directory.
 
 ### gtk3
 https://www.gtk.org/  
-`sudo apt-get install libgtk3-dev -y`  
+`sudo apt-get install libgtk-3-dev -y`  
 
 ### libxml2
 http://www.xmlsoft.org/  
@@ -58,7 +58,7 @@ http://www.xmlsoft.org/
 https://github.com/google/googletest  
 `git clone --depth=1 https://github.com/google/googletest.git`  
 `cd googletest/googletst/`  
-`cmake && make`  
+`cmake . && make`  
 
 Make up libgtest.a libgtest_main.a in googletest directory.  
 Need for test.  
