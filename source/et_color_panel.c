@@ -14,6 +14,8 @@ struct EtColorPanel{
 	GtkWidget *box;
 	GtkWidget *event_box_color_sliders;
 	GtkWidget *box_color_sliders;
+	GtkWidget *slider_boxs[NUM_COLOR_PARAMETER];
+	GtkWidget *slider_labels[NUM_COLOR_PARAMETER];
 	GtkWidget *sliders[NUM_COLOR_PARAMETER];
 	GtkWidget *event_box_pallet;
 	GtkWidget *pallet;
@@ -73,17 +75,21 @@ EtColorPanel *et_color_panel_init()
 	for(int i = 0; i < NUM_COLOR_PARAMETER; i++){
 		const PvColorParameterProperty *color_parameter_property
 			= pv_color_get_parameter_property_from_ix(i);
+
+		self->slider_boxs[i] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+		et_assertf(self->slider_boxs[i], "%d", i);
+		gtk_container_add(GTK_CONTAINER(self->box_color_sliders), self->slider_boxs[i]);
+		self->slider_labels[i] = gtk_label_new_with_mnemonic(color_parameter_property->name);
+		et_assertf(self->slider_labels[i], "%d", i);
+		gtk_box_pack_start(GTK_BOX(self->slider_boxs[i]), self->slider_labels[i], false, false, 1);
 		self->sliders[i] = gtk_scale_new_with_range(
 				GTK_ORIENTATION_HORIZONTAL,
 				color_parameter_property->min,
 				color_parameter_property->max,
 				1);
-		if(NULL == self->sliders[i]){
-			et_error("");
-			return NULL;
-		}
+		et_assertf(self->sliders[i], "%d", i);
 		gtk_scale_set_value_pos(GTK_SCALE(self->sliders[i]), GTK_POS_RIGHT);
-		gtk_container_add(GTK_CONTAINER(self->box_color_sliders), self->sliders[i]);
+		gtk_box_pack_start(GTK_BOX(self->slider_boxs[i]), self->sliders[i], true, true, 1);
 
 		g_signal_connect(G_OBJECT(self->sliders[i]), "change-value",
 				G_CALLBACK(_cb_change_value_color_slider),
