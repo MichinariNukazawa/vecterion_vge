@@ -437,8 +437,32 @@ static double _et_ceil_unit(double value, double unit)
 	return unit * ((int)((value / unit) + t)); // trick for value 0.6 can't ceiled.
 }
 
-const double ET_RENDER_CONTEXT_SCALE_MIN = 0.01;
-const double ET_CANVAS_SCALE_UNIT = (0.1);
+#define ET_CANVAS_SCALE_UNIT (0.1)
+const double ET_RENDER_CONTEXT_SCALE_MIN_OF_UNIT = ET_CANVAS_SCALE_UNIT;
+const double ET_RENDER_CONTEXT_SCALE_MAX_OF_UNIT = 3.0;
+void et_canvas_change_scale_of_unit(EtCanvas *self, int wait)
+{
+	et_assert(self);
+
+	double before = self->render_context.scale;
+	self->render_context.scale = _et_ceil_unit(self->render_context.scale, ET_CANVAS_SCALE_UNIT);
+	self->render_context.scale += (wait * ET_CANVAS_SCALE_UNIT);
+
+	if(self->render_context.scale < ET_RENDER_CONTEXT_SCALE_MIN_OF_UNIT){
+		et_debug("limit scale min:%f", self->render_context.scale);
+		self->render_context.scale = ET_RENDER_CONTEXT_SCALE_MIN_OF_UNIT;
+	}
+
+	if(ET_RENDER_CONTEXT_SCALE_MAX_OF_UNIT < self->render_context.scale){
+		et_debug("limit scale max:%f", self->render_context.scale);
+		self->render_context.scale = ET_RENDER_CONTEXT_SCALE_MAX_OF_UNIT;
+	}
+
+	if(before != self->render_context.scale){
+		_signal_et_canvas_slot_change(self);
+	}
+}
+
 static gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer data)
 {
 	EtCanvas *self = (EtCanvas *)data;
@@ -456,27 +480,18 @@ static gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpoi
 		switch(event->direction){
 			case GDK_SCROLL_UP:
 				et_debug("BUTTON SCROLL   UP");
-				self->render_context.scale = _et_ceil_unit(self->render_context.scale, ET_CANVAS_SCALE_UNIT);
-				self->render_context.scale += ET_CANVAS_SCALE_UNIT; 
+				et_canvas_change_scale_of_unit(self, 1);
 				break;
 			case GDK_SCROLL_DOWN:
 				et_debug("BUTTON SCROLL DOWN");
-				self->render_context.scale = _et_ceil_unit(self->render_context.scale, ET_CANVAS_SCALE_UNIT);
-				self->render_context.scale -= ET_CANVAS_SCALE_UNIT; 
+				et_canvas_change_scale_of_unit(self, -1);
 				break;
 			default:
 				break;
 		}
-
-		if(self->render_context.scale < ET_RENDER_CONTEXT_SCALE_MIN){
-			et_debug("under limit scale:%f", self->render_context.scale);
-			self->render_context.scale = ET_RENDER_CONTEXT_SCALE_MIN;
-		}
 	}else{
 		// ** move(vertical,horizontal) has GtkScrolledWindow.
 	}
-
-	_signal_et_canvas_slot_change(self);
 
 	return is_stop_signal;
 }

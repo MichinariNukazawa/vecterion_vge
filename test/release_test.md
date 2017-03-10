@@ -224,11 +224,20 @@ Layer操作により変化したLayer構造が、LayerViewに反映されてい�
 
 ### CanvasCollection
 
-#### Document表示(Canvas)のリサイズ
+#### Document表示(Canvas)のZoom倍率変更
+表示の拡大・縮小に合わせて、Document表示倍率が増減する  
 * Canvas内にカーソルを配置し、Alt+マウスホイールUpする。
-	Document表示倍率が増え、表示が拡大される。  
+	CurrentCanvasの表示が拡大される。  
+* Canvas内にカーソルを配置し、Ctrl++ショートカットを押下する。
+	CurrentCanvasの表示が拡大される。  
+* Canvas内にカーソルを配置し、Ctrl++(TenKey上の+)ショートカットを押下する。
+	CurrentCanvasの表示が拡大される。  
 * Canvas内にカーソルを配置し、Alt+マウスホイールDownする。
-	Document表示倍率が減り、表示が縮小される。  
+	CurrentCanvasの表示が縮小される。  
+* Canvas内にカーソルを配置し、Ctrl+-ショートカットを押下する。
+	CurrentCanvasの表示が縮小される。  
+* Canvas内にカーソルを配置し、Ctrl+-(TenKey上の-)ショートカットを押下する。
+	CurrentCanvasの表示が縮小される。  
 
 ### ThumbnailView
 * CucrrentDocumentを変える。

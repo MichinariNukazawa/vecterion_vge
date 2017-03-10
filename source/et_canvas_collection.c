@@ -207,6 +207,47 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 		return canvas;
 }
 
+EtCanvas *_get_canvas_from_canvas_frame(const GtkWidget *canvas_frame)
+{
+	EtCanvasCollection *self = _canvas_collection;
+	et_assert(self);
+
+	size_t num_collects = pv_general_get_parray_num((void **)self->collects);
+	for(int i = 0; i < (int)num_collects; i++){
+		const EtCanvasCollectionCollect *collect = self->collects[i];
+		size_t num_canvases = pv_general_get_parray_num((void **)collect->canvases);
+		for(int t = 0; t < (int)num_canvases; t++){
+			et_assertf(collect->canvases[t], "%d,%d", i, t);
+			const GtkWidget *frame = et_canvas_get_widget_frame(collect->canvases[t]);
+			et_assertf(frame, "%d,%d", i, t);
+			if(canvas_frame == frame){
+				return collect->canvases[t];
+			}
+		}
+	}
+
+	return NULL;
+}
+
+EtCanvas *et_canvas_collection_get_current_canvas()
+{
+	EtCanvasCollection *self = _canvas_collection;
+	et_assert(self);
+
+	gint page_num = gtk_notebook_get_current_page(GTK_NOTEBOOK(self->widget_tab));
+	if(-1 == page_num){
+		et_debug("");
+		return NULL;
+	}
+
+	GtkWidget *canvas_frame = gtk_notebook_get_nth_page(GTK_NOTEBOOK(self->widget_tab), page_num);
+	et_assertf(canvas_frame, "%d", page_num);
+	EtCanvas *canvas = _get_canvas_from_canvas_frame(canvas_frame);
+	et_assertf(canvas, "%d", page_num);
+
+	return canvas;
+}
+
 EtDocId et_canvas_collection_get_other_doc_id(EtDocId doc_id)
 {
 	EtCanvasCollection *self = _canvas_collection;

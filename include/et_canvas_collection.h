@@ -18,6 +18,7 @@ EtCanvasCollection *et_canvas_collection_init();
 GtkWidget *et_canvas_collection_get_widget_frame();
 EtThumbnail *et_canvas_collection_get_thumbnail();
 EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id);
+EtCanvas *et_canvas_collection_get_current_canvas();
 EtDocId et_canvas_collection_get_other_doc_id(EtDocId);
 void et_canvas_collection_delete_canvases_from_doc_id(EtDocId);
 

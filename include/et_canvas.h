@@ -26,6 +26,7 @@ bool et_canvas_draw_pixbuf(EtCanvas *, GdkPixbuf *pixbuf);
 int et_canvas_set_slot_change(EtCanvas *, EtCanvasSlotChange slot, gpointer data);
 int et_canvas_set_slot_mouse_action(EtCanvas *, EtCanvasSlotMouseAction slot, gpointer data);
 void slot_et_canvas_from_doc_change(EtDoc *, gpointer data);
+void et_canvas_change_scale_of_unit(EtCanvas *self, int wait);
 
 // ** use thumbnail.
 void et_canvas_set_is_thumbnail(EtCanvas *, bool is_thumbnail);

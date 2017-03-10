@@ -258,6 +258,7 @@ bool slot_et_etaion_from_key_action(EtKeyAction key_action)
 		return false;
 	}
 
+	//! key list: https://git.gnome.org/browse/gtk+/plain/gdk/gdkkeysyms.h
 	switch(key_action.key){
 		// case EtKeyType_Enter:
 		case GDK_KEY_p:

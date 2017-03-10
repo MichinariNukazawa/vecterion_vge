@@ -1324,6 +1324,26 @@ finally_1:
 
 }
 
+static void _cb_menu_view_zoom_in(GtkCheckMenuItem *menuitem, gpointer user_data)
+{
+	EtCanvas *current_canvas = et_canvas_collection_get_current_canvas();
+	if(NULL == current_canvas){
+		_show_error_dialog("Zoom:nothing document.");
+		return;
+	}
+	et_canvas_change_scale_of_unit(current_canvas, 1);
+}
+
+static void _cb_menu_view_zoom_out(GtkCheckMenuItem *menuitem, gpointer user_data)
+{
+	EtCanvas *current_canvas = et_canvas_collection_get_current_canvas();
+	if(NULL == current_canvas){
+		_show_error_dialog("Zoom:nothing document.");
+		return;
+	}
+	et_canvas_change_scale_of_unit(current_canvas, -1);
+}
+
 static void _cb_menu_view_extent(GtkCheckMenuItem *menuitem, gpointer user_data)
 {
 	if(!et_etaion_set_is_extent_view(gtk_check_menu_item_get_active(menuitem))){
@@ -1793,7 +1813,8 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_edit(GtkAccelGroup *accel_group)
 	return menuitem_root;
 }
 
-static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group){
+static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group)
+{
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
 	GtkWidget *menu;
@@ -1833,6 +1854,41 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group)
 	return menuitem_root;
 }
 
+static GtkWidget *_pv_get_menuitem_new_tree_of_view_zoom(GtkAccelGroup *accel_group)
+{
+	GtkWidget *menuitem_root;
+	GtkWidget *menuitem;
+	GtkWidget *menu;
+
+	menuitem_root = gtk_menu_item_new_with_label ("_Zoom");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
+
+	menu = gtk_menu_new ();
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
+
+	// ** Accel to "/_View/_Zoom/Zoom _In (Ctrl++)"
+	menuitem = gtk_menu_item_new_with_label ("Zoom _In");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_view_zoom_in), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_plus, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_KP_Add, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE); // in ten key.
+
+	// ** Accel to "/_View/_Zoom/Zoom _Out (Ctrl+-)"
+	menuitem = gtk_menu_item_new_with_label ("Zoom _Out");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_view_zoom_out), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_minus, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_KP_Subtract, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE); // in ten key.
+
+	return menuitem_root;
+}
+
 static GtkWidget *_pv_get_menuitem_new_tree_of_view(GtkAccelGroup *accel_group)
 {
 	GtkWidget *menuitem_root;
@@ -1845,6 +1901,10 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_view(GtkAccelGroup *accel_group)
 
 	menu = gtk_menu_new ();
 	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
+
+	// ** "/_View/_Zoom/*"
+	menuitem = _pv_get_menuitem_new_tree_of_view_zoom(accel_group);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 
 	// ** Accel to "View > extent show
 	menuitem = gtk_check_menu_item_new_with_mnemonic ("_Extent View");
