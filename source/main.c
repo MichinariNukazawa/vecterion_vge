@@ -1151,7 +1151,7 @@ static gboolean _cb_menu_layer_delete(gpointer data)
 	return false;
 }
 
-static void _reordering_element(EtDocId doc_id, int move, bool is_end)
+static void _reordering_element(EtDocId doc_id, int move, bool is_end, bool is_layer)
 {
 	et_assertf((1 == move || -1 == move), "%d", move);
 
@@ -1164,18 +1164,29 @@ static void _reordering_element(EtDocId doc_id, int move, bool is_end)
 		return;
 	}
 
-	if(!pv_element_kind_is_object(focus->elements[0]->kind)){
-		_show_error_dialog("Reorder:element not ones.");
-		et_debug("%d", focus->elements[0]->kind);
-		return;
-	}
+	PvElement *parent_element = NULL;
+	PvElement *target_element = NULL;
+	if(is_layer){
+		target_element = pv_element_get_first_parent_layer_or_root(focus->elements[0]);
+		et_assert(target_element);
+		parent_element = target_element->parent;
+		et_assert(parent_element);
+	}else{
+		target_element = focus->elements[0];
+		et_assert(target_element);
+		parent_element = target_element->parent;
+		et_assert(parent_element);
 
-	PvElement *parent_element = focus->elements[0]->parent;
-	et_assert(parent_element);
+		if(!pv_element_kind_is_object(target_element->kind)){
+			_show_error_dialog("Reorder:element not ones.");
+			et_debug("%d", focus->elements[0]->kind);
+			return;
+		}
+	}
 
 	size_t num_childs = pv_general_get_parray_num((void **)parent_element->childs);
 	for(int i = 0; i < (int)num_childs; i++){
-		if(focus->elements[0] == parent_element->childs[i]){
+		if(target_element == parent_element->childs[i]){
 			int index = i + (-1 * move);
 			if(is_end){
 				if(1 == move){
@@ -1207,6 +1218,62 @@ static void _reordering_element(EtDocId doc_id, int move, bool is_end)
 	et_abortf("");
 }
 
+static gboolean _cb_menu_layer_raise(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// _show_error_dialog("Raise:nothing document.");
+		// et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	_reordering_element(doc_id, -1, false, true);
+
+	return false;
+}
+
+static gboolean _cb_menu_layer_lower(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// _show_error_dialog("Raise:nothing document.");
+		// et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	_reordering_element(doc_id, 1, false, true);
+
+	return false;
+}
+
+static gboolean _cb_menu_layer_raise_to_top(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// _show_error_dialog("Raise:nothing document.");
+		// et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	_reordering_element(doc_id, -1, true, true);
+
+	return false;
+}
+
+static gboolean _cb_menu_layer_lower_to_end(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// _show_error_dialog("Raise:nothing document.");
+		// et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	_reordering_element(doc_id, 1, true, true);
+
+	return false;
+}
+
 static gboolean _cb_menu_element_raise(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
@@ -1216,7 +1283,7 @@ static gboolean _cb_menu_element_raise(gpointer data)
 		return false;
 	}
 
-	_reordering_element(doc_id, -1, false);
+	_reordering_element(doc_id, -1, false, false);
 
 	return false;
 }
@@ -1230,7 +1297,7 @@ static gboolean _cb_menu_element_lower(gpointer data)
 		return false;
 	}
 
-	_reordering_element(doc_id, 1, false);
+	_reordering_element(doc_id, 1, false, false);
 
 	return false;
 }
@@ -1244,7 +1311,7 @@ static gboolean _cb_menu_element_raise_to_top(gpointer data)
 		return false;
 	}
 
-	_reordering_element(doc_id, -1, true);
+	_reordering_element(doc_id, -1, true, false);
 
 	return false;
 }
@@ -1258,7 +1325,7 @@ static gboolean _cb_menu_element_lower_to_end(gpointer data)
 		return false;
 	}
 
-	_reordering_element(doc_id, 1, true);
+	_reordering_element(doc_id, 1, true, false);
 
 	return false;
 }
@@ -1962,6 +2029,41 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group)
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_delete), NULL);
+
+	GtkWidget *separator = gtk_separator_menu_item_new();
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), separator);
+
+	// ** Accel to "/_Layer/_Raise(Ctrl+Shift+PageUp)"
+	menuitem = gtk_menu_item_new_with_label ("_Raise");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_raise), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_Page_Up, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
+
+	// ** Accel to "/_Layer/_Lower(Ctrl+Shift+PageDown)"
+	menuitem = gtk_menu_item_new_with_label ("_Lower");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_lower), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_Page_Down, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
+
+	// ** Accel to "/_Layer/Raise to _Top(Ctrl+Shift+Home)"
+	menuitem = gtk_menu_item_new_with_label ("Raise to Top");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_raise_to_top), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_Home, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
+
+	// ** Accel to "/_Layer/Lower to _End(Ctrl+Shift+End)"
+	menuitem = gtk_menu_item_new_with_label ("Lower to _End");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_lower_to_end), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_End, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
 	return menuitem_root;
 }

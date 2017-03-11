@@ -299,21 +299,6 @@ PvAnchorPoint *pv_focus_get_first_anchor_point(const PvFocus *focus)
 	return focus->anchor_points[0];
 }
 
-static bool pv_focus_is_layer_root_null_from_element_(const PvElement *element)
-{
-	if(NULL == element){
-		return true;
-	}
-	if(PvElementKind_Root == element->kind){
-		return true;
-	}
-	if(PvElementKind_Layer == element->kind){
-		return true;
-	}
-
-	return false;
-}
-
 PvElement *pv_focus_get_first_layer(const PvFocus *focus)
 {
 	if(NULL == focus){
@@ -327,11 +312,7 @@ PvElement *pv_focus_get_first_layer(const PvFocus *focus)
 		return NULL;
 	}
 
-	while(!pv_focus_is_layer_root_null_from_element_(element)){
-		element = element->parent;
-	}
-
-	return element;
+	return pv_element_get_first_parent_layer_or_root(element);
 }
 
 bool pv_focus_clear_set_element_index(PvFocus *focus, PvElement *element, int index)

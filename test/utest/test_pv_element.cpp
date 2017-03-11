@@ -158,3 +158,43 @@ TEST(Test, remove){
 	pv_vg_free(vg);
 }
 
+TEST(Test, get_first_parent_layer_or_root){
+	PvVg *vg = pv_vg_new();
+	assert(NULL != vg);
+
+	PvElement *element_root = pv_vg_get_layer_top(vg);
+
+	PvElement *element_layer0 = pv_element_new(PvElementKind_Layer);
+	PvElement *element_group0 = pv_element_new(PvElementKind_Group);
+
+	PvElement *element_curves[4];
+
+	element_curves[0] = pv_element_curve_new_from_rect((PvRect){0,0,0,0});
+	assert(element_curves[0]);
+	element_curves[1] = pv_element_curve_new_from_rect((PvRect){0,0,0,0});
+	assert(element_curves[1]);
+	element_curves[2] = pv_element_curve_new_from_rect((PvRect){0,0,0,0});
+	assert(element_curves[2]);
+	ASSERT_TRUE(element_root == pv_element_get_first_parent_layer_or_root(element_root));
+	ASSERT_TRUE(element_layer0 == pv_element_get_first_parent_layer_or_root(element_layer0));
+	ASSERT_TRUE(NULL == pv_element_get_first_parent_layer_or_root(element_group0));
+	ASSERT_TRUE(NULL == pv_element_get_first_parent_layer_or_root(element_curves[0]));
+	ASSERT_TRUE(NULL == pv_element_get_first_parent_layer_or_root(element_curves[1]));
+
+	assert(pv_element_append_child(element_layer0, NULL, element_curves[0]));
+	assert(pv_element_append_child(element_group0, NULL, element_curves[1]));
+	ASSERT_TRUE(element_root == pv_element_get_first_parent_layer_or_root(element_root));
+	ASSERT_TRUE(element_layer0 == pv_element_get_first_parent_layer_or_root(element_layer0));
+	ASSERT_TRUE(NULL == pv_element_get_first_parent_layer_or_root(element_group0));
+	ASSERT_TRUE(element_layer0 == pv_element_get_first_parent_layer_or_root(element_curves[0]));
+	ASSERT_TRUE(NULL == pv_element_get_first_parent_layer_or_root(element_curves[1]));
+
+	assert(pv_element_append_child(element_root, NULL, element_layer0));
+	assert(pv_element_append_child(element_layer0, NULL, element_group0));
+	ASSERT_TRUE(element_root == pv_element_get_first_parent_layer_or_root(element_root));
+	ASSERT_TRUE(element_layer0 == pv_element_get_first_parent_layer_or_root(element_layer0));
+	ASSERT_TRUE(element_layer0 == pv_element_get_first_parent_layer_or_root(element_group0));
+	ASSERT_TRUE(element_layer0 == pv_element_get_first_parent_layer_or_root(element_curves[0]));
+	ASSERT_TRUE(element_layer0 == pv_element_get_first_parent_layer_or_root(element_curves[1]));
+}
+

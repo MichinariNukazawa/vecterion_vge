@@ -198,7 +198,29 @@ Layer操作により変化したLayer構造が、LayerViewに反映されてい�
 * (准正常系) 空Layerが1つのみ存在するDocumentで、DeleteLayerアイコンをクリックする。
 	FocusしているLayerが削除されない。  
 
+### Layer順序の並び替え
+テストデータ：[test/raise_and_lower_release_test.svg](raise_and_lower_release_test.svg)  
+LayerのFocusは、Layer内のElementへのFocusと、LeyerへのFocus(ElementをFocusしていない状態)の2通りをテストする。  
+Layer順序の並び替えを行った際、Layer内のElementが並び替えられていないことを確認する。  
+* 上に姉妹Layerが居るLayerをFocusし、Ctrl+Shift+PageUpショートカットを押下する。
+	FocusしているLayerが1つ上に並び替えられる。  
+* (准正常系)上に姉妹Layerが居ないLayerをFocusし、Ctrl+Shift+PageUpショートカットを押下する。
+	Layerが並び替えられない。  
+* 下に姉妹Layerが居るLayerをFocusし、Ctrl+Shift+PageDownショートカットを押下する。
+	FocusしているLayerが1つ下に並び替えられる。  
+* (准正常系)下に姉妹Layerが居ないLayerをFocusし、Ctrl+Shift+PageDownショートカットを押下する。
+	Layerが並び替えられない。  
+* 上に姉妹Layerが2つ以上居るLayerをFocusし、Ctrl+Shift+Homeショートカットを押下する。
+	FocusしているLayerが姉妹Layerの一番上に並び替えられる。  
+* (准正常系)上に姉妹Layerが居ないLayerをFocusし、Ctrl+Shift+Homeショートカットを押下する。
+	Layerが並び替えられない。  
+* 下に姉妹Layerが2つ以上居るLayerをFocusし、Ctrl+Shift+Endショートカットを押下する。
+	FocusしているLayerが姉妹Layerの一番下に並び替えられる。  
+* (准正常系)下に姉妹Layerが居ないLayerをFocusし、Ctrl+Shift+Endショートカットを押下する。
+	Layerが並び替えられない。  
+
 ### Element順序の並び替え
+テストデータ：[test/raise_and_lower_release_test.svg](raise_and_lower_release_test.svg)  
 * 上に姉妹Elementが居るElementをFocusし、PageUpショートカットを押下する。
 	FocusしているElementが1つ上に並び替えられる。
 * (准正常系)上に姉妹Elementが居ないElementをFocusし、PageUpショートカットを押下する。

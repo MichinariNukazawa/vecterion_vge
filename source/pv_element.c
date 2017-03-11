@@ -418,6 +418,29 @@ bool pv_element_append_on_focusing(PvElement *focusing_element, PvElement *eleme
 	return pv_element_append_child(parent, sister, element);
 }
 
+static bool is_layer_root_null_from_element_(const PvElement *element)
+{
+	if(NULL == element){
+		return true;
+	}
+	switch(element->kind){
+		case PvElementKind_Root:
+		case PvElementKind_Layer:
+		return true;
+		default:
+		return false;
+	}
+}
+
+PvElement *pv_element_get_first_parent_layer_or_root(PvElement *element)
+{
+	while(!is_layer_root_null_from_element_(element)){
+		element = element->parent;
+	}
+
+	return element;
+}
+
 PvElement *pv_element_get_in_elements_from_member_anchor_point(
 		PvElement **elements,
 		const PvAnchorPoint *anchor_point)
