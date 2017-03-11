@@ -201,7 +201,7 @@ bool et_mouse_cursor_info_init()
 				}
 		}
 
-#ifndef TARGET_ARCH_WIN
+#ifndef TARGET_OS_WIN
 		info->cursor = gdk_cursor_new_from_pixbuf(
 				gdk_display_get_default(),
 				info->pixbuf,

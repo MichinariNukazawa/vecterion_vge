@@ -9,7 +9,7 @@
 #include "et_pointing_manager.h"
 #include "et_doc_relation.h"
 
-#ifdef TARGET_ARCH_WIN
+#ifdef TARGET_OS_WIN
 static void gtk_notebook_detach_tab (GtkNotebook *notebook, GtkWidget *child)
 {
 	gtk_container_remove (GTK_CONTAINER (notebook), child);

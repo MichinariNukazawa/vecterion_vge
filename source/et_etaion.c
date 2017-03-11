@@ -125,7 +125,7 @@ void et_etaion_set_application_base_dir_from_execute_path(const char *execute_pa
 
 const char *et_etaion_get_application_base_dir()
 {
-#ifdef TARGET_ARCH_WIN
+#ifdef TARGET_OS_WIN
 	return ".";
 #else
 	EtEtaion *self = current_state;

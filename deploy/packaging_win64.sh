@@ -18,12 +18,12 @@ trap 'echo "error:$0($LINENO) \"$BASH_COMMAND\" \"$@\""' ERR
 SCRIPT_DIR=$(cd $(dirname $0); pwd)
 ROOT_DIR=${SCRIPT_DIR}/..
 
-TARGET_ARCH=win
-OBJECT_DIR=object/${TARGET_ARCH}
+TARGET_OS=win
+OBJECT_DIR=object/${TARGET_OS}
 CACHE_DIR=${ROOT_DIR}/library/download_cache
 GTK3LIBRARY_DIR=${OBJECT_DIR}/gtk3_win64
 LIBXML2_DIR=${OBJECT_DIR}/libxml2
-BUILD_DIR=build/${TARGET_ARCH}
+BUILD_DIR=build/${TARGET_OS}
 
 
 # download gkt3 library binary
@@ -51,8 +51,8 @@ fi
 
 
 # make resource(icon and other)
-TARGET_ARCH_WIN_RESOURCE=${OBJECT_DIR}/vecterion.res
-x86_64-w64-mingw32-windres ${ROOT_DIR}/deploy/win/vecterion.rc -O coff -o ${TARGET_ARCH_WIN_RESOURCE}
+TARGET_OS_WIN_RESOURCE=${OBJECT_DIR}/vecterion.res
+x86_64-w64-mingw32-windres ${ROOT_DIR}/deploy/win/vecterion.rc -O coff -o ${TARGET_OS_WIN_RESOURCE}
 
 
 # build app source
@@ -60,7 +60,7 @@ CFLAGS_APPEND=-Wno-missing-include-dirs
 
 [ -d ${GTK3LIBRARY_DIR}/lib/pkgconfig ]
 export PKG_CONFIG_PATH=${GTK3LIBRARY_DIR}/lib/pkgconfig
-make TARGET_ARCH=win CC=x86_64-w64-mingw32-gcc CFLAGS_APPEND=${CFLAGS_APPEND} INCLUDE_APPEND="-mwindows" TARGET_ARCH_WIN_RESOURCE=${TARGET_ARCH_WIN_RESOURCE}
+make TARGET_OS=win CC=x86_64-w64-mingw32-gcc CFLAGS_APPEND=${CFLAGS_APPEND} INCLUDE_APPEND="-mwindows" TARGET_OS_WIN_RESOURCE=${TARGET_OS_WIN_RESOURCE}
 
 
 

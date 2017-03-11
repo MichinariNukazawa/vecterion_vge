@@ -5,10 +5,10 @@
 prefix = /usr/local
 
 
-TARGET_ARCH	:= linux
+TARGET_OS	:= linux
 
 ifeq ($(OS),Windows_NT)
-TARGET_ARCH	:= win
+TARGET_OS	:= win
 MKDIR_P		:= mkdir
 else
 MKDIR_P		:= mkdir -p
@@ -16,8 +16,8 @@ endif
 
 APP_NAME	:= vecterion_vge
 SOURCE_DIR	:= source
-OBJECT_DIR	:= object/$(TARGET_ARCH)
-BUILD_DIR	:= build/$(TARGET_ARCH)
+OBJECT_DIR	:= object/$(TARGET_OS)
+BUILD_DIR	:= build/$(TARGET_OS)
 APP_FILE	:= $(BUILD_DIR)/$(APP_NAME).exe
 
 CC		:= gcc
@@ -45,8 +45,8 @@ INCLUDE		:= -I./include
 INCLUDE		+= $(shell $(PKG_CONFIG) --libs --cflags gtk+-3.0 libxml-2.0)
 INCLUDE		+= $(INCLUDE_APPEND)
 
-ifeq ($(TARGET_ARCH),win)
-CFLAGS		+= -DTARGET_ARCH_WIN
+ifeq ($(TARGET_OS),win)
+CFLAGS		+= -DTARGET_OS_WIN
 endif
 
 SOURCES		:= $(wildcard $(SOURCE_DIR)/*.c) 
@@ -71,7 +71,7 @@ $(APP_FILE) : $(OBJECTS)
 	$(CC) \
 		$^ \
 		$(OBJECT_DIR)/version.c \
-		$(TARGET_ARCH_WIN_RESOURCE) \
+		$(TARGET_OS_WIN_RESOURCE) \
 		$(CFLAGS) \
 		$(INCLUDE) \
 		-o $(APP_FILE)
