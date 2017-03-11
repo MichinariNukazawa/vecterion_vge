@@ -331,6 +331,7 @@ PvElement *pv_element_copy_recursive(const PvElement *self)
 	return new_element_tree;
 }
 
+static bool pv_element_append_nth(PvElement *parent, const int nth, PvElement *element);
 /*! @brief 
  *
  * @param parent
@@ -342,46 +343,48 @@ PvElement *pv_element_copy_recursive(const PvElement *self)
  */
 bool pv_element_append_child(PvElement *parent, const PvElement *prev, PvElement *element)
 {
-	if(NULL == parent){
-		pv_bug("");
-		return false;
-	}
-	if(NULL == element){
-		pv_bug("");
-		return false;
-	}
+	pv_assert(parent);
+	pv_assert(element);
 
-	int num = pv_general_get_parray_num((void **)parent->childs);
-	if(0 > num){
-		pv_bug("");
-		return false;
-	}
+	size_t num = pv_general_get_parray_num((void **)parent->childs);
 
-	PvElement **childs = (PvElement **)realloc(parent->childs,
-			sizeof(PvElement*) * (num + 2));
-	if(NULL == childs){
-		pv_error("");
-		return false;
-	}
+	int index = -1;
 	if(NULL == prev){
-		childs[num] = element;
+		index = (int)num;
 	}else{
-		bool isExist = false;
-		for(int i = 0; i < num; i++){
-			if(prev == childs[i]){
-				isExist = true;
-				memmove(&childs[i + 1], &childs[i], sizeof(PvElement*) * (num - i));
-				childs[i] = element;
+		for(int i = 0; i < (int)num; i++){
+			if(prev == parent->childs[i]){
+				index = i;
 				break;
 			}
 		}
-		if(!isExist){
-			pv_error("");
-			return false;
-		}
 	}
-	childs[num + 1] = NULL;
 
+	if(-1 == index){
+		pv_error("");
+		return false;
+	}
+
+	bool ret = pv_element_append_nth(parent, index, element);
+	pv_assertf(ret, "%d", index);
+
+	return true;
+}
+
+bool pv_element_append_nth(PvElement *parent, const int nth, PvElement *element)
+{
+	pv_assert(parent);
+	pv_assert(element);
+
+	size_t num = pv_general_get_parray_num((void **)parent->childs);
+	pv_assertf((0 <= nth || nth <= (int)num), "%d %zu", nth, num);
+
+	PvElement **childs = (PvElement **)realloc(parent->childs, sizeof(PvElement*) * (num + 2));
+	pv_assert(childs);
+
+	memmove(&childs[nth + 1], &childs[nth], sizeof(PvElement*) * (num - nth));
+	childs[nth] = element;
+	childs[num + 1] = NULL;
 	parent->childs = childs;
 	element->parent = parent;
 
