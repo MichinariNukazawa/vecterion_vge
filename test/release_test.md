@@ -193,6 +193,16 @@ Layer操作により変化したLayer構造が、LayerViewに反映されてい�
 * (准正常系) 空Layerが1つのみ存在するDocumentで、DeleteLayerアイコンをクリックする。
 	FocusしているLayerが削除されない。  
 
+## Element順序の並び替え
+* 上に姉妹Elementが居るElementをFocusし、PageUpショートカットを押下する。
+	FocusしているElementが1つ上に並び替えられる。
+* (准正常系)上に姉妹Elementが居ないElementをFocusし、PageUpショートカットを押下する。
+	Elementが並び替えられない。
+* 下に姉妹Elementが居るElementをFocusし、PageDownショートカットを押下する。
+	FocusしているElementが1つ下に並び替えられる。
+* (准正常系)下に姉妹Elementが居ないElementをFocusし、PageDownショートカットを押下する。
+	Elementが並び替えられない。
+
 ### PosotionPanel
 2つ以上のElementをFocusすると、位置はElementsの最も左上と右下を囲った矩形領域となる。  
 * Elementを1つFocusする。

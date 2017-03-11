@@ -577,7 +577,7 @@ static void _pvui_app_set_style(){
 			   "GtkWidget {\n"
 			   "   background-color: rgb (103, 103, 103);\n"
 			   "}\n"
-			 */
+			   */
 			"GtkNotebook {\n"
 			"   padding: 2px;\n"
 			"}\n"
@@ -1147,6 +1147,83 @@ static gboolean _cb_menu_layer_delete(gpointer data)
 	}
 
 	et_etaion_remove_delete_layer(doc_id);
+
+	return false;
+}
+
+static void _reordering_element(EtDocId doc_id, int move)
+{
+	et_assertf((1 == move || -1 == move), "%d", move);
+
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	et_assertf(focus, "%d", doc_id);
+
+	size_t num_focus = pv_general_get_parray_num((void **)focus->elements);
+	if(1 != num_focus){
+		_show_error_dialog("Reorder:element not ones.");
+		return;
+	}
+
+	if(!pv_element_kind_is_object(focus->elements[0]->kind)){
+		_show_error_dialog("Reorder:element not ones.");
+		et_debug("%d", focus->elements[0]->kind);
+		return;
+	}
+
+	PvElement *parent_element = focus->elements[0]->parent;
+	et_assert(parent_element);
+
+	size_t num_childs = pv_general_get_parray_num((void **)parent_element->childs);
+	for(int i = 0; i < (int)num_childs; i++){
+		if(focus->elements[0] == parent_element->childs[i]){
+			int index = i + (-1 * move);
+			if(index < 0 || (int)num_childs <= index){
+				// NOP
+				return;
+			}else{
+				bool ret;
+				PvElement *element = parent_element->childs[i];
+				et_assertf(element, "%d", i);
+				ret = pv_element_remove(element);
+				et_assertf(ret, "%d", i);
+				ret = pv_element_append_nth(parent_element, index, element);
+				et_assertf(ret, "%d", i);
+
+				et_doc_save_from_id(doc_id);
+				et_doc_signal_update_from_id(doc_id);
+
+				return;
+			}
+		}
+	}
+
+	et_abortf("");
+}
+
+static gboolean _cb_menu_element_raise(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// _show_error_dialog("Raise:nothing document.");
+		// et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	_reordering_element(doc_id, -1);
+
+	return false;
+}
+
+static gboolean _cb_menu_element_lower(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// _show_error_dialog("Raise:nothing document.");
+		// et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	_reordering_element(doc_id, 1);
 
 	return false;
 }
@@ -1854,6 +1931,37 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group)
 	return menuitem_root;
 }
 
+static GtkWidget *_pv_get_menuitem_new_tree_of_element(GtkAccelGroup *accel_group)
+{
+	GtkWidget *menuitem_root;
+	GtkWidget *menuitem;
+	GtkWidget *menu;
+
+	menuitem_root = gtk_menu_item_new_with_label ("_Element");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
+
+	menu = gtk_menu_new ();
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
+
+	// ** Accel to "/_Element/_Raise(PageUp)"
+	menuitem = gtk_menu_item_new_with_label ("_Raise");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_raise), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_Page_Up, (0), GTK_ACCEL_VISIBLE);
+
+	// ** Accel to "/_Element/_Lower(PageDown)"
+	menuitem = gtk_menu_item_new_with_label ("_Lower");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_lower), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_Page_Down, (0), GTK_ACCEL_VISIBLE);
+
+	return menuitem_root;
+}
+
 static GtkWidget *_pv_get_menuitem_new_tree_of_view_zoom(GtkAccelGroup *accel_group)
 {
 	GtkWidget *menuitem_root;
@@ -1957,7 +2065,7 @@ static GtkWidget *_new_tree_of_help(GtkAccelGroup *accel_group){
 	/*
 	   gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 	   GDK_KEY_a, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
-	 */
+	   */
 
 	return menuitem_root;
 }
@@ -1982,6 +2090,9 @@ static bool _init_menu(GtkWidget *window, GtkWidget *box_root)
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	menuitem = _pv_get_menuitem_new_tree_of_layer(accel_group);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
+
+	menuitem = _pv_get_menuitem_new_tree_of_element(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	menuitem = _pv_get_menuitem_new_tree_of_select(accel_group);

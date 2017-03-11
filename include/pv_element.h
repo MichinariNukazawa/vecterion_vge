@@ -59,10 +59,12 @@ void pv_element_free(PvElement *);
 
 PvElement *pv_element_copy_recursive(const PvElement *);
 bool pv_element_remove_free_recursive(PvElement *);
+bool pv_element_remove(PvElement *);
 
 void pv_element_copy_property(PvElement *dst, PvElement *src);
 
 bool pv_element_append_child(PvElement *parent, const PvElement *prev, PvElement *element);
+bool pv_element_append_nth(PvElement *parent, const int nth, PvElement *element);
 bool pv_element_append_on_focusing(PvElement *focusing_element, PvElement *element);
 
 PvElement *pv_element_get_in_elements_from_member_anchor_point(PvElement **elements, const PvAnchorPoint *);

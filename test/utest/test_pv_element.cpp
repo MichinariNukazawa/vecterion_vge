@@ -84,3 +84,77 @@ TEST(Test, PvVg_OnAllElementKind){
 	pv_vg_free(vg2);
 }
 
+TEST(Test, append){
+	PvVg *vg = pv_vg_new();
+	assert(NULL != vg);
+
+	PvElement *element_parent = pv_vg_get_layer_top(vg);
+
+	PvElement *element_curves[4];
+
+	// ** append_nth
+	element_curves[0] = pv_element_curve_new_from_rect((PvRect){0,0,0,0});
+	assert(element_curves[0]);
+	ASSERT_TRUE(pv_element_append_nth(element_parent, 0, element_curves[0]));
+	ASSERT_EQ(1, (int)pv_general_get_parray_num((void **)element_parent->childs));
+	// ** append_nth invalid
+	element_curves[1] = pv_element_curve_new_from_rect((PvRect){0,0,0,0});
+	assert(element_curves[1]);
+	ASSERT_TRUE(false == pv_element_append_nth(element_parent, -1, element_curves[1]));
+	ASSERT_TRUE(false == pv_element_append_nth(element_parent, 2, element_curves[1]));
+	ASSERT_EQ(1, (int)pv_general_get_parray_num((void **)element_parent->childs));
+	pv_element_free(element_curves[1]);
+
+	// ** append_child
+	element_curves[0] = pv_element_curve_new_from_rect((PvRect){0,0,0,0});
+	assert(element_curves[0]);
+	ASSERT_TRUE(pv_element_append_child(element_parent, NULL, element_curves[0]));
+	ASSERT_EQ(2, (int)pv_general_get_parray_num((void **)element_parent->childs));
+	ASSERT_EQ(element_parent->childs[1], element_curves[0]);
+	//
+	element_curves[1] = pv_element_curve_new_from_rect((PvRect){0,0,0,0});
+	assert(element_curves[1]);
+	ASSERT_TRUE(pv_element_append_child(element_parent, element_curves[0], element_curves[1]));
+	ASSERT_EQ(3, (int)pv_general_get_parray_num((void **)element_parent->childs));
+	ASSERT_EQ(element_parent->childs[1], element_curves[1]);
+	// ** append_child invalid
+	element_curves[2] = pv_element_curve_new_from_rect((PvRect){0,0,0,0});
+	assert(element_curves[2]);
+	element_curves[3] = pv_element_curve_new_from_rect((PvRect){0,0,0,0});
+	assert(element_curves[3]);
+	ASSERT_TRUE(false == pv_element_append_child(element_parent, element_curves[3], element_curves[2]));
+	ASSERT_EQ(3, (int)pv_general_get_parray_num((void **)element_parent->childs));
+	pv_element_free(element_curves[2]);
+	pv_element_free(element_curves[3]);
+
+	pv_vg_free(vg);
+}
+
+TEST(Test, remove){
+	PvVg *vg = pv_vg_new();
+	assert(NULL != vg);
+
+	PvElement *element_parent = pv_vg_get_layer_top(vg);
+
+	PvElement *element_curves[4];
+
+	// ** remove_delete_recursive
+	element_curves[0] = pv_element_curve_new_from_rect((PvRect){0,0,0,0});
+	assert(element_curves[0]);
+	assert(pv_element_append_child(element_parent, NULL, element_curves[0]));
+	assert(1 == (int)pv_general_get_parray_num((void **)element_parent->childs));
+	ASSERT_TRUE(pv_element_remove_free_recursive(element_curves[0]));
+	assert(0 == (int)pv_general_get_parray_num((void **)element_parent->childs));
+
+	// ** remove
+	element_curves[0] = pv_element_curve_new_from_rect((PvRect){0,0,0,0});
+	assert(element_curves[0]);
+	assert(pv_element_append_child(element_parent, NULL, element_curves[0]));
+	assert(1 == (int)pv_general_get_parray_num((void **)element_parent->childs));
+	ASSERT_TRUE(pv_element_remove(element_curves[0]));
+	assert(0 == (int)pv_general_get_parray_num((void **)element_parent->childs));
+	pv_element_free(element_curves[0]);
+
+	pv_vg_free(vg);
+}
+

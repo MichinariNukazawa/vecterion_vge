@@ -331,7 +331,6 @@ PvElement *pv_element_copy_recursive(const PvElement *self)
 	return new_element_tree;
 }
 
-static bool pv_element_append_nth(PvElement *parent, const int nth, PvElement *element);
 /*! @brief 
  *
  * @param parent
@@ -377,7 +376,10 @@ bool pv_element_append_nth(PvElement *parent, const int nth, PvElement *element)
 	pv_assert(element);
 
 	size_t num = pv_general_get_parray_num((void **)parent->childs);
-	pv_assertf((0 <= nth || nth <= (int)num), "%d %zu", nth, num);
+	if(! (0 <= nth && nth <= (int)num)){
+		pv_debug("%d %zu", nth, num);
+		return false;
+	}
 
 	PvElement **childs = (PvElement **)realloc(parent->childs, sizeof(PvElement*) * (num + 2));
 	pv_assert(childs);
@@ -497,7 +499,7 @@ static bool _pv_element_remove_free_recursive_inline(PvElement *self,
 	return true;
 }
 
-static bool _pv_element_detouch_parent(PvElement * const self)
+bool pv_element_remove(PvElement * const self)
 {
 	if(NULL == self){
 		pv_error("");
@@ -554,9 +556,8 @@ bool pv_element_remove_free_recursive(PvElement *self)
 		return false;
 	}
 
-	// 親がいるなら連結を外す
 	if(NULL != self->parent){
-		if(!_pv_element_detouch_parent(self)){
+		if(!pv_element_remove(self)){
 			pv_error("");
 			return false;
 		}
