@@ -30,6 +30,11 @@ Vecterionのリリーステストです。
 Current：現在選択しているターゲット(ex. CurrentDocument, CurrentElement, CurrentTool)  
 
 
+# テスト環境
+- 108Keyboard(Keyboard with Tenkey)
+- Mouse(with Wheel)
+
+
 # テスト
 
 ## インストール & アプリケーションの起動
@@ -193,7 +198,7 @@ Layer操作により変化したLayer構造が、LayerViewに反映されてい�
 * (准正常系) 空Layerが1つのみ存在するDocumentで、DeleteLayerアイコンをクリックする。
 	FocusしているLayerが削除されない。  
 
-## Element順序の並び替え
+### Element順序の並び替え
 * 上に姉妹Elementが居るElementをFocusし、PageUpショートカットを押下する。
 	FocusしているElementが1つ上に並び替えられる。
 * (准正常系)上に姉妹Elementが居ないElementをFocusし、PageUpショートカットを押下する。
@@ -201,6 +206,14 @@ Layer操作により変化したLayer構造が、LayerViewに反映されてい�
 * 下に姉妹Elementが居るElementをFocusし、PageDownショートカットを押下する。
 	FocusしているElementが1つ下に並び替えられる。
 * (准正常系)下に姉妹Elementが居ないElementをFocusし、PageDownショートカットを押下する。
+	Elementが並び替えられない。
+* 上に姉妹Elementが2つ以上居るElementをFocusし、Homeショートカットを押下する。
+	FocusしているElementが姉妹Elementの一番上に並び替えられる。
+* (准正常系)上に姉妹Elementが居ないElementをFocusし、Homeショートカットを押下する。
+	Elementが並び替えられない。
+* 下に姉妹Elementが2つ以上居るElementをFocusし、Endショートカットを押下する。
+	FocusしているElementが姉妹Elementの一番下に並び替えられる。
+* (准正常系)下に姉妹Elementが居ないElementをFocusし、Endショートカットを押下する。
 	Elementが並び替えられない。
 
 ### PosotionPanel

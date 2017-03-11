@@ -1151,7 +1151,7 @@ static gboolean _cb_menu_layer_delete(gpointer data)
 	return false;
 }
 
-static void _reordering_element(EtDocId doc_id, int move)
+static void _reordering_element(EtDocId doc_id, int move, bool is_end)
 {
 	et_assertf((1 == move || -1 == move), "%d", move);
 
@@ -1177,6 +1177,13 @@ static void _reordering_element(EtDocId doc_id, int move)
 	for(int i = 0; i < (int)num_childs; i++){
 		if(focus->elements[0] == parent_element->childs[i]){
 			int index = i + (-1 * move);
+			if(is_end){
+				if(1 == move){
+					index = 0;
+				}else{
+					index = (int)num_childs - 1;
+				}
+			}
 			if(index < 0 || (int)num_childs <= index){
 				// NOP
 				return;
@@ -1209,7 +1216,7 @@ static gboolean _cb_menu_element_raise(gpointer data)
 		return false;
 	}
 
-	_reordering_element(doc_id, -1);
+	_reordering_element(doc_id, -1, false);
 
 	return false;
 }
@@ -1223,7 +1230,35 @@ static gboolean _cb_menu_element_lower(gpointer data)
 		return false;
 	}
 
-	_reordering_element(doc_id, 1);
+	_reordering_element(doc_id, 1, false);
+
+	return false;
+}
+
+static gboolean _cb_menu_element_raise_to_top(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// _show_error_dialog("Raise:nothing document.");
+		// et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	_reordering_element(doc_id, -1, true);
+
+	return false;
+}
+
+static gboolean _cb_menu_element_lower_to_end(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// _show_error_dialog("Raise:nothing document.");
+		// et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	_reordering_element(doc_id, 1, true);
 
 	return false;
 }
@@ -1958,6 +1993,22 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_element(GtkAccelGroup *accel_grou
 	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_lower), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_Page_Down, (0), GTK_ACCEL_VISIBLE);
+
+	// ** Accel to "/_Element/Raise to _Top(Home)"
+	menuitem = gtk_menu_item_new_with_label ("Raise to Top");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_raise_to_top), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_Home, (0), GTK_ACCEL_VISIBLE);
+
+	// ** Accel to "/_Element/Lower to _End(End)"
+	menuitem = gtk_menu_item_new_with_label ("Lower to _End");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_lower_to_end), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_End, (0), GTK_ACCEL_VISIBLE);
 
 	return menuitem_root;
 }
