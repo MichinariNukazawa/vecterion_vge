@@ -24,7 +24,7 @@
 
 #define pv_abortf(fmt, ...) \
 	do{ \
-		fprintf(stderr, "pv_bortf: %s()[%d]: "fmt"\n", \
+		fprintf(stderr, "pv_abortf: %s()[%d]: "fmt"\n", \
 				__func__, __LINE__, ## __VA_ARGS__); \
 		abort(); \
 	}while(0);

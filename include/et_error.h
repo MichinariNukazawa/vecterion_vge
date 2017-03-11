@@ -24,7 +24,7 @@
 
 #define et_abortf(fmt, ...) \
 	do{ \
-		fprintf(stderr, "et_bortf: %s()[%d]: "fmt"\n", \
+		fprintf(stderr, "et_abortf: %s()[%d]: "fmt"\n", \
 				__func__, __LINE__, ## __VA_ARGS__); \
 		abort(); \
 	}while(0);
