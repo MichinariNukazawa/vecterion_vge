@@ -442,9 +442,8 @@ static void _curve_draw_point(cairo_t *cr, PvPoint gp, PvElementPointKind kind)
 static void _draw_extent_from_rect(cairo_t *cr, PvRect rect)
 {
 	cairo_rectangle (cr, rect.x, rect.y, rect.w, rect.h);
-	pv_cairo_set_source_rgba_workingcolor(cr);
-	cairo_set_line_width(cr, 1.0);
-	cairo_stroke(cr);
+	cairo_set_source_rgba (cr, 0.9, 0.2, 0.4, 0.4);
+	cairo_fill(cr);
 }
 
 void _curve_command_path(
@@ -862,7 +861,7 @@ static bool _func_curve_draw_focusing(
 		_curve_draw_point(cr, p, kind);
 	}
 
-	// ** extent
+	// ** extent_view
 	if(render_context.is_extent_view){
 		_draw_extent_from_rect(cr, _func_curve_get_rect_by_anchor_points(simplify));
 	}
