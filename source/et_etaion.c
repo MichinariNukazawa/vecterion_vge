@@ -32,6 +32,7 @@ EtEtaion *et_etaion_init()
 	self->application_path = NULL;
 	self->widget_on_mouse_cursor = NULL;
 
+	self->is_extent_view = false;
 	self->is_transparent_grid = false;
 
 	self->slot_change_states = NULL;
@@ -138,11 +139,12 @@ const char *et_etaion_get_application_base_dir()
 #endif
 }
 
-static bool _et_etaion_is_extent_view = false;
 bool et_etaion_set_is_extent_view(bool is_extent_view)
 {
-	et_debug("%s", (is_extent_view? "TRUE":"FALSE"));
-	_et_etaion_is_extent_view = is_extent_view;
+	EtEtaion *self = current_state;
+	assert(self);
+
+	self->is_extent_view = is_extent_view;
 
 	// TODO: update all doc.
 	EtDocId doc_id = et_etaion_get_current_doc_id();
@@ -157,7 +159,7 @@ bool et_etaion_get_is_extent_view()
 	EtEtaion *self = current_state;
 	assert(self);
 
-	return _et_etaion_is_extent_view || (EtToolId_EditElement == self->tool_id);
+	return self->is_extent_view;
 }
 
 void et_etaion_set_is_transparent_grid(bool is_transparent_grid)

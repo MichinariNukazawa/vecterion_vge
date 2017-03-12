@@ -25,6 +25,7 @@ struct EtEtaion{
 	const char *application_path;
 	GtkWidget *widget_on_mouse_cursor;
 
+	bool is_extent_view;
 	bool is_transparent_grid;
 
 	EtEtaionSlotChangeState *slot_change_states;
