@@ -4,9 +4,11 @@
 #include <stdbool.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
+#include "pv_type.h"
 
-void pv_cairo_set_source_rgba_workingcolor(cairo_t *cr);
-void pv_cairo_set_source_rgba_subworkingcolor(cairo_t *cr);
+void pv_cairo_set_source_rgba_workingcolor(cairo_t *);
+void pv_cairo_set_source_rgba_subworkingcolor(cairo_t *);
+void pv_cairo_fill_checkboard(cairo_t *, PvRect);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

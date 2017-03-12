@@ -96,31 +96,16 @@ static bool _pv_renderer_cairo_background(cairo_t *cr,
 				cairo_fill (cr);
 			}
 			break;
-
 		case PvBackgroundKind_Checkboard:
 			{
-				// ** fill background white
-				cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
-				cairo_rectangle (cr, 0, 0, w_size, h_size);
-				cairo_fill (cr);
-
-				// ** draw checkboard
-				cairo_set_source_rgba (cr, 0.6, 0.6, 0.6, 1.0);
-				int unit = 16;
-				for(int y = 0; y < h_size; y += unit){
-					for(int x = 0 + (((y/unit) % 2) * unit); x < w_size; x += (unit * 2)){
-						cairo_rectangle (cr, x, y, unit, unit);
-					}
-				}
-				cairo_fill (cr);
+				pv_cairo_fill_checkboard(cr, (PvRect){0, 0, w_size, h_size});
 			}
 			break;
 		default:
 			pv_bug("%d", render_context.background_kind);
 	}
 
-	// clear clipping
-	cairo_restore(cr);
+	cairo_restore(cr); // clear clipping
 
 	return true;
 }

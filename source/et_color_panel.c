@@ -1,9 +1,10 @@
 #include "et_color_panel.h"
 
 #include <stdlib.h>
-#include "et_error.h"
+#include "pv_cairo.h"
 #include "et_doc.h"
 #include "et_etaion.h"
+#include "et_error.h"
 
 const int W_PALLET = 200;
 const int H_PALLET = 60;
@@ -351,28 +352,6 @@ static void _et_color_panel_update_focus_elements()
 	et_doc_signal_update_from_id(doc_id);
 }
 
-static void _draw_checkboard(cairo_t *cr, PvRect rect, int unit)
-{
-	cairo_save (cr);
-	cairo_rectangle (cr, rect.x, rect.y, rect.w, rect.h);
-	cairo_clip_preserve (cr);
-
-	cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
-	cairo_fill(cr);
-
-	// draw checkboard
-	PvCairoRgbaColor cc = {0.0, 0.0, 0.0, 1.0};
-	cairo_set_source_rgba (cr, cc.r, cc.g, cc.b, cc.a);
-	for(int y = 0; y < rect.h; y += unit){
-		for(int x = 0 + (((y/unit) % 2) * unit); x < rect.w; x += (unit * 2)){
-			cairo_rectangle (cr, x + rect.x, y + rect.y, unit, unit);
-		}
-	}
-	cairo_fill (cr);
-
-	cairo_restore(cr); // clear clipping
-}
-
 static void _draw_multicolor(cairo_t *cr, PvRect rect)
 {
 	PvCairoRgbaColor cc = {0.5, 0.5, 0.5, 0.8};
@@ -404,7 +383,7 @@ static void _draw_pallet(cairo_t *cr, PvRect rect, PvCairoRgbaColor cc, bool is_
 	cairo_clip_preserve (cr);
 
 	// erase background
-	_draw_checkboard (cr, rect, 16);
+	pv_cairo_fill_checkboard(cr, rect);
 
 	// fill color
 	cairo_set_source_rgba (cr, cc.r, cc.g, cc.b, cc.a);
