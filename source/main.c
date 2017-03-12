@@ -1597,6 +1597,11 @@ static void _cb_menu_view_extent(GtkCheckMenuItem *menuitem, gpointer user_data)
 	}
 }
 
+static void _cb_menu_view_transparent_grid(GtkCheckMenuItem *menuitem, gpointer user_data)
+{
+	et_etaion_set_is_transparent_grid(gtk_check_menu_item_get_active(menuitem));
+}
+
 static bool _cb_menu_document_resize (GtkMenuItem *menuitem, gpointer user_data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
@@ -2282,8 +2287,14 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_view(GtkAccelGroup *accel_group)
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 	g_signal_connect(menuitem, "toggled", G_CALLBACK(_cb_menu_view_extent), NULL);
-	//gtk_widget_add_accelerator (menuitem, "toggled", accel_group,
-	//		GDK_KEY_e,( ET_GDK_ALT_MASK|GDK_SHIFT_MASK|GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
+
+	// ** Accel to "/_View/_Transparent Grid"
+	menuitem = gtk_check_menu_item_new_with_mnemonic ("_Transparent Grid");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "toggled", G_CALLBACK(_cb_menu_view_transparent_grid), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_d, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
 	return menuitem_root;
 }

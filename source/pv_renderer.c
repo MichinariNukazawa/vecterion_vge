@@ -98,7 +98,13 @@ static bool _pv_renderer_cairo_background(cairo_t *cr,
 			break;
 		case PvBackgroundKind_Checkboard:
 			{
-				pv_cairo_fill_checkboard(cr, (PvRect){0, 0, w_size, h_size});
+				if(render_context.is_transparent_grid){
+					pv_cairo_fill_checkboard(cr, (PvRect){0, 0, w_size, h_size});
+				}else{
+					cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+					cairo_rectangle (cr, 0, 0, w_size, h_size);
+					cairo_fill (cr);
+				}
 			}
 			break;
 		default:
@@ -150,15 +156,15 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(
 		return NULL;
 	}
 
-		PvRenderOption render_option = {
-			.render_context = render_context,
-			.focus = focus,
-		};
-		int level = 0;
-		if(!_pv_renderer_cairo_recursive(cr, vg->element_root, render_option, &level)){
-			pv_error("");
-			return NULL;
-		}
+	PvRenderOption render_option = {
+		.render_context = render_context,
+		.focus = focus,
+	};
+	int level = 0;
+	if(!_pv_renderer_cairo_recursive(cr, vg->element_root, render_option, &level)){
+		pv_error("");
+		return NULL;
+	}
 
 	if(NULL != focus){
 		PvRect rect_extent = PvRect_Default;

@@ -25,6 +25,8 @@ struct EtEtaion{
 	const char *application_path;
 	GtkWidget *widget_on_mouse_cursor;
 
+	bool is_transparent_grid;
+
 	EtEtaionSlotChangeState *slot_change_states;
 	gpointer *slot_change_state_datas;
 	EtEtaionSlotChangeToolId *slot_change_tool_ids;
@@ -35,10 +37,12 @@ EtEtaion *et_etaion_init();
 
 bool et_etaion_set_current_doc_id(EtDocId doc_id);
 EtDocId et_etaion_get_current_doc_id();
-bool et_etaion_set_is_extent_view(bool is_extent_view);
-bool et_etaion_get_is_extent_view();
 EtToolId et_etaion_get_tool_id();
 EtDocId et_etaion_get_current_doc_id();
+bool et_etaion_set_is_extent_view(bool is_extent_view);
+bool et_etaion_get_is_extent_view();
+void et_etaion_set_is_transparent_grid(bool);
+bool et_etaion_get_is_transparent_grid();
 
 void et_etaion_set_application_base_dir_from_execute_path(const char *execute_path);
 const char *et_etaion_get_application_base_dir();

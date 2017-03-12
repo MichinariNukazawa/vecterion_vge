@@ -309,6 +309,14 @@ Layer順序の並び替えを行った際、Layer内のElementが並び替えら
 
 ## Documentの表示
 
+### Checkboard(TransparentGrid) 市松模様(透明グリッド)
+* アプリケーションを起動する。
+	Canvas内のドキュメントがTransparentGrid無し(白色背景)で描画されている。
+	MenuのTransparentGridのチェックが入っていない。  
+* 前のテストに続いて、Ctrl+Shift+Dショートカットを押下する。
+	Canvas内のドキュメントがTransparentGrid有りで描画される。
+	MenuのTransparentGridのチェックが入っている。  
+
 ### CanvasCollection
 
 #### Document表示(Canvas)のZoom倍率変更

@@ -85,9 +85,11 @@ void slot_et_renderer_from_canvas_change(EtCanvas *canvas, gpointer data)
 		et_bug("");
 		return;
 	}
+
 	render_context.is_extent_view = et_etaion_get_is_extent_view();
-	GdkPixbuf *pixbuf = _et_renderer_rendering_pixbuf_new(doc,
-			render_context);
+	render_context.is_transparent_grid = et_etaion_get_is_transparent_grid();
+
+	GdkPixbuf *pixbuf = _et_renderer_rendering_pixbuf_new(doc, render_context);
 	if(NULL == pixbuf){
 		et_error("");
 	}else{
