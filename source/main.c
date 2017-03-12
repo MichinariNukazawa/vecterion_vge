@@ -36,6 +36,7 @@
 #include "et_position_panel.h"
 #include "pv_file_format.h"
 #include "et_doc_relation.h"
+#include "et_clipboard_manager.h"
 #include "version.h"
 
 #define VECTERION_FULLNAME "Vecterion Vector Graphic Editor"
@@ -270,6 +271,12 @@ int main (int argc, char **argv){
 
 	EtRenderer *renderer = et_renderer_init();
 	if(NULL == renderer){
+		et_error("");
+		return -1;
+	}
+
+	EtClipboardManager *clipboard_manager = et_clipboard_manager_init();
+	if(NULL == clipboard_manager){
 		et_error("");
 		return -1;
 	}
@@ -1071,6 +1078,66 @@ static gboolean _cb_menu_edit_redo(gpointer data)
 		return false;
 	}
 
+	et_doc_signal_update_from_id(doc_id);
+
+	return false;
+}
+
+static gboolean _cb_menu_edit_cut(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		//_show_error_dialog("Close:nothing document.");
+		//et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	if(!et_clipboard_cut_from_doc_id(doc_id)){
+		et_error("");
+		return false;
+	}
+
+	et_doc_save_from_id(doc_id);
+	et_doc_signal_update_from_id(doc_id);
+
+	return false;
+}
+
+static gboolean _cb_menu_edit_copy(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		//_show_error_dialog("Close:nothing document.");
+		//et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	if(!et_clipboard_copy_from_doc_id(doc_id)){
+		et_error("");
+		return false;
+	}
+
+	et_doc_save_from_id(doc_id);
+	et_doc_signal_update_from_id(doc_id);
+
+	return false;
+}
+
+static gboolean _cb_menu_edit_paste(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		//_show_error_dialog("Close:nothing document.");
+		//et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	if(!et_clipboard_paste_from_doc_id(doc_id)){
+		et_error("");
+		return false;
+	}
+
+	et_doc_save_from_id(doc_id);
 	et_doc_signal_update_from_id(doc_id);
 
 	return false;
@@ -1958,6 +2025,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_edit(GtkAccelGroup *accel_group)
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
 	GtkWidget *menu;
+	GtkWidget *separator;
 
 	menuitem_root = gtk_menu_item_new_with_label ("_Edit");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
@@ -1981,6 +2049,36 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_edit(GtkAccelGroup *accel_group)
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_z, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
+	separator = gtk_separator_menu_item_new();
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), separator);
+
+	// ** Accel to "/_Edit/_Cut (Ctrl+X)"
+	menuitem = gtk_menu_item_new_with_label ("_Cut");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_edit_cut), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_x, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
+
+	// ** Accel to "/_Edit/_Copy (Ctrl+C)"
+	menuitem = gtk_menu_item_new_with_label ("_Copy");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_edit_copy), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_c, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
+
+	// ** Accel to "/_Edit/_Paste (Ctrl+V)"
+	menuitem = gtk_menu_item_new_with_label ("_Paste");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_edit_paste), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_v, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
+
+	separator = gtk_separator_menu_item_new();
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), separator);
+
 	// ** Accel to "/_Edit/_Delete"
 	menuitem = gtk_menu_item_new_with_label ("_Delete");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
@@ -1997,6 +2095,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group)
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
 	GtkWidget *menu;
+	GtkWidget *separator;
 
 	menuitem_root = gtk_menu_item_new_with_label ("_Layer");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
@@ -2030,7 +2129,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group)
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_delete), NULL);
 
-	GtkWidget *separator = gtk_separator_menu_item_new();
+	separator = gtk_separator_menu_item_new();
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), separator);
 
 	// ** Accel to "/_Layer/_Raise(Ctrl+Shift+PageUp)"

@@ -238,6 +238,46 @@ Layer順序の並び替えを行った際、Layer内のElementが並び替えら
 * (准正常系)下に姉妹Elementが居ないElementをFocusし、Endショートカットを押下する。
 	Elementが並び替えられない。
 
+### Cut, Copy, Paste
+
+#### Cut and Paste
+* Elementを1つFocusし、Ctrl+Xショートカットを押下する。
+	FocusしていたElementが削除される。  
+* 前のテストに続けて、Ctrl+Vショートカットを押下する。
+	FocusしているLayer内に、前のテストで削除されたElementと同じElementが、作成される。  
+* 前のテストに続けて、Ctrl+Vショートカットを押下する。
+	FocusしているLayer内に、前のテストで削除されたElementと同じElementが、作成される。  
+* 前のテストに続けて、FocusしているLayerを変更し、Ctrl+Vショートカットを押下する。
+	FocusしているLayer内に、前のテストで削除されたElementと同じElementが作成される。  
+* 異なるLayer上のElementを2つFocusし、Ctrl+Xショートカットを押下する。
+	FocusしていたElementが削除される。  
+* 前のテストに続けて、Ctrl+Vショートカットを押下する。
+	FocusしているLayer内に、前のテストで削除されたElementと同じElementが作成される。  
+* (准正常系)ElementをFocusしていない状態で、Ctrl+Xショートカットを押下する。
+	変化が起こらない。  
+* (准正常系)前のテストに続けて、Ctrl+Vショートカットを押下する。
+	変化が起こらない。  
+
+#### Copy and Paste
+* Elementを1つFocusし、Ctrl+Cショートカットを押下し、Ctrl+Vショートカットを押下する。
+	FocusしているLayer内の、
+	FocusしていたElementから少しずれた位置に、
+	位置以外が同じElementが生成される。  
+* 前のテストに続けて、Ctrl+Vショートカットを押下する。
+	FocusしているLayer内の、
+//	FocusしていたElementと前のテストで作成されたElementから少しずれた位置に、位置のみ異なる
+	同じElementが生成される。  
+* 異なるLayer上のElementを2つFocusし、Ctrl+Cショートカットを押下し、Ctrl+Vショートカットを押下する。
+	FocusしているLayer内の、
+//	FocusしていたElementから少しずれた位置に、位置のみ異なる
+	同じElementが生成される。  
+* 前のテストに続けて、Ctrl+Vショートカットを押下する。
+	FocusしているLayer内の、
+//	FocusしていたElementと前のテストで作成されたElementから少しずれた位置に、位置のみ異なる
+	同じElementが生成される。  
+* (准正常系)ElementをFocusしていない状態で、Ctrl+Cショートカットを押下し、Ctrl+Vショートカットを押下する。
+	変化が起こらない。  
+
 ### PosotionPanel
 2つ以上のElementをFocusすると、位置はElementsの最も左上と右下を囲った矩形領域となる。  
 * Elementを1つFocusする。
