@@ -4,7 +4,12 @@
 typedef int EtToolId;
 
 enum{
-	EtToolId_FocusElement = 0,
+	EtToolId_EditElement,
+	EtToolId_EditAnchorPoint,
+	EtToolId_AddAnchorPoint,
+	EtToolId_EditAnchorPointHandle,
+	EtToolId_KnifeAnchorPoint,
+	EtToolId_InsertAnchorPoint,
 };
 
 #ifdef include_ET_TEST

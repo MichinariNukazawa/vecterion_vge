@@ -62,6 +62,8 @@ Current：現在選択しているターゲット(ex. CurrentDocument, CurrentEl
 ツールに持ち替えてテストを行う。  
 
 ### Tool
+* Toolに割り当てられているショートカットを押下する。
+	Toolが切り替わる。
 
 #### AddAnchorPointTool
 

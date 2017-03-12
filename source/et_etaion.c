@@ -155,7 +155,7 @@ bool et_etaion_get_is_extent_view()
 	EtEtaion *self = current_state;
 	assert(self);
 
-	return _et_etaion_is_extent_view || (EtToolId_FocusElement == self->tool_id);
+	return _et_etaion_is_extent_view || (EtToolId_EditElement == self->tool_id);
 }
 
 EtToolId et_etaion_get_tool_id()
@@ -229,7 +229,7 @@ bool slot_et_etaion_from_mouse_action(EtDocId doc_id, EtMouseAction mouse_action
 	   if(EtMouseAction_Up == mouse_action.action){
 	   et_doc_save_from_id(doc_id);
 	   }
-	 */
+	   */
 
 	// ** redraw doc
 	et_doc_signal_update_from_id(doc_id);
@@ -260,12 +260,6 @@ bool slot_et_etaion_from_key_action(EtKeyAction key_action)
 
 	//! key list: https://git.gnome.org/browse/gtk+/plain/gdk/gdkkeysyms.h
 	switch(key_action.key){
-		// case EtKeyType_Enter:
-		case GDK_KEY_p:
-			pv_focus_clear_to_first_layer(focus);
-
-			_signal_et_etaion_change_state(self);
-			break;
 		default:
 			et_debug("no use:%d", key_action.key);
 			return true;
@@ -618,7 +612,6 @@ bool slot_et_etaion_change_tool(EtToolId tool_id, gpointer data)
 
 		self->tool_id = tool_id;
 
-#include "et_tool_panel.h"
 		bool ret = et_tool_panel_set_current_tool_id(tool_id);
 		et_assertf(ret, "%d", tool_id);
 

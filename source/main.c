@@ -290,11 +290,6 @@ int main (int argc, char **argv){
 	GtkWidget *box_root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
 	gtk_container_add(GTK_CONTAINER(window), box_root);
 
-	if(! _init_menu(window, box_root)){
-		et_bug("");
-		return -1;
-	}
-
 	g_signal_connect(G_OBJECT(window), "key-press-event",
 			G_CALLBACK(_cb_key_press), NULL);
 	g_signal_connect(window, "delete-event",
@@ -336,6 +331,11 @@ int main (int argc, char **argv){
 	et_etaion_set_widget_on_mouse_cursor(cancol_widget);
 
 	if(!et_tool_info_init()){
+		et_bug("");
+		return -1;
+	}
+
+	if(! _init_menu(window, box_root)){
 		et_bug("");
 		return -1;
 	}
@@ -1664,6 +1664,17 @@ static bool _cb_menu_document_resize (GtkMenuItem *menuitem, gpointer user_data)
 	return false;
 }
 
+static bool _cb_menu_tool_change(GtkMenuItem *menuitem, gpointer user_data)
+{
+	et_assert(user_data);
+	EtToolInfo *info = user_data;
+
+	bool ret = slot_et_etaion_change_tool(info->tool_id, NULL);
+	et_assertf(ret, "%d", info->tool_id);
+
+	return false;
+}
+
 static bool _pv_element_is_exist_from_elements(const PvElement *element, PvElement **elements)
 {
 	int num = pv_general_get_parray_num((void **)elements);
@@ -2298,6 +2309,60 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_document(GtkAccelGroup *accel_gro
 	return menuitem_root;
 }
 
+static GtkWidget *_pv_get_menuitem_new_tree_of_tool_tool(GtkAccelGroup *accel_group)
+{
+	GtkWidget *menuitem_root;
+	GtkWidget *menuitem;
+	GtkWidget *menu;
+
+	menuitem_root = gtk_menu_item_new_with_mnemonic ("_Tool");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
+
+	menu = gtk_menu_new ();
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
+
+	size_t num = et_tool_get_num();
+	for(int i = 0; i < (int)num; i++){
+		const EtToolInfo *info = et_tool_get_info_from_id(i);
+		et_assertf(info, "%d/%zu", i, num);
+
+		menuitem = gtk_menu_item_new_with_mnemonic(info->name);
+		gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+		gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+		g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_tool_change), (gpointer)info);
+
+		int t = 0;
+		while(0 != info->shortcuts[t].accel_key){
+			gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+					info->shortcuts[t].accel_key,
+					info->shortcuts[t].accel_mods,
+					GTK_ACCEL_VISIBLE);
+			t++;
+		}
+	}
+
+	return menuitem_root;
+}
+
+static GtkWidget *_pv_get_menuitem_new_tree_of_tool(GtkAccelGroup *accel_group)
+{
+	GtkWidget *menuitem_root;
+	GtkWidget *menuitem;
+	GtkWidget *menu;
+
+	menuitem_root = gtk_menu_item_new_with_mnemonic ("_Tool");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
+
+	menu = gtk_menu_new ();
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
+
+	// ** "/_Tool/_Tool/*"
+	menuitem = _pv_get_menuitem_new_tree_of_tool_tool(accel_group);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+
+	return menuitem_root;
+}
+
 static GtkWidget *_new_tree_of_help(GtkAccelGroup *accel_group){
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
@@ -2354,6 +2419,9 @@ static bool _init_menu(GtkWidget *window, GtkWidget *box_root)
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	menuitem = _pv_get_menuitem_new_tree_of_document(accel_group);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
+
+	menuitem = _pv_get_menuitem_new_tree_of_tool(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	menuitem = _new_tree_of_help(accel_group);

@@ -12,6 +12,12 @@
 
 typedef bool (*EtToolFuncMouseAction)(EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **);
 
+typedef struct{
+	// shortcut key
+	guint accel_key;
+	GdkModifierType accel_mods;
+}EtToolInfoShortcut;
+
 typedef struct EtToolInfo{
 	EtToolId tool_id;
 	const char *name;
@@ -22,6 +28,8 @@ typedef struct EtToolInfo{
 
 	const char *filepath_icon;
 	const char *filepath_cursor;
+
+	EtToolInfoShortcut shortcuts[3];
 
 	EtToolFuncMouseAction		func_mouse_action;
 
