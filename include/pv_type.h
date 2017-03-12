@@ -3,9 +3,6 @@
  * or please contact to author.
  * author: michinari.nukazawa@gmail.com / project daisy bell
  */
-// ******** ********
-//! @file
-// ******** ********
 #ifndef include_PV_TYPE_H
 #define include_PV_TYPE_H
 

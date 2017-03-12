@@ -5,10 +5,6 @@
  */
 #ifndef include_PV_VG_H
 #define include_PV_VG_H
-/** ******************************
- * @brief PhotonVector Vector Graphics Format.
- *
- ****************************** */
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>

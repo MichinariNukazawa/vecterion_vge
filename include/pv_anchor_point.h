@@ -5,9 +5,6 @@
  */
 #ifndef include_PV_ANCHOR_POINT_H
 #define include_PV_ANCHOR_POINT_H
-/*! ******************************
- * @brief 
- ****************************** */
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
