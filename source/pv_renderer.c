@@ -82,7 +82,7 @@ static bool _pv_renderer_cairo_background(cairo_t *cr,
 
 	// clipping
 	cairo_save(cr);
-	cairo_rectangle (cr, 0, 0, w_size, h_size);
+	cairo_rectangle(cr, 0, 0, w_size, h_size);
 	cairo_clip(cr);
 
 	switch(render_context.background_kind){
@@ -103,6 +103,14 @@ static bool _pv_renderer_cairo_background(cairo_t *cr,
 			break;
 		default:
 			pv_bug("%d", render_context.background_kind);
+	}
+
+	// frame
+	if(render_context.is_frame_line){
+		cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
+		cairo_rectangle(cr, 0, 0, w_size, h_size);
+		cairo_set_line_width(cr, 1 * 2);
+		cairo_stroke(cr);
 	}
 
 	cairo_restore(cr); // clear clipping

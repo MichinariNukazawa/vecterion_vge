@@ -12,6 +12,7 @@ typedef struct PvRenderContext PvRenderContext;
 struct PvRenderContext{
 	bool is_focus;
 	bool is_extent_view;
+	bool is_frame_line;
 	double scale;
 	int margin;
 	PvBackgroundKind background_kind;
@@ -19,6 +20,7 @@ struct PvRenderContext{
 static const PvRenderContext PvRenderContext_Default = {
 	.is_focus	= false,
 	.is_extent_view	= false,
+	.is_frame_line	= false,
 	.scale		= 1.0,
 	.margin		= 0,
 	.background_kind = PvBackgroundKind_Checkboard,

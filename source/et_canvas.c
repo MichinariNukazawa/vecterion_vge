@@ -189,6 +189,7 @@ EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 			G_CALLBACK (_cb_expose_event), (gpointer)self);
 
 	self->render_context = PvRenderContext_Default;
+	self->render_context.is_frame_line = true;
 
 	self->widget = self->box;
 	self->pixbuf_buffer = NULL;
