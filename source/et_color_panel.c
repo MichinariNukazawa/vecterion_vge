@@ -7,7 +7,7 @@
 
 const int W_PALLET = 200;
 const int H_PALLET = 60;
-const int BORDER_PALLET = 4;
+const int BORDER_PALLET = 2;
 
 struct EtColorPanel{
 	GtkWidget *widget; // Top widget pointer.
@@ -351,14 +351,17 @@ static void _et_color_panel_update_focus_elements()
 	et_doc_signal_update_from_id(doc_id);
 }
 
-static void _draw_checkboard(cairo_t *cr, PvRect rect, PvCairoRgbaColor cc, int unit)
+static void _draw_checkboard(cairo_t *cr, PvRect rect, int unit)
 {
-	// clipping
-	cairo_save(cr);
+	cairo_save (cr);
 	cairo_rectangle (cr, rect.x, rect.y, rect.w, rect.h);
-	cairo_clip(cr);
+	cairo_clip_preserve (cr);
+
+	cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
+	cairo_fill(cr);
 
 	// draw checkboard
+	PvCairoRgbaColor cc = {0.0, 0.0, 0.0, 1.0};
 	cairo_set_source_rgba (cr, cc.r, cc.g, cc.b, cc.a);
 	for(int y = 0; y < rect.h; y += unit){
 		for(int x = 0 + (((y/unit) % 2) * unit); x < rect.w; x += (unit * 2)){
@@ -370,36 +373,54 @@ static void _draw_checkboard(cairo_t *cr, PvRect rect, PvCairoRgbaColor cc, int 
 	cairo_restore(cr); // clear clipping
 }
 
+static void _draw_multicolor(cairo_t *cr, PvRect rect)
+{
+	PvCairoRgbaColor cc = {0.5, 0.5, 0.5, 0.8};
+	cairo_set_source_rgba (cr, cc.r, cc.g, cc.b, cc.a);
+
+	int unit = 6;
+	for(int y = 0; y < rect.h; y += unit){
+		for(int x = 0 + (((y/unit) % 2) * unit); x < rect.w; x += (unit * 2)){
+			cairo_rectangle (cr, x + rect.x, y + rect.y, 4, 4);
+		}
+	}
+	cairo_fill (cr);
+
+	PvCairoRgbaColor cc1 = {0.3, 0.3, 0.3, 0.8};
+	cairo_set_source_rgba (cr, cc1.r, cc1.g, cc1.b, cc1.a);
+
+	for(int y = 0; y < rect.h; y += unit){
+		for(int x = 0 + (((y/unit) % 2) * unit); x < rect.w; x += (unit * 2)){
+			cairo_rectangle (cr, 3 + x + rect.x, 3 + y + rect.y, 4, 4);
+		}
+	}
+	cairo_fill (cr);
+}
+
 static void _draw_pallet(cairo_t *cr, PvRect rect, PvCairoRgbaColor cc, bool is_multi)
 {
-	// clipping
 	cairo_save (cr);
 	cairo_rectangle (cr, rect.x, rect.y, rect.w, rect.h);
-	cairo_clip (cr);
+	cairo_clip_preserve (cr);
 
 	// erase background
-	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
-	cairo_rectangle (cr, rect.x, rect.y, rect.w, rect.h);
-	cairo_fill (cr);
-	PvCairoRgbaColor c1 = {0.0, 0.0, 0.0, 0.5};
-	_draw_checkboard (cr, rect, c1, 16);
+	_draw_checkboard (cr, rect, 16);
 
 	// fill color
 	cairo_set_source_rgba (cr, cc.r, cc.g, cc.b, cc.a);
 	cairo_rectangle (cr, rect.x, rect.y, rect.w, rect.h);
 	cairo_fill(cr);
+
+	// multi color
 	if(is_multi){
-		PvCairoRgbaColor c = {0.0, 0.0, 0.0, 0.4};
-		_draw_checkboard(cr, rect, c, 8);
+		_draw_multicolor(cr, rect);
+	}else{
+		cairo_set_source_rgba (cr, 0.5, 0.5, 0.5, 1.0);
 	}
 
 	// stroke rectangle
 	cairo_set_line_width(cr, BORDER_PALLET * 2);
-	cairo_set_source_rgba (cr, 0.5, 0.5, 0.5, 1.0);
 	cairo_rectangle (cr, rect.x, rect.y, rect.w, rect.h);
-	if(is_multi){
-		cairo_set_source_rgba (cr, 0.7, 0.7, 0.7, 1.0);
-	}
 	cairo_stroke (cr);
 
 	cairo_restore(cr); // clear clipping
