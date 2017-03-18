@@ -94,9 +94,10 @@ static bool _et_tool_panel_add_tool(EtToolPanel *self, const EtToolInfo *info)
 	gtk_button_set_image(GTK_BUTTON(toggle_button), icon);
 	item->button = toggle_button;
 
+	const int column = 1;
 	int num_tool = pv_general_get_parray_num((void **)self->tools);
-	int x = num_tool % 2;
-	int y = num_tool / 2;
+	int x = num_tool % column;
+	int y = num_tool / column;
 	printf("item:%s:%d, %d\n", info->name, x, y);
 	gtk_grid_attach(GTK_GRID(self->toolpanel), toggle_button, x, y, 1, 1);
 
