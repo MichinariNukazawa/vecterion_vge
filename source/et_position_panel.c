@@ -85,7 +85,7 @@ static gboolean _cb_button_release_event_spin_positions(
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		//! when start app.
-		et_debug("doc is noting. %d", doc_id);
+		et_debug("doc is nothing. %d", doc_id);
 		return false;
 	}
 
@@ -274,7 +274,7 @@ static void _update_focus_element_or_anchor_point_from_local()
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		//! when start app.
-		et_debug("doc is noting. %d", doc_id);
+		et_debug("doc is nothing. %d", doc_id);
 		return;
 	}
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
