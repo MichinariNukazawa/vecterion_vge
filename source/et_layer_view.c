@@ -84,7 +84,11 @@ static bool _et_layer_view_set_layer_ctrl(EtLayerView *self, int index)
 		return false;
 	}
 	// フォーカス状態でEnterKey押下した際に、誤作動する問題への対処
+#if GTK_CHECK_VERSION (3,20,0)
+	gtk_widget_set_focus_on_click(self->button_layer_ctrls[index], false);
+#else
 	gtk_button_set_focus_on_click(GTK_BUTTON(self->button_layer_ctrls[index]), false);
+#endif
 	// gtk_widget_set_can_focus(self->button_layer_ctrls[index], false);
 	gtk_container_add(GTK_CONTAINER(self->button_layer_ctrls[index]),
 			image);
@@ -144,7 +148,7 @@ EtLayerView *et_layer_view_init()
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (self->text));
 	gtk_text_buffer_set_text (buffer, "<Nothing document>", -1);
 	gtk_text_view_set_editable (GTK_TEXT_VIEW(self->text), false);
-#ifndef TARGET_OS_WIN
+#if GTK_CHECK_VERSION (3,16,0)
 	gtk_text_view_set_monospace (GTK_TEXT_VIEW(self->text), TRUE);
 #endif
 	gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW(self->text), false);

@@ -9,7 +9,8 @@
 #include "et_pointing_manager.h"
 #include "et_doc_relation.h"
 
-#ifdef TARGET_OS_WIN
+#if GTK_CHECK_VERSION (3,16,0)
+#else
 static void gtk_notebook_detach_tab (GtkNotebook *notebook, GtkWidget *child)
 {
 	gtk_container_remove (GTK_CONTAINER (notebook), child);
