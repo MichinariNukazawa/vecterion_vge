@@ -295,6 +295,16 @@ int main (int argc, char **argv){
 	g_signal_connect(window, "delete-event",
 			G_CALLBACK(_cb_delete_event), NULL);
 
+	if(!et_tool_info_init()){
+		et_bug("");
+		return -1;
+	}
+
+	if(! _init_menu(window, box_root)){
+		et_bug("");
+		return -1;
+	}
+
 	GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
 	gtk_container_add(GTK_CONTAINER(box_root), vbox);
 
@@ -329,16 +339,6 @@ int main (int argc, char **argv){
 	gtk_paned_pack1 (GTK_PANED (hpaned), cancol_widget, TRUE, FALSE);
 
 	et_etaion_set_widget_on_mouse_cursor(cancol_widget);
-
-	if(!et_tool_info_init()){
-		et_bug("");
-		return -1;
-	}
-
-	if(! _init_menu(window, box_root)){
-		et_bug("");
-		return -1;
-	}
 
 	EtToolPanel *tool_panel = et_tool_panel_init();
 	if(NULL == tool_panel){
