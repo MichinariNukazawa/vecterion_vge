@@ -8,7 +8,7 @@
 #include "pv_error.h"
 #include "pv_element_general.h"
 #include "pv_element_info.h"
-#include "pv_svg_info.h"
+#include "pv_svg_element_info.h"
 
 typedef struct{
 	InfoTargetSvg *target;
@@ -601,7 +601,7 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		gpointer data,
 		ConfReadSvg *conf)
 {
-	const PvSvgInfo *svg_info = pv_svg_get_svg_info_from_tagname((char *)xmlnode->name);
+	const PvSvgElementInfo *svg_info = pv_svg_get_svg_element_info_from_tagname((char *)xmlnode->name);
 	if(NULL == svg_info){
 		pv_error("");
 		goto error;

@@ -1,4 +1,4 @@
-#include "pv_svg_info.h"
+#include "pv_svg_element_info.h"
 
 #include <strings.h>
 #include "pv_error.h"
@@ -299,7 +299,7 @@ static PvElement *_pv_svg_unknown_new_element_from_svg(
 	return element_parent;
 }
 
-const PvSvgInfo _pv_svg_infos[] = {
+const PvSvgElementInfo _pv_svg_element_infos[] = {
 	{
 		.tagname = "svg",
 		.func_new_element_from_svg = _pv_svg_svg_new_element_from_svg,
@@ -324,16 +324,16 @@ const PvSvgInfo _pv_svg_infos[] = {
 };
 
 
-const PvSvgInfo *pv_svg_get_svg_info_from_tagname(const char *tagname)
+const PvSvgElementInfo *pv_svg_get_svg_element_info_from_tagname(const char *tagname)
 {
-	int num = sizeof(_pv_svg_infos) / sizeof(_pv_svg_infos[0]);
+	int num = sizeof(_pv_svg_element_infos) / sizeof(_pv_svg_element_infos[0]);
 	for(int i = 0; i < num; i++){
-		const PvSvgInfo *info = &_pv_svg_infos[i];
+		const PvSvgElementInfo *info = &_pv_svg_element_infos[i];
 		if(0 == strcasecmp(tagname, info->tagname)){
 			return info;
 		}
 	}
 
-	return &_pv_svg_infos[num - 1];
+	return &_pv_svg_element_infos[num - 1];
 }
 
