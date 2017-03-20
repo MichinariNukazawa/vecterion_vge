@@ -2,6 +2,7 @@
 
 #include <strings.h>
 #include "pv_error.h"
+#include "pv_io_util.h"
 
 static void pv_element_anchor_point_init(PvAnchorPoint *ap)
 {
@@ -48,6 +49,60 @@ static bool _pv_svg_read_args_from_str(double *args, int num_args, const char **
 }
 
 
+
+static bool func_fill_set_(
+		PvElement *element,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	bool res = true;
+
+	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "fill");
+	if(!value){
+		pv_error("");
+		return false;
+	}
+
+	PvColor *color = &(element->color_pair.colors[PvColorPairGround_BackGround]);
+	if(! pv_io_util_get_pv_color_from_svg_str_rgba(color, (const char *)value)){
+		pv_error("");
+		res = false;
+		goto failed;
+	}
+
+failed:
+	xmlFree(value);
+
+	return res;
+}
+
+static bool func_stroke_set_(
+		PvElement *element,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	bool res = true;
+
+	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "stroke");
+	if(!value){
+		pv_error("");
+		return false;
+	}
+
+	PvColor *color = &(element->color_pair.colors[PvColorPairGround_ForGround]);
+	if(! pv_io_util_get_pv_color_from_svg_str_rgba(color, (const char *)value)){
+		pv_error("");
+		res = false;
+		goto failed;
+	}
+
+failed:
+	xmlFree(value);
+
+	return res;
+}
 
 static bool func_stroke_width_set_(
 		PvElement *element,
@@ -301,6 +356,14 @@ static bool func_points_set_(
 
 
 const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
+	{
+		.name = "fill",
+		.pv_svg_attribute_func_set = func_fill_set_,
+	},
+	{
+		.name = "stroke",
+		.pv_svg_attribute_func_set = func_stroke_set_,
+	},
 	{
 		.name = "stroke-width",
 		.pv_svg_attribute_func_set = func_stroke_width_set_,

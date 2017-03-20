@@ -9,6 +9,7 @@
 #include "pv_element_general.h"
 #include "pv_element_info.h"
 #include "pv_svg_element_info.h"
+#include "pv_io_util.h"
 
 typedef struct{
 	InfoTargetSvg *target;
@@ -315,105 +316,6 @@ static bool _pv_io_set_vg_from_xmlnode_svg(PvVg *vg, xmlNode *xmlnode_svg)
 	return true;
 }
 
-bool _pv_io_get_pv_color_from_svg_str_rgba(PvColor *ret_color, const char *str)
-{
-	PvColor color = PvColor_None;
-
-	int ret;
-	unsigned int r = 0, g = 0, b = 0;
-	double a = 100.0;
-	if(4 == (ret = sscanf(str, " rgba(%3u,%3u,%3u,%lf)", &r, &g, &b, &a))){
-		goto match;
-	}
-
-	char strv[9];
-	if(1 == (ret = sscanf(str, " #%8[0-9A-Fa-f]", strv))){
-		for(int i = 0; i < (int)strlen(strv); i++){
-			strv[i] = (char)tolower(strv[i]);
-		}
-		switch(strlen(strv)){
-			case 3:
-				{
-					if(3 != sscanf(strv, "%1x%1x%1x", &r, &g, &b)){
-						pv_warning("'%s'", str);
-						goto error;
-					}
-					a = 1.0;
-
-					goto match;
-				}
-				break;
-			case 4:
-				{
-					unsigned int a_x = 0;
-					if(4 != sscanf(strv, "%1x%1x%1x%1x", &r, &g, &b, &a_x)){
-						pv_warning("'%s'", str);
-						goto error;
-					}
-					a = ((double)a_x / ((int)0xF));
-
-					goto match;
-				}
-				break;
-			case 6:
-				{
-					if(3 != sscanf(strv, "%2x%2x%2x", &r, &g, &b)){
-						pv_warning("'%s'", str);
-						goto error;
-					}
-					a = 1.0;
-
-					goto match;
-				}
-				break;
-			case 8:
-				{
-					unsigned int a_x = 0;
-					if(4 != sscanf(strv, "%2x%2x%2x%2x", &r, &g, &b, &a_x)){
-						pv_warning("'%s'", str);
-						goto error;
-					}
-					a = ((double)a_x / ((int)0xFF));
-
-					goto match;
-				}
-				break;
-			default:
-				goto error;
-				pv_warning("'%s'", str);
-		}
-	}
-
-	if(NULL != strstr(str, "none")){
-		*ret_color = PvColor_None;
-		return true;
-	}
-
-	goto error;
-
-match:
-	{
-		// pv_debug(" rgba(%u,%u,%u,%f)", r, g, b, a);
-		bool ok = (pv_color_set_parameter(&color, PvColorParameterIx_R, (double)r)
-				&& pv_color_set_parameter(&color, PvColorParameterIx_G, (double)g)
-				&& pv_color_set_parameter(&color, PvColorParameterIx_B, (double)b)
-				&& pv_color_set_parameter(&color, PvColorParameterIx_O, (double)a * 100.0)
-			  );
-		if(!ok){
-			pv_warning("'%s'", str);
-			goto error;
-		}
-	}
-
-	*ret_color = color;
-	return true;
-
-error:
-	pv_warning("'%s'", str);
-
-	*ret_color = PvColor_None;
-	return false;
-}
 
 typedef struct{
 	char *key;
@@ -534,7 +436,7 @@ ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, xmlNo
 	xmlChar *xc_fill = xmlGetProp(xmlnode, BAD_CAST "fill");
 	if(NULL != xc_fill){
 		PvColor color;
-		if(!_pv_io_get_pv_color_from_svg_str_rgba(&color, (char *)xc_fill)){
+		if(!pv_io_util_get_pv_color_from_svg_str_rgba(&color, (char *)xc_fill)){
 			pv_warning("'%s'(%d)", (char *)xc_fill, xmlnode->line);
 		}else{
 			color_pair.colors[PvColorPairGround_BackGround] = color;
@@ -545,7 +447,7 @@ ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, xmlNo
 	xmlChar *xc_stroke = xmlGetProp(xmlnode, BAD_CAST "stroke");
 	if(NULL != xc_stroke){
 		PvColor color;
-		if(!_pv_io_get_pv_color_from_svg_str_rgba(&color, (char *)xc_stroke)){
+		if(!pv_io_util_get_pv_color_from_svg_str_rgba(&color, (char *)xc_stroke)){
 			pv_warning("'%s'(%d)", (char *)xc_stroke, xmlnode->line);
 		}else{
 			color_pair.colors[PvColorPairGround_ForGround] = color;
@@ -565,14 +467,14 @@ ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, xmlNo
 		char *str = g_strdup(css_str_maps[i].value);
 		if(0 == strcmp("fill", css_str_maps[i].key)){
 			PvColor color;
-			if(!_pv_io_get_pv_color_from_svg_str_rgba(&color, str)){
+			if(!pv_io_util_get_pv_color_from_svg_str_rgba(&color, str)){
 				pv_warning("'%s'(%d)", (char *)xc_style, xmlnode->line);
 			}else{
 				color_pair.colors[PvColorPairGround_BackGround] = color;
 			}
 		}else if(0 == strcmp("stroke", css_str_maps[i].key)){
 			PvColor color;
-			if(!_pv_io_get_pv_color_from_svg_str_rgba(&color, str)){
+			if(!pv_io_util_get_pv_color_from_svg_str_rgba(&color, str)){
 				pv_warning("'%s'(%d)", (char *)xc_style, xmlnode->line);
 			}else{
 				color_pair.colors[PvColorPairGround_ForGround] = color;
