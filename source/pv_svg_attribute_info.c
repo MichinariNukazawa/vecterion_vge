@@ -333,7 +333,11 @@ static bool func_points_set_(
 		const xmlAttr *attribute
 		)
 {
-	if(0 != strcasecmp("polygon", (char *)xmlnode->name)){
+	if(0 == strcasecmp("polygon", (char *)xmlnode->name)){
+		// NOP
+	}else if(0 == strcasecmp("polyline", (char *)xmlnode->name)){
+		// NOP
+	}else{
 		pv_error("'%s'", attribute->name);
 		return false;
 	}

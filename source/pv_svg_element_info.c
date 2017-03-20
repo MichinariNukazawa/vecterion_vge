@@ -127,6 +127,29 @@ static PvElement *_pv_svg_polygon_new_element_from_svg(
 	return element;
 }
 
+static PvElement *_pv_svg_polyline_new_element_from_svg(
+		PvElement *element_parent,
+		xmlNodePtr xmlnode,
+		bool *isDoChild,
+		gpointer data,
+		const ConfReadSvg *conf
+		)
+{
+	PvElement *element = _pv_svg_path_new_element_from_svg(
+			element_parent,
+			xmlnode,
+			isDoChild,
+			data,
+			conf
+			);
+
+	if(element){
+		pv_element_curve_set_close_anchor_point(element, false);
+	}
+
+	return element;
+}
+
 static PvElement *_pv_svg_text_new_element_from_svg(
 		PvElement *element_parent,
 		xmlNodePtr xmlnode,
@@ -168,6 +191,10 @@ const PvSvgElementInfo _pv_svg_element_infos[] = {
 	{
 		.tagname = "polygon",
 		.func_new_element_from_svg = _pv_svg_polygon_new_element_from_svg,
+	},
+	{
+		.tagname = "polyline",
+		.func_new_element_from_svg = _pv_svg_polyline_new_element_from_svg,
 	},
 	{
 		.tagname = "text",
