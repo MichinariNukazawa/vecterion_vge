@@ -763,6 +763,14 @@ PvElement *pv_element_curve_new_set_anchor_path(PvAnchorPath *anchor_path)
 	return element;
 }
 
+PvAnchorPath *pv_element_curve_get_anchor_path(PvElement *element)
+{
+	pv_assert(element);
+
+	PvElementCurveData *data = element->data;
+	return data->anchor_path;
+}
+
 PvElement *pv_element_curve_new_set_anchor_point(PvAnchorPoint *anchor_point)
 {
 	PvElement *element = pv_element_new(PvElementKind_Curve);

@@ -360,6 +360,183 @@ static bool func_points_set_(
 	return ret;
 }
 
+static bool func_x1_set_(
+		PvElement *element,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	pv_assert(PvElementKind_Curve == element->kind);
+
+	if(0 == strcasecmp("line", (char *)xmlnode->name)){
+		// NOP
+	}else{
+		pv_error("'%s'", attribute->name);
+		return false;
+	}
+
+	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "x1");
+	if(!value){
+		pv_error("");
+		return false;
+	}
+
+	int num = pv_element_curve_get_num_anchor_point(element);
+	if(2 != num){
+		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
+		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
+	}
+
+	double v = pv_io_util_get_double_from_str((const char *)value);
+
+	PvAnchorPath *anchor_path = pv_element_curve_get_anchor_path(element);
+	pv_assert(anchor_path);
+	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(
+			anchor_path,
+			0,
+			PvAnchorPathIndexTurn_Disable);
+	pv_assert(ap);
+	PvPoint point = pv_anchor_point_get_point(ap);
+	point.x = v;
+	pv_anchor_point_set_point(ap, point);
+
+	xmlFree(value);
+
+	return true;
+}
+
+static bool func_y1_set_(
+		PvElement *element,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	pv_assert(PvElementKind_Curve == element->kind);
+
+	if(0 == strcasecmp("line", (char *)xmlnode->name)){
+		// NOP
+	}else{
+		pv_error("'%s'", attribute->name);
+		return false;
+	}
+
+	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "x1");
+	if(!value){
+		pv_error("");
+		return false;
+	}
+
+	int num = pv_element_curve_get_num_anchor_point(element);
+	if(2 != num){
+		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
+		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
+	}
+
+	double v = pv_io_util_get_double_from_str((const char *)value);
+
+	PvAnchorPath *anchor_path = pv_element_curve_get_anchor_path(element);
+	pv_assert(anchor_path);
+	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(
+			anchor_path,
+			0,
+			PvAnchorPathIndexTurn_Disable);
+	pv_assert(ap);
+	PvPoint point = pv_anchor_point_get_point(ap);
+	point.y = v;
+	pv_anchor_point_set_point(ap, point);
+
+	xmlFree(value);
+
+	return true;
+}
+static bool func_x2_set_(
+		PvElement *element,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	pv_assert(PvElementKind_Curve == element->kind);
+
+	if(0 == strcasecmp("line", (char *)xmlnode->name)){
+		// NOP
+	}else{
+		pv_error("'%s'", attribute->name);
+		return false;
+	}
+
+	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "x1");
+	if(!value){
+		pv_error("");
+		return false;
+	}
+
+	int num = pv_element_curve_get_num_anchor_point(element);
+	if(2 != num){
+		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
+		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
+	}
+
+	double v = pv_io_util_get_double_from_str((const char *)value);
+
+	PvAnchorPath *anchor_path = pv_element_curve_get_anchor_path(element);
+	pv_assert(anchor_path);
+	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(
+			anchor_path,
+			1,
+			PvAnchorPathIndexTurn_Disable);
+	pv_assert(ap);
+	PvPoint point = pv_anchor_point_get_point(ap);
+	point.x = v;
+	pv_anchor_point_set_point(ap, point);
+
+	xmlFree(value);
+
+	return true;
+}
+static bool func_y2_set_(
+		PvElement *element,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	pv_assert(PvElementKind_Curve == element->kind);
+
+	if(0 == strcasecmp("line", (char *)xmlnode->name)){
+		// NOP
+	}else{
+		pv_error("'%s'", attribute->name);
+		return false;
+	}
+
+	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "x1");
+	if(!value){
+		pv_error("");
+		return false;
+	}
+
+	int num = pv_element_curve_get_num_anchor_point(element);
+	if(2 != num){
+		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
+		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
+	}
+
+	double v = pv_io_util_get_double_from_str((const char *)value);
+
+	PvAnchorPath *anchor_path = pv_element_curve_get_anchor_path(element);
+	pv_assert(anchor_path);
+	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(
+			anchor_path,
+			1,
+			PvAnchorPathIndexTurn_Disable);
+	pv_assert(ap);
+	PvPoint point = pv_anchor_point_get_point(ap);
+	point.y = v;
+	pv_anchor_point_set_point(ap, point);
+
+	xmlFree(value);
+
+	return true;
+}
 
 const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
 	{
@@ -389,6 +566,22 @@ const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
 	{
 		.name = "points",
 		.pv_svg_attribute_func_set = func_points_set_,
+	},
+	{
+		.name = "x1",
+		.pv_svg_attribute_func_set = func_x1_set_,
+	},
+	{
+		.name = "y1",
+		.pv_svg_attribute_func_set = func_y1_set_,
+	},
+	{
+		.name = "x2",
+		.pv_svg_attribute_func_set = func_x2_set_,
+	},
+	{
+		.name = "y2",
+		.pv_svg_attribute_func_set = func_y2_set_,
 	},
 };
 
