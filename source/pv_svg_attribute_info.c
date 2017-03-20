@@ -50,10 +50,10 @@ static bool _pv_svg_read_args_from_str(double *args, int num_args, const char **
 
 
 static bool func_stroke_width_set_(
-				PvElement *element,
-				const xmlNodePtr xmlnode,
-				const xmlAttr *attribute
-				)
+		PvElement *element,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
 {
 	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "stroke-width");
 	if(!value){
@@ -67,10 +67,10 @@ static bool func_stroke_width_set_(
 }
 
 static bool func_stroke_linecap_set_(
-				PvElement *element,
-				const xmlNodePtr xmlnode,
-				const xmlAttr *attribute
-				)
+		PvElement *element,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
 {
 	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "stroke-linecap");
 	if(!value){
@@ -93,10 +93,10 @@ static bool func_stroke_linecap_set_(
 }
 
 static bool func_stroke_linejoin_set_(
-				PvElement *element,
-				const xmlNodePtr xmlnode,
-				const xmlAttr *attribute
-				)
+		PvElement *element,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
 {
 	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "stroke-linejoin");
 	if(!value){
@@ -232,6 +232,73 @@ static bool func_d_set_(
 	return ret;
 }
 
+static bool func_points_set_inline_(
+		PvElement *element,
+		const char *value
+		)
+{
+	const int num_args = 10;
+	double args[num_args];
+	double prev_args[num_args];
+	_pv_svg_fill_double_array(args, 0, num_args);
+	_pv_svg_fill_double_array(prev_args, 0, num_args);
+
+	PvAnchorPoint ap;
+	pv_assert(element);
+	pv_assert(element->data);
+	pv_assert(PvElementKind_Curve == element->kind);
+
+	// PvElementCurveData *data = element->data;
+
+	const char *p = value;
+	while('\0' != *p){
+		bool is_append = _pv_svg_read_args_from_str(args, 2, &p);
+		pv_element_anchor_point_init(&ap);
+		ap.points[PvAnchorPointIndex_Point].x = args[0];
+		ap.points[PvAnchorPointIndex_Point].y = args[1];
+
+		if(is_append){
+			if(!pv_element_curve_add_anchor_point(element, ap)){
+				pv_error("");
+				return false;
+			}
+		}
+
+		p++;
+	}
+
+	return true;
+}
+
+static bool func_points_set_(
+		PvElement *element,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	if(0 != strcasecmp("polygon", (char *)xmlnode->name)){
+		pv_error("'%s'", attribute->name);
+		return false;
+	}
+
+	if(PvElementKind_Curve != element->kind){
+		pv_error("");
+		return false;
+	}
+
+	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "points");
+	if(!value){
+		pv_error("");
+		return false;
+	}
+
+	bool ret = func_points_set_inline_(element, (const char *)value);
+
+	xmlFree(value);
+
+	return ret;
+}
+
 
 const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
 	{
@@ -249,6 +316,10 @@ const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
 	{
 		.name = "d",
 		.pv_svg_attribute_func_set = func_d_set_,
+	},
+	{
+		.name = "points",
+		.pv_svg_attribute_func_set = func_points_set_,
 	},
 };
 
