@@ -8,6 +8,7 @@
 
 #include "pv_color.h"
 
+double pv_io_util_get_double_from_str(const char *str);
 bool pv_io_util_get_pv_color_from_svg_str_rgba(PvColor *ret_color, const char *str);
 
 #ifdef include_PV_TEST

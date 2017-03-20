@@ -2,7 +2,22 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
 #include "pv_error.h"
+
+double pv_io_util_get_double_from_str(const char *str)
+{
+	char *endptr = NULL;
+
+	errno = 0;    /* To distinguish success/failure after call */
+	double val = strtod(str, &endptr);
+	if(0 != errno || str == endptr){
+		pv_warning("%s", str);
+		return 0.0;
+	}
+
+	return val;
+}
 
 bool pv_io_util_get_pv_color_from_svg_str_rgba(PvColor *ret_color, const char *str)
 {

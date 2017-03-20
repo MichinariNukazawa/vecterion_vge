@@ -116,6 +116,8 @@ static bool func_stroke_width_set_(
 		return false;
 	}
 
+	element->stroke.width = pv_io_util_get_double_from_str((const char *)value);
+
 	xmlFree(value);
 
 	return true;

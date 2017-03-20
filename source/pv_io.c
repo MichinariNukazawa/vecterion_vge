@@ -412,20 +412,6 @@ static char *_strdup_cssvaluestr(const char *style_str, const char *key_str)
 	return NULL;
 }
 */
-static double _get_double_from_str(const char *str)
-{
-	char *endptr = NULL;
-
-	errno = 0;    /* To distinguish success/failure after call */
-	double val = strtod(str, &endptr);
-	if(0 != errno || str == endptr){
-		pv_warning("%s", str);
-		return 0.0;
-	}
-
-	return val;
-}
-
 
 // PvColorPair _pv_io_get_pv_color_pair_from_xmlnode_simple(const xmlNode *xmlnode)
 ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, xmlNode *xmlnode)
@@ -457,7 +443,7 @@ ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, xmlNo
 
 	xmlChar *xc_stroke_width = xmlGetProp(xmlnode, BAD_CAST "stroke-width");
 	if(NULL != xc_stroke_width){
-		stroke_width = _get_double_from_str((char *)xc_stroke_width);
+		stroke_width = pv_io_util_get_double_from_str((char *)xc_stroke_width);
 	}
 	xmlFree(xc_stroke_width);
 
@@ -480,7 +466,7 @@ ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, xmlNo
 				color_pair.colors[PvColorPairGround_ForGround] = color;
 			}
 		}else if(0 == strcmp("stroke-width", css_str_maps[i].key)){
-			stroke_width = _get_double_from_str(str);
+			stroke_width = pv_io_util_get_double_from_str(str);
 		}else{
 			pv_warning("unknown css style key: '%s'(%d)'%s':'%s'(%d)",
 					(char *)xc_style, xmlnode->line,
