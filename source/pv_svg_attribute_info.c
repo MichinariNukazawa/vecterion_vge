@@ -15,18 +15,21 @@ static void _pv_svg_fill_double_array(double *dst, double value, int size)
 	}
 }
 
-static const char *_pv_svg_read_args_from_str(double *args, int num_args, const char *str)
+static bool _pv_svg_read_args_from_str(double *args, int num_args, const char **str)
 {
-	const char *p = str;
-	char *next;
+	const char *p = *str;
+	bool res = true;
+
 	int i = 0;
-	const char *str_error = NULL;
 	while('\0' != *p){
 		if(',' == *p){
 			p++;
 			continue;
 		}
+		char *next = NULL;
+		const char *str_error = NULL;
 		if(!pv_general_strtod(&args[i], p, &next, &str_error)){
+			res = false;
 			break;
 		}
 		p = next;
@@ -39,7 +42,9 @@ static const char *_pv_svg_read_args_from_str(double *args, int num_args, const 
 		args[i] = 0;
 	}
 
-	return p;
+	*str = p;
+
+	return res;
 }
 
 
@@ -136,14 +141,15 @@ static bool func_d_set_inline_(
 		switch(*p){
 			case 'M':
 			case 'L':
-				p = _pv_svg_read_args_from_str(args, 2, ++p);
+				p++;
+				is_append = _pv_svg_read_args_from_str(args, 2, &p);
 				pv_element_anchor_point_init(&ap);
 				ap.points[PvAnchorPointIndex_Point].x = args[0];
 				ap.points[PvAnchorPointIndex_Point].y = args[1];
-				is_append = true;
 				break;
 			case 'C':
-				p = _pv_svg_read_args_from_str(args, 6, ++p);
+				p++;
+				is_append = _pv_svg_read_args_from_str(args, 6, &p);
 				pv_element_anchor_point_init(&ap);
 				ap.points[PvAnchorPointIndex_HandlePrev].x = args[2] - args[4];
 				ap.points[PvAnchorPointIndex_HandlePrev].y = args[3] - args[5];
@@ -161,10 +167,10 @@ static bool func_d_set_inline_(
 					// 'C' command on top?
 					pv_warning("");
 				}
-				is_append = true;
 				break;
 			case 'S':
-				p = _pv_svg_read_args_from_str(args, 4, ++p);
+				p++;
+				is_append = _pv_svg_read_args_from_str(args, 4, &p);
 				pv_element_anchor_point_init(&ap);
 				ap.points[PvAnchorPointIndex_HandlePrev].x = args[0] - args[2];
 				ap.points[PvAnchorPointIndex_HandlePrev].y = args[1] - args[3];
@@ -172,7 +178,6 @@ static bool func_d_set_inline_(
 				ap.points[PvAnchorPointIndex_Point].y = args[3];
 				ap.points[PvAnchorPointIndex_HandleNext].x = 0;
 				ap.points[PvAnchorPointIndex_HandleNext].y = 0;
-				is_append = true;
 				break;
 			case 'Z':
 			case 'z':
