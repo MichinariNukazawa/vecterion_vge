@@ -6,9 +6,9 @@
 
 
 const PvStrokeLinecapInfo pvStrokeLinecapInfos[] = {
-	{PvStrokeLinecap_Butt, "Butt", CAIRO_LINE_CAP_BUTT, },
-	{PvStrokeLinecap_Round, "Round", CAIRO_LINE_CAP_ROUND, },
-	{PvStrokeLinecap_Square, "Square", CAIRO_LINE_CAP_SQUARE, },
+	{PvStrokeLinecap_Butt, "butt", CAIRO_LINE_CAP_BUTT, },
+	{PvStrokeLinecap_Round, "round", CAIRO_LINE_CAP_ROUND, },
+	{PvStrokeLinecap_Square, "square", CAIRO_LINE_CAP_SQUARE, },
 };
 
 int get_num_stroke_linecap_infos()
@@ -31,9 +31,9 @@ const PvStrokeLinecapInfo *get_stroke_linecap_info_from_id(PvStrokeLinecap linec
 }
 
 const PvStrokeLinejoinInfo pvStrokeLinejoinInfos[] = {
-	{PvStrokeLinejoin_Miter, "Miter", CAIRO_LINE_JOIN_MITER, },
-	{PvStrokeLinejoin_Round, "Round", CAIRO_LINE_JOIN_ROUND, },
-	{PvStrokeLinejoin_Bevel, "Bevel", CAIRO_LINE_JOIN_BEVEL, },
+	{PvStrokeLinejoin_Miter, "miter", CAIRO_LINE_JOIN_MITER, },
+	{PvStrokeLinejoin_Round, "round", CAIRO_LINE_JOIN_ROUND, },
+	{PvStrokeLinejoin_Bevel, "bevel", CAIRO_LINE_JOIN_BEVEL, },
 };
 
 int get_num_stroke_linejoin_infos()
