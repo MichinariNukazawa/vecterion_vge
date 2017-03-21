@@ -199,35 +199,47 @@ static bool func_d_set_inline_(
 			case 'M':
 			case 'L':
 				p++;
-				is_append = _pv_svg_read_args_from_str(args, 2, &p);
+				if(!_pv_svg_read_args_from_str(args, 2, &p)){
+					goto failed;
+				}
 				pv_element_anchor_point_init(&ap);
 				ap.points[PvAnchorPointIndex_Point].x = args[0];
 				ap.points[PvAnchorPointIndex_Point].y = args[1];
+				is_append = true;
 				break;
 			case 'C':
-				p++;
-				is_append = _pv_svg_read_args_from_str(args, 6, &p);
-				pv_element_anchor_point_init(&ap);
-				ap.points[PvAnchorPointIndex_HandlePrev].x = args[2] - args[4];
-				ap.points[PvAnchorPointIndex_HandlePrev].y = args[3] - args[5];
-				ap.points[PvAnchorPointIndex_Point].x = args[4];
-				ap.points[PvAnchorPointIndex_Point].y = args[5];
-				ap.points[PvAnchorPointIndex_HandleNext].x = 0;
-				ap.points[PvAnchorPointIndex_HandleNext].y = 0;
-				size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
-				if(0 < num){
-					PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, (num - 1), PvAnchorPathIndexTurn_Disable);
+				{
+					p++;
+					if(!_pv_svg_read_args_from_str(args, 6, &p)){
+						goto failed;
+					}
+					pv_element_anchor_point_init(&ap);
+					ap.points[PvAnchorPointIndex_HandlePrev].x = args[2] - args[4];
+					ap.points[PvAnchorPointIndex_HandlePrev].y = args[3] - args[5];
+					ap.points[PvAnchorPointIndex_Point].x = args[4];
+					ap.points[PvAnchorPointIndex_Point].y = args[5];
+					ap.points[PvAnchorPointIndex_HandleNext].x = 0;
+					ap.points[PvAnchorPointIndex_HandleNext].y = 0;
+					size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+					if(0 == num){
+						pv_warning("'C' command on top?");
+						goto failed;
+					}
+					PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
+							data->anchor_path,
+							(num - 1),
+							PvAnchorPathIndexTurn_Disable);
 					PvPoint gpoint_next = {args[0], args[1]};
 					pv_anchor_point_set_handle(ap_prev,
 							PvAnchorPointIndex_HandleNext, gpoint_next);
-				}else{
-					// 'C' command on top?
-					pv_warning("");
+					is_append = true;
 				}
 				break;
 			case 'S':
 				p++;
-				is_append = _pv_svg_read_args_from_str(args, 4, &p);
+				if(!_pv_svg_read_args_from_str(args, 4, &p)){
+					goto failed;
+				}
 				pv_element_anchor_point_init(&ap);
 				ap.points[PvAnchorPointIndex_HandlePrev].x = args[0] - args[2];
 				ap.points[PvAnchorPointIndex_HandlePrev].y = args[1] - args[3];
@@ -235,6 +247,7 @@ static bool func_d_set_inline_(
 				ap.points[PvAnchorPointIndex_Point].y = args[3];
 				ap.points[PvAnchorPointIndex_HandleNext].x = 0;
 				ap.points[PvAnchorPointIndex_HandleNext].y = 0;
+				is_append = true;
 				break;
 			case 'Z':
 			case 'z':
@@ -250,14 +263,15 @@ static bool func_d_set_inline_(
 		}
 
 		if(is_append){
-			if(!pv_element_curve_add_anchor_point(element, ap)){
-				pv_error("");
-				return false;
-			}
+			pv_assert(pv_element_curve_add_anchor_point(element, ap));
 		}
 	}
 
 	return true;
+failed:
+	pv_debug("'%s' %td", value, (p - value));
+
+	return false;
 }
 
 static bool func_d_set_(
