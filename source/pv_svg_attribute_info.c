@@ -217,7 +217,6 @@ static bool func_d_set_inline_(
 
 					size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
 					if(0 == num){
-						pv_warning("'C' command on top?");
 						goto failed;
 					}
 					const PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
@@ -234,12 +233,55 @@ static bool func_d_set_inline_(
 					is_append = true;
 				}
 				break;
+			case 'H':
+			case 'h':
+			case 'V':
+			case 'v':
+				{
+					char command = *p;
+					p++;
+					if(!_pv_svg_read_args_from_str(args, 1, &p)){
+						goto failed;
+					}
+
+					size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+					if(0 == num){
+						goto failed;
+					}
+					const PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
+							data->anchor_path,
+							(num - 1),
+							PvAnchorPathIndexTurn_Disable);
+					PvPoint point = pv_anchor_point_get_point(ap_prev);
+
+					switch(command){
+						case 'H':
+							point.x = args[0];
+							break;
+						case 'h':
+							point.x += args[0];
+							break;
+						case 'V':
+							point.y = args[0];
+							break;
+						case 'v':
+						default:
+							point.y += args[0];
+							break;
+					}
+
+					pv_element_anchor_point_init(&ap);
+					ap.points[PvAnchorPointIndex_Point] = point;
+					is_append = true;
+				}
+				break;
 			case 'C':
 				{
 					p++;
 					if(!_pv_svg_read_args_from_str(args, 6, &p)){
 						goto failed;
 					}
+
 					pv_element_anchor_point_init(&ap);
 					ap.points[PvAnchorPointIndex_HandlePrev].x = args[2] - args[4];
 					ap.points[PvAnchorPointIndex_HandlePrev].y = args[3] - args[5];
@@ -247,6 +289,7 @@ static bool func_d_set_inline_(
 					ap.points[PvAnchorPointIndex_Point].y = args[5];
 					ap.points[PvAnchorPointIndex_HandleNext].x = 0;
 					ap.points[PvAnchorPointIndex_HandleNext].y = 0;
+
 					size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
 					if(0 == num){
 						pv_warning("'C' command on top?");
@@ -259,6 +302,7 @@ static bool func_d_set_inline_(
 					PvPoint gpoint_next = {args[0], args[1]};
 					pv_anchor_point_set_handle(ap_prev,
 							PvAnchorPointIndex_HandleNext, gpoint_next);
+
 					is_append = true;
 				}
 				break;
