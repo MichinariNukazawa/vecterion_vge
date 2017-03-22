@@ -215,15 +215,17 @@ static bool func_d_set_inline_(
 						goto failed;
 					}
 
+					PvPoint point = PvPoint_Default;
 					size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
 					if(0 == num){
-						goto failed;
+						// 'm' first use by inkscape(v0.91 r13725).
+					}else{
+						const PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
+								data->anchor_path,
+								(num - 1),
+								PvAnchorPathIndexTurn_Disable);
+						point = pv_anchor_point_get_point(ap_prev);
 					}
-					const PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
-							data->anchor_path,
-							(num - 1),
-							PvAnchorPathIndexTurn_Disable);
-					PvPoint point = pv_anchor_point_get_point(ap_prev);
 
 					point.x += args[0];
 					point.y += args[1];
