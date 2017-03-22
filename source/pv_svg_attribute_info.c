@@ -321,18 +321,41 @@ static bool func_d_set_inline_(
 				}
 				break;
 			case 'S':
-				p++;
-				if(!_pv_svg_read_args_from_str(args, 4, &p)){
-					goto failed;
+			case 's':
+				{
+					char command = *p;
+					p++;
+					if(!_pv_svg_read_args_from_str(args, 4, &p)){
+						goto failed;
+					}
+					pv_element_anchor_point_init(&ap);
+					ap.points[PvAnchorPointIndex_HandlePrev].x = args[0] - args[2];
+					ap.points[PvAnchorPointIndex_HandlePrev].y = args[1] - args[3];
+					ap.points[PvAnchorPointIndex_Point].x = args[2];
+					ap.points[PvAnchorPointIndex_Point].y = args[3];
+					ap.points[PvAnchorPointIndex_HandleNext].x = 0;
+					ap.points[PvAnchorPointIndex_HandleNext].y = 0;
+					if('s' == command){
+						PvPoint point = PvPoint_Default;
+						size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+						if(0 == num){
+						}else{
+							PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
+									data->anchor_path,
+									(num - 1),
+									PvAnchorPathIndexTurn_Disable);
+							point = pv_anchor_point_get_point(ap_prev);
+						}
+
+						ap.points[PvAnchorPointIndex_Point].x = args[2] + point.x;
+						ap.points[PvAnchorPointIndex_Point].y = args[3] + point.y;
+
+						pv_anchor_point_set_handle(&ap,
+								PvAnchorPointIndex_HandlePrev,
+								(PvPoint){args[0] + point.x, args[1] + point.y});
+					}
+					is_append = true;
 				}
-				pv_element_anchor_point_init(&ap);
-				ap.points[PvAnchorPointIndex_HandlePrev].x = args[0] - args[2];
-				ap.points[PvAnchorPointIndex_HandlePrev].y = args[1] - args[3];
-				ap.points[PvAnchorPointIndex_Point].x = args[2];
-				ap.points[PvAnchorPointIndex_Point].y = args[3];
-				ap.points[PvAnchorPointIndex_HandleNext].x = 0;
-				ap.points[PvAnchorPointIndex_HandleNext].y = 0;
-				is_append = true;
 				break;
 			case 'Z':
 			case 'z':
