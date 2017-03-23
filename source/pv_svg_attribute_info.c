@@ -180,7 +180,7 @@ static bool func_d_set_inline_(
 			default:
 				if(0 != isdigit(*p)){
 					command = command_prev;
-				}else if('.' == *p){ // floating number
+				}else if('-' == *p){ // minus number
 					command = command_prev;
 				}else{
 					p++;
