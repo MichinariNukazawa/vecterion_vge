@@ -289,20 +289,25 @@ static bool func_d_set_inline_(
 
 					PvPoint gpoint_next;
 					pv_element_anchor_point_init(&ap);
-					gpoint_next = (PvPoint){.x = args[0], .y = args[1]};
-					ap.points[PvAnchorPointIndex_HandlePrev].x = args[2] - args[4];
-					ap.points[PvAnchorPointIndex_HandlePrev].y = args[3] - args[5];
-					ap.points[PvAnchorPointIndex_Point].x = args[4];
-					ap.points[PvAnchorPointIndex_Point].y = args[5];
 					ap.points[PvAnchorPointIndex_HandleNext].x = 0;
 					ap.points[PvAnchorPointIndex_HandleNext].y = 0;
-					if('c' == command){
+					if('C' == command){
+						ap.points[PvAnchorPointIndex_Point].x = args[4];
+						ap.points[PvAnchorPointIndex_Point].y = args[5];
+						ap.points[PvAnchorPointIndex_HandlePrev].x = args[2] - args[4];
+						ap.points[PvAnchorPointIndex_HandlePrev].y = args[3] - args[5];
+						gpoint_next = (PvPoint){.x = args[0], .y = args[1]};
+					}else{
 						PvPoint point = pv_anchor_point_get_point(ap_prev);
-						gpoint_next = (PvPoint){args[0] + point.x, args[1] + point.y};
-						ap.points[PvAnchorPointIndex_HandlePrev].x = args[2];
-						ap.points[PvAnchorPointIndex_HandlePrev].y = args[3];
-						ap.points[PvAnchorPointIndex_Point].x += point.x;
-						ap.points[PvAnchorPointIndex_Point].y += point.y;
+
+						ap.points[PvAnchorPointIndex_Point].x += point.x + args[4];
+						ap.points[PvAnchorPointIndex_Point].y += point.y + args[5];
+
+						pv_anchor_point_set_handle(&ap,
+								PvAnchorPointIndex_HandlePrev,
+								(PvPoint){point.x + args[2], point.y + args[3]});
+
+						gpoint_next = (PvPoint){point.x + args[0], point.y + args[1]};
 					}
 
 					pv_anchor_point_set_handle(ap_prev,
