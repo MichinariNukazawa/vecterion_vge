@@ -9,47 +9,6 @@ static void pv_element_anchor_point_init(PvAnchorPoint *ap)
 	*ap = PvAnchorPoint_Default;
 }
 
-static void _pv_svg_fill_double_array(double *dst, double value, int size)
-{
-	for(int i = 0; i < size; i++){
-		dst[i] = value;
-	}
-}
-
-static bool _pv_svg_read_args_from_str(double *args, int num_args, const char **str)
-{
-	const char *p = *str;
-	bool res = true;
-
-	int i = 0;
-	while('\0' != *p){
-		if(',' == *p){
-			p++;
-			continue;
-		}
-		char *next = NULL;
-		const char *str_error = NULL;
-		if(!pv_general_strtod(&args[i], p, &next, &str_error)){
-			res = false;
-			break;
-		}
-		p = next;
-		i++;
-		if(!(i < num_args)){
-			break;
-		}
-	}
-	for(; i < num_args; i++){
-		args[i] = 0;
-	}
-
-	*str = p;
-
-	return res;
-}
-
-
-
 static bool func_fill_set_(
 		PvElement *element,
 		const xmlNodePtr xmlnode,
@@ -182,8 +141,8 @@ static bool func_d_set_inline_(
 	const int num_args = 10;
 	double args[num_args];
 	double prev_args[num_args];
-	_pv_svg_fill_double_array(args, 0, num_args);
-	_pv_svg_fill_double_array(prev_args, 0, num_args);
+	pv_double_array_fill(args, 0, num_args);
+	pv_double_array_fill(prev_args, 0, num_args);
 
 	PvAnchorPoint ap;
 	pv_assert(element);
@@ -199,7 +158,7 @@ static bool func_d_set_inline_(
 			case 'M':
 			case 'L':
 				p++;
-				if(!_pv_svg_read_args_from_str(args, 2, &p)){
+				if(!pv_read_args_from_str(args, 2, &p)){
 					goto failed;
 				}
 				pv_element_anchor_point_init(&ap);
@@ -211,7 +170,7 @@ static bool func_d_set_inline_(
 			case 'l':
 				{
 					p++;
-					if(!_pv_svg_read_args_from_str(args, 2, &p)){
+					if(!pv_read_args_from_str(args, 2, &p)){
 						goto failed;
 					}
 
@@ -242,7 +201,7 @@ static bool func_d_set_inline_(
 				{
 					char command = *p;
 					p++;
-					if(!_pv_svg_read_args_from_str(args, 1, &p)){
+					if(!pv_read_args_from_str(args, 1, &p)){
 						goto failed;
 					}
 
@@ -282,7 +241,7 @@ static bool func_d_set_inline_(
 				{
 					char command = *p;
 					p++;
-					if(!_pv_svg_read_args_from_str(args, 6, &p)){
+					if(!pv_read_args_from_str(args, 6, &p)){
 						goto failed;
 					}
 
@@ -325,7 +284,7 @@ static bool func_d_set_inline_(
 				{
 					char command = *p;
 					p++;
-					if(!_pv_svg_read_args_from_str(args, 4, &p)){
+					if(!pv_read_args_from_str(args, 4, &p)){
 						goto failed;
 					}
 					pv_element_anchor_point_init(&ap);
@@ -419,8 +378,8 @@ static bool func_points_set_inline_(
 	const int num_args = 10;
 	double args[num_args];
 	double prev_args[num_args];
-	_pv_svg_fill_double_array(args, 0, num_args);
-	_pv_svg_fill_double_array(prev_args, 0, num_args);
+	pv_double_array_fill(args, 0, num_args);
+	pv_double_array_fill(prev_args, 0, num_args);
 
 	PvAnchorPoint ap;
 	pv_assert(element);
@@ -431,7 +390,7 @@ static bool func_points_set_inline_(
 
 	const char *p = value;
 	while('\0' != *p){
-		bool is_append = _pv_svg_read_args_from_str(args, 2, &p);
+		bool is_append = pv_read_args_from_str(args, 2, &p);
 		pv_element_anchor_point_init(&ap);
 		ap.points[PvAnchorPointIndex_Point].x = args[0];
 		ap.points[PvAnchorPointIndex_Point].y = args[1];

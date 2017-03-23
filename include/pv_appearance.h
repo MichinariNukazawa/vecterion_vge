@@ -11,7 +11,7 @@
 #include "pv_type.h"
 
 typedef enum{
-	PvAppearanceKind_None,
+	PvAppearanceKind_None = 0,
 	PvAppearanceKind_Translate,
 	PvAppearanceKind_Resize,
 	PvAppearanceKind_Rotate,

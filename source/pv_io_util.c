@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include "pv_error.h"
+#include "pv_general.h"
 
 double pv_io_util_get_double_from_str(const char *str)
 {
@@ -117,5 +118,57 @@ error:
 
 	*ret_color = PvColor_None;
 	return false;
+}
+
+bool pv_read_args_from_str(double *args, int num_args, const char **str)
+{
+	const char *p = *str;
+	bool res = true;
+
+	int i = 0;
+	while('\0' != *p){
+		if(',' == *p){
+			p++;
+			continue;
+		}
+		char *next = NULL;
+		const char *str_error = NULL;
+		if(!pv_general_strtod(&args[i], p, &next, &str_error)){
+			res = false;
+			break;
+		}
+		p = next;
+		i++;
+		if(!(i < num_args)){
+			break;
+		}
+	}
+	for(; i < num_args; i++){
+		args[i] = 0;
+	}
+
+	*str = p;
+
+	return res;
+}
+
+void pv_double_array_fill(double *dst, double value, int size)
+{
+	for(int i = 0; i < size; i++){
+		dst[i] = value;
+	}
+}
+
+void pv_str_maps_free(PvStrMap *map)
+{
+	if(NULL == map){
+		return;
+	}
+
+	for(int i = 0; NULL != map[i].key; i++){
+		free(map[i].key);
+		free(map[i].value);
+	}
+	free(map);
 }
 

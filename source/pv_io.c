@@ -316,32 +316,13 @@ static bool _pv_io_set_vg_from_xmlnode_svg(PvVg *vg, xmlNode *xmlnode_svg)
 	return true;
 }
 
-
-typedef struct{
-	char *key;
-	char *value;
-}PvCssStrMap;
-
-static void _free_css_str_maps(PvCssStrMap *map)
-{
-	if(NULL == map){
-		return;
-	}
-
-	for(int i = 0; NULL != map[i].key; i++){
-		free(map[i].key);
-		free(map[i].value);
-	}
-	free(map);
-}
-
-static PvCssStrMap *_new_css_str_maps_from_str(const char *style_str)
+static PvStrMap *_new_css_str_maps_from_str(const char *style_str)
 {
 	const char *head = style_str;
 
 	int num = 0;
-	PvCssStrMap *map = NULL;
-	map = realloc(map, sizeof(PvCssStrMap) * (num + 1));
+	PvStrMap *map = NULL;
+	map = realloc(map, sizeof(PvStrMap) * (num + 1));
 	map[num - 0].key = NULL;
 	map[num - 0].value = NULL;
 
@@ -354,7 +335,7 @@ static PvCssStrMap *_new_css_str_maps_from_str(const char *style_str)
 		}
 		num++;
 
-		map = realloc(map, sizeof(PvCssStrMap) * (num + 1));
+		map = realloc(map, sizeof(PvStrMap) * (num + 1));
 		pv_assert(map);
 
 		map[num - 0].key = NULL;
@@ -448,7 +429,7 @@ ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, xmlNo
 	xmlFree(xc_stroke_width);
 
 	xmlChar *xc_style = xmlGetProp(xmlnode, BAD_CAST "style");
-	PvCssStrMap *css_str_maps = _new_css_str_maps_from_str((char *)xc_style);
+	PvStrMap *css_str_maps = _new_css_str_maps_from_str((char *)xc_style);
 	for(int i = 0; NULL != css_str_maps[i].key; i++){
 		char *str = g_strdup(css_str_maps[i].value);
 		if(0 == strcmp("fill", css_str_maps[i].key)){
@@ -474,7 +455,7 @@ ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, xmlNo
 		}
 		g_free(str);
 	}
-	_free_css_str_maps(css_str_maps);
+	pv_str_maps_free(css_str_maps);
 	xmlFree(xc_style);
 
 	ConfReadSvg dst_conf = *conf;
@@ -498,6 +479,8 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		pv_error("");
 		goto error;
 	}
+
+	ConfReadSvg conf_save = *conf;
 
 	bool isDoChild = true;
 	PvElement *element_current = svg_info->func_new_element_from_svg(
@@ -528,6 +511,8 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 			}
 		}
 	}
+
+	*conf = conf_save;
 
 	return true;
 error:

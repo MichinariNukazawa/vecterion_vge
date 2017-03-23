@@ -12,15 +12,19 @@
 #include <stdbool.h>
 #include "pv_element_general.h"
 #include "pv_element.h"
+#include "pv_appearance.h"
 
 typedef struct{
 	double stroke_width;
 	PvColorPair color_pair;
+
+	PvAppearance appearances[5];
 }ConfReadSvg;
 
 static const ConfReadSvg ConfReadSvg_Default = {
 	1.0,
 	{ {{{0, 0, 0, 100,}}, {{255, 255, 255, 100,}},}, },
+	{},
 };
 
 /** @brief
@@ -31,7 +35,7 @@ typedef PvElement* (*PvSvgFuncNewElementFromSvg)(
 				xmlNodePtr xmlnode,
 				bool *isDoChild,
 				gpointer data,
-				const ConfReadSvg *conf
+				ConfReadSvg *conf
 				);
 
 typedef struct{
