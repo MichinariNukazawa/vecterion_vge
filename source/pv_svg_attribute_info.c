@@ -1,6 +1,7 @@
 #include "pv_svg_attribute_info.h"
 
 #include <strings.h>
+#include <ctype.h>
 #include "pv_error.h"
 #include "pv_io_util.h"
 
@@ -151,13 +152,49 @@ static bool func_d_set_inline_(
 
 	PvElementCurveData *data = element->data;
 
+	char command_prev = ' '; // intialize character is nothing prev command.
 	const char *p = value;
 	while('\0' != *p){
 		bool is_append = false;
+
+		char command = ' ';
 		switch(*p){
 			case 'M':
 			case 'L':
+			case 'm':
+			case 'l':
+			case 'H':
+			case 'h':
+			case 'V':
+			case 'v':
+			case 'C':
+			case 'c':
+			case 'S':
+			case 's':
+			case 'Z':
+			case 'z':
+				command = *p;
+				command_prev = command;
 				p++;
+				break;
+			default:
+				if(0 != isdigit(*p)){
+					command = command_prev;
+				}else if('.' == *p){ // floating number
+					command = command_prev;
+				}else{
+					p++;
+				}
+				break;
+		}
+
+		if(' ' == command){
+			continue;
+		}
+
+		switch(command){
+			case 'M':
+			case 'L':
 				if(!pv_read_args_from_str(args, 2, &p)){
 					goto failed;
 				}
@@ -169,7 +206,6 @@ static bool func_d_set_inline_(
 			case 'm':
 			case 'l':
 				{
-					p++;
 					if(!pv_read_args_from_str(args, 2, &p)){
 						goto failed;
 					}
@@ -199,8 +235,6 @@ static bool func_d_set_inline_(
 			case 'V':
 			case 'v':
 				{
-					char command = *p;
-					p++;
 					if(!pv_read_args_from_str(args, 1, &p)){
 						goto failed;
 					}
@@ -239,8 +273,6 @@ static bool func_d_set_inline_(
 			case 'C':
 			case 'c':
 				{
-					char command = *p;
-					p++;
 					if(!pv_read_args_from_str(args, 6, &p)){
 						goto failed;
 					}
@@ -282,8 +314,6 @@ static bool func_d_set_inline_(
 			case 'S':
 			case 's':
 				{
-					char command = *p;
-					p++;
 					if(!pv_read_args_from_str(args, 4, &p)){
 						goto failed;
 					}
@@ -318,15 +348,10 @@ static bool func_d_set_inline_(
 				break;
 			case 'Z':
 			case 'z':
-				p++;
 				pv_anchor_path_set_is_close(data->anchor_path, true);
 				break;
-			case ' ':
-			case ',':
-				p++;
-				break;
 			default:
-				p++;
+				pv_abortf("'%c' %td '%s'", command, (p - value), value);
 		}
 
 		if(is_append){
@@ -336,7 +361,7 @@ static bool func_d_set_inline_(
 
 	return true;
 failed:
-	pv_debug("'%s' %td", value, (p - value));
+	pv_debug("%td '%s' '%s'", (p - value), value, p);
 
 	return false;
 }
