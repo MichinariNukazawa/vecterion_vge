@@ -329,18 +329,28 @@ static bool func_d_set_inline_(
 					ap.points[PvAnchorPointIndex_Point].y = args[3];
 					ap.points[PvAnchorPointIndex_HandleNext].x = 0;
 					ap.points[PvAnchorPointIndex_HandleNext].y = 0;
-					if('s' == command){
-						PvPoint point = PvPoint_Default;
-						size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
-						if(0 == num){
-						}else{
-							PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
-									data->anchor_path,
-									(num - 1),
-									PvAnchorPathIndexTurn_Disable);
-							point = pv_anchor_point_get_point(ap_prev);
-						}
 
+					PvPoint point = PvPoint_Default;
+					size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+					if(0 == num){
+						pv_warning("command on top?");
+						goto failed;
+					}else{
+						PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
+								data->anchor_path,
+								(num - 1),
+								PvAnchorPathIndexTurn_Disable);
+						PvPoint handle = pv_anchor_point_get_handle_relate(
+								ap_prev,
+								PvAnchorPointIndex_HandlePrev);
+						pv_anchor_point_set_handle_relate(
+								ap_prev,
+								PvAnchorPointIndex_HandleNext,
+								(PvPoint){-handle.x, -handle.y});
+						point = pv_anchor_point_get_point(ap_prev);
+					}
+
+					if('s' == command){
 						ap.points[PvAnchorPointIndex_Point].x = args[2] + point.x;
 						ap.points[PvAnchorPointIndex_Point].y = args[3] + point.y;
 
