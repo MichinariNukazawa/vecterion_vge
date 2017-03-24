@@ -21,6 +21,7 @@ tags
 /object
 /binary
 /build
+/log
 
 # object files
 *.d
