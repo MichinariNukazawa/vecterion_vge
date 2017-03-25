@@ -37,6 +37,7 @@
 #include "pv_file_format.h"
 #include "et_doc_relation.h"
 #include "et_clipboard_manager.h"
+#include "pv_image_file_read_option.h"
 #include "version.h"
 
 #define VECTERION_FULLNAME "Vecterion Vector Graphic Editor"
@@ -55,7 +56,7 @@ static void _pvui_app_set_style();
 static bool _init_menu(GtkWidget *window, GtkWidget *box_root);
 // static bool _debug_init();
 static EtDocId _open_doc_new(PvVg *pv_src);
-static EtDocId _open_doc_new_from_file(const char* filepath);
+static EtDocId _open_doc_new_from_file(const char* filepath, const PvImageFileReadOption *imageFileReadOption);
 static bool _output_file_from_doc_id(const char *filepath, EtDocId doc_id);
 static bool _output_svg_from_doc_id(const char *filepath, EtDocId doc_id);
 
@@ -121,11 +122,13 @@ static gboolean _cb_delete_event(GtkWidget *widget,
 typedef struct{
 	const char *input_filepath;
 	const char *output_filepath;
+	bool is_strict;
 }EtArgs;
 
 EtArgs EtArgs_Default = {
 	NULL,
 	NULL,
+	false,
 };
 
 static void usage()
@@ -136,7 +139,12 @@ static void usage()
 			" 				default if svg format is extract pvvg structure in memory.\n"
 			" -o output_filepath		output file and exit this app.\n"
 			" 				depend -i option.\n"
-			" 				file format from filename extension.\n",
+			" 				file format from filename extension.\n"
+			" -s				strict mode for input.\n"
+			"				debug.\n"
+			"				depend -i option.\n"
+			" -h				show help.\n"
+			,
 			"vecterion"
 	       );
 	fprintf(stderr, "output_filepath format(extension):\n");
@@ -156,13 +164,16 @@ static bool et_args(EtArgs *args, int argc, char **argv)
 	extern int optind, opterr, optopt;
 
 	int opt;
-	while (-1 != (opt = getopt(argc, argv, "i:o:h"))) {
+	while (-1 != (opt = getopt(argc, argv, "i:o:sh"))) {
 		switch (opt) {
 			case 'i':
 				args->input_filepath = optarg;
 				break;
 			case 'o':
 				args->output_filepath = optarg;
+				break;
+			case 's':
+				args->is_strict = true;
 				break;
 			case 'h':
 				usage();
@@ -175,6 +186,13 @@ static bool et_args(EtArgs *args, int argc, char **argv)
 			default:
 				et_error("");
 				return false;
+		}
+	}
+
+	if(args->is_strict){
+		if(NULL == args->input_filepath){
+			fprintf(stderr, "strict: input_filepath is not exist.\n");
+			return false;
 		}
 	}
 
@@ -251,8 +269,13 @@ int main (int argc, char **argv){
 	EtArgs *args = &args_;
 	if(!et_args(args, argc, argv)){
 		usage();
-		exit(EXIT_SUCCESS);
+		exit(EXIT_FAILURE);
 	}
+
+	static PvImageFileReadOption imageFileReadOption_;
+	static PvImageFileReadOption *imageFileReadOption = &imageFileReadOption_;
+	*imageFileReadOption = PvImageFileReadOption_Default;
+	imageFileReadOption->is_strict = args->is_strict;
 
 	// ** The etaion core modules initialize.
 	EtEtaion *current_state = et_etaion_init();
@@ -454,7 +477,7 @@ int main (int argc, char **argv){
 
 
 	if(NULL != args->input_filepath){
-		EtDocId doc_id = _open_doc_new_from_file(args->input_filepath);
+		EtDocId doc_id = _open_doc_new_from_file(args->input_filepath, imageFileReadOption);
 		if(doc_id < 0){
 			et_error("");
 			fprintf(stderr, "input_filepath can't open. :'%s'\n", args->input_filepath);
@@ -493,7 +516,7 @@ int main (int argc, char **argv){
 	return 0;
 }
 
-static EtDocId _open_doc_new_from_file(const char* filepath)
+static EtDocId _open_doc_new_from_file(const char* filepath, const PvImageFileReadOption *imageFileReadOption)
 {
 	et_debug("filepath:'%s'", (NULL == filepath)? "NULL":filepath);
 
@@ -511,7 +534,7 @@ static EtDocId _open_doc_new_from_file(const char* filepath)
 	PvVg *vg_src = NULL;
 	EtDocId doc_id = -1;
 	if( PvFormatKind_SVG == format->kind){
-		vg_src = pv_io_new_from_file(filepath);
+		vg_src = pv_io_new_from_file(filepath, imageFileReadOption);
 		if(NULL == vg_src){
 			et_error("");
 			return -1;
@@ -957,7 +980,7 @@ static gboolean _cb_menu_file_save_as(gpointer data)
 		_show_error_dialog("Save:'%s'", filepath);
 		goto finally;
 	}
-	EtDocId dst_doc_id = _open_doc_new_from_file(filepath);
+	EtDocId dst_doc_id = _open_doc_new_from_file(filepath, &PvImageFileReadOption_Default);
 	if(dst_doc_id < 0){
 		_show_error_dialog("Save:'%s'", filepath);
 		goto finally;
@@ -1434,7 +1457,7 @@ static gboolean _cb_menu_file_open(gpointer data)
 		char *filename;
 		GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
 		filename = gtk_file_chooser_get_filename (chooser);
-		EtDocId doc_id = _open_doc_new_from_file(filename);
+		EtDocId doc_id = _open_doc_new_from_file(filename, &PvImageFileReadOption_Default);
 		if(doc_id < 0){
 			_show_error_dialog("Open:open error.:'%s'", filename);
 		}

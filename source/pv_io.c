@@ -360,42 +360,42 @@ static PvStrMap *_new_css_str_maps_from_str(const char *style_str)
  * @return match: cstr from g_strdup_*() / not match:NULL
  */
 /*
-static char *_strdup_cssvaluestr(const char *style_str, const char *key_str)
-{
-	const char *head = style_str;
-	while('\0' != *head){
-		char *ret = NULL;
+   static char *_strdup_cssvaluestr(const char *style_str, const char *key_str)
+   {
+   const char *head = style_str;
+   while('\0' != *head){
+   char *ret = NULL;
 
-		char *skey;
-		char *svalue;
-		if(2 == sscanf(head, " %m[^:;] : %m[^;]", &skey, &svalue)){
-			if(0 == strncmp(skey, key_str, strlen(key_str))){
-				ret = g_strdup(svalue);
-			}
+   char *skey;
+   char *svalue;
+   if(2 == sscanf(head, " %m[^:;] : %m[^;]", &skey, &svalue)){
+   if(0 == strncmp(skey, key_str, strlen(key_str))){
+   ret = g_strdup(svalue);
+   }
 
-			free(skey);
-			free(svalue);
-		}
+   free(skey);
+   free(svalue);
+   }
 
-		if(NULL == ret){
-			head = strchr(head, ';');
-			if(NULL == head){
-				return NULL;
-			}
-			if(';' == *head){
-				head++;
-			}
-		}else{
-			return ret;
-		}
-	}
+   if(NULL == ret){
+   head = strchr(head, ';');
+   if(NULL == head){
+   return NULL;
+   }
+   if(';' == *head){
+   head++;
+   }
+   }else{
+   return ret;
+   }
+   }
 
-	return NULL;
-}
-*/
+   return NULL;
+   }
+ */
 
 // PvColorPair _pv_io_get_pv_color_pair_from_xmlnode_simple(const xmlNode *xmlnode)
-ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, xmlNode *xmlnode)
+bool _overwrite_conf_read_svg_from_xmlnode(ConfReadSvg *conf, xmlNode *xmlnode)
 {
 	PvColorPair color_pair = conf->color_pair;
 	double stroke_width = conf->stroke_width;
@@ -452,6 +452,10 @@ ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, xmlNo
 			pv_warning("unknown css style key: '%s'(%d)'%s':'%s'(%d)",
 					(char *)xc_style, xmlnode->line,
 					css_str_maps[i].key, css_str_maps[i].value, i);
+			if(conf->imageFileReadOption->is_strict){
+				pv_error("strict");
+				return false;
+			}
 		}
 		g_free(str);
 	}
@@ -462,7 +466,9 @@ ConfReadSvg _overwrite_conf_read_svg_from_xmlnode(const ConfReadSvg *conf, xmlNo
 	dst_conf.color_pair = color_pair;
 	dst_conf.stroke_width = stroke_width;
 
-	return dst_conf;
+	*conf = dst_conf;
+
+	return true;
 }
 
 static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_parent,
@@ -473,11 +479,11 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 	const PvSvgElementInfo *svg_info = pv_svg_get_svg_element_info_from_tagname((char *)xmlnode->name);
 	if(NULL == svg_info){
 		pv_error("");
-		goto error;
+		goto failed0;
 	}
 	if(NULL == svg_info->func_new_element_from_svg){
 		pv_error("");
-		goto error;
+		goto failed0;
 	}
 
 	ConfReadSvg conf_save = *conf;
@@ -487,7 +493,7 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 			element_parent, xmlnode, &isDoChild, data, conf);
 	if(NULL == element_current){
 		pv_error("");
-		goto error;
+		goto failed0;
 	}
 
 	// element_current->color_pair = _pv_io_get_pv_color_pair_from_xmlnode_simple(xmlnode);
@@ -495,7 +501,10 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		conf->color_pair = PvColorPair_TransparentBlack;
 		conf->stroke_width = 1.0;
 	}
-	*conf = _overwrite_conf_read_svg_from_xmlnode(conf, xmlnode);
+	if(! _overwrite_conf_read_svg_from_xmlnode(conf, xmlnode)){
+		pv_error("");
+		goto failed1;
+	}
 	element_current->color_pair = conf->color_pair;
 	element_current->stroke.width = conf->stroke_width;
 
@@ -507,7 +516,7 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 						conf))
 			{
 				pv_error("");
-				return false;
+				goto failed1;
 			}
 		}
 	}
@@ -515,7 +524,9 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 	*conf = conf_save;
 
 	return true;
-error:
+failed1:
+	pv_element_remove_free_recursive(element_current);
+failed0:
 	return false;
 }
 
@@ -541,7 +552,10 @@ static bool _new_elements_from_svg_elements_recursive(
 	return true;
 }
 
-static PvElement *pv_io_new_element_from_filepath_with_vg_(PvVg *vg, const char *filepath)
+static PvElement *pv_io_new_element_from_filepath_with_vg_(
+		PvVg *vg,
+		const char *filepath,
+		const PvImageFileReadOption *imageFileReadOption)
 {
 	PvElement *top_layer = NULL;
 
@@ -569,6 +583,7 @@ static PvElement *pv_io_new_element_from_filepath_with_vg_(PvVg *vg, const char 
 	PvElement *layer = pv_element_new(PvElementKind_Layer);
 	pv_assert(layer);
 	ConfReadSvg conf = ConfReadSvg_Default;
+	conf.imageFileReadOption = imageFileReadOption;
 	if(!_new_elements_from_svg_elements_recursive(layer, xmlnode_svg, &conf)){
 		pv_error("");
 		goto error;
@@ -591,7 +606,7 @@ error:
 	return top_layer;
 }
 
-PvVg *pv_io_new_from_file(const char *filepath)
+PvVg *pv_io_new_from_file(const char *filepath, const PvImageFileReadOption *imageFileReadOption)
 {
 	if(NULL == filepath){
 		pv_error("");
@@ -604,7 +619,7 @@ PvVg *pv_io_new_from_file(const char *filepath)
 		return NULL;
 	}
 
-	PvElement *layer = pv_io_new_element_from_filepath_with_vg_(vg, filepath);
+	PvElement *layer = pv_io_new_element_from_filepath_with_vg_(vg, filepath, imageFileReadOption);
 	if(NULL == layer){
 		pv_warning("");
 		goto error;
@@ -642,6 +657,6 @@ error:
 
 PvElement *pv_io_new_element_from_filepath(const char *filepath)
 {
-	return pv_io_new_element_from_filepath_with_vg_(NULL, filepath);
+	return pv_io_new_element_from_filepath_with_vg_(NULL, filepath, &PvImageFileReadOption_Default);
 }
 

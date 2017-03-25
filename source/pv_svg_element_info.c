@@ -113,6 +113,10 @@ static PvElement *_pv_svg_g_new_element_from_svg(
 					pv_warning("unknown key: '%s'(%d)'%s':'%s'(%d)",
 							(char *)value, xmlnode->line,
 							transform_str_maps[i].key, transform_str_maps[i].value, i);
+					if(conf->imageFileReadOption->is_strict){
+						pv_error("strict");
+						return NULL;
+					}
 				}
 			}
 			pv_str_maps_free(transform_str_maps);
@@ -160,6 +164,10 @@ static PvElement *_pv_svg_path_new_element_from_svg(
 		}else{
 			pv_warning("Not implement:'%s'(%d) on '%s'",
 					attribute->name, xmlnode->line, xmlnode->name);
+			if(conf->imageFileReadOption->is_strict){
+				pv_error("strict");
+				goto failed;
+			}
 		}
 
 
@@ -277,6 +285,11 @@ static PvElement *_pv_svg_unknown_new_element_from_svg(
 		)
 {
 	pv_warning("Not implement:'%s'(%d)", xmlnode->name, xmlnode->line);
+
+	if(conf->imageFileReadOption->is_strict){
+		pv_error("strict");
+		return NULL;
+	}
 
 	return element_parent;
 }

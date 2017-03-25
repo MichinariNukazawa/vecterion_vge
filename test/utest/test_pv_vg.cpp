@@ -45,7 +45,7 @@ TEST(Test, CopyAndDiff){
 	}
 
 	const char *filepath = "test/utest/image_01.svg";
-	PvVg *vg = pv_io_new_from_file(filepath);
+	PvVg *vg = pv_io_new_from_file(filepath, &PvImageFileReadOption_Default);
 	ASSERT_TRUE(NULL != vg);
 	ASSERT_TRUE(NULL != vg->element_root);
 	ASSERT_TRUE(NULL != vg->element_root->childs[0]);

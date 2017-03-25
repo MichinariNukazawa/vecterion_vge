@@ -12,7 +12,7 @@ TEST(Test, Test){
 #define FILEPATH_SVG "library/23.svg"
 
 TEST(Test, PvIo_Read){
-	PvVg *vg = pv_io_new_from_file(FILEPATH_SVG);
+	PvVg *vg = pv_io_new_from_file(FILEPATH_SVG, &PvImageFileReadOption_Default);
 	ASSERT_TRUE(NULL != vg);
 
 	PvElement *elem = pv_vg_get_layer_top(vg);
