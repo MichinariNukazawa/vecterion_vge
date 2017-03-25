@@ -34,8 +34,9 @@ TEST_COMMAND := true $(foreach TEST_TARGET,$(TEST_TARGETS), && $(TEST_TARGET))
 
 
 
-.PHONY : test argtest_run unittest_run test_clean
-test : unittest_run argtest_run
+.PHONY : test test_clean
+.PHONY : unittest_run argtest_run svg_read_test_run
+test : unittest_run argtest_run svg_read_test_run
 
 $(TEST_OBJECT_DIR)/%.o : $(TEST_SOURCE_DIR)/%.cpp $(GTEST_LIBS)
 	$(MKDIR_P) $(dir $@)
@@ -65,6 +66,11 @@ argtest_run : $(APP_FILE)
 		$(ARGTEST_OUTPUT_BASE)
 	# bash test/argtest.sh $(APP_FILE) library/23.svg $(ARGTEST_OUTPUT_BASE)
 	# bash test/argtest_import_raster.sh $(APP_FILE) test/testdata $(ARGTEST_OUTPUT_BASE)
+
+svg_read_test_run : $(APP_FILE)
+	make install prefix=$(OBJECT_DIR)/install
+	bash test/svg_read_test/svg_read_test.sh \
+		./$(OBJECT_DIR)/install/bin/vecterion_vge
 
 
 test_clean :

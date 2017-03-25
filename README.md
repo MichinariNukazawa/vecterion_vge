@@ -63,6 +63,10 @@ https://github.com/google/googletest
 Make up libgtest.a libgtest_main.a in googletest directory.  
 Need for test.  
 
+### rsvg
+`sudo apt-get install rsvg -y`  
+Need for test.  
+
 # Specification
 
 ## Already implement
