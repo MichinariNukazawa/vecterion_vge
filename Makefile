@@ -77,7 +77,6 @@ $(APP_FILE) : $(OBJECTS)
 		-o $(APP_FILE)
 
 run : $(APP_FILE)
-	$(MKDIR_P) $(OBJECT_DIR)/install
 	make install prefix=$(OBJECT_DIR)/install
 	./$(OBJECT_DIR)/install/bin/vecterion_vge -i ./library/23.svg
 
