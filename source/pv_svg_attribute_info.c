@@ -1059,15 +1059,6 @@ static bool func_transform_set_(
 		const xmlAttr *attribute
 		)
 {
-	if(0 == strcasecmp("svg", (char *)xmlnode->name)){
-		// NOP
-	}else if(0 == strcasecmp("g", (char *)xmlnode->name)){
-		// NOP
-	}else{
-		pv_error("'%s'", attribute->name);
-		return false;
-	}
-
 	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "transform");
 	if(!value){
 		pv_error("");
