@@ -14,6 +14,7 @@
 #include "pv_element.h"
 #include "pv_appearance.h"
 #include "pv_image_file_read_option.h"
+#include "pv_svg_attribute_info.h"
 
 typedef struct{
 	double stroke_width;
@@ -35,15 +36,21 @@ static const ConfReadSvg ConfReadSvg_Default = {
  */
 typedef PvElement* (*PvSvgFuncNewElementFromSvg)(
 				PvElement *element_parent,
+				PvSvgAttributeCache *attribute_cache,
 				xmlNodePtr xmlnode,
 				bool *isDoChild,
 				gpointer data,
 				ConfReadSvg *conf
 				);
+typedef bool (*PvSvgElementFuncSetAttributeCache)(
+				PvElement *element,
+				const PvSvgAttributeCache *attribute_cache
+				);
 
 typedef struct{
 	const char *tagname;
 	PvSvgFuncNewElementFromSvg		func_new_element_from_svg;
+	PvSvgElementFuncSetAttributeCache	func_set_attribute_cache;
 }PvSvgElementInfo;
 
 extern const PvSvgElementInfo _pv_svg_element_infos[];

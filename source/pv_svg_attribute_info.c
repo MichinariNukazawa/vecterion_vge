@@ -1,9 +1,24 @@
 #include "pv_svg_attribute_info.h"
 
+#include <string.h>
 #include <strings.h>
 #include <ctype.h>
 #include "pv_error.h"
+#include "pv_element_info.h"
 #include "pv_io_util.h"
+
+void pv_svg_attribute_cache_init(PvSvgAttributeCache *attribute_cache)
+{
+	pv_assert(attribute_cache);
+
+	const PvSvgAttributeItem PvSvgAttributeItem_Default = {
+		false,
+		0,
+	};
+	for(int i = 0; i < (int)PvSvgAttributeKind_NUM; i++){
+		attribute_cache->attributes[i] = PvSvgAttributeItem_Default;
+	}
+}
 
 static void pv_element_anchor_point_init(PvAnchorPoint *ap)
 {
@@ -12,6 +27,7 @@ static void pv_element_anchor_point_init(PvAnchorPoint *ap)
 
 static bool func_fill_set_(
 		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -39,6 +55,7 @@ failed:
 
 static bool func_stroke_set_(
 		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -66,6 +83,7 @@ failed:
 
 static bool func_stroke_width_set_(
 		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -85,6 +103,7 @@ static bool func_stroke_width_set_(
 
 static bool func_stroke_linecap_set_(
 		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -111,6 +130,7 @@ static bool func_stroke_linecap_set_(
 
 static bool func_stroke_linejoin_set_(
 		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -136,6 +156,7 @@ static bool func_stroke_linejoin_set_(
 
 static bool func_d_set_inline_(
 		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
 		const char *value
 		)
 {
@@ -383,6 +404,7 @@ failed:
 
 static bool func_d_set_(
 		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -403,7 +425,7 @@ static bool func_d_set_(
 		return false;
 	}
 
-	bool ret = func_d_set_inline_(element, (const char *)value);
+	bool ret = func_d_set_inline_(element, attribute_cache, (const char *)value);
 
 	xmlFree(value);
 
@@ -412,6 +434,7 @@ static bool func_d_set_(
 
 static bool func_points_set_inline_(
 		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
 		const char *value
 		)
 {
@@ -450,6 +473,7 @@ static bool func_points_set_inline_(
 
 static bool func_points_set_(
 		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -474,7 +498,7 @@ static bool func_points_set_(
 		return false;
 	}
 
-	bool ret = func_points_set_inline_(element, (const char *)value);
+	bool ret = func_points_set_inline_(element, attribute_cache, (const char *)value);
 
 	xmlFree(value);
 
@@ -483,6 +507,7 @@ static bool func_points_set_(
 
 static bool func_x1_set_(
 		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -528,6 +553,7 @@ static bool func_x1_set_(
 
 static bool func_y1_set_(
 		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -572,6 +598,7 @@ static bool func_y1_set_(
 }
 static bool func_x2_set_(
 		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -616,6 +643,7 @@ static bool func_x2_set_(
 }
 static bool func_y2_set_(
 		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -658,6 +686,259 @@ static bool func_y2_set_(
 
 	return true;
 }
+
+static bool func_xlink_href_set_(
+		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	pv_assert(PvElementKind_Raster == element->kind);
+
+	if(0 == strcasecmp("image", (char *)xmlnode->name)){
+		// NOP
+	}else{
+		pv_error("'%s'", attribute->name);
+		return false;
+	}
+
+	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "href");
+	if(!value){
+		pv_error("");
+		return false;
+	}
+
+	bool res = false;
+
+	PvElementRasterData *data = element->data;
+	if(NULL != data->pixbuf){
+		pv_warning("");
+		goto failed0;
+	}
+
+	char *data_str = (char *)value;
+	if(0 != strncmp("data:", data_str, strlen("data:"))){
+		pv_warning("'%.20s'", data_str);
+		goto failed0;
+	}
+
+	data_str += strlen("data:");
+	char *filetype_str;
+	char *encoding_str;
+	bool is_failed = false;
+	int ret;
+	if(2 != (ret = sscanf(data_str, " image / %m[^;] ; %m[^,] ,", &filetype_str, &encoding_str))){
+		pv_warning("%d, '%.20s'", ret, data_str);
+		is_failed = true;
+	}
+	if(0 != strcmp("base64", encoding_str)){
+		pv_warning("%d '%.20s'", ret, encoding_str);
+		is_failed = true;
+	}
+	pv_debug("'%.20s', '%.20s'", filetype_str, encoding_str);
+	free(filetype_str);
+	free(encoding_str);
+	if(is_failed){
+		goto failed0;
+	}
+
+	data_str = strchr(data_str, ',');
+	if(NULL == data_str){
+		pv_warning("");
+		goto failed0;
+	}
+
+	gsize out_len;
+	guchar *raw_data = g_base64_decode((gchar *)data_str, &out_len);
+	if(NULL == raw_data){
+		pv_warning("");
+		goto failed0;
+	}
+
+	GError *error = NULL;
+	GdkPixbufLoader *loader = gdk_pixbuf_loader_new();
+	if(!gdk_pixbuf_loader_write (loader, raw_data, out_len, &error)){
+		pv_warning("%s", error->message);
+		g_error_free(error);
+		goto failed1;
+	}
+	if(!gdk_pixbuf_loader_close(loader, &error)){
+		pv_warning("%s", error->message);
+		g_error_free(error);
+		goto failed1;
+	}
+
+	data->pixbuf = gdk_pixbuf_copy(gdk_pixbuf_loader_get_pixbuf (loader));
+	if(NULL == data->pixbuf){
+		pv_warning("");
+		goto failed1;
+	}
+
+	data->urischeme_byte_array = g_byte_array_new();
+	pv_assert(data->urischeme_byte_array);
+	g_byte_array_append(data->urischeme_byte_array, (guint8 *)value, strlen((const char *)value) + 1);
+	if(NULL == data->urischeme_byte_array){
+		pv_warning("");
+		goto failed1;
+	}
+
+	attribute_cache->attributes[PvSvgAttributeKind_xlink_href].is_exist = true;
+
+	res = true;
+
+failed1:
+	g_object_unref(loader);
+failed0:
+	xmlFree(value);
+
+	return res;
+}
+
+static bool func_x_set_(
+		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	pv_assert(PvElementKind_Raster == element->kind);
+
+	if(0 == strcasecmp("image", (char *)xmlnode->name)){
+		// NOP
+	}else{
+		pv_error("'%s'", attribute->name);
+		return false;
+	}
+
+	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "x");
+	if(!value){
+		pv_error("");
+		return false;
+	}
+
+	double v = pv_io_util_get_double_from_str((const char *)value);
+
+	if(attribute_cache->attributes[PvSvgAttributeKind_x].is_exist){
+		pv_warning("");
+		return false;
+	}
+	attribute_cache->attributes[PvSvgAttributeKind_x].is_exist = true;
+	attribute_cache->attributes[PvSvgAttributeKind_x].value = v;
+
+	xmlFree(value);
+
+	return true;
+}
+
+static bool func_y_set_(
+		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	pv_assert(PvElementKind_Raster == element->kind);
+
+	if(0 == strcasecmp("image", (char *)xmlnode->name)){
+		// NOP
+	}else{
+		pv_error("'%s'", attribute->name);
+		return false;
+	}
+
+	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "y");
+	if(!value){
+		pv_error("");
+		return false;
+	}
+
+	double v = pv_io_util_get_double_from_str((const char *)value);
+
+	if(attribute_cache->attributes[PvSvgAttributeKind_y].is_exist){
+		pv_warning("");
+		return false;
+	}
+	attribute_cache->attributes[PvSvgAttributeKind_y].is_exist = true;
+	attribute_cache->attributes[PvSvgAttributeKind_y].value = v;
+
+	xmlFree(value);
+
+	return true;
+}
+
+static bool func_width_set_(
+		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	pv_assert(PvElementKind_Raster == element->kind);
+
+	if(0 == strcasecmp("image", (char *)xmlnode->name)){
+		// NOP
+	}else{
+		pv_error("'%s'", attribute->name);
+		return false;
+	}
+
+	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "width");
+	if(!value){
+		pv_error("");
+		return false;
+	}
+
+	double v = pv_io_util_get_double_from_str((const char *)value);
+
+	if(attribute_cache->attributes[PvSvgAttributeKind_width].is_exist){
+		pv_warning("");
+		return false;
+	}
+	attribute_cache->attributes[PvSvgAttributeKind_width].is_exist = true;
+	attribute_cache->attributes[PvSvgAttributeKind_width].value = v;
+
+	xmlFree(value);
+
+	return true;
+}
+
+static bool func_height_set_(
+		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	pv_assert(PvElementKind_Raster == element->kind);
+
+	if(0 == strcasecmp("image", (char *)xmlnode->name)){
+		// NOP
+	}else{
+		pv_error("'%s'", attribute->name);
+		return false;
+	}
+
+	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "height");
+	if(!value){
+		pv_error("");
+		return false;
+	}
+
+	double v = pv_io_util_get_double_from_str((const char *)value);
+
+	if(attribute_cache->attributes[PvSvgAttributeKind_height].is_exist){
+		pv_warning("");
+		return false;
+	}
+	attribute_cache->attributes[PvSvgAttributeKind_height].is_exist = true;
+	attribute_cache->attributes[PvSvgAttributeKind_height].value = v;
+
+	xmlFree(value);
+
+	return true;
+}
+
 
 const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
 	{
@@ -703,6 +984,26 @@ const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
 	{
 		.name = "y2",
 		.pv_svg_attribute_func_set = func_y2_set_,
+	},
+	{
+		.name = "href",
+		.pv_svg_attribute_func_set = func_xlink_href_set_,
+	},
+	{
+		.name = "x",
+		.pv_svg_attribute_func_set = func_x_set_,
+	},
+	{
+		.name = "y",
+		.pv_svg_attribute_func_set = func_y_set_,
+	},
+	{
+		.name = "width",
+		.pv_svg_attribute_func_set = func_width_set_,
+	},
+	{
+		.name = "height",
+		.pv_svg_attribute_func_set = func_height_set_,
 	},
 };
 

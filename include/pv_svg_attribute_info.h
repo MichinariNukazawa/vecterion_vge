@@ -12,11 +12,32 @@
 #include <stdbool.h>
 #include "pv_element.h"
 
+typedef enum{
+	PvSvgAttributeKind_x,
+	PvSvgAttributeKind_y,
+	PvSvgAttributeKind_width,
+	PvSvgAttributeKind_height,
+	PvSvgAttributeKind_xlink_href,
+	PvSvgAttributeKind_NUM,
+}PvSvgAttributeKind;
+
+typedef struct{
+	bool is_exist;
+	double value;
+}PvSvgAttributeItem;
+
+typedef struct{
+	PvSvgAttributeItem attributes[PvSvgAttributeKind_NUM];
+}PvSvgAttributeCache;
+
+void pv_svg_attribute_cache_init(PvSvgAttributeCache *);
+
 typedef bool (*PvSvgAttributeFuncSet)(
-				PvElement *element,
-				const xmlNodePtr xmlnode,
-				const xmlAttr *attribute
-				);
+		PvElement *element,
+		PvSvgAttributeCache *attributeCache,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		);
 
 typedef struct{
 	const char *name;

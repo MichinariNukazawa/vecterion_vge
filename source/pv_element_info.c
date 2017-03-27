@@ -8,6 +8,7 @@
 #include "pv_color.h"
 #include "pv_cairo.h"
 #include "pv_rotate.h"
+#include "pv_urischeme.h"
 
 
 
@@ -33,45 +34,47 @@ static PvRect _get_rect_extent_from_cr(cairo_t *cr)
 
 
 /** @brief write_svg未実装箇所に挿入する */
-static int _func_notimpl_write_svg(
-		InfoTargetSvg *target,
-		const PvElement *element, const ConfWriteSvg *conf)
-{
-	if(NULL == target){
-		pv_bug("");
-		return -1;
-	}
+/*
+   static int _func_notimpl_write_svg(
+   InfoTargetSvg *target,
+   const PvElement *element, const ConfWriteSvg *conf)
+   {
+   if(NULL == target){
+   pv_bug("");
+   return -1;
+   }
 
-	if(NULL == target->xml_parent_node){
-		pv_bug("");
-		return -1;
-	}
+   if(NULL == target->xml_parent_node){
+   pv_bug("");
+   return -1;
+   }
 
-	if(NULL == element){
-		pv_bug("");
-		return -1;
-	}
+   if(NULL == element){
+   pv_bug("");
+   return -1;
+   }
 
-	if(NULL == conf){
-		pv_bug("");
-		return -1;
-	}
+   if(NULL == conf){
+   pv_bug("");
+   return -1;
+   }
 
-	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
-	if(NULL == info){
-		pv_bug("%d", element->kind);
-		return -1;
-	}
+   const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+   if(NULL == info){
+   pv_bug("%d", element->kind);
+   return -1;
+   }
 
-	xmlNodePtr node = NULL;
-	// node = xmlNewNode(NULL, BAD_CAST info->name);
-	node = xmlNewComment(BAD_CAST info->name);
+   xmlNodePtr node = NULL;
+// node = xmlNewNode(NULL, BAD_CAST info->name);
+node = xmlNewComment(BAD_CAST info->name);
 
-	xmlAddChild(target->xml_parent_node, node);
-	target->xml_new_node = node;
+xmlAddChild(target->xml_parent_node, node);
+target->xml_new_node = node;
 
-	return 0;
+return 0;
 }
+ */
 
 static int _func_zero_get_num_anchor_point(
 		const PvElement *element)
@@ -1316,6 +1319,7 @@ static gpointer _func_raster_new_data()
 
 	data->path = NULL;
 	data->pixbuf = NULL;
+	data->urischeme_byte_array = NULL;
 
 	data->raster_appearances = pv_appearance_parray_new_from_num(Num_PvElementRasterAppearance);
 	pv_assert(data->raster_appearances);
@@ -1351,6 +1355,10 @@ static bool _func_raster_free_data(void *_data)
 		g_object_unref(G_OBJECT(data->pixbuf));
 	}
 
+	if(NULL != data->urischeme_byte_array){
+		g_byte_array_unref(data->urischeme_byte_array);
+	}
+
 	pv_appearance_parray_free(data->raster_appearances);
 
 	free(data);
@@ -1378,12 +1386,75 @@ static gpointer _func_raster_copy_new_data(void *_data)
 		g_object_ref(G_OBJECT(new_data->pixbuf));
 	}
 
+	if(NULL != new_data->urischeme_byte_array){
+		g_byte_array_ref(new_data->urischeme_byte_array);
+	}
+
 	if(NULL != data->raster_appearances){
 		new_data->raster_appearances = pv_appearance_parray_copy_new(data->raster_appearances);
 		pv_assert(new_data->raster_appearances);
 	}
 
 	return (gpointer)new_data;
+}
+
+static int _func_raster_write_svg(
+		InfoTargetSvg *target,
+		const PvElement *element, const ConfWriteSvg *conf)
+{
+	pv_assert(target);
+	pv_assert(target->xml_parent_node);
+	pv_assert(element);
+	pv_assert(PvElementKind_Raster == element->kind);
+	pv_assert(conf);
+
+	PvElementRasterData *data = (PvElementRasterData *)element->data;
+
+	if(NULL == data->urischeme_byte_array){
+		if(NULL != data->path){
+			char *urischeme_str = pv_urischeme_get_from_image_filepath(data->path);
+			pv_assert(urischeme_str);
+			data->urischeme_byte_array = g_byte_array_new();
+			pv_assert(data->urischeme_byte_array);
+			g_byte_array_append(data->urischeme_byte_array, (guint8 *)urischeme_str, strlen(urischeme_str) + 1);
+			g_free(urischeme_str);
+		}
+	}
+	if(NULL == data->urischeme_byte_array){
+		if(NULL != data->pixbuf){
+			// not implement.
+		}
+	}
+
+	if(NULL == data->urischeme_byte_array){
+		pv_error("");
+		return -1;
+	}
+
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	pv_assert(info);
+	PvRect rect = info->func_get_rect_by_anchor_points(element);
+	char *x_str = g_strdup_printf("%.6f", rect.x);
+	char *y_str = g_strdup_printf("%.6f", rect.y);
+	char *w_str = g_strdup_printf("%.6f", rect.w);
+	char *h_str = g_strdup_printf("%.6f", rect.h);
+
+	xmlNodePtr node = xmlNewNode(NULL, BAD_CAST "image");
+	pv_assert(node);
+
+	xmlNewProp(node, BAD_CAST "xlink:href", BAD_CAST data->urischeme_byte_array->data);
+	xmlNewProp(node, BAD_CAST "x", BAD_CAST x_str);
+	xmlNewProp(node, BAD_CAST "y", BAD_CAST y_str);
+	xmlNewProp(node, BAD_CAST "width", BAD_CAST w_str);
+	xmlNewProp(node, BAD_CAST "height", BAD_CAST h_str);
+	xmlAddChild(target->xml_parent_node, node);
+
+	g_free(x_str);
+	g_free(y_str);
+	g_free(w_str);
+	g_free(h_str);
+
+	return 0;
 }
 
 static void _func_raster_apply_appearances(
@@ -1729,6 +1800,11 @@ static PvRect _func_raster_get_rect_by_anchor_points(
 	PvElementRasterData *data = element->data;
 	assert(data);
 
+	if(NULL == data->pixbuf){
+		pv_warning("");
+		return PvRect_Default;
+	}
+
 	PvPoint position = data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move;
 	PvPoint resize = data->raster_appearances[PvElementRasterAppearanceIndex_Resize]->resize.resize;
 
@@ -1761,6 +1837,11 @@ static bool _func_raster_set_rect_by_anchor_points(
 
 	PvElementRasterData *data = element->data;
 	assert(data);
+
+	if(NULL == data->pixbuf){
+		pv_warning("");
+		return false;
+	}
 
 	PvRect src_rect = _func_raster_get_rect_by_anchor_points(element);
 
@@ -1932,7 +2013,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_new_data				= _func_raster_new_data,
 		.func_free_data				= _func_raster_free_data,
 		.func_copy_new_data			= _func_raster_copy_new_data,
-		.func_write_svg				= _func_notimpl_write_svg,
+		.func_write_svg				= _func_raster_write_svg,
 		.func_draw				= _func_raster_draw,
 		.func_draw_focusing			= _func_raster_draw_focusing,
 		.func_is_touch_element			= _func_raster_is_touch_element,

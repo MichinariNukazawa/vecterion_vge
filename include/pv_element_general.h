@@ -53,8 +53,9 @@ typedef struct PvElementRasterData PvElementRasterData;
 struct PvElementRasterData{
 	PvAnchorPath *anchor_path;
 
-	char *path;
-	GdkPixbuf *pixbuf;
+	char		*path;
+	GdkPixbuf	*pixbuf;
+	GByteArray	*urischeme_byte_array;
 
 	// default payload appearances (void **) type is easy access
 	PvAppearance **raster_appearances;

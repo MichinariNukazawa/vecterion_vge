@@ -141,6 +141,8 @@ bool pv_io_write_file_svg_from_vg(PvVg *vg, const char *path)
 			BAD_CAST "http://www.w3.org/2000/svg");
 	xmlNewProp(root_node, BAD_CAST "xmlns:inkscape",
 			BAD_CAST "http://www.inkscape.org/namespaces/inkscape");
+	xmlNewProp(root_node, BAD_CAST "xmlns:xlink",
+			BAD_CAST "http://www.w3.org/1999/xlink");
 	xmlDocSetRootElement(doc, root_node);
 
 	// ** width, height
@@ -488,13 +490,48 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 
 	ConfReadSvg conf_save = *conf;
 
+	PvSvgAttributeCache attribute_cache;
+	pv_svg_attribute_cache_init(&attribute_cache);
+
 	bool isDoChild = true;
 	PvElement *element_current = svg_info->func_new_element_from_svg(
-			element_parent, xmlnode, &isDoChild, data, conf);
+			element_parent,
+			&attribute_cache,
+			xmlnode,
+			&isDoChild,
+			data,
+			conf);
 	if(NULL == element_current){
 		pv_error("");
 		goto failed0;
 	}
+
+	if(PvElementKind_Raster == element_current->kind){
+		if(!attribute_cache.attributes[PvSvgAttributeKind_xlink_href].is_exist){
+			if(conf->imageFileReadOption->is_strict){
+				pv_error("strict");
+				goto failed1;
+			}
+			pv_warning("remove empty image element by vecterion.");
+			pv_element_remove_free_recursive(element_current);
+			goto skiped;
+		}
+	}
+
+	bool ret = svg_info->func_set_attribute_cache(element_current, &attribute_cache);
+	if(!ret){
+		pv_warning("%d %s(%d)", ret, (char *)xmlnode->name, xmlnode->line);
+		if(conf->imageFileReadOption->is_strict){
+			pv_error("strict");
+			goto failed1;
+		}
+	}
+
+	const PvElementInfo *info = pv_element_get_info_from_kind(element_current->kind);
+	pv_assert(info);
+	PvAppearance *a[2] = {NULL, NULL};
+	a[0] = &(conf->appearances[1]);
+	info->func_apply_appearances(element_current, a);
 
 	// element_current->color_pair = _pv_io_get_pv_color_pair_from_xmlnode_simple(xmlnode);
 	if(0 == strcmp("g", svg_info->tagname)){
@@ -521,6 +558,7 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		}
 	}
 
+skiped:
 	*conf = conf_save;
 
 	return true;

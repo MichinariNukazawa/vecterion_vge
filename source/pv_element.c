@@ -4,6 +4,7 @@
 #include <string.h>
 #include "pv_error.h"
 #include "pv_element_info.h"
+#include "pv_urischeme.h"
 
 static bool _pv_element_free_single(PvElement *self);
 
@@ -845,6 +846,16 @@ static bool pv_element_raster_read_file(PvElement *self, const char *path)
 	if(NULL == data->pixbuf){
 		pv_warning("%s\n", data->path);
 		return false;
+	}
+
+	char *urischeme_str = pv_urischeme_get_from_image_filepath(data->path);
+	pv_assert(urischeme_str);
+	pv_debug("'%.20s'", urischeme_str);
+	data->urischeme_byte_array = g_byte_array_new();
+	pv_assert(data->urischeme_byte_array);
+	g_byte_array_append(data->urischeme_byte_array, (guint8 *)urischeme_str, strlen(urischeme_str) + 1);
+	if(NULL == data->urischeme_byte_array){
+		pv_warning("'%s'", data->path);
 	}
 
 	return true;
