@@ -70,9 +70,9 @@ argtest_run : $(APP_FILE)
 
 svg_read_test_run : $(APP_FILE)
 	make install prefix=$(OBJECT_DIR)/install
-	bash test/svg_read_test/svg_read_test.sh \
-		./$(OBJECT_DIR)/install/bin/vecterion_vge
 	bash test/svg_read_test/svg_read_invalid_test.sh \
+		./$(OBJECT_DIR)/install/bin/vecterion_vge
+	bash test/svg_read_test/svg_read_test.sh \
 		./$(OBJECT_DIR)/install/bin/vecterion_vge
 
 
