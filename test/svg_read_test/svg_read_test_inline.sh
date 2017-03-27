@@ -28,11 +28,15 @@ mkdir -p ${LOG_DIR}
 rsvg ${SOURCE_SVG_FILE} ${LOG_DIR}/${NAME}_rsvg.png
 
 # raster output(png)
-${VECTERION} -s -i ${SOURCE_SVG_FILE} -o ${LOG_DIR}/${NAME}_vecterion.png > /dev/null
+${VECTERION} -s -i ${SOURCE_SVG_FILE} -o ${LOG_DIR}/${NAME}_vecterion.png >> ${LOG_DIR}/log_.log
 compare -verbose -metric AE ${LOG_DIR}/${NAME}_rsvg.png ${LOG_DIR}/${NAME}_vecterion.png ${LOG_DIR}/${NAME}_diff_AE_png.png
 
 # vector output(svg)
-${VECTERION} -s -i ${SOURCE_SVG_FILE} -o ${LOG_DIR}/${NAME}_vecterion.svg > /dev/null
+${VECTERION} -s -i ${SOURCE_SVG_FILE} -o ${LOG_DIR}/${NAME}_vecterion.svg >> ${LOG_DIR}/log_.log
 rsvg ${LOG_DIR}/${NAME}_vecterion.svg ${LOG_DIR}/${NAME}_vecterion_rsvg.png
 compare -verbose -metric AE ${LOG_DIR}/${NAME}_rsvg.png ${LOG_DIR}/${NAME}_vecterion_rsvg.png ${LOG_DIR}/${NAME}_diff_AE_svg.png
+
+# vector re input(svg)
+${VECTERION} -s -i ${LOG_DIR}/${NAME}_vecterion.svg -o ${LOG_DIR}/${NAME}_vecterion_vecterion.png >> ${LOG_DIR}/log_.log
+compare -verbose -metric AE ${LOG_DIR}/${NAME}_rsvg.png ${LOG_DIR}/${NAME}_vecterion_vecterion.png ${LOG_DIR}/${NAME}_diff_AE_svg_svg.png
 

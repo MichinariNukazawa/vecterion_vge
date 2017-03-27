@@ -30,7 +30,7 @@ TEST_BINS		:= $(TEST_OBJECTS:.o=.exe)
 TEST_TARGETS		:= $(TEST_BINS)
 
 TEST_O_OBJECTS		:= $(filter-out $(OBJECT_DIR)/main.o,$(OBJECTS))
-TEST_COMMAND := true $(foreach TEST_TARGET,$(TEST_TARGETS), && $(TEST_TARGET))
+TEST_COMMAND := true $(foreach TEST_TARGET,$(TEST_TARGETS), && echo "$(TEST_TARGET)" && $(TEST_TARGET))
 
 
 
