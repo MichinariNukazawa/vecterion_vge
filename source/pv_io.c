@@ -478,15 +478,16 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		gpointer data,
 		PvSvgReadConf *conf)
 {
-	const PvSvgElementInfo *svg_info = pv_svg_get_svg_element_info_from_tagname((char *)xmlnode->name);
-	if(NULL == svg_info){
-		pv_error("");
-		goto failed0;
+	const PvSvgElementInfo *svg_element_info = pv_svg_get_svg_element_info_from_tagname((char *)xmlnode->name);
+	if(NULL == svg_element_info){
+		pv_warning("Not implement:'%s'(%d)",
+				xmlnode->name, xmlnode->line);
+		if(conf->imageFileReadOption->is_strict){
+			goto failed0;
+		}
+		goto skiped;
 	}
-	if(NULL == svg_info->func_new_element_from_svg){
-		pv_error("");
-		goto failed0;
-	}
+	pv_assertf(svg_element_info->func_new_element_from_svg, "'%s'", (char *)xmlnode->name);
 
 	PvSvgReadConf conf_save = *conf;
 
@@ -495,7 +496,7 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 	pv_svg_attribute_cache_init(attribute_cache);
 
 	bool isDoChild = true;
-	PvElement *element_current = svg_info->func_new_element_from_svg(
+	PvElement *element_current = svg_element_info->func_new_element_from_svg(
 			element_parent,
 			attribute_cache,
 			xmlnode,
@@ -544,7 +545,7 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		}
 	}
 
-	bool ret = svg_info->func_set_attribute_cache(element_current, attribute_cache);
+	bool ret = svg_element_info->func_set_attribute_cache(element_current, attribute_cache);
 	if(!ret){
 		pv_warning("%d %s(%d)", ret, (char *)xmlnode->name, xmlnode->line);
 		if(conf->imageFileReadOption->is_strict){
@@ -560,7 +561,7 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 	info->func_apply_appearances(element_current, a);
 
 	// element_current->color_pair = _pv_io_get_pv_color_pair_from_xmlnode_simple(xmlnode);
-	if(0 == strcmp("g", svg_info->tagname)){
+	if(0 == strcmp("g", svg_element_info->tagname)){
 		conf->color_pair = PvColorPair_TransparentBlack;
 		conf->stroke_width = 1.0;
 	}

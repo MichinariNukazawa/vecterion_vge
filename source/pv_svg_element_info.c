@@ -243,24 +243,6 @@ static PvElement *_pv_svg_text_new_element_from_svg(
 	return element_parent;
 }
 
-static PvElement *_pv_svg_unknown_new_element_from_svg(
-		PvElement *element_parent,
-		PvSvgAttributeCache *attribute_cache,
-		xmlNodePtr xmlnode,
-		bool *isDoChild,
-		gpointer data,
-		PvSvgReadConf *conf
-		)
-{
-	pv_warning("Not implement:'%s'(%d)", xmlnode->name, xmlnode->line);
-
-	if(conf->imageFileReadOption->is_strict){
-		pv_error("strict");
-		return NULL;
-	}
-
-	return element_parent;
-}
 
 const PvSvgElementInfo _pv_svg_element_infos[] = {
 	{
@@ -303,12 +285,6 @@ const PvSvgElementInfo _pv_svg_element_infos[] = {
 		.func_new_element_from_svg	= _pv_svg_text_new_element_from_svg,
 		.func_set_attribute_cache	= func_nop_set_attribute_cache_,
 	},
-	/* Unknown (or not implement) tag */
-	{
-		.tagname = "==tag-unknown==",
-		.func_new_element_from_svg	= _pv_svg_unknown_new_element_from_svg,
-		.func_set_attribute_cache	= func_nop_set_attribute_cache_,
-	},
 };
 
 
@@ -322,6 +298,6 @@ const PvSvgElementInfo *pv_svg_get_svg_element_info_from_tagname(const char *tag
 		}
 	}
 
-	return &_pv_svg_element_infos[num - 1];
+	return NULL;
 }
 

@@ -578,12 +578,15 @@ static bool func_x1_set_(
 		const xmlAttr *attribute
 		)
 {
-	pv_assert(PvElementKind_Curve == element->kind);
-
 	if(0 == strcasecmp("line", (char *)xmlnode->name)){
 		// NOP
 	}else{
 		pv_error("'%s'", attribute->name);
+		return false;
+	}
+
+	if(PvElementKind_Curve == element->kind){
+		pv_error("%d '%s'", element->kind, attribute->name);
 		return false;
 	}
 
@@ -625,12 +628,15 @@ static bool func_y1_set_(
 		const xmlAttr *attribute
 		)
 {
-	pv_assert(PvElementKind_Curve == element->kind);
-
 	if(0 == strcasecmp("line", (char *)xmlnode->name)){
 		// NOP
 	}else{
 		pv_error("'%s'", attribute->name);
+		return false;
+	}
+
+	if(PvElementKind_Curve == element->kind){
+		pv_error("%d '%s'", element->kind, attribute->name);
 		return false;
 	}
 
@@ -671,12 +677,15 @@ static bool func_x2_set_(
 		const xmlAttr *attribute
 		)
 {
-	pv_assert(PvElementKind_Curve == element->kind);
-
 	if(0 == strcasecmp("line", (char *)xmlnode->name)){
 		// NOP
 	}else{
 		pv_error("'%s'", attribute->name);
+		return false;
+	}
+
+	if(PvElementKind_Curve == element->kind){
+		pv_error("%d '%s'", element->kind, attribute->name);
 		return false;
 	}
 
@@ -717,12 +726,15 @@ static bool func_y2_set_(
 		const xmlAttr *attribute
 		)
 {
-	pv_assert(PvElementKind_Curve == element->kind);
-
 	if(0 == strcasecmp("line", (char *)xmlnode->name)){
 		// NOP
 	}else{
 		pv_error("'%s'", attribute->name);
+		return false;
+	}
+
+	if(PvElementKind_Curve == element->kind){
+		pv_error("%d '%s'", element->kind, attribute->name);
 		return false;
 	}
 
