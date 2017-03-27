@@ -40,7 +40,7 @@ function svg_read_test(){
 	bash ${SCRIPT_DIR}/svg_read_test_inline.sh ${VECTERION} ${LOG_DIR} ${1}
 }
 
-for SOURCE_SVG_FILE in $(find ${DATA_DIR} -name *svg) ; do
+for SOURCE_SVG_FILE in $(find ${DATA_DIR} -name '*svg') ; do
 	svg_read_test ${SOURCE_SVG_FILE}
 done
 
