@@ -12,47 +12,10 @@ static PvElement *_pv_svg_svg_new_element_from_svg(
 		xmlNodePtr xmlnode,
 		bool *isDoChild,
 		gpointer data,
-		ConfReadSvg *conf
+		PvSvgReadConf *conf
 		)
 {
 	return element_parent;
-}
-
-static PvStrMap *new_transform_str_maps_from_str_(const char *src_str)
-{
-	const char *head = src_str;
-
-	int num = 0;
-	PvStrMap *map = NULL;
-	map = realloc(map, sizeof(PvStrMap) * (num + 1));
-	map[num - 0].key = NULL;
-	map[num - 0].value = NULL;
-
-	while(NULL != head && '\0' != *head){
-
-		char *skey;
-		char *svalue;
-		if(2 != sscanf(head, " %m[^(] ( %m[^)] )", &skey, &svalue)){
-			break;
-		}
-		num++;
-
-		map = realloc(map, sizeof(PvStrMap) * (num + 1));
-		pv_assert(map);
-
-		map[num - 0].key = NULL;
-		map[num - 0].value = NULL;
-		map[num - 1].key = skey;
-		map[num - 1].value = svalue;
-
-		head = svalue;
-		while('\0' == *head
-				|| ',' == *head){
-			head++;
-		}
-	}
-
-	return map;
 }
 
 static bool func_nop_set_attribute_cache_(
@@ -74,71 +37,10 @@ static PvElement *_pv_svg_g_new_element_from_svg(
 		xmlNodePtr xmlnode,
 		bool *isDoChild,
 		gpointer data,
-		ConfReadSvg *conf
+		PvSvgReadConf *conf
 		)
 {
-	// ** is exist groupmode=layer
-	PvElementKind kind = PvElementKind_Group;
-	{
-		xmlChar *value = NULL;
-		/*
-		   value = xmlGetNsProp(xmlnode,"groupmode",
-		   "http://www.inkscape.org/namespaces/inkscape");
-		   if(NULL == value){
-		   value = xmlGetProp(xmlnode,"inkscape:groupmode");
-		   }
-		 */
-		if(NULL == value){
-			value = xmlGetProp(xmlnode, BAD_CAST "groupmode");
-		}
-		if(NULL != value){
-			if(0 == strcasecmp("layer", (char*)value)){
-				kind = PvElementKind_Layer;
-			}
-		}
-		xmlFree(value);
-	}
-	{
-		xmlChar *value = NULL;
-		value = xmlGetProp(xmlnode, BAD_CAST "transform");
-
-		if(NULL != value){
-			PvStrMap *transform_str_maps = new_transform_str_maps_from_str_((const char *)value);
-			for(int i = 0; NULL != transform_str_maps[i].key; i++){
-				if(0 == strcmp("translate", transform_str_maps[i].key)){
-
-					const int num_args = 10;
-					double args[num_args];
-					pv_double_array_fill(args, 0, num_args);
-					const char *p = transform_str_maps[i].value;
-					if(!pv_read_args_from_str(args, 2, &p)){
-						pv_warning("'%s','%s'", transform_str_maps[i].key, transform_str_maps[i].value);
-					}else{
-						conf->appearances[PvAppearanceKind_Translate].kind = PvAppearanceKind_Translate;
-						PvAppearanceTranslateData *translate
-							= &(conf->appearances[PvAppearanceKind_Translate].translate);
-						translate->move = pv_point_add(translate->move, (PvPoint){args[0], args[1]});
-
-						pv_debug("translate:'%s',(%f,%f),(%f,%f)",
-								transform_str_maps[i].key, args[0], args[1],
-								translate->move.x, translate->move.y);
-					}
-				}else{
-					pv_warning("unknown key: '%s'(%d)'%s':'%s'(%d)",
-							(char *)value, xmlnode->line,
-							transform_str_maps[i].key, transform_str_maps[i].value, i);
-					if(conf->imageFileReadOption->is_strict){
-						pv_error("strict");
-						return NULL;
-					}
-				}
-			}
-			pv_str_maps_free(transform_str_maps);
-		}
-		xmlFree(value);
-	}
-
-	PvElement *element_new = pv_element_new(kind);
+	PvElement *element_new = pv_element_new(PvElementKind_Group);
 	if(NULL == element_new){
 		pv_error("");
 		return NULL;
@@ -157,7 +59,7 @@ static PvElement *_pv_svg_path_new_element_from_svg(
 		xmlNodePtr xmlnode,
 		bool *isDoChild,
 		gpointer data,
-		ConfReadSvg *conf
+		PvSvgReadConf *conf
 		)
 {
 	PvElement *element_new = pv_element_new(PvElementKind_Curve);
@@ -165,31 +67,6 @@ static PvElement *_pv_svg_path_new_element_from_svg(
 		pv_error("");
 		return NULL;
 	}
-
-	xmlAttr* attribute = xmlnode->properties;
-	while(attribute){
-		const PvSvgAttributeInfo *info = pv_svg_get_svg_attribute_info_from_name((const char *)attribute->name);
-
-		if(info){
-			bool ret = info->pv_svg_attribute_func_set(element_new, attribute_cache, xmlnode, attribute);
-			if(!ret){
-				pv_warning("'%s'(%d) on '%s'",
-						attribute->name, xmlnode->line, xmlnode->name);
-			}
-		}else{
-			pv_warning("Not implement:'%s'(%d) on '%s'",
-					attribute->name, xmlnode->line, xmlnode->name);
-			if(conf->imageFileReadOption->is_strict){
-				pv_error("strict");
-				goto failed;
-			}
-		}
-
-
-		attribute = attribute->next;
-	}
-
-	// pv_element_debug_print(element_new);
 
 	if(!pv_element_append_child(element_parent, NULL, element_new)){
 		pv_error("");
@@ -210,7 +87,7 @@ static PvElement *_pv_svg_polygon_new_element_from_svg(
 		xmlNodePtr xmlnode,
 		bool *isDoChild,
 		gpointer data,
-		ConfReadSvg *conf
+		PvSvgReadConf *conf
 		)
 {
 	PvElement *element = _pv_svg_path_new_element_from_svg(
@@ -235,7 +112,7 @@ static PvElement *_pv_svg_polyline_new_element_from_svg(
 		xmlNodePtr xmlnode,
 		bool *isDoChild,
 		gpointer data,
-		ConfReadSvg *conf
+		PvSvgReadConf *conf
 		)
 {
 	PvElement *element = _pv_svg_path_new_element_from_svg(
@@ -260,7 +137,7 @@ static PvElement *_pv_svg_line_new_element_from_svg(
 		xmlNodePtr xmlnode,
 		bool *isDoChild,
 		gpointer data,
-		ConfReadSvg *conf
+		PvSvgReadConf *conf
 		)
 {
 	PvElement *element = _pv_svg_path_new_element_from_svg(
@@ -285,35 +162,13 @@ static PvElement *_pv_svg_image_new_element_from_svg(
 		xmlNodePtr xmlnode,
 		bool *isDoChild,
 		gpointer data,
-		ConfReadSvg *conf
+		PvSvgReadConf *conf
 		)
 {
 	PvElement *element_new = pv_element_new(PvElementKind_Raster);
 	if(NULL == element_new){
 		pv_error("");
 		return NULL;
-	}
-
-	xmlAttr* attribute = xmlnode->properties;
-	while(attribute){
-		const PvSvgAttributeInfo *info = pv_svg_get_svg_attribute_info_from_name((const char *)attribute->name);
-
-		if(info){
-			bool ret = info->pv_svg_attribute_func_set(element_new, attribute_cache, xmlnode, attribute);
-			if(!ret){
-				pv_warning("'%s'(%d) on '%s'",
-						attribute->name, xmlnode->line, xmlnode->name);
-			}
-		}else{
-			pv_warning("Not implement:'%s'(%d) on '%s'",
-					attribute->name, xmlnode->line, xmlnode->name);
-			if(conf->imageFileReadOption->is_strict){
-				pv_error("strict");
-				goto failed;
-			}
-		}
-
-		attribute = attribute->next;
 	}
 
 	if(!pv_element_append_child(element_parent, NULL, element_new)){
@@ -381,7 +236,7 @@ static PvElement *_pv_svg_text_new_element_from_svg(
 		xmlNodePtr xmlnode,
 		bool *isDoChild,
 		gpointer data,
-		ConfReadSvg *conf
+		PvSvgReadConf *conf
 		)
 {
 	// nop
@@ -394,7 +249,7 @@ static PvElement *_pv_svg_unknown_new_element_from_svg(
 		xmlNodePtr xmlnode,
 		bool *isDoChild,
 		gpointer data,
-		ConfReadSvg *conf
+		PvSvgReadConf *conf
 		)
 {
 	pv_warning("Not implement:'%s'(%d)", xmlnode->name, xmlnode->line);

@@ -397,7 +397,7 @@ static PvStrMap *_new_css_str_maps_from_str(const char *style_str)
  */
 
 // PvColorPair _pv_io_get_pv_color_pair_from_xmlnode_simple(const xmlNode *xmlnode)
-bool _overwrite_conf_read_svg_from_xmlnode(ConfReadSvg *conf, xmlNode *xmlnode)
+bool _overwrite_conf_read_svg_from_xmlnode(PvSvgReadConf *conf, xmlNode *xmlnode)
 {
 	PvColorPair color_pair = conf->color_pair;
 	double stroke_width = conf->stroke_width;
@@ -464,7 +464,7 @@ bool _overwrite_conf_read_svg_from_xmlnode(ConfReadSvg *conf, xmlNode *xmlnode)
 	pv_str_maps_free(css_str_maps);
 	xmlFree(xc_style);
 
-	ConfReadSvg dst_conf = *conf;
+	PvSvgReadConf dst_conf = *conf;
 	dst_conf.color_pair = color_pair;
 	dst_conf.stroke_width = stroke_width;
 
@@ -476,7 +476,7 @@ bool _overwrite_conf_read_svg_from_xmlnode(ConfReadSvg *conf, xmlNode *xmlnode)
 static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_parent,
 		xmlNode *xmlnode,
 		gpointer data,
-		ConfReadSvg *conf)
+		PvSvgReadConf *conf)
 {
 	const PvSvgElementInfo *svg_info = pv_svg_get_svg_element_info_from_tagname((char *)xmlnode->name);
 	if(NULL == svg_info){
@@ -488,15 +488,16 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		goto failed0;
 	}
 
-	ConfReadSvg conf_save = *conf;
+	PvSvgReadConf conf_save = *conf;
 
-	PvSvgAttributeCache attribute_cache;
-	pv_svg_attribute_cache_init(&attribute_cache);
+	PvSvgAttributeCache attribute_cache_;
+	PvSvgAttributeCache *attribute_cache = &attribute_cache_;
+	pv_svg_attribute_cache_init(attribute_cache);
 
 	bool isDoChild = true;
 	PvElement *element_current = svg_info->func_new_element_from_svg(
 			element_parent,
-			&attribute_cache,
+			attribute_cache,
 			xmlnode,
 			&isDoChild,
 			data,
@@ -506,8 +507,33 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		goto failed0;
 	}
 
+	{
+		xmlAttr* attribute = xmlnode->properties;
+		while(attribute){
+			const PvSvgAttributeInfo *info = pv_svg_get_svg_attribute_info_from_name((const char *)attribute->name);
+
+			if(info){
+				bool ret = info->pv_svg_attribute_func_set(
+						element_current, attribute_cache, conf, xmlnode, attribute);
+				if(!ret){
+					pv_warning("'%s'(%d) on '%s'",
+							attribute->name, xmlnode->line, xmlnode->name);
+				}
+			}else{
+				pv_warning("Not implement:'%s'(%d) on '%s'",
+						attribute->name, xmlnode->line, xmlnode->name);
+				if(conf->imageFileReadOption->is_strict){
+					pv_error("strict");
+					goto failed1;
+				}
+			}
+
+			attribute = attribute->next;
+		}
+	}
+
 	if(PvElementKind_Raster == element_current->kind){
-		if(!attribute_cache.attributes[PvSvgAttributeKind_xlink_href].is_exist){
+		if(!attribute_cache->attributes[PvSvgAttributeKind_xlink_href].is_exist){
 			if(conf->imageFileReadOption->is_strict){
 				pv_error("strict");
 				goto failed1;
@@ -518,7 +544,7 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		}
 	}
 
-	bool ret = svg_info->func_set_attribute_cache(element_current, &attribute_cache);
+	bool ret = svg_info->func_set_attribute_cache(element_current, attribute_cache);
 	if(!ret){
 		pv_warning("%d %s(%d)", ret, (char *)xmlnode->name, xmlnode->line);
 		if(conf->imageFileReadOption->is_strict){
@@ -571,7 +597,7 @@ failed0:
 static bool _new_elements_from_svg_elements_recursive(
 		PvElement *parent_element,
 		xmlNodePtr xml_svg, 
-		ConfReadSvg *conf)
+		PvSvgReadConf *conf)
 {
 	pv_assert(parent_element);
 	pv_assert(xml_svg);
@@ -620,7 +646,7 @@ static PvElement *pv_io_new_element_from_filepath_with_vg_(
 
 	PvElement *layer = pv_element_new(PvElementKind_Layer);
 	pv_assert(layer);
-	ConfReadSvg conf = ConfReadSvg_Default;
+	PvSvgReadConf conf = PvSvgReadConf_Default;
 	conf.imageFileReadOption = imageFileReadOption;
 	if(!_new_elements_from_svg_elements_recursive(layer, xmlnode_svg, &conf)){
 		pv_error("");

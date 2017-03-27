@@ -11,6 +11,22 @@
 #include <libxml/xmlwriter.h>
 #include <stdbool.h>
 #include "pv_element.h"
+#include "pv_image_file_read_option.h"
+
+typedef struct{
+	double stroke_width;
+	PvColorPair color_pair;
+
+	PvAppearance appearances[5];
+	const PvImageFileReadOption *imageFileReadOption;
+}PvSvgReadConf;
+
+static const PvSvgReadConf PvSvgReadConf_Default = {
+	1.0,
+	{ {{{0, 0, 0, 100,}}, {{255, 255, 255, 100,}},}, },
+	{},
+	&PvImageFileReadOption_Default,
+};
 
 typedef enum{
 	PvSvgAttributeKind_x,
@@ -35,6 +51,7 @@ void pv_svg_attribute_cache_init(PvSvgAttributeCache *);
 typedef bool (*PvSvgAttributeFuncSet)(
 		PvElement *element,
 		PvSvgAttributeCache *attributeCache,
+		PvSvgReadConf *conf,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		);
