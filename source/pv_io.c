@@ -482,6 +482,9 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 	if(NULL == svg_element_info){
 		pv_warning("Not implement:'%s'(%d)",
 				xmlnode->name, xmlnode->line);
+		if(0 == strcmp("comment", (char *)xmlnode->name)){
+			return true;
+		}
 		if(conf->imageFileReadOption->is_strict){
 			goto failed0;
 		}

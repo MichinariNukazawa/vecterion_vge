@@ -285,6 +285,11 @@ const PvSvgElementInfo _pv_svg_element_infos[] = {
 		.func_new_element_from_svg	= _pv_svg_text_new_element_from_svg,
 		.func_set_attribute_cache	= func_nop_set_attribute_cache_,
 	},
+	{
+		.tagname = "comment",
+		.func_new_element_from_svg	= _pv_svg_text_new_element_from_svg,
+		.func_set_attribute_cache	= func_nop_set_attribute_cache_,
+	},
 };
 
 
