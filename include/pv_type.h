@@ -15,6 +15,7 @@
 #endif
 
 #define DELTA_OF_RESIZE (0.000001)
+#define PV_DELTA (0.000001)
 
 
 // ******** ********
@@ -30,6 +31,7 @@ static const PvPoint PvPoint_Default = {0, 0};
 PvPoint pv_point_add(PvPoint, PvPoint);
 PvPoint pv_point_sub(PvPoint, PvPoint);
 PvPoint pv_point_mul(PvPoint, PvPoint);
+PvPoint pv_point_div(PvPoint, PvPoint);
 PvPoint pv_point_add_value(PvPoint, double);
 PvPoint pv_point_mul_value(PvPoint, double);
 PvPoint pv_point_div_value(PvPoint, double);

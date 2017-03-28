@@ -3,6 +3,9 @@
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
+#include <math.h>
+#include <errno.h>
+#include <fenv.h>
 #include "pv_error.h"
 #include "pv_element_info.h"
 #include "pv_io_util.h"
@@ -48,6 +51,7 @@ static PvStrMap *new_transform_str_maps_from_str_(const char *src_str)
 	int num = 0;
 	PvStrMap *map = NULL;
 	map = realloc(map, sizeof(PvStrMap) * (num + 1));
+	pv_assert(map);
 	map[num - 0].key = NULL;
 	map[num - 0].value = NULL;
 
@@ -1051,6 +1055,57 @@ static bool func_view_box_set_(
 	return true;
 }
 
+static double sqrt_(double value, bool *ok)
+{
+	errno = 0;
+	feclearexcept(FE_ALL_EXCEPT);
+	value = sqrt(value);
+	if(0 != errno){
+		pv_warning("%s", strerror(errno));
+		*ok = false;
+		return 0;
+	}
+	int ret;
+	if(0 != (ret = fetestexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW))){
+		pv_warning("%d", ret);
+		*ok = false;
+		return 0;
+	}
+
+	*ok = true;
+	return value;
+}
+
+static bool set_appearances_from_cairo_matrix_(PvAppearance *appearances, cairo_matrix_t matrix)
+{
+	appearances[PvAppearanceKind_Translate].kind = PvAppearanceKind_Translate;
+	PvAppearanceTranslateData *translate = &(appearances[PvAppearanceKind_Translate].translate);
+	translate->move = pv_point_add(translate->move, (PvPoint){matrix.x0, matrix.y0});
+
+	bool ok;
+	PvPoint scale;
+	scale.x = sqrt_((matrix.xx * matrix.xx) + (matrix.yx * matrix.yx), &ok);
+	if(!ok){
+		pv_warning("");
+		return false;
+	}
+	scale.y = sqrt_((matrix.xy * matrix.xy) + (matrix.yy * matrix.yy), &ok);
+	if(!ok){
+		pv_warning("");
+		return false;
+	}
+	PvAppearanceResizeData *resize = &(appearances[PvAppearanceKind_Resize].resize);
+	if(PvAppearanceKind_Resize != appearances[PvAppearanceKind_Resize].kind){
+		resize->resize = (PvPoint){1, 1};
+	}
+	appearances[PvAppearanceKind_Resize].kind = PvAppearanceKind_Resize;
+	resize->resize = pv_point_mul(resize->resize, scale);
+
+	translate->move = pv_point_mul(translate->move, scale);
+
+	return true;
+}
+
 static bool func_transform_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
@@ -1065,41 +1120,93 @@ static bool func_transform_set_(
 		return false;
 	}
 
-	PvStrMap *transform_str_maps = new_transform_str_maps_from_str_((const char *)value);
-	for(int i = 0; NULL != transform_str_maps[i].key; i++){
-		if(0 == strcmp("translate", transform_str_maps[i].key)){
+	bool res = false;
 
-			const int num_args = 10;
-			double args[num_args];
-			pv_double_array_fill(args, 0, num_args);
-			const char *p = transform_str_maps[i].value;
+	PvStrMap *transform_str_maps = new_transform_str_maps_from_str_((const char *)value);
+	if(NULL == transform_str_maps){
+		pv_error("%.20s", (char *)value);
+		goto failed;
+	}
+	for(int i = 0; NULL != transform_str_maps[i].key; i++){
+		const int num_args = 10;
+		double args[num_args];
+		pv_double_array_fill(args, 0, num_args);
+		const char *p = transform_str_maps[i].value;
+
+		if(0 == strcmp("translate", transform_str_maps[i].key)){
 			if(!pv_read_args_from_str(args, 2, &p)){
 				pv_warning("'%s','%s'", transform_str_maps[i].key, transform_str_maps[i].value);
-			}else{
-				conf->appearances[PvAppearanceKind_Translate].kind = PvAppearanceKind_Translate;
-				PvAppearanceTranslateData *translate
-					= &(conf->appearances[PvAppearanceKind_Translate].translate);
-				translate->move = pv_point_add(translate->move, (PvPoint){args[0], args[1]});
-
-				pv_debug("translate:'%s',(%f,%f),(%f,%f)",
-						transform_str_maps[i].key, args[0], args[1],
-						translate->move.x, translate->move.y);
+				if(conf->imageFileReadOption->is_strict){
+					pv_error("strict");
+					goto failed;
+				}
+				continue;
 			}
+
+			conf->appearances[PvAppearanceKind_Translate].kind = PvAppearanceKind_Translate;
+			PvAppearanceTranslateData *translate
+				= &(conf->appearances[PvAppearanceKind_Translate].translate);
+			translate->move = pv_point_add(translate->move, (PvPoint){args[0], args[1]});
+
+			pv_debug("translate:'%s',(%f,%f),(%f,%f)",
+					transform_str_maps[i].key, args[0], args[1],
+					translate->move.x, translate->move.y);
+		}else if(0 == strcmp("matrix", transform_str_maps[i].key)){
+			if(!pv_read_args_from_str(args, 6, &p)){
+				pv_warning("'%s','%s'", transform_str_maps[i].key, transform_str_maps[i].value);
+				if(conf->imageFileReadOption->is_strict){
+					pv_error("strict");
+					goto failed;
+				}
+				continue;
+			}
+
+			if(1 != args[0] || 0 != args[1] || 0 != args[2] || 1 != args[3]){
+				if(conf->imageFileReadOption->is_strict){
+					pv_error("Not implement.");
+					pv_error("strict");
+					goto failed;
+				}
+			}
+
+			cairo_matrix_t matrix;
+			cairo_matrix_init(&matrix, args[0], args[1], args[2], args[3], args[4], args[5]);
+			if(!set_appearances_from_cairo_matrix_(conf->appearances, matrix)){
+				pv_warning("'%s','%s'", transform_str_maps[i].key, transform_str_maps[i].value);
+				if(conf->imageFileReadOption->is_strict){
+					pv_error("strict");
+					goto failed;
+				}
+				continue;
+			}
+
+			PvPoint resize = conf->appearances[PvAppearanceKind_Resize].resize.resize;
+			pv_debug("'%s':"
+					" (%9.4f,%9.4f,%9.4f,%9.4f,%9.4f,%9.4f),"
+					" (%9.4f,%9.4f),"
+					,
+					transform_str_maps[i].key,
+					args[0], args[1], args[2], args[3], args[4], args[5],
+					resize.x, resize.y
+				);
 		}else{
 			pv_warning("unknown key: '%s'(%d)'%s':'%s'(%d)",
 					(char *)value, xmlnode->line,
 					transform_str_maps[i].key, transform_str_maps[i].value, i);
 			if(conf->imageFileReadOption->is_strict){
 				pv_error("strict");
-				return NULL;
+				goto failed;
 			}
 		}
 	}
+
+	res = true;
+failed:
 	pv_str_maps_free(transform_str_maps);
 
 	xmlFree(value);
 
-	return true;
+	return res;
 }
 
 static bool func_groupmode_set_(

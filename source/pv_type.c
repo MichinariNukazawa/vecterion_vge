@@ -38,6 +38,25 @@ PvPoint pv_point_mul(PvPoint p0, PvPoint p1)
 	return ret;
 }
 
+PvPoint pv_point_div(PvPoint p0, PvPoint p1)
+{
+	if(p1.x < PV_DELTA){
+		pv_error("");
+		return p0;
+	}
+	if(p1.y < PV_DELTA){
+		pv_error("");
+		return p0;
+	}
+
+	PvPoint ret = {
+		.x = p0.x / p1.x,
+		.y = p0.y / p1.y,
+	};
+
+	return ret;
+}
+
 PvPoint pv_point_add_value(PvPoint p, double diff)
 {
 	PvPoint ret = {

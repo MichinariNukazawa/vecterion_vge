@@ -559,8 +559,9 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element_current->kind);
 	pv_assert(info);
-	PvAppearance *a[2] = {NULL, NULL};
+	PvAppearance *a[3] = {NULL, NULL, NULL,};
 	a[0] = &(conf->appearances[PvAppearanceKind_Translate]);
+	a[1] = &(conf->appearances[PvAppearanceKind_Resize]);
 	info->func_apply_appearances(element_current, a);
 
 	// element_current->color_pair = _pv_io_get_pv_color_pair_from_xmlnode_simple(xmlnode);
