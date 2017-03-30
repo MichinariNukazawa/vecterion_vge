@@ -29,52 +29,8 @@ static PvRect _get_rect_extent_from_cr(cairo_t *cr)
 
 // ******** ********
 // null functions. (ex. use method not implement)
-//! @detail 無効なindexを引いた際に埋め込まれているダミー関数
 // ******** ********
 
-
-/** @brief write_svg未実装箇所に挿入する */
-/*
-   static int _func_notimpl_write_svg(
-   InfoTargetSvg *target,
-   const PvElement *element, const ConfWriteSvg *conf)
-   {
-   if(NULL == target){
-   pv_bug("");
-   return -1;
-   }
-
-   if(NULL == target->xml_parent_node){
-   pv_bug("");
-   return -1;
-   }
-
-   if(NULL == element){
-   pv_bug("");
-   return -1;
-   }
-
-   if(NULL == conf){
-   pv_bug("");
-   return -1;
-   }
-
-   const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
-   if(NULL == info){
-   pv_bug("%d", element->kind);
-   return -1;
-   }
-
-   xmlNodePtr node = NULL;
-// node = xmlNewNode(NULL, BAD_CAST info->name);
-node = xmlNewComment(BAD_CAST info->name);
-
-xmlAddChild(target->xml_parent_node, node);
-target->xml_new_node = node;
-
-return 0;
-}
- */
 
 static int _func_zero_get_num_anchor_point(
 		const PvElement *element)
@@ -169,8 +125,6 @@ char *pv_general_new_str(const char *src)
 
 	return dst;
 }
-
-// ** PvElementKindごとのdataのnew関数群
 
 /* ****************
  * Group(Root,Layer,Group)
@@ -761,10 +715,10 @@ static int _func_curve_write_svg(
 
 	char *str_fg_color = pv_color_new_str_svg_rgba_simple(
 			element->color_pair.colors[PvColorPairGround_ForGround]);
-	assert(str_fg_color);
+	pv_assert(str_fg_color);
 	char *str_bg_color = pv_color_new_str_svg_rgba_simple(
 			element->color_pair.colors[PvColorPairGround_BackGround]);
-	assert(str_bg_color);
+	pv_assert(str_bg_color);
 
 	xmlNodePtr node = xmlNewNode(NULL, BAD_CAST "path");
 	xmlNewProp(node, BAD_CAST "fill", BAD_CAST str_bg_color);
@@ -1075,8 +1029,8 @@ static PvAnchorPoint *_func_curve_get_anchor_point(
 		const PvElement *element,
 		const int index)
 {
-	assert(element);
-	assert(PvElementKind_Curve == element->kind);
+	pv_assert(element);
+	pv_assertf(PvElementKind_Curve == element->kind, "%d", element->kind);
 
 	PvElementCurveData *data = element->data;
 
@@ -1089,11 +1043,11 @@ static bool _func_curve_set_anchor_point_point(
 		PvAnchorPoint *ap,
 		const PvPoint point)
 {
-	assert(element);
-	assert(PvElementKind_Curve == element->kind);
+	pv_assert(element);
+	pv_assertf(PvElementKind_Curve == element->kind, "%d", element->kind);
 
 	PvElementCurveData *data = element->data;
-	assert(data);
+	pv_assert(data);
 
 	if(!pv_anchor_path_is_exist_anchor_point(data->anchor_path, ap)){
 		pv_bug("");
@@ -1110,11 +1064,11 @@ static bool _func_curve_move_anchor_point(
 		PvAnchorPoint *ap,
 		const PvPoint move)
 {
-	assert(element);
-	assert(PvElementKind_Curve == element->kind);
+	pv_assert(element);
+	pv_assertf(PvElementKind_Curve == element->kind, "%d", element->kind);
 
 	PvElementCurveData *data = element->data;
-	assert(data);
+	pv_assert(data);
 
 	if(!pv_anchor_path_is_exist_anchor_point(data->anchor_path, ap)){
 		pv_bug("");
@@ -1159,8 +1113,8 @@ static PvRect _func_curve_get_rect_by_anchor_points(
 static PvPoint _curve_get_point_by_anchor_points(
 		const PvElement *element)
 {
-	assert(element);
-	assert(element->data);
+	pv_assert(element);
+	pv_assert(element->data);
 	const PvElementCurveData *data = element->data;
 
 	PvPoint point = PvPoint_Default;
@@ -1184,8 +1138,8 @@ static void _curve_set_point_by_anchor_points(
 		PvElement *element,
 		const PvPoint point)
 {
-	assert(element);
-	assert(element->data);
+	pv_assert(element);
+	pv_assert(element->data);
 	PvElementCurveData *data = element->data;
 
 
@@ -1260,15 +1214,15 @@ static void _func_curve_apply_appearances(
 		PvElement *element,
 		PvAppearance **appearances)
 {
-	assert(element);
+	pv_assert(element);
 	PvElementCurveData *data = element->data;
-	assert(data);
+	pv_assert(data);
 
 	size_t num = pv_general_get_parray_num((void **)appearances);
 	for(int i = 0; i < (int)num; i++){
 		switch(appearances[i]->kind){
 			case PvAppearanceKind_None:
-				// End of fppearances
+				// End of appearances
 				return;
 				break;
 			case PvAppearanceKind_Translate:
@@ -1314,10 +1268,7 @@ static void _func_curve_apply_appearances(
 static gpointer _func_raster_new_data()
 {
 	PvElementRasterData *data = (PvElementRasterData *)malloc(sizeof(PvElementRasterData));
-	if(NULL == data){
-		pv_critical("");
-		exit(-1);
-	}
+	pv_assert(data);
 
 	data->path = NULL;
 	data->pixbuf = NULL;
@@ -1342,10 +1293,7 @@ static gpointer _func_raster_new_data()
 
 static bool _func_raster_free_data(void *_data)
 {
-	if(NULL == _data){
-		pv_error("");
-		return false;
-	}
+	pv_assert(_data);
 
 	PvElementRasterData *data = (PvElementRasterData *)_data;
 
@@ -1370,10 +1318,7 @@ static bool _func_raster_free_data(void *_data)
 
 static gpointer _func_raster_copy_new_data(void *_data)
 {
-	if(NULL == _data){
-		pv_bug("");
-		return NULL;
-	}
+	pv_assert(_data);
 
 	PvElementRasterData *data = (PvElementRasterData *)_data;
 
@@ -1402,12 +1347,13 @@ static gpointer _func_raster_copy_new_data(void *_data)
 
 static int _func_raster_write_svg(
 		InfoTargetSvg *target,
-		const PvElement *element, const ConfWriteSvg *conf)
+		const PvElement *element,
+		const ConfWriteSvg *conf)
 {
 	pv_assert(target);
 	pv_assert(target->xml_parent_node);
 	pv_assert(element);
-	pv_assert(PvElementKind_Raster == element->kind);
+	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
 	pv_assert(conf);
 
 	PvElementRasterData *data = (PvElementRasterData *)element->data;
@@ -1516,12 +1462,10 @@ static bool _raster_draw_inline(
 		RasterDrawKind rasterDrawKind
 		)
 {
-	bool result = true;
-
 	pv_assert(element);
 	PvElementRasterData *data = element->data;
 	pv_assert(data);
-	pv_assertf(data->pixbuf, "%p", data->pixbuf);
+	pv_assert(data->pixbuf);
 
 	PvElement *simplify = _raster_simplify_new(element, render_context);
 	pv_assert(simplify);
@@ -1592,7 +1536,7 @@ static bool _raster_draw_inline(
 finally:
 	_raster_simplify_free(simplify);
 
-	return result;
+	return true;
 }
 
 static bool _func_raster_draw(
@@ -1660,11 +1604,8 @@ static bool _func_raster_is_diff_one(
 {
 	const PvElementRasterData *data0 = element0->data;
 	const PvElementRasterData *data1 = element1->data;
-	if(NULL == data0 || NULL == data1){
-		pv_bug("%p,%p", data0, data1);
-		*is_diff = true;
-		return false;
-	}
+	pv_assert(data0);
+	pv_assert(data1);
 
 	if(pv_appearance_parray_is_diff(data0->raster_appearances, data1->raster_appearances)){
 		*is_diff = true;
@@ -1673,7 +1614,7 @@ static bool _func_raster_is_diff_one(
 
 	// ** dataX->path is not check.
 
-	// ** TODO: check raster pixbuf.
+	//! @todo check raster pixbuf.
 	if(data0->pixbuf != data1->pixbuf){
 		*is_diff = true;
 		return true;
@@ -1688,15 +1629,11 @@ static bool _func_raster_move_element(
 		double gx,
 		double gy)
 {
-	if(NULL == element || PvElementKind_Raster != element->kind){
-		pv_error("%p", element);
-		return false;
-	}
+	pv_assert(element);
+	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
+
 	PvElementRasterData *data = element->data;
-	if(NULL == data){
-		pv_error("");
-		return false;
-	}
+	pv_assert(data);
 
 	PvPoint position = data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move;
 	position.x += gx;
@@ -1710,15 +1647,18 @@ static PvAnchorPoint *_func_raster_get_anchor_point(
 		const PvElement *element,
 		const int index)
 {
-	assert(element);
-	assert(PvElementKind_Raster == element->kind);
+	pv_assert(element);
+	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
 
 	PvElementRasterData *data = element->data;
-	assert(data);
+	pv_assert(data);
 
 	PvPoint position = data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move;
 
-	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, index, PvAnchorPathIndexTurn_Disable);
+	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(
+			data->anchor_path,
+			index,
+			PvAnchorPathIndexTurn_Disable);
 	pv_assert(ap);
 
 	PvPoint point = {
@@ -1735,15 +1675,13 @@ static bool _func_raster_set_anchor_point_point(
 		PvAnchorPoint *ap,
 		const PvPoint point)
 {
-	assert(element);
-	assert(PvElementKind_Raster == element->kind);
+	pv_assert(element);
+	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
 
 	PvElementRasterData *data = element->data;
-	assert(data);
+	pv_assert(data);
 
-	data->raster_appearances
-		[PvElementRasterAppearanceIndex_Translate]->translate.move
-		= point;
+	data->raster_appearances [PvElementRasterAppearanceIndex_Translate]->translate.move = point;
 
 	return true;
 }
@@ -1753,11 +1691,11 @@ static bool _func_raster_move_anchor_point(
 		PvAnchorPoint *ap,
 		const PvPoint move)
 {
-	assert(element);
-	assert(PvElementKind_Raster == element->kind);
+	pv_assert(element);
+	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
 
 	PvElementRasterData *data = element->data;
-	assert(data);
+	pv_assert(data);
 
 	//! @todo not implement, already implement is only upleft anchor_point.
 	{
@@ -1796,11 +1734,11 @@ static PvRect pv_rect_expand_from_point_(PvRect rect, PvPoint point, bool is_ini
 static PvRect _func_raster_get_rect_by_anchor_points(
 		const PvElement *element)
 {
-	assert(element);
-	assert(PvElementKind_Raster == element->kind);
+	pv_assert(element);
+	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
 
 	PvElementRasterData *data = element->data;
-	assert(data);
+	pv_assert(data);
 
 	if(NULL == data->pixbuf){
 		pv_warning("");
@@ -1834,11 +1772,11 @@ static bool _func_raster_set_rect_by_anchor_points(
 		PvElement *element,
 		PvRect rect)
 {
-	assert(element);
-	assert(PvElementKind_Raster == element->kind);
+	pv_assert(element);
+	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
 
 	PvElementRasterData *data = element->data;
-	assert(data);
+	pv_assert(data);
 
 	if(NULL == data->pixbuf){
 		pv_warning("");
@@ -1863,16 +1801,17 @@ static void _func_raster_apply_appearances(
 		PvElement *element,
 		PvAppearance **appearances)
 {
-	assert(element);
-	assert(PvElementKind_Raster == element->kind);
+	pv_assert(element);
+	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
+
 	PvElementRasterData *data = element->data;
-	assert(data);
+	pv_assert(data);
 
 	size_t num = pv_general_get_parray_num((void **)appearances);
 	for(int i = 0; i < (int)num; i++){
 		switch(appearances[i]->kind){
 			case PvAppearanceKind_None:
-				// End of fppearances
+				// End of appearances
 				return;
 				break;
 			case PvAppearanceKind_Translate:
