@@ -59,11 +59,6 @@ typedef bool (*PvElementFuncRemoveDeleteAnchorPoint)(
 		const PvAnchorPoint *anchor_point,
 		PvElement **p_foot_element,
 		bool *is_deleted_element);
-typedef PvPoint (*PvElementFuncGetPointByAnchorPoints)(
-		const PvElement *element);
-typedef void (*PvElementFuncSetPointByAnchorPoints)(
-		PvElement *element,
-		const PvPoint);
 typedef bool (*PvElementFuncMoveElement)(
 		const PvElement *element,
 		double gx,
@@ -110,8 +105,6 @@ typedef struct PvElementInfo{
 	PvElementFuncIsOverlapRect		func_is_overlap_rect;
 	PvElementFuncIsDiffOne			func_is_diff_one;
 	PvElementFuncRemoveDeleteAnchorPoint	func_remove_delete_anchor_point;
-	PvElementFuncGetPointByAnchorPoints	func_get_point_by_anchor_points;
-	PvElementFuncSetPointByAnchorPoints	func_set_point_by_anchor_points;
 	PvElementFuncMoveElement		func_move_element;
 	PvElementFuncGetNumAnchorPoint		func_get_num_anchor_point;
 	PvElementFuncIsExistAnchorPoint		func_is_exist_anchor_point;
@@ -123,7 +116,6 @@ typedef struct PvElementInfo{
 	PvElementFuncSetRectByAnchorPoints	func_set_rect_by_anchor_points;
 	PvElementFuncGetRectByDraw		func_get_rect_by_draw;
 	PvElementFuncApplyAppearances		func_apply_appearances;
-
 }PvElementInfo;
 
 extern const PvElementInfo _pv_element_info[];
@@ -134,3 +126,4 @@ const PvElementInfo *pv_element_get_info_from_kind(PvElementKind kind);
 #endif // include_ET_TEST
 
 #endif // include_PV_ELEMENT_DATAS_H
+
