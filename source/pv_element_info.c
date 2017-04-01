@@ -8,7 +8,7 @@
 #include "pv_color.h"
 #include "pv_cairo.h"
 #include "pv_rotate.h"
-#include "pv_urischeme.h"
+#include "pv_basic_shape_info.h"
 
 
 
@@ -1262,229 +1262,178 @@ static void _func_curve_apply_appearances(
 
 
 /* ****************
- * Raster
+ * BasicShape
  **************** */
 
-static gpointer _func_raster_new_data()
+static gpointer _func_basic_shape_new_data()
 {
-	PvElementRasterData *data = (PvElementRasterData *)malloc(sizeof(PvElementRasterData));
-	pv_assert(data);
+	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)malloc(sizeof(PvElementBasicShapeData));
+	pv_assert(element_data);
 
-	data->path = NULL;
-	data->pixbuf = NULL;
-	data->urischeme_byte_array = NULL;
+	element_data->kind = PvBasicShapeKind_Raster;
 
-	data->raster_appearances = pv_appearance_parray_new_from_num(Num_PvElementRasterAppearance);
-	pv_assert(data->raster_appearances);
-	data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->kind = PvAppearanceKind_Translate;
-	data->raster_appearances[PvElementRasterAppearanceIndex_Resize]->kind = PvAppearanceKind_Resize;
-	data->raster_appearances[PvElementRasterAppearanceIndex_Resize]->resize.resize = (PvPoint){1,1};
-	data->raster_appearances[PvElementRasterAppearanceIndex_Rotate]->kind = PvAppearanceKind_Rotate;
+	const PvBasicShapeInfo *info = pv_basic_shape_info_get_from_kind(element_data->kind);
+	pv_assertf(info, "%d", element_data->kind);
 
-	data->anchor_path = pv_anchor_path_new();
-	pv_assert(data->anchor_path);
+	element_data->data = info->func_new_data();
+	pv_assert(element_data->data);
+
+	element_data->basic_shape_appearances = pv_appearance_parray_new_from_num(Num_PvElementBasicShapeAppearance);
+	pv_assert(element_data->basic_shape_appearances);
+	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->kind = PvAppearanceKind_Translate;
+	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Resize]->kind = PvAppearanceKind_Resize;
+	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize = (PvPoint){1,1};
+	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Rotate]->kind = PvAppearanceKind_Rotate;
+
+	element_data->anchor_path = pv_anchor_path_new();
+	pv_assert(element_data->anchor_path);
 	PvAnchorPoint ap = PvAnchorPoint_Default;
 	for(int i = 0; i < 4; i++){
-		pv_anchor_path_add_anchor_point(data->anchor_path, &ap);
+		pv_anchor_path_add_anchor_point(element_data->anchor_path, &ap);
 	}
 
-	return (gpointer)data;
+	return (gpointer)element_data;
 }
 
-static bool _func_raster_free_data(void *_data)
+static bool _func_basic_shape_free_data(void *_data)
 {
 	pv_assert(_data);
+	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)_data;
+	pv_assert(element_data);
 
-	PvElementRasterData *data = (PvElementRasterData *)_data;
+	const PvBasicShapeInfo *info = pv_basic_shape_info_get_from_kind(element_data->kind);
+	pv_assertf(info, "%d", element_data->kind);
+	info->func_free_data(element_data->data);
 
-	if(NULL != data->path){
-		free(data->path);
-	}
+	pv_appearance_parray_free(element_data->basic_shape_appearances);
 
-	if(NULL != data->pixbuf){
-		g_object_unref(G_OBJECT(data->pixbuf));
-	}
-
-	if(NULL != data->urischeme_byte_array){
-		g_byte_array_unref(data->urischeme_byte_array);
-	}
-
-	pv_appearance_parray_free(data->raster_appearances);
-
-	free(data);
+	free(element_data);
 
 	return true;
 }
 
-static gpointer _func_raster_copy_new_data(void *_data)
+static gpointer _func_basic_shape_copy_new_data(void *_data)
 {
 	pv_assert(_data);
+	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)_data;
+	pv_assert(element_data);
 
-	PvElementRasterData *data = (PvElementRasterData *)_data;
+	const PvBasicShapeInfo *info = pv_basic_shape_info_get_from_kind(element_data->kind);
+	pv_assertf(info, "%d", element_data->kind);
 
-	PvElementRasterData *new_data = (PvElementRasterData *)malloc(sizeof(PvElementRasterData));
-	pv_assert(new_data);
+	PvElementBasicShapeData *new_element_data = (PvElementBasicShapeData *)malloc(sizeof(PvElementBasicShapeData));
+	pv_assert(new_element_data);
 
-	*new_data = *data;
+	*new_element_data = *element_data;
 
-	new_data->path = pv_general_new_str(data->path);
+	new_element_data->data = info->func_copy_new_data(element_data->data);
+	pv_assert(new_element_data->data);
 
-	if(NULL != new_data->pixbuf){
-		g_object_ref(G_OBJECT(new_data->pixbuf));
+	if(NULL != element_data->basic_shape_appearances){
+		new_element_data->basic_shape_appearances = pv_appearance_parray_copy_new(element_data->basic_shape_appearances);
+		pv_assert(new_element_data->basic_shape_appearances);
 	}
 
-	if(NULL != new_data->urischeme_byte_array){
-		g_byte_array_ref(new_data->urischeme_byte_array);
-	}
-
-	if(NULL != data->raster_appearances){
-		new_data->raster_appearances = pv_appearance_parray_copy_new(data->raster_appearances);
-		pv_assert(new_data->raster_appearances);
-	}
-
-	return (gpointer)new_data;
+	return (gpointer)new_element_data;
 }
 
-static int _func_raster_write_svg(
+static int _func_basic_shape_write_svg(
 		InfoTargetSvg *target,
 		const PvElement *element,
 		const ConfWriteSvg *conf)
 {
 	pv_assert(target);
 	pv_assert(target->xml_parent_node);
+
 	pv_assert(element);
-	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
+	pv_assertf(PvElementKind_BasicShape == element->kind, "%d", element->kind);
+	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)element->data;
+	pv_assert(element_data);
+
 	pv_assert(conf);
 
-	PvElementRasterData *data = (PvElementRasterData *)element->data;
+	const PvBasicShapeInfo *info = pv_basic_shape_info_get_from_kind(element_data->kind);
+	pv_assertf(info, "%d", element_data->kind);
 
-	if(NULL == data->urischeme_byte_array){
-		if(NULL != data->path){
-			char *urischeme_str = pv_urischeme_get_from_image_filepath(data->path);
-			pv_assert(urischeme_str);
-			data->urischeme_byte_array = g_byte_array_new();
-			pv_assert(data->urischeme_byte_array);
-			g_byte_array_append(data->urischeme_byte_array, (guint8 *)urischeme_str, strlen(urischeme_str) + 1);
-			g_free(urischeme_str);
-		}
-	}
-	if(NULL == data->urischeme_byte_array){
-		if(NULL != data->pixbuf){
-			// not implement.
-		}
-	}
-
-	if(NULL == data->urischeme_byte_array){
-		pv_error("");
+	if(!info->func_write_svg(target, element, conf)){
 		return -1;
 	}
-
-	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
-	pv_assert(info);
-	PvRect rect = info->func_get_rect_by_anchor_points(element);
-	char *x_str = g_strdup_printf("%.6f", rect.x);
-	char *y_str = g_strdup_printf("%.6f", rect.y);
-	char *w_str = g_strdup_printf("%.6f", rect.w);
-	char *h_str = g_strdup_printf("%.6f", rect.h);
-
-	xmlNodePtr node = xmlNewNode(NULL, BAD_CAST "image");
-	pv_assert(node);
-
-	xmlNewProp(node, BAD_CAST "xlink:href", BAD_CAST data->urischeme_byte_array->data);
-	xmlNewProp(node, BAD_CAST "x", BAD_CAST x_str);
-	xmlNewProp(node, BAD_CAST "y", BAD_CAST y_str);
-	xmlNewProp(node, BAD_CAST "width", BAD_CAST w_str);
-	xmlNewProp(node, BAD_CAST "height", BAD_CAST h_str);
-	xmlAddChild(target->xml_parent_node, node);
-
-	g_free(x_str);
-	g_free(y_str);
-	g_free(w_str);
-	g_free(h_str);
 
 	return 0;
 }
 
-static void _func_raster_apply_appearances(
+static void _func_basic_shape_apply_appearances(
 		PvElement *element,
 		PvAppearance **appearances);
 
-static PvElement *_raster_simplify_new(const PvElement *element, PvRenderContext render_context)
+static PvElement *_basic_shape_simplify_new(const PvElement *element, PvRenderContext render_context)
 {
 	pv_assert(element);
 
 	PvElement *simplify = pv_element_copy_recursive(element);
 	pv_assert(simplify);
-	PvElementRasterData *simplify_data = simplify->data;
-	pv_assert(simplify_data);
+	PvElementBasicShapeData *simplify_element_data = simplify->data;
+	pv_assert(simplify_element_data);
 
 	// appearance
-	_func_raster_apply_appearances(simplify, element->etaion_work_appearances);
+	_func_basic_shape_apply_appearances(simplify, element->etaion_work_appearances);
 	simplify->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
 
 	// scale
-	PvPoint *move = &(simplify_data->raster_appearances
-			[PvElementRasterAppearanceIndex_Translate]->translate.move);
+	PvPoint *move = &(simplify_element_data->basic_shape_appearances
+			[PvElementBasicShapeAppearanceIndex_Translate]->translate.move);
 	*move = pv_point_mul_value(*move, render_context.scale);
-	PvPoint *resize = &(simplify_data->raster_appearances
-			[PvElementRasterAppearanceIndex_Resize]->resize.resize);
+	PvPoint *resize = &(simplify_element_data->basic_shape_appearances
+			[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize);
 	*resize = pv_point_mul_value(*resize, render_context.scale);
 
 	return simplify;
 }
 
-void _raster_simplify_free(PvElement *self)
+void _basic_shape_simplify_free(PvElement *self)
 {
 	pv_element_remove_free_recursive(self);
 }
 
-static PvPoint get_pixbuf_size_(const GdkPixbuf *pb)
-{
-	PvPoint ret = {
-		.x = gdk_pixbuf_get_width(pb),
-		.y = gdk_pixbuf_get_height(pb),
-	};
-
-	return ret;
-}
-
 typedef enum{
-	RasterDrawKind_Draw,
-	RasterDrawKind_DrawFocusing,
-	RasterDrawKind_IsTouch,
-}RasterDrawKind;
+	BasicShapeDrawKind_Draw,
+	BasicShapeDrawKind_DrawFocusing,
+	BasicShapeDrawKind_IsTouch,
+}BasicShapeDrawKind;
 
-static bool _raster_draw_inline(
+static bool _basic_shape_draw_inline(
 		cairo_t *cr,
 		const PvRenderContext render_context,
 		const PvElement *element,
 		double line_width,
-		RasterDrawKind rasterDrawKind
+		BasicShapeDrawKind basic_shapeDrawKind
 		)
 {
 	pv_assert(element);
-	PvElementRasterData *data = element->data;
-	pv_assert(data);
-	pv_assert(data->pixbuf);
+	PvElementBasicShapeData *element_data = element->data;
+	pv_assert(element_data);
 
-	PvElement *simplify = _raster_simplify_new(element, render_context);
+	PvElement *simplify = _basic_shape_simplify_new(element, render_context);
 	pv_assert(simplify);
-	PvElementRasterData *simplify_data = simplify->data;
-	pv_assert(simplify_data);
+	PvElementBasicShapeData *simplify_element_data = simplify->data;
+	pv_assert(simplify_element_data);
 
-	PvPoint position = simplify_data->raster_appearances
-		[PvElementRasterAppearanceIndex_Translate]->translate.move;
-	PvPoint resize = simplify_data->raster_appearances
-		[PvElementRasterAppearanceIndex_Resize]->resize.resize;
-	double degree = simplify_data->raster_appearances
-		[PvElementRasterAppearanceIndex_Rotate]->rotate.degree;
+	PvPoint position = simplify_element_data->basic_shape_appearances
+		[PvElementBasicShapeAppearanceIndex_Translate]->translate.move;
+	PvPoint resize = simplify_element_data->basic_shape_appearances
+		[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize;
+	double degree = simplify_element_data->basic_shape_appearances
+		[PvElementBasicShapeAppearanceIndex_Rotate]->rotate.degree;
 
-	PvPoint size = get_pixbuf_size_(data->pixbuf);
+	const PvBasicShapeInfo *info = pv_basic_shape_info_get_from_kind(simplify_element_data->kind);
+	pv_assertf(info, "%d", simplify_element_data->kind);
+
+	PvPoint size = info->func_get_size(simplify_element_data->data);
 	size = pv_point_mul(size, resize);
 
 	// effectively invisible to not draw
-	const int PX_RASTER_MINIMUM = 0.00001;
-	if(fabs(size.x)  < PX_RASTER_MINIMUM || fabs(size.y) < PX_RASTER_MINIMUM){
+	const int PX_BASIC_SHAPE_MINIMUM = 0.00001;
+	if(fabs(size.x)  < PX_BASIC_SHAPE_MINIMUM || fabs(size.y) < PX_BASIC_SHAPE_MINIMUM){
 		pv_debug("%f, %f", size.x, size.y);
 		goto finally;
 	}
@@ -1500,17 +1449,16 @@ static bool _raster_draw_inline(
 	cairo_translate(cr, -center.x, -center.y);
 
 	// draw
-	switch(rasterDrawKind){
-		case RasterDrawKind_Draw:
+	switch(basic_shapeDrawKind){
+		case BasicShapeDrawKind_Draw:
 			{
 				cairo_translate(cr, position.x, position.y);
 				cairo_scale(cr, resize.x, resize.y);
 
-				gdk_cairo_set_source_pixbuf (cr, simplify_data->pixbuf, 0, 0);
-				cairo_paint (cr);
+				info->func_draw(cr, simplify_element_data->data);
 			}
 			break;
-		case RasterDrawKind_DrawFocusing:
+		case BasicShapeDrawKind_DrawFocusing:
 			{
 				cairo_rectangle(cr, position.x, position.y, size.x, size.y);
 				cairo_set_line_width(cr, line_width);
@@ -1518,7 +1466,7 @@ static bool _raster_draw_inline(
 				cairo_stroke(cr);
 			}
 			break;
-		case RasterDrawKind_IsTouch:
+		case BasicShapeDrawKind_IsTouch:
 			{
 				cairo_rectangle(cr, position.x, position.y, size.x, size.y);
 				cairo_set_line_width(cr, line_width);
@@ -1528,36 +1476,36 @@ static bool _raster_draw_inline(
 			}
 			break;
 		default:
-			pv_assertf(false, "%d", rasterDrawKind);
+			pv_assertf(false, "%d", basic_shapeDrawKind);
 			break;
 	}
 	cairo_restore(cr); // end rorate
 
 finally:
-	_raster_simplify_free(simplify);
+	_basic_shape_simplify_free(simplify);
 
 	return true;
 }
 
-static bool _func_raster_draw(
+static bool _func_basic_shape_draw(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
-	bool ret = _raster_draw_inline(cr, render_option.render_context, element, 0, RasterDrawKind_Draw);
+	bool ret = _basic_shape_draw_inline(cr, render_option.render_context, element, 0, BasicShapeDrawKind_Draw);
 	return ret;
 }
 
-static bool _func_raster_draw_focusing(
+static bool _func_basic_shape_draw_focusing(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
-	bool ret = _raster_draw_inline(cr, render_option.render_context, element, 1.0, RasterDrawKind_DrawFocusing);
+	bool ret = _basic_shape_draw_inline(cr, render_option.render_context, element, 1.0, BasicShapeDrawKind_DrawFocusing);
 	return ret;
 }
 
-static bool _func_raster_is_touch_element(
+static bool _func_basic_shape_is_touch_element(
 		bool *is_touch,
 		const PvElement *element,
 		int offset,
@@ -1573,7 +1521,7 @@ static bool _func_raster_is_touch_element(
 
 	PvRenderContext render_context = PvRenderContext_Default;
 	double c_width = (element->stroke.width * render_context.scale) + offset;
-	bool ret = _raster_draw_inline(cr, render_context, element, c_width, RasterDrawKind_IsTouch);
+	bool ret = _basic_shape_draw_inline(cr, render_context, element, c_width, BasicShapeDrawKind_IsTouch);
 	pv_assert(ret);
 
 	//! @fixme bug fill area not detection.(down below side in fill.)
@@ -1584,7 +1532,7 @@ static bool _func_raster_is_touch_element(
 	return true;
 }
 
-static bool _func_raster_is_overlap_rect(
+static bool _func_basic_shape_is_overlap_rect(
 		bool *is_overlap,
 		const PvElement *element,
 		int offset,
@@ -1597,25 +1545,26 @@ static bool _func_raster_is_overlap_rect(
 	return true;
 }
 
-static bool _func_raster_is_diff_one(
+static bool _func_basic_shape_is_diff_one(
 		bool *is_diff,
 		const PvElement *element0,
 		const PvElement *element1)
 {
-	const PvElementRasterData *data0 = element0->data;
-	const PvElementRasterData *data1 = element1->data;
-	pv_assert(data0);
-	pv_assert(data1);
+	const PvElementBasicShapeData *element0_data = element0->data;
+	const PvElementBasicShapeData *element1_data = element1->data;
+	pv_assert(element0_data);
+	pv_assert(element1_data);
 
-	if(pv_appearance_parray_is_diff(data0->raster_appearances, data1->raster_appearances)){
+	if(pv_appearance_parray_is_diff(element0_data->basic_shape_appearances, element1_data->basic_shape_appearances)){
 		*is_diff = true;
 		return true;
 	}
 
-	// ** dataX->path is not check.
+	const PvBasicShapeInfo *info = pv_basic_shape_info_get_from_kind(element0_data->kind);
+	pv_assertf(info, "%d", element0_data->kind);
 
-	//! @todo check raster pixbuf.
-	if(data0->pixbuf != data1->pixbuf){
+	if(info->func_is_diff_one(element0_data->data, element1_data->data)){
+		pv_debug("####2");
 		*is_diff = true;
 		return true;
 	}
@@ -1624,39 +1573,39 @@ static bool _func_raster_is_diff_one(
 	return true;
 }
 
-static bool _func_raster_move_element(
+static bool _func_basic_shape_move_element(
 		const PvElement *element,
 		double gx,
 		double gy)
 {
 	pv_assert(element);
-	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
+	pv_assertf(PvElementKind_BasicShape == element->kind, "%d", element->kind);
 
-	PvElementRasterData *data = element->data;
-	pv_assert(data);
+	PvElementBasicShapeData *element_data = element->data;
+	pv_assert(element_data);
 
-	PvPoint position = data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move;
+	PvPoint position = element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->translate.move;
 	position.x += gx;
 	position.y += gy;
-	data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move = position;
+	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->translate.move = position;
 
 	return true;
 }
 
-static PvAnchorPoint *_func_raster_get_anchor_point(
+static PvAnchorPoint *_func_basic_shape_get_anchor_point(
 		const PvElement *element,
 		const int index)
 {
 	pv_assert(element);
-	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
+	pv_assertf(PvElementKind_BasicShape == element->kind, "%d", element->kind);
 
-	PvElementRasterData *data = element->data;
-	pv_assert(data);
+	PvElementBasicShapeData *element_data = element->data;
+	pv_assert(element_data);
 
-	PvPoint position = data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move;
+	PvPoint position = element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->translate.move;
 
 	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(
-			data->anchor_path,
+			element_data->anchor_path,
 			index,
 			PvAnchorPathIndexTurn_Disable);
 	pv_assert(ap);
@@ -1670,39 +1619,39 @@ static PvAnchorPoint *_func_raster_get_anchor_point(
 	return ap;
 }
 
-static bool _func_raster_set_anchor_point_point(
+static bool _func_basic_shape_set_anchor_point_point(
 		PvElement *element,
 		PvAnchorPoint *ap,
 		const PvPoint point)
 {
 	pv_assert(element);
-	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
+	pv_assertf(PvElementKind_BasicShape == element->kind, "%d", element->kind);
 
-	PvElementRasterData *data = element->data;
-	pv_assert(data);
+	PvElementBasicShapeData *element_data = element->data;
+	pv_assert(element_data);
 
-	data->raster_appearances [PvElementRasterAppearanceIndex_Translate]->translate.move = point;
+	element_data->basic_shape_appearances [PvElementBasicShapeAppearanceIndex_Translate]->translate.move = point;
 
 	return true;
 }
 
-static bool _func_raster_move_anchor_point(
+static bool _func_basic_shape_move_anchor_point(
 		PvElement *element,
 		PvAnchorPoint *ap,
 		const PvPoint move)
 {
 	pv_assert(element);
-	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
+	pv_assertf(PvElementKind_BasicShape == element->kind, "%d", element->kind);
 
-	PvElementRasterData *data = element->data;
-	pv_assert(data);
+	PvElementBasicShapeData *element_data = element->data;
+	pv_assert(element_data);
 
 	//! @todo not implement, already implement is only upleft anchor_point.
 	{
-		PvPoint position = data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move;
+		PvPoint position = element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->translate.move;
 		position.x += move.x;
 		position.y += move.y;
-		data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move = position;
+		element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->translate.move = position;
 	}
 
 	return true;
@@ -1731,28 +1680,27 @@ static PvRect pv_rect_expand_from_point_(PvRect rect, PvPoint point, bool is_ini
 	return rect;
 }
 
-static PvRect _func_raster_get_rect_by_anchor_points(
+static PvRect _func_basic_shape_get_rect_by_anchor_points(
 		const PvElement *element)
 {
 	pv_assert(element);
-	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
+	pv_assertf(PvElementKind_BasicShape == element->kind, "%d", element->kind);
 
-	PvElementRasterData *data = element->data;
-	pv_assert(data);
+	PvElementBasicShapeData *element_data = element->data;
+	pv_assert(element_data);
 
-	if(NULL == data->pixbuf){
-		pv_warning("");
-		return PvRect_Default;
-	}
+	PvPoint position = element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->translate.move;
+	PvPoint resize = element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize;
 
-	PvPoint position = data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move;
-	PvPoint resize = data->raster_appearances[PvElementRasterAppearanceIndex_Resize]->resize.resize;
+	const PvBasicShapeInfo *info = pv_basic_shape_info_get_from_kind(element_data->kind);
+	pv_assertf(info, "%d", element_data->kind);
+	PvPoint size = info->func_get_size(element_data->data);
 
 	PvRect rect = PvRect_Default;
 	rect.x = position.x;
 	rect.y = position.y;
-	rect.w = gdk_pixbuf_get_width(data->pixbuf) * resize.x;
-	rect.h = gdk_pixbuf_get_height(data->pixbuf) * resize.y;
+	rect.w = size.x * resize.x;
+	rect.h = size.y * resize.y;
 
 	PvPoint center = pv_rect_get_center(rect);
 	PvRect expand = PvRect_Default;
@@ -1760,7 +1708,7 @@ static PvRect _func_raster_get_rect_by_anchor_points(
 		PvPoint p = pv_rect_get_edge_point(rect, i);
 		p = pv_rotate_point(
 				p, 
-				data->raster_appearances[PvElementRasterAppearanceIndex_Rotate]->rotate.degree,
+				element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Rotate]->rotate.degree,
 				center);
 		expand = pv_rect_expand_from_point_(expand, p, i == 0);
 	}
@@ -1768,44 +1716,42 @@ static PvRect _func_raster_get_rect_by_anchor_points(
 	return expand;
 }
 
-static bool _func_raster_set_rect_by_anchor_points(
+static bool _func_basic_shape_set_rect_by_anchor_points(
 		PvElement *element,
 		PvRect rect)
 {
 	pv_assert(element);
-	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
+	pv_assertf(PvElementKind_BasicShape == element->kind, "%d", element->kind);
 
-	PvElementRasterData *data = element->data;
-	pv_assert(data);
+	PvElementBasicShapeData *element_data = element->data;
+	pv_assert(element_data);
 
-	if(NULL == data->pixbuf){
-		pv_warning("");
-		return false;
-	}
+	PvRect src_rect = _func_basic_shape_get_rect_by_anchor_points(element);
 
-	PvRect src_rect = _func_raster_get_rect_by_anchor_points(element);
-
-	data->raster_appearances[PvElementRasterAppearanceIndex_Translate]->translate.move
+	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->translate.move
 		= (PvPoint){.x = rect.x, .y = rect.y};
 	PvPoint scale_ = {
 		.x = rect.w / src_rect.w,
 		.y = rect.h / src_rect.h,
 	};
-	PvPoint *resize = &(data->raster_appearances[PvElementRasterAppearanceIndex_Resize]->resize.resize);
+	PvPoint *resize = &(element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize);
 	*resize = pv_point_mul(*resize, scale_);
 
 	return true;
 }
 
-static void _func_raster_apply_appearances(
+static void _func_basic_shape_apply_appearances(
 		PvElement *element,
 		PvAppearance **appearances)
 {
 	pv_assert(element);
-	pv_assertf(PvElementKind_Raster == element->kind, "%d", element->kind);
+	pv_assertf(PvElementKind_BasicShape == element->kind, "%d", element->kind);
 
-	PvElementRasterData *data = element->data;
-	pv_assert(data);
+	PvElementBasicShapeData *element_data = element->data;
+	pv_assert(element_data);
+
+	const PvBasicShapeInfo *info = pv_basic_shape_info_get_from_kind(element_data->kind);
+	pv_assertf(info, "%d", element_data->kind);
 
 	size_t num = pv_general_get_parray_num((void **)appearances);
 	for(int i = 0; i < (int)num; i++){
@@ -1816,31 +1762,31 @@ static void _func_raster_apply_appearances(
 				break;
 			case PvAppearanceKind_Translate:
 				{
-					PvPoint *move = &(data->raster_appearances
-							[PvElementRasterAppearanceIndex_Translate]->translate.move);
+					PvPoint *move = &(element_data->basic_shape_appearances
+							[PvElementBasicShapeAppearanceIndex_Translate]->translate.move);
 					*move = pv_point_add(*move, appearances[i]->translate.move);
 				}
 				break;
 			case PvAppearanceKind_Resize:
 				{
-					PvPoint *resize = &(data->raster_appearances
-							[PvElementRasterAppearanceIndex_Resize]->resize.resize);
-					PvPoint img_size = get_pixbuf_size_(data->pixbuf);
+					PvPoint *resize = &(element_data->basic_shape_appearances
+							[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize);
+					PvPoint img_size = info->func_get_size(element_data->data);
 					PvPoint src_size = pv_point_mul(img_size, *resize);
 
 					*resize = pv_point_mul(*resize, appearances[i]->resize.resize);
 
 					PvPoint dst_size = pv_point_mul(img_size, *resize);
 
-					PvPoint *move = &(data->raster_appearances
-							[PvElementRasterAppearanceIndex_Translate]->translate.move);
+					PvPoint *move = &(element_data->basic_shape_appearances
+							[PvElementBasicShapeAppearanceIndex_Translate]->translate.move);
 					PvPoint diff = pv_point_div_value(pv_point_sub(src_size, dst_size), 2);
 					*move = pv_point_add(*move, diff);
 				}
 				break;
 			case PvAppearanceKind_Rotate:
 				{
-					data->raster_appearances[PvElementRasterAppearanceIndex_Rotate]
+					element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Rotate]
 						->rotate.degree += appearances[i]->rotate.degree;
 				}
 				break;
@@ -1950,28 +1896,28 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_get_rect_by_draw			= _func_curve_get_rect_by_draw,
 		.func_apply_appearances			= _func_curve_apply_appearances,
 	},
-	{PvElementKind_Raster, "Raster",
-		.func_new_data				= _func_raster_new_data,
-		.func_free_data				= _func_raster_free_data,
-		.func_copy_new_data			= _func_raster_copy_new_data,
-		.func_write_svg				= _func_raster_write_svg,
-		.func_draw				= _func_raster_draw,
-		.func_draw_focusing			= _func_raster_draw_focusing,
-		.func_is_touch_element			= _func_raster_is_touch_element,
-		.func_is_overlap_rect			= _func_raster_is_overlap_rect,
+	{PvElementKind_BasicShape, "BasicShape",
+		.func_new_data				= _func_basic_shape_new_data,
+		.func_free_data				= _func_basic_shape_free_data,
+		.func_copy_new_data			= _func_basic_shape_copy_new_data,
+		.func_write_svg				= _func_basic_shape_write_svg,
+		.func_draw				= _func_basic_shape_draw,
+		.func_draw_focusing			= _func_basic_shape_draw_focusing,
+		.func_is_touch_element			= _func_basic_shape_is_touch_element,
+		.func_is_overlap_rect			= _func_basic_shape_is_overlap_rect,
 		.func_remove_delete_anchor_point	= _func_nop_remove_delete_anchor_point,
-		.func_is_diff_one			= _func_raster_is_diff_one,
-		.func_move_element			= _func_raster_move_element,
+		.func_is_diff_one			= _func_basic_shape_is_diff_one,
+		.func_move_element			= _func_basic_shape_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
 		.func_is_exist_anchor_point		= _func_nop_is_exist_anchor_point,
 		.func_new_anchor_points			= _func_null_new_anchor_points,
-		.func_get_anchor_point			= _func_raster_get_anchor_point,
-		.func_set_anchor_point_point		= _func_raster_set_anchor_point_point,
-		.func_move_anchor_point_point		= _func_raster_move_anchor_point,
-		.func_get_rect_by_anchor_points		= _func_raster_get_rect_by_anchor_points,
-		.func_set_rect_by_anchor_points		= _func_raster_set_rect_by_anchor_points,
+		.func_get_anchor_point			= _func_basic_shape_get_anchor_point,
+		.func_set_anchor_point_point		= _func_basic_shape_set_anchor_point_point,
+		.func_move_anchor_point_point		= _func_basic_shape_move_anchor_point,
+		.func_get_rect_by_anchor_points		= _func_basic_shape_get_rect_by_anchor_points,
+		.func_set_rect_by_anchor_points		= _func_basic_shape_set_rect_by_anchor_points,
 		.func_get_rect_by_draw			= _func_notimpl_get_rect_by_draw,
-		.func_apply_appearances			= _func_raster_apply_appearances,
+		.func_apply_appearances			= _func_basic_shape_apply_appearances,
 	},
 };
 

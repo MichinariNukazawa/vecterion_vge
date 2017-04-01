@@ -820,31 +820,26 @@ void pv_element_curve_set_close_anchor_point(PvElement *self, bool is_close)
 	pv_anchor_path_set_is_close(data->anchor_path, is_close);
 }
 
-static bool pv_element_raster_read_file(PvElement *self, const char *path)
+static bool pv_element_basic_shape_raster_read_file_(PvElement *self, const char *path)
 {
-	if(PvElementKind_Raster != self->kind){
-		pv_bug("");
-		return false;
-	}
+	pv_assertf(PvElementKind_BasicShape == self->kind, "%d", self->kind);
+	pv_assert(self->data);
 
-	if(NULL == self->data){
-		pv_bug("");
-		return false;
-	}
+	PvElementBasicShapeData *element_data = self->data;
+	PvBasicShapeRasterData *data = element_data->data;
 
-	PvElementRasterData *data = self->data;
 	if(NULL != data->path){
-		pv_fixme("");
-		return false;
-	}
-	data->path = pv_general_str_new(path);
-	if(NULL == data->path){
 		pv_error("");
 		return false;
 	}
-	data->pixbuf = gdk_pixbuf_new_from_file(data->path, NULL);
+	data->path = pv_general_str_new(path);
+	pv_assert(data->path);
+
+	GError *error = NULL;
+	data->pixbuf = gdk_pixbuf_new_from_file(data->path, &error);
 	if(NULL == data->pixbuf){
-		pv_warning("%s\n", data->path);
+		pv_warning("'%s' '%s'\n", data->path, error->message);
+		g_error_free(error);
 		return false;
 	}
 
@@ -861,15 +856,15 @@ static bool pv_element_raster_read_file(PvElement *self, const char *path)
 	return true;
 }
 
-PvElement *pv_element_raster_new_from_filepath(const char *filepath)
+PvElement *pv_element_basic_shape_new_from_filepath(const char *filepath)
 {
-	PvElement *self = pv_element_new(PvElementKind_Raster);
+	PvElement *self = pv_element_new(PvElementKind_BasicShape);
 	if(NULL == self){
 		pv_error("");
 		return NULL;
 	}
 
-	if(! pv_element_raster_read_file(self, filepath)){
+	if(! pv_element_basic_shape_raster_read_file_(self, filepath)){
 		_pv_element_free_single(self);
 		return NULL;
 	}
@@ -898,7 +893,7 @@ bool pv_element_kind_is_viewable_object(PvElementKind kind)
 		case PvElementKind_EndOfKind:
 			return false;
 		case PvElementKind_Curve:
-		case PvElementKind_Raster:
+		case PvElementKind_BasicShape:
 			return true;
 		default:
 			pv_bug("");
@@ -916,7 +911,7 @@ bool pv_element_kind_is_object(PvElementKind kind)
 			return false;
 		case PvElementKind_Group:
 		case PvElementKind_Curve:
-		case PvElementKind_Raster:
+		case PvElementKind_BasicShape:
 			return true;
 		default:
 			pv_bug("");

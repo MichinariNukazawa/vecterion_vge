@@ -536,7 +536,7 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		}
 	}
 
-	if(PvElementKind_Raster == element_current->kind){
+	if(PvElementKind_BasicShape == element_current->kind){
 		if(!attribute_cache->attributes[PvSvgAttributeKind_xlink_href].is_exist){
 			if(conf->imageFileReadOption->is_strict){
 				pv_error("strict");

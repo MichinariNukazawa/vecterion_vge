@@ -550,17 +550,18 @@ static EtDocId _open_doc_new_from_file(const char* filepath, const PvImageFileRe
 			et_error("");
 			goto finally;
 		}
-		PvElement *element_raster = pv_element_raster_new_from_filepath(filepath);
-		if(NULL == element_raster){
+		PvElement *element_basic_shape = pv_element_basic_shape_new_from_filepath(filepath);
+		if(NULL == element_basic_shape){
 			et_error("");
 			goto finally;
 		}
-		if(! pv_element_append_child(element_parent, NULL, element_raster)){
+		if(! pv_element_append_child(element_parent, NULL, element_basic_shape)){
 			et_error("");
 			goto finally;
 		}
 
-		PvElementRasterData *data = element_raster->data;
+		PvElementBasicShapeData *element_data = element_basic_shape->data;
+		PvBasicShapeRasterData *data = element_data->data;
 		vg_src->rect.w = gdk_pixbuf_get_width(data->pixbuf);
 		vg_src->rect.h = gdk_pixbuf_get_height(data->pixbuf);
 	}
@@ -1503,7 +1504,7 @@ PvElement *_new_element_from_filepath(const char *filepath)
 	if(PvFormatKind_SVG == format->kind){
 		element = pv_io_new_element_from_filepath(filepath);
 	}else{
-		element = pv_element_raster_new_from_filepath(filepath);
+		element = pv_element_basic_shape_new_from_filepath(filepath);
 	}
 
 	if(NULL == element){

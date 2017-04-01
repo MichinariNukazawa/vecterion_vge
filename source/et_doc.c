@@ -236,7 +236,7 @@ bool et_doc_signal_update_from_id(EtDocId doc_id)
 
 bool et_doc_set_image_from_file(EtDoc *self, const char *filepath)
 {
-	PvElement *element = pv_element_raster_new_from_filepath(filepath);
+	PvElement *element = pv_element_basic_shape_new_from_filepath(filepath);
 	if(NULL == element){
 		et_error("");
 		return false;

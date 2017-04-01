@@ -119,9 +119,9 @@ void pv_element_curve_set_close_anchor_point(PvElement *, bool);
 
 
 // ******** ********
-// PvElement Raster
+// PvElement BasicShape
 // ******** ********
-PvElement *pv_element_raster_new_from_filepath(const char *filepath);
+PvElement *pv_element_basic_shape_new_from_filepath(const char *filepath);
 
 
 

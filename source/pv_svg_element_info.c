@@ -165,7 +165,7 @@ static PvElement *_pv_svg_image_new_element_from_svg(
 		PvSvgReadConf *conf
 		)
 {
-	PvElement *element_new = pv_element_new(PvElementKind_Raster);
+	PvElement *element_new = pv_element_new(PvElementKind_BasicShape);
 	if(NULL == element_new){
 		pv_error("");
 		return NULL;

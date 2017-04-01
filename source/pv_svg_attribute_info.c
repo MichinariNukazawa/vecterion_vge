@@ -780,7 +780,7 @@ static bool func_xlink_href_set_(
 		const xmlAttr *attribute
 		)
 {
-	pv_assert(PvElementKind_Raster == element->kind);
+	pv_assert(PvElementKind_BasicShape == element->kind);
 
 	if(0 == strcasecmp("image", (char *)xmlnode->name)){
 		// NOP
@@ -797,7 +797,8 @@ static bool func_xlink_href_set_(
 
 	bool res = false;
 
-	PvElementRasterData *data = element->data;
+	PvElementBasicShapeData *element_data = element->data;
+	PvBasicShapeRasterData *data = element_data->data;
 	if(NULL != data->pixbuf){
 		pv_warning("");
 		goto failed0;

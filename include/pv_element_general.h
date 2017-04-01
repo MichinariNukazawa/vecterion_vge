@@ -42,23 +42,32 @@ static const PvMatrix PvMatrix_Default = {
 };
 
 typedef enum{
-	PvElementRasterAppearanceIndex_Translate,
-	PvElementRasterAppearanceIndex_Resize,
-	PvElementRasterAppearanceIndex_Rotate,
-}PvElementRasterAppearanceIndex;
-#define Num_PvElementRasterAppearance (3)
+	PvElementBasicShapeAppearanceIndex_Translate,
+	PvElementBasicShapeAppearanceIndex_Resize,
+	PvElementBasicShapeAppearanceIndex_Rotate,
+}PvElementBasicShapeAppearanceIndex;
+#define Num_PvElementBasicShapeAppearance (3)
 
-struct PvElementRasterData;
-typedef struct PvElementRasterData PvElementRasterData;
-struct PvElementRasterData{
-	PvAnchorPath *anchor_path;
+typedef enum{
+	PvBasicShapeKind_Raster,
+}PvBasicShapeKind;
 
+typedef struct{
 	char		*path;
 	GdkPixbuf	*pixbuf;
 	GByteArray	*urischeme_byte_array;
+}PvBasicShapeRasterData;
+
+struct PvElementBasicShapeData;
+typedef struct PvElementBasicShapeData PvElementBasicShapeData;
+struct PvElementBasicShapeData{
+	PvBasicShapeKind kind;
+	void *data;
+
+	PvAnchorPath *anchor_path;
 
 	// default payload appearances (void **) type is easy access
-	PvAppearance **raster_appearances;
+	PvAppearance **basic_shape_appearances;
 };
 
 struct PvElementCurveData;
@@ -78,7 +87,7 @@ typedef enum _PvElementKind{
 	PvElementKind_Group,
 	/* simple element kinds */
 	PvElementKind_Curve,
-	PvElementKind_Raster, /* Raster image */
+	PvElementKind_BasicShape, /* BasicShape image */
 
 	/* 番兵 */
 	PvElementKind_EndOfKind,

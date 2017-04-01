@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#define RASTER_FILEPATH_1 "./resource/vecterion/daisy_bell_header_r2.jpg"
+#define BASIC_SHAPE_FILEPATH_1 "./resource/vecterion/daisy_bell_header_r2.jpg"
 
 extern "C"
 {
@@ -12,28 +12,29 @@ TEST(Test, Test){
 	EXPECT_EQ(1,1);
 }
 
-TEST(Test, PvElement_Raster){
+TEST(Test, PvElement_BasicShape){
 	PvVg *vg = pv_vg_new();
 	assert(NULL != vg);
 
 	PvElement *element_parent = pv_vg_get_layer_top(vg);
 
-	PvElement *element_raster0 = pv_element_new(PvElementKind_Raster);
-	ASSERT_TRUE(NULL != element_raster0);
-	ASSERT_TRUE(pv_element_append_child(element_parent, NULL, element_raster0));
+	PvElement *element_basic_shape0 = pv_element_new(PvElementKind_BasicShape);
+	ASSERT_TRUE(NULL != element_basic_shape0);
+	ASSERT_TRUE(pv_element_append_child(element_parent, NULL, element_basic_shape0));
 
-	PvElement *element_raster1 = pv_element_raster_new_from_filepath(RASTER_FILEPATH_1);
-	ASSERT_TRUE(NULL != element_raster1);
-	PvElementRasterData *data = (PvElementRasterData *)element_raster1->data;
+	PvElement *element_basic_shape1 = pv_element_basic_shape_new_from_filepath(BASIC_SHAPE_FILEPATH_1);
+	ASSERT_TRUE(NULL != element_basic_shape1);
+	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)element_basic_shape1->data;
+	PvBasicShapeRasterData *data = (PvBasicShapeRasterData *)element_data->data;
 	ASSERT_TRUE(NULL != data);
 	ASSERT_TRUE(NULL != data->path);
-	ASSERT_STREQ(data->path, RASTER_FILEPATH_1);
+	ASSERT_STREQ(data->path, BASIC_SHAPE_FILEPATH_1);
 	ASSERT_TRUE(NULL != data->pixbuf);
-	ASSERT_TRUE(pv_element_append_child(element_parent, NULL, element_raster1));
+	ASSERT_TRUE(pv_element_append_child(element_parent, NULL, element_basic_shape1));
 
-	PvElement *element_raster2
-		= pv_element_raster_new_from_filepath("./test/testdata/invalid.jpg");
-	ASSERT_TRUE(NULL == element_raster2);
+	PvElement *element_basic_shape2
+		= pv_element_basic_shape_new_from_filepath("./test/testdata/invalid.jpg");
+	ASSERT_TRUE(NULL == element_basic_shape2);
 
 	pv_vg_free(vg);
 }
@@ -62,9 +63,9 @@ TEST(Test, PvVg_OnAllElementKind){
 	assert(pv_element_curve_add_anchor_point(element_curve0, ap));
 	assert(1 == pv_element_curve_get_num_anchor_point(element_curve0));
 	ASSERT_TRUE(pv_element_append_child(element_parent, NULL, element_curve0));
-	// ** raster
-	PvElement *element_raster1 = pv_element_raster_new_from_filepath(RASTER_FILEPATH_1);
-	ASSERT_TRUE(pv_element_append_child(element_parent, NULL, element_raster1));
+	// ** basic_shape
+	PvElement *element_basic_shape1 = pv_element_basic_shape_new_from_filepath(BASIC_SHAPE_FILEPATH_1);
+	ASSERT_TRUE(pv_element_append_child(element_parent, NULL, element_basic_shape1));
 
 	// ** copy
 	PvVg *vg2 = pv_vg_copy_new(vg);
