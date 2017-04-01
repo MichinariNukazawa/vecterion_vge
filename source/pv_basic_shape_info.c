@@ -7,6 +7,10 @@
 
 
 
+// ******** ********
+// Raster
+// ******** ********
+
 static gpointer func_raster_new_data_()
 {
 	PvBasicShapeRasterData *data = malloc(sizeof(PvBasicShapeRasterData));
@@ -65,6 +69,7 @@ static gpointer func_raster_copy_new_data_(
 }
 
 static bool func_raster_write_svg_(
+		xmlNodePtr *node_,
 		InfoTargetSvg *target,
 		const PvElement *element,
 		const ConfWriteSvg *conf)
@@ -120,6 +125,8 @@ static bool func_raster_write_svg_(
 	g_free(w_str);
 	g_free(h_str);
 
+	*node_ = node;
+
 	return true;
 }
 
@@ -141,12 +148,20 @@ static PvPoint func_raster_get_size_(const void *data_)
 	return get_pixbuf_size_(data->pixbuf);
 }
 
-static void func_raster_draw_(cairo_t *cr, const void *data_)
+static void func_raster_draw_(
+		cairo_t *cr,
+		const PvElement *element,
+		PvPoint resize)
 {
-	const PvBasicShapeRasterData *data = data_;
+	pv_assert(element);
+	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)element->data;
+	pv_assert(element_data);
+	PvBasicShapeRasterData *data = element_data->data;
+	pv_assert(data);
 
 	pv_assert(data->pixbuf);
 
+	cairo_scale(cr, resize.x, resize.y);
 	gdk_cairo_set_source_pixbuf (cr, data->pixbuf, 0, 0);
 	cairo_paint (cr);
 }
@@ -173,7 +188,136 @@ static bool func_raster_is_diff_one_(
 
 
 
+// ******** ********
+// Rect
+// ******** ********
+
+static gpointer func_rect_new_data_()
+{
+	PvBasicShapeRectData *data = malloc(sizeof(PvBasicShapeRectData));
+	pv_assert(data);
+
+	return data;
+}
+
+static void func_rect_free_data_(
+		void *data_)
+{
+	PvBasicShapeRectData *data = data_;
+	pv_assert(data);
+
+	free(data);
+}
+
+static gpointer func_rect_copy_new_data_(
+		const void *data_)
+{
+	const PvBasicShapeRectData *data = data_;
+	pv_assert(data);
+
+	PvBasicShapeRectData *new_data = func_rect_new_data_();
+	pv_assert(new_data);
+
+	*new_data = *data;
+
+	return new_data;
+}
+
+static bool func_rect_write_svg_(
+		xmlNodePtr *node_,
+		InfoTargetSvg *target,
+		const PvElement *element,
+		const ConfWriteSvg *conf)
+{
+	pv_assert(element);
+	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)element->data;
+	pv_assert(element_data);
+
+	PvBasicShapeRectData *data = element_data->data;
+	pv_assert(data);
+
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	pv_assert(info);
+	PvRect rect = info->func_get_rect_by_anchor_points(element);
+	char *x_str = g_strdup_printf("%.6f", rect.x);
+	char *y_str = g_strdup_printf("%.6f", rect.y);
+	char *w_str = g_strdup_printf("%.6f", rect.w);
+	char *h_str = g_strdup_printf("%.6f", rect.h);
+
+	xmlNodePtr node = xmlNewNode(NULL, BAD_CAST "rect");
+	pv_assert(node);
+
+	xmlNewProp(node, BAD_CAST "x", BAD_CAST x_str);
+	xmlNewProp(node, BAD_CAST "y", BAD_CAST y_str);
+	xmlNewProp(node, BAD_CAST "width", BAD_CAST w_str);
+	xmlNewProp(node, BAD_CAST "height", BAD_CAST h_str);
+	xmlAddChild(target->xml_parent_node, node);
+
+	g_free(x_str);
+	g_free(y_str);
+	g_free(w_str);
+	g_free(h_str);
+
+	*node_ = node;
+
+	return true;
+}
+
+static PvPoint func_rect_get_size_(const void *data_)
+{
+	return (PvPoint){1, 1};
+}
+
+static void func_rect_draw_(
+		cairo_t *cr,
+		const PvElement *element,
+		PvPoint resize)
+{
+	pv_assert(element);
+	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)element->data;
+	pv_assert(element_data);
+	PvBasicShapeRasterData *data = element_data->data;
+	pv_assert(data);
+
+	PvRect rect = {0, 0, 1, 1};
+	cairo_rectangle(cr, rect.x, rect.y, rect.w * resize.x, rect.h * resize.y);
+
+	cairo_set_line_width(cr, element->stroke.width);
+
+	PvCairoRgbaColor cc_f = pv_color_get_cairo_rgba(element->color_pair.colors[PvColorPairGround_BackGround]);
+	cairo_set_source_rgba (cr, cc_f.r, cc_f.g, cc_f.b, cc_f.a);
+	cairo_fill_preserve(cr);
+
+	PvCairoRgbaColor cc_s = pv_color_get_cairo_rgba(element->color_pair.colors[PvColorPairGround_ForGround]);
+	cairo_set_source_rgba (cr, cc_s.r, cc_s.g, cc_s.b, cc_s.a);
+	cairo_stroke(cr);
+}
+
+static bool func_rect_is_diff_one_(
+		const void *data0_,
+		const void *data1_)
+{
+	const PvBasicShapeRectData *data0 = data0_;
+	pv_assert(data0);
+	const PvBasicShapeRectData *data1 = data1_;
+	pv_assert(data1);
+
+	return false;
+}
+
+
+
+
 const PvBasicShapeInfo pv_basic_shape_infos_[] = {
+	{PvBasicShapeKind_Rect, "Rect",
+		.func_new_data			= func_rect_new_data_,
+		.func_free_data			= func_rect_free_data_,
+		.func_copy_new_data		= func_rect_copy_new_data_,
+		.func_write_svg			= func_rect_write_svg_,
+		.func_draw			= func_rect_draw_,
+		.func_get_size			= func_rect_get_size_,
+		.func_is_diff_one		= func_rect_is_diff_one_,
+	},
 	{PvBasicShapeKind_Raster, "Raster",
 		.func_new_data			= func_raster_new_data_,
 		.func_free_data			= func_raster_free_data_,

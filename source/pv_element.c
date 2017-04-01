@@ -4,6 +4,7 @@
 #include <string.h>
 #include "pv_error.h"
 #include "pv_element_info.h"
+#include "pv_basic_shape_info.h"
 #include "pv_urischeme.h"
 
 static bool _pv_element_free_single(PvElement *self);
@@ -427,9 +428,9 @@ static bool is_layer_root_null_from_element_(const PvElement *element)
 	switch(element->kind){
 		case PvElementKind_Root:
 		case PvElementKind_Layer:
-		return true;
+			return true;
 		default:
-		return false;
+			return false;
 	}
 }
 
@@ -867,6 +868,31 @@ PvElement *pv_element_basic_shape_new_from_filepath(const char *filepath)
 	if(! pv_element_basic_shape_raster_read_file_(self, filepath)){
 		_pv_element_free_single(self);
 		return NULL;
+	}
+
+	return self;
+}
+
+PvElement *pv_element_basic_shape_new_from_kind(PvBasicShapeKind kind)
+{
+	PvElement *self = pv_element_new(PvElementKind_BasicShape);
+	pv_assert(self);
+
+	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)self->data;
+	pv_assert(element_data);
+
+	if(kind != element_data->kind){
+		const PvBasicShapeInfo *basic_shape_info_before = pv_basic_shape_info_get_from_kind(element_data->kind);
+		pv_assert(basic_shape_info_before);
+		void *data = element_data->data;
+		basic_shape_info_before->func_free_data(data);
+
+		const PvBasicShapeInfo *basic_shape_info_after = pv_basic_shape_info_get_from_kind(kind);
+		pv_assert(basic_shape_info_after);
+		element_data->data = basic_shape_info_after->func_new_data();
+		pv_assert(self->data);
+
+		element_data->kind = kind;
 	}
 
 	return self;

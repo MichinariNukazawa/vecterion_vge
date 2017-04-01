@@ -537,14 +537,17 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 	}
 
 	if(PvElementKind_BasicShape == element_current->kind){
-		if(!attribute_cache->attributes[PvSvgAttributeKind_xlink_href].is_exist){
-			if(conf->imageFileReadOption->is_strict){
-				pv_error("strict");
-				goto failed1;
+		PvElementBasicShapeData *element_data = element_current->data;
+		if(PvBasicShapeKind_Raster == element_data->kind){
+			if(!attribute_cache->attributes[PvSvgAttributeKind_xlink_href].is_exist){
+				if(conf->imageFileReadOption->is_strict){
+					pv_error("strict");
+					goto failed1;
+				}
+				pv_warning("remove empty image element by vecterion.");
+				pv_element_remove_free_recursive(element_current);
+				goto skiped;
 			}
-			pv_warning("remove empty image element by vecterion.");
-			pv_element_remove_free_recursive(element_current);
-			goto skiped;
 		}
 	}
 
@@ -596,6 +599,9 @@ skiped:
 failed1:
 	pv_element_remove_free_recursive(element_current);
 failed0:
+
+	pv_debug("fail:'%s'(%d)",
+				xmlnode->name, xmlnode->line);
 	return false;
 }
 

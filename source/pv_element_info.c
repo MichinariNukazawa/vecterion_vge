@@ -498,7 +498,23 @@ static char *_curve_new_str_from_anchor(const PvAnchorPoint ap_current, const Pv
 	return str;
 }
 
-static bool _node_add_stroke_props(xmlNodePtr node, PvStroke stroke)
+static void node_add_color_props_(xmlNodePtr node, const PvElement *element)
+{
+	char *str_fg_color = pv_color_new_str_svg_rgba_simple(
+			element->color_pair.colors[PvColorPairGround_ForGround]);
+	pv_assert(str_fg_color);
+	char *str_bg_color = pv_color_new_str_svg_rgba_simple(
+			element->color_pair.colors[PvColorPairGround_BackGround]);
+	pv_assert(str_bg_color);
+
+	xmlNewProp(node, BAD_CAST "fill", BAD_CAST str_bg_color);
+	xmlNewProp(node, BAD_CAST "stroke", BAD_CAST str_fg_color);
+
+	g_free(str_bg_color);
+	g_free(str_fg_color);
+}
+
+static bool node_add_stroke_props_(xmlNodePtr node, PvStroke stroke)
 {
 	char *str = g_strdup_printf("%.3f", stroke.width);
 	xmlNewProp(node, BAD_CAST "stroke-width", BAD_CAST str);
@@ -713,23 +729,14 @@ static int _func_curve_write_svg(
 		}
 	}
 
-	char *str_fg_color = pv_color_new_str_svg_rgba_simple(
-			element->color_pair.colors[PvColorPairGround_ForGround]);
-	pv_assert(str_fg_color);
-	char *str_bg_color = pv_color_new_str_svg_rgba_simple(
-			element->color_pair.colors[PvColorPairGround_BackGround]);
-	pv_assert(str_bg_color);
-
 	xmlNodePtr node = xmlNewNode(NULL, BAD_CAST "path");
-	xmlNewProp(node, BAD_CAST "fill", BAD_CAST str_bg_color);
-	xmlNewProp(node, BAD_CAST "stroke", BAD_CAST str_fg_color);
-	xmlNewProp(node, BAD_CAST "d", BAD_CAST str_current);
+	pv_assert(node);
 
-	g_free(str_bg_color);
-	g_free(str_fg_color);
+	xmlNewProp(node, BAD_CAST "d", BAD_CAST str_current);
 	g_free(str_current);
 
-	_node_add_stroke_props(node, element->stroke);
+	node_add_color_props_(node, element);
+	node_add_stroke_props_(node, element->stroke);
 
 	xmlAddChild(target->xml_parent_node, node);
 	//target->xml_parent_node = node;
@@ -1355,9 +1362,13 @@ static int _func_basic_shape_write_svg(
 	const PvBasicShapeInfo *info = pv_basic_shape_info_get_from_kind(element_data->kind);
 	pv_assertf(info, "%d", element_data->kind);
 
-	if(!info->func_write_svg(target, element, conf)){
+	xmlNodePtr node = NULL;
+	if(!info->func_write_svg(&node, target, element, conf)){
 		return -1;
 	}
+
+	node_add_color_props_(node, element);
+	node_add_stroke_props_(node, element->stroke);
 
 	return 0;
 }
@@ -1453,9 +1464,8 @@ static bool _basic_shape_draw_inline(
 		case BasicShapeDrawKind_Draw:
 			{
 				cairo_translate(cr, position.x, position.y);
-				cairo_scale(cr, resize.x, resize.y);
 
-				info->func_draw(cr, simplify_element_data->data);
+				info->func_draw(cr, simplify, resize);
 			}
 			break;
 		case BasicShapeDrawKind_DrawFocusing:

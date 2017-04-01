@@ -894,6 +894,8 @@ static bool func_x_set_(
 		// NOP
 	}else if(0 == strcasecmp("image", (char *)xmlnode->name)){
 		// NOP
+	}else if(0 == strcasecmp("rect", (char *)xmlnode->name)){
+		// NOP
 	}else{
 		pv_error("'%s'", attribute->name);
 		return false;
@@ -930,6 +932,8 @@ static bool func_y_set_(
 	if(0 == strcasecmp("svg", (char *)xmlnode->name)){
 		// NOP
 	}else if(0 == strcasecmp("image", (char *)xmlnode->name)){
+		// NOP
+	}else if(0 == strcasecmp("rect", (char *)xmlnode->name)){
 		// NOP
 	}else{
 		pv_error("'%s'", attribute->name);
@@ -968,6 +972,8 @@ static bool func_width_set_(
 		// NOP
 	}else if(0 == strcasecmp("image", (char *)xmlnode->name)){
 		// NOP
+	}else if(0 == strcasecmp("rect", (char *)xmlnode->name)){
+		// NOP
 	}else{
 		pv_error("'%s'", attribute->name);
 		return false;
@@ -1004,6 +1010,8 @@ static bool func_height_set_(
 	if(0 == strcasecmp("svg", (char *)xmlnode->name)){
 		// NOP
 	}else if(0 == strcasecmp("image", (char *)xmlnode->name)){
+		// NOP
+	}else if(0 == strcasecmp("rect", (char *)xmlnode->name)){
 		// NOP
 	}else{
 		pv_error("'%s'", attribute->name);

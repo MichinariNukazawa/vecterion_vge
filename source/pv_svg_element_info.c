@@ -156,6 +156,31 @@ static PvElement *_pv_svg_line_new_element_from_svg(
 	return element;
 }
 
+static PvElement *_pv_svg_rect_new_element_from_svg(
+		PvElement *element_parent,
+		PvSvgAttributeCache *attribute_cache,
+		xmlNodePtr xmlnode,
+		bool *isDoChild,
+		gpointer data,
+		PvSvgReadConf *conf
+		)
+{
+	PvElement *element_new = pv_element_basic_shape_new_from_kind(PvBasicShapeKind_Rect);
+	pv_assert(element_new);
+
+	if(!pv_element_append_child(element_parent, NULL, element_new)){
+		pv_error("");
+		goto failed;
+	}
+
+	return element_new;
+
+failed:
+	pv_element_free(element_new);
+
+	return NULL;
+}
+
 static PvElement *_pv_svg_image_new_element_from_svg(
 		PvElement *element_parent,
 		PvSvgAttributeCache *attribute_cache,
@@ -191,11 +216,6 @@ static bool func_image_set_attribute_cache_(
 {
 	pv_assert(element);
 	pv_assert(attribute_cache);
-
-	if(!attribute_cache->attributes[PvSvgAttributeKind_xlink_href].is_exist){
-		pv_debug("");
-		return true;
-	}
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 	pv_assert(info);
@@ -274,6 +294,11 @@ const PvSvgElementInfo _pv_svg_element_infos[] = {
 		.tagname = "line",
 		.func_new_element_from_svg	= _pv_svg_line_new_element_from_svg,
 		.func_set_attribute_cache	= func_nop_set_attribute_cache_,
+	},
+	{
+		.tagname = "rect",
+		.func_new_element_from_svg	= _pv_svg_rect_new_element_from_svg,
+		.func_set_attribute_cache	= func_image_set_attribute_cache_,
 	},
 	{
 		.tagname = "image",

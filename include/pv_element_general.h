@@ -49,6 +49,7 @@ typedef enum{
 #define Num_PvElementBasicShapeAppearance (3)
 
 typedef enum{
+	PvBasicShapeKind_Rect,
 	PvBasicShapeKind_Raster,
 }PvBasicShapeKind;
 
@@ -57,6 +58,9 @@ typedef struct{
 	GdkPixbuf	*pixbuf;
 	GByteArray	*urischeme_byte_array;
 }PvBasicShapeRasterData;
+typedef struct{
+	int dummy;
+}PvBasicShapeRectData;
 
 struct PvElementBasicShapeData;
 typedef struct PvElementBasicShapeData PvElementBasicShapeData;

@@ -20,12 +20,14 @@ typedef void (*PvBasicShapeFuncFreeData)(
 typedef gpointer (*PvBasicShapeFuncCopyNewData)(
 		const void *);
 typedef bool (*PvBasicShapeFuncWriteSvg)(
+		xmlNodePtr *node,
 		InfoTargetSvg *target,
 		const PvElement *element,
 		const ConfWriteSvg *conf);
 typedef void (*PvBasicShapeFuncDraw)(
 		cairo_t *cr,
-		const void *data);
+		const PvElement *element,
+		PvPoint resize);
 typedef PvPoint (*PvBasicShapeFuncGetSize)(
 		const void *);
 typedef bool (*PvBasicShapeFuncIsDiffOne)(
