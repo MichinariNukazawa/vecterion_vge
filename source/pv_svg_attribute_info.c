@@ -27,19 +27,12 @@ static bool func_nop_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
 {
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST attribute->name);
-	if(!value){
-		pv_error("");
-		return false;
-	}
-
 	pv_warning("Not implement:'%s'(%d) in '%s'", (char *)attribute->name, xmlnode->line, (char *)xmlnode->name);
-
-	xmlFree(value);
 
 	return true;
 }
@@ -91,77 +84,48 @@ static bool func_fill_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
 {
-	bool res = true;
-
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "fill");
-	if(!value){
+	PvColor *color = &(element->color_pair.colors[PvColorPairGround_BackGround]);
+	if(! pv_io_util_get_pv_color_from_svg_str_rgba(color, (const char *)value)){
 		pv_error("");
 		return false;
 	}
 
-	PvColor *color = &(element->color_pair.colors[PvColorPairGround_BackGround]);
-	if(! pv_io_util_get_pv_color_from_svg_str_rgba(color, (const char *)value)){
-		pv_error("");
-		res = false;
-		goto failed;
-	}
-
-failed:
-	xmlFree(value);
-
-	return res;
+	return true;
 }
 
 static bool func_stroke_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
 {
-	bool res = true;
-
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "stroke");
-	if(!value){
+	PvColor *color = &(element->color_pair.colors[PvColorPairGround_ForGround]);
+	if(! pv_io_util_get_pv_color_from_svg_str_rgba(color, (const char *)value)){
 		pv_error("");
 		return false;
 	}
 
-	PvColor *color = &(element->color_pair.colors[PvColorPairGround_ForGround]);
-	if(! pv_io_util_get_pv_color_from_svg_str_rgba(color, (const char *)value)){
-		pv_error("");
-		res = false;
-		goto failed;
-	}
-
-failed:
-	xmlFree(value);
-
-	return res;
+	return true;
 }
 
 static bool func_stroke_width_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
 {
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "stroke-width");
-	if(!value){
-		pv_error("");
-		return false;
-	}
-
 	element->stroke.width = pv_io_util_get_double_from_str((const char *)value);
-
-	xmlFree(value);
 
 	return true;
 }
@@ -170,16 +134,11 @@ static bool func_stroke_linecap_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
 {
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "stroke-linecap");
-	if(!value){
-		pv_error("");
-		return false;
-	}
-
 	int num = get_num_stroke_linecap_infos();
 	for(int i = 0; i < num; i++){
 		const PvStrokeLinecapInfo *info = get_stroke_linecap_info_from_id(i);
@@ -189,8 +148,6 @@ static bool func_stroke_linecap_set_(
 		}
 	}
 
-	xmlFree(value);
-
 	return true;
 }
 
@@ -198,16 +155,11 @@ static bool func_stroke_linejoin_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
 {
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "stroke-linejoin");
-	if(!value){
-		pv_error("");
-		return false;
-	}
-
 	int num = get_num_stroke_linejoin_infos();
 	for(int i = 0; i < num; i++){
 		const PvStrokeLinejoinInfo *info = get_stroke_linejoin_info_from_id(i);
@@ -217,7 +169,6 @@ static bool func_stroke_linejoin_set_(
 		}
 	}
 
-	xmlFree(value);
 	return true;
 }
 
@@ -473,6 +424,7 @@ static bool func_d_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -487,15 +439,7 @@ static bool func_d_set_(
 		return false;
 	}
 
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "d");
-	if(!value){
-		pv_error("");
-		return false;
-	}
-
 	bool ret = func_d_set_inline_(element, attribute_cache, (const char *)value);
-
-	xmlFree(value);
 
 	return ret;
 }
@@ -543,6 +487,7 @@ static bool func_points_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -561,15 +506,7 @@ static bool func_points_set_(
 		return false;
 	}
 
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "points");
-	if(!value){
-		pv_error("");
-		return false;
-	}
-
 	bool ret = func_points_set_inline_(element, attribute_cache, (const char *)value);
-
-	xmlFree(value);
 
 	return ret;
 }
@@ -578,6 +515,7 @@ static bool func_x1_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -591,12 +529,6 @@ static bool func_x1_set_(
 
 	if(PvElementKind_Curve == element->kind){
 		pv_error("%d '%s'", element->kind, attribute->name);
-		return false;
-	}
-
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "x1");
-	if(!value){
-		pv_error("");
 		return false;
 	}
 
@@ -618,8 +550,6 @@ static bool func_x1_set_(
 	PvPoint point = pv_anchor_point_get_point(ap);
 	point.x = v;
 	pv_anchor_point_set_point(ap, point);
-
-	xmlFree(value);
 
 	return true;
 }
@@ -628,6 +558,7 @@ static bool func_y1_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -641,12 +572,6 @@ static bool func_y1_set_(
 
 	if(PvElementKind_Curve == element->kind){
 		pv_error("%d '%s'", element->kind, attribute->name);
-		return false;
-	}
-
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "x1");
-	if(!value){
-		pv_error("");
 		return false;
 	}
 
@@ -669,14 +594,13 @@ static bool func_y1_set_(
 	point.y = v;
 	pv_anchor_point_set_point(ap, point);
 
-	xmlFree(value);
-
 	return true;
 }
 static bool func_x2_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -690,12 +614,6 @@ static bool func_x2_set_(
 
 	if(PvElementKind_Curve == element->kind){
 		pv_error("%d '%s'", element->kind, attribute->name);
-		return false;
-	}
-
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "x1");
-	if(!value){
-		pv_error("");
 		return false;
 	}
 
@@ -718,14 +636,13 @@ static bool func_x2_set_(
 	point.x = v;
 	pv_anchor_point_set_point(ap, point);
 
-	xmlFree(value);
-
 	return true;
 }
 static bool func_y2_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -739,12 +656,6 @@ static bool func_y2_set_(
 
 	if(PvElementKind_Curve == element->kind){
 		pv_error("%d '%s'", element->kind, attribute->name);
-		return false;
-	}
-
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "x1");
-	if(!value){
-		pv_error("");
 		return false;
 	}
 
@@ -767,8 +678,6 @@ static bool func_y2_set_(
 	point.y = v;
 	pv_anchor_point_set_point(ap, point);
 
-	xmlFree(value);
-
 	return true;
 }
 
@@ -776,6 +685,7 @@ static bool func_xlink_href_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -786,12 +696,6 @@ static bool func_xlink_href_set_(
 		// NOP
 	}else{
 		pv_error("'%s'", attribute->name);
-		return false;
-	}
-
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "href");
-	if(!value){
-		pv_error("");
 		return false;
 	}
 
@@ -877,7 +781,6 @@ static bool func_xlink_href_set_(
 failed1:
 	g_object_unref(loader);
 failed0:
-	xmlFree(value);
 
 	return res;
 }
@@ -886,6 +789,7 @@ static bool func_x_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -898,12 +802,6 @@ static bool func_x_set_(
 		// NOP
 	}else{
 		pv_error("'%s'", attribute->name);
-		return false;
-	}
-
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "x");
-	if(!value){
-		pv_error("");
 		return false;
 	}
 
@@ -916,8 +814,6 @@ static bool func_x_set_(
 	attribute_cache->attributes[PvSvgAttributeKind_x].is_exist = true;
 	attribute_cache->attributes[PvSvgAttributeKind_x].value = v;
 
-	xmlFree(value);
-
 	return true;
 }
 
@@ -925,6 +821,7 @@ static bool func_y_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -937,12 +834,6 @@ static bool func_y_set_(
 		// NOP
 	}else{
 		pv_error("'%s'", attribute->name);
-		return false;
-	}
-
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "y");
-	if(!value){
-		pv_error("");
 		return false;
 	}
 
@@ -955,8 +846,6 @@ static bool func_y_set_(
 	attribute_cache->attributes[PvSvgAttributeKind_y].is_exist = true;
 	attribute_cache->attributes[PvSvgAttributeKind_y].value = v;
 
-	xmlFree(value);
-
 	return true;
 }
 
@@ -964,6 +853,7 @@ static bool func_width_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -976,12 +866,6 @@ static bool func_width_set_(
 		// NOP
 	}else{
 		pv_error("'%s'", attribute->name);
-		return false;
-	}
-
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "width");
-	if(!value){
-		pv_error("");
 		return false;
 	}
 
@@ -994,8 +878,6 @@ static bool func_width_set_(
 	attribute_cache->attributes[PvSvgAttributeKind_width].is_exist = true;
 	attribute_cache->attributes[PvSvgAttributeKind_width].value = v;
 
-	xmlFree(value);
-
 	return true;
 }
 
@@ -1003,6 +885,7 @@ static bool func_height_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -1018,12 +901,6 @@ static bool func_height_set_(
 		return false;
 	}
 
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "height");
-	if(!value){
-		pv_error("");
-		return false;
-	}
-
 	double v = pv_io_util_get_double_from_str((const char *)value);
 
 	if(attribute_cache->attributes[PvSvgAttributeKind_height].is_exist){
@@ -1033,8 +910,6 @@ static bool func_height_set_(
 	attribute_cache->attributes[PvSvgAttributeKind_height].is_exist = true;
 	attribute_cache->attributes[PvSvgAttributeKind_height].value = v;
 
-	xmlFree(value);
-
 	return true;
 }
 
@@ -1042,6 +917,7 @@ static bool func_view_box_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -1052,14 +928,6 @@ static bool func_view_box_set_(
 		pv_error("'%s'", attribute->name);
 		return false;
 	}
-
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "viewBox");
-	if(!value){
-		pv_error("");
-		return false;
-	}
-
-	xmlFree(value);
 
 	return true;
 }
@@ -1119,16 +987,11 @@ static bool func_transform_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
 {
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "transform");
-	if(!value){
-		pv_error("");
-		return false;
-	}
-
 	bool res = false;
 
 	PvStrMap *transform_str_maps = new_transform_str_maps_from_str_((const char *)value);
@@ -1213,8 +1076,6 @@ static bool func_transform_set_(
 failed:
 	pv_str_maps_free(transform_str_maps);
 
-	xmlFree(value);
-
 	return res;
 }
 
@@ -1222,6 +1083,7 @@ static bool func_groupmode_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		)
@@ -1235,17 +1097,9 @@ static bool func_groupmode_set_(
 
 	pv_assert(PvElementKind_Layer == element->kind || PvElementKind_Group == element->kind);
 
-	xmlChar *value = xmlGetProp(xmlnode, BAD_CAST "groupmode");
-	if(!value){
-		pv_error("");
-		return false;
-	}
-
 	if(0 == strcasecmp("layer", (char*)value)){
 		element->kind = PvElementKind_Layer;
 	}
-
-	xmlFree(value);
 
 	return true;
 }

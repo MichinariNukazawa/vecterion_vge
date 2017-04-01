@@ -517,12 +517,20 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 			const PvSvgAttributeInfo *info = pv_svg_get_svg_attribute_info_from_name((const char *)attribute->name);
 
 			if(info){
+				xmlChar *value = xmlGetProp(xmlnode, BAD_CAST attribute->name);
+				pv_assertf(value, "'%s'(%d) on '%s'",
+						attribute->name, xmlnode->line, xmlnode->name);
+
 				bool ret = info->pv_svg_attribute_func_set(
-						element_current, attribute_cache, conf, xmlnode, attribute);
+						element_current, attribute_cache, conf,
+						(const char *)value,
+						xmlnode, attribute);
 				if(!ret){
 					pv_warning("'%s'(%d) on '%s'",
 							attribute->name, xmlnode->line, xmlnode->name);
 				}
+
+				xmlFree(value);
 			}else{
 				pv_warning("Not implement:'%s'(%d) on '%s'",
 						attribute->name, xmlnode->line, xmlnode->name);
@@ -601,7 +609,7 @@ failed1:
 failed0:
 
 	pv_debug("fail:'%s'(%d)",
-				xmlnode->name, xmlnode->line);
+			xmlnode->name, xmlnode->line);
 	return false;
 }
 

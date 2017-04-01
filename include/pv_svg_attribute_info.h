@@ -52,6 +52,7 @@ typedef bool (*PvSvgAttributeFuncSet)(
 		PvElement *element,
 		PvSvgAttributeCache *attributeCache,
 		PvSvgReadConf *conf,
+		const char *value,
 		const xmlNodePtr xmlnode,
 		const xmlAttr *attribute
 		);
