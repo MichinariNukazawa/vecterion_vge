@@ -13,6 +13,7 @@ enum{
 	EtToolId_EditAnchorPoint,
 	EtToolId_AddAnchorPoint,
 	EtToolId_EditAnchorPointHandle,
+	EtToolId_AddBasicShapeElement,
 	EtToolId_KnifeAnchorPoint,
 	EtToolId_InsertAnchorPoint,
 };

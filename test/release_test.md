@@ -148,6 +148,10 @@ Current：現在選択しているターゲット(ex. CurrentDocument, CurrentEl
 * AnchorHandleのあるAnchorPointをクリックしてドラッグする。
 	ドラッグした側のHandleがマウスに追随して変形し、反対のHandleが点対称に変形する。  
 
+#### AddBasicShapeTool
+* Canvas上をドラッグする。
+	BasicShapeElement/BasicShapeRectが追加される。  
+
 #### KnifeAnchorPathTool
 本Toolの実行結果はAnchorPointを移動してみると判断できる。  
 本Toolを使用した際、ElementCurveは切れるが、全体のAnchorPathの線の形状は変形しない。  

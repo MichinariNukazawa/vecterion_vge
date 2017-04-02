@@ -1421,6 +1421,32 @@ static void curve_element_split_from_index_(PvElement *element, PvElement **p_el
 	}
 }
 
+static bool add_basic_shape_element_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action)
+{
+	PvElement *parent_layer = pv_focus_get_first_layer(focus);
+	et_assert(parent_layer);
+
+	PvElement *element = pv_element_basic_shape_new_from_kind(PvBasicShapeKind_Rect);
+	et_assert(element);
+
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	et_assert(info);
+
+	PvRect rect = {
+		mouse_action.point.x,
+		mouse_action.point.y,
+		1,
+		1,
+	};
+	info->func_set_rect_by_anchor_points(element, rect);
+
+	pv_element_append_child(parent_layer, NULL, element);
+
+	pv_focus_clear_set_element(focus, element);
+
+	return true;
+}
+
 static int insert_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action);
 
 static bool knife_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action)
@@ -1461,6 +1487,54 @@ static bool knife_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction m
 		pv_element_append_child(parent_layer, element, element_post);
 		pv_focus_add_element(focus, element);
 		pv_focus_add_element(focus, element_post);
+	}
+
+	return true;
+}
+
+static bool _func_add_basic_shape_element_mouse_action(
+		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
+{
+	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
+	et_assertf(doc, "%d", doc_id);
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	et_assertf(focus, "%d", doc_id);
+
+	static EtFocusElementMouseActionMode mode_ = EtFocusElementMouseActionMode_None;
+	static PvRect src_extent_rect_;
+
+	switch(mouse_action.action){
+		case EtMouseAction_Down:
+			{
+				add_basic_shape_element_down_(doc, focus, mouse_action);
+				src_extent_rect_ = _get_rect_extent_from_elements(focus->elements);
+				mode_ = EtFocusElementMouseActionMode_Resize;
+			}
+			break;
+		case EtMouseAction_Move:
+			{
+				if(EtFocusElementMouseActionMode_Resize == mode_){
+					static EdgeKind mode_edge_ = EdgeKind_Resize_DownLeft;
+					_resize_elements(doc_id, mouse_action, mode_edge_, src_extent_rect_);
+				}
+			}
+			break;
+		case EtMouseAction_Up:
+			{
+				PvElement *element = pv_focus_get_first_element(focus);
+				et_assert(element);
+				const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+				et_assert(info);
+				info->func_apply_appearances(element, element->etaion_work_appearances);
+				element->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
+
+				mode_ = EtFocusElementMouseActionMode_None;
+
+				et_doc_save_from_id(doc_id);
+			}
+			break;
+		default:
+			break;
 	}
 
 	return true;
@@ -1755,6 +1829,21 @@ EtToolInfo _et_tool_infos[] = {
 			{0, (0),},
 		},
 		.func_mouse_action = _func_edit_anchor_point_handle_mouse_action,
+		.mouse_cursor = NULL,
+	},
+	{
+		.tool_id = EtToolId_AddBasicShapeElement,
+		.name = "Add Basic Shape Element",
+		.is_element_tool = true,
+		.icon = NULL,
+		.icon_focus = NULL,
+		.icon_cursor = NULL,
+		.filepath_icon = NULL,
+		.filepath_cursor = "resource/tool/tool_basic_shape_24x24.svg",
+		.shortcuts = {
+			{0, (0),},
+		},
+		.func_mouse_action = _func_add_basic_shape_element_mouse_action,
 		.mouse_cursor = NULL,
 	},
 	{
