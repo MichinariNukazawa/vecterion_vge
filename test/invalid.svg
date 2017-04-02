@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+    viewBox="0 0 400 400"
+    height="400"
+    width="400">
+   <g>
+        <path
+        invalid-attribute="invalid"
+        fill="#ff8888"
+        stroke="#ff2222"
+        stroke-width="6"
+        style="fill:#88ff88;stroke:#22ff22"
+        d="M30 10 l 250,0 0,250 -250,0 "/>
+  </g>
+</svg>
+

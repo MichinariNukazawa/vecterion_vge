@@ -11,7 +11,7 @@ set -o pipefail
 
 trap 'echo "error:$0($LINENO) \"$BASH_COMMAND\" \"$@\""' ERR
 
-#SCRIPT_DIR=$(cd $(dirname $0); pwd)
+SCRIPT_DIR=$(cd $(dirname $0); pwd)
 
 [ 1 -eq $# ]
 VECTERION=$1
@@ -19,7 +19,7 @@ VECTERION=$1
 
 
 OBJECT_DIR=object/svg_read_invalid_test
-SOURCE_SVG_FILE=library/23.svg
+SOURCE_SVG_FILE=${SCRIPT_DIR}/../invalid.svg
 
 mkdir -p ${OBJECT_DIR}
 
