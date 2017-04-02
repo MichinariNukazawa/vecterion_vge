@@ -84,8 +84,8 @@ bool pv_io_util_get_pv_color_from_svg_str_rgba(PvColor *ret_color, const char *s
 				}
 				break;
 			default:
-				goto error;
 				pv_warning("'%s'", str);
+				goto error;
 		}
 	}
 
@@ -94,6 +94,7 @@ bool pv_io_util_get_pv_color_from_svg_str_rgba(PvColor *ret_color, const char *s
 		return true;
 	}
 
+	pv_warning("'%s'", str);
 	goto error;
 
 match:
@@ -157,6 +158,45 @@ void pv_double_array_fill(double *dst, double value, int size)
 	for(int i = 0; i < size; i++){
 		dst[i] = value;
 	}
+}
+
+PvStrMap *pv_new_css_str_maps_from_str(const char *style_str)
+{
+	const char *head = style_str;
+
+	int num = 0;
+	PvStrMap *map = NULL;
+	map = realloc(map, sizeof(PvStrMap) * (num + 1));
+	map[num - 0].key = NULL;
+	map[num - 0].value = NULL;
+
+	while(NULL != head && '\0' != *head){
+
+		char *skey;
+		char *svalue;
+		if(2 != sscanf(head, " %m[^:;] : %m[^;]", &skey, &svalue)){
+			break;
+		}
+		num++;
+
+		map = realloc(map, sizeof(PvStrMap) * (num + 1));
+		pv_assert(map);
+
+		map[num - 0].key = NULL;
+		map[num - 0].value = NULL;
+		map[num - 1].key = skey;
+		map[num - 1].value = svalue;
+
+		head = strchr(head, ';');
+		if(NULL == head){
+			break;
+		}
+		if(';' == *head){
+			head++;
+		}
+	}
+
+	return map;
 }
 
 void pv_str_maps_free(PvStrMap *map)

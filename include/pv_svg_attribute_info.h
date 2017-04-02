@@ -29,6 +29,9 @@ static const PvSvgReadConf PvSvgReadConf_Default = {
 };
 
 typedef enum{
+	PvSvgAttributeKind_fill,
+	PvSvgAttributeKind_stroke,
+	PvSvgAttributeKind_stroke_width,
 	PvSvgAttributeKind_x,
 	PvSvgAttributeKind_y,
 	PvSvgAttributeKind_width,
@@ -40,6 +43,7 @@ typedef enum{
 typedef struct{
 	bool is_exist;
 	double value;
+	PvColor color;
 }PvSvgAttributeItem;
 
 typedef struct{
@@ -58,8 +62,9 @@ typedef bool (*PvSvgAttributeFuncSet)(
 		);
 
 typedef struct{
-	const char *name;
-	PvSvgAttributeFuncSet pv_svg_attribute_func_set;
+	const char			*name;
+	PvSvgAttributeFuncSet		pv_svg_attribute_func_set;
+	bool				is_able_style;
 }PvSvgAttributeInfo;
 
 extern const PvSvgAttributeInfo _pv_svg_attribute_infos[];

@@ -17,6 +17,7 @@ void pv_svg_attribute_cache_init(PvSvgAttributeCache *attribute_cache)
 	const PvSvgAttributeItem PvSvgAttributeItem_Default = {
 		false,
 		0,
+		{{0, 0, 0, 0, },},
 	};
 	for(int i = 0; i < (int)PvSvgAttributeKind_NUM; i++){
 		attribute_cache->attributes[i] = PvSvgAttributeItem_Default;
@@ -89,11 +90,14 @@ static bool func_fill_set_(
 		const xmlAttr *attribute
 		)
 {
-	PvColor *color = &(element->color_pair.colors[PvColorPairGround_BackGround]);
-	if(! pv_io_util_get_pv_color_from_svg_str_rgba(color, (const char *)value)){
+	PvColor color;
+	if(! pv_io_util_get_pv_color_from_svg_str_rgba(&color, (const char *)value)){
 		pv_error("");
 		return false;
 	}
+
+	attribute_cache->attributes[PvSvgAttributeKind_fill].is_exist = true;
+	attribute_cache->attributes[PvSvgAttributeKind_fill].color = color;
 
 	return true;
 }
@@ -107,11 +111,14 @@ static bool func_stroke_set_(
 		const xmlAttr *attribute
 		)
 {
-	PvColor *color = &(element->color_pair.colors[PvColorPairGround_ForGround]);
-	if(! pv_io_util_get_pv_color_from_svg_str_rgba(color, (const char *)value)){
-		pv_error("");
+	PvColor color;
+	if(! pv_io_util_get_pv_color_from_svg_str_rgba(&color, (const char *)value)){
+		pv_warning("");
 		return false;
 	}
+
+	attribute_cache->attributes[PvSvgAttributeKind_stroke].is_exist = true;
+	attribute_cache->attributes[PvSvgAttributeKind_stroke].color = color;
 
 	return true;
 }
@@ -125,7 +132,10 @@ static bool func_stroke_width_set_(
 		const xmlAttr *attribute
 		)
 {
-	element->stroke.width = pv_io_util_get_double_from_str((const char *)value);
+	double width = pv_io_util_get_double_from_str((const char *)value);
+
+	attribute_cache->attributes[PvSvgAttributeKind_stroke_width].is_exist = true;
+	attribute_cache->attributes[PvSvgAttributeKind_stroke_width].value = width;
 
 	return true;
 }
@@ -1104,91 +1114,185 @@ static bool func_groupmode_set_(
 	return true;
 }
 
+static bool func_style_set_(
+		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
+		PvSvgReadConf *conf,
+		const char *value_,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	bool is_success = false;
+
+	PvStrMap *css_str_maps = pv_new_css_str_maps_from_str((const char *)value_);
+	for(int i = 0; NULL != css_str_maps[i].key; i++){
+		const char *value = css_str_maps[i].value;
+		const PvSvgAttributeInfo *info = pv_svg_get_svg_attribute_info_from_name(css_str_maps[i].key);
+		if(NULL == info){
+			pv_warning("unknown css style key: '%s'(%d)'%s':'%s'(%d)",
+					(const char *)value,
+					xmlnode->line,
+					css_str_maps[i].key, css_str_maps[i].value,
+					i);
+			if(conf->imageFileReadOption->is_strict){
+				goto failed;
+			}
+		}else{
+			if(!info->is_able_style){
+				pv_warning("no able css style key: '%s'(%d)'%s':'%s'(%d)",
+						(const char *)value,
+						xmlnode->line,
+						css_str_maps[i].key, css_str_maps[i].value,
+						i);
+				if(conf->imageFileReadOption->is_strict){
+					goto failed;
+				}
+			}
+			bool ret = info->pv_svg_attribute_func_set(
+					element,
+					attribute_cache,
+					conf,
+					value,
+					xmlnode,
+					attribute);
+			if(!ret){
+				pv_warning("can not read css style key: '%s'(%d)'%s':'%s'(%d)",
+						(const char *)value,
+						xmlnode->line,
+						css_str_maps[i].key, css_str_maps[i].value,
+						i);
+				goto failed;
+			}
+		}
+	}
+
+	is_success = true;
+
+failed:
+	pv_str_maps_free(css_str_maps);
+
+	if(!is_success){
+		if(conf->imageFileReadOption->is_strict){
+			pv_error("strict");
+			return false;
+		}
+	}
+
+	return true;
+}
+
 
 const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
 	{
 		.name = "fill",
 		.pv_svg_attribute_func_set = func_fill_set_,
+		.is_able_style = true,
 	},
 	{
 		.name = "stroke",
 		.pv_svg_attribute_func_set = func_stroke_set_,
+		.is_able_style = true,
 	},
 	{
 		.name = "stroke-width",
 		.pv_svg_attribute_func_set = func_stroke_width_set_,
+		.is_able_style = true,
 	},
 	{
 		.name = "stroke-linecap",
 		.pv_svg_attribute_func_set = func_stroke_linecap_set_,
+		.is_able_style = true,
 	},
 	{
 		.name = "stroke-linejoin",
 		.pv_svg_attribute_func_set = func_stroke_linejoin_set_,
+		.is_able_style = true,
 	},
 	{
 		.name = "d",
 		.pv_svg_attribute_func_set = func_d_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "points",
 		.pv_svg_attribute_func_set = func_points_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "x1",
 		.pv_svg_attribute_func_set = func_x1_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "y1",
 		.pv_svg_attribute_func_set = func_y1_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "x2",
 		.pv_svg_attribute_func_set = func_x2_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "y2",
 		.pv_svg_attribute_func_set = func_y2_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "href",
 		.pv_svg_attribute_func_set = func_xlink_href_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "x",
 		.pv_svg_attribute_func_set = func_x_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "y",
 		.pv_svg_attribute_func_set = func_y_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "width",
 		.pv_svg_attribute_func_set = func_width_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "height",
 		.pv_svg_attribute_func_set = func_height_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "viewBox",
 		.pv_svg_attribute_func_set = func_view_box_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "transform",
 		.pv_svg_attribute_func_set = func_transform_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "groupmode",
 		.pv_svg_attribute_func_set = func_groupmode_set_,
+		.is_able_style = false,
+	},
+	{
+		.name = "style",
+		.pv_svg_attribute_func_set = func_style_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "version",
 		.pv_svg_attribute_func_set = func_nop_set_,
+		.is_able_style = false,
 	},
 	{
 		.name = "label",
 		.pv_svg_attribute_func_set = func_nop_set_,
+		.is_able_style = false,
 	},
 };
 
