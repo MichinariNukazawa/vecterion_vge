@@ -341,6 +341,26 @@ static bool set_attribute_cache_(
 		conf->stroke_width
 			= attribute_cache->attributes[PvSvgAttributeKind_stroke_width].value;
 	}
+	if(attribute_cache->attributes[PvSvgAttributeKind_fill_opacity].is_exist){
+		PvColor *color = NULL;
+		double opacity = attribute_cache->attributes[PvSvgAttributeKind_fill_opacity].value;
+
+		color = &(element->color_pair.colors[PvColorPairGround_BackGround]);
+		pv_color_set_parameter(color, PvColorParameterIx_O, opacity * 100);
+
+		color = &(conf->color_pair.colors[PvColorPairGround_BackGround]);
+		pv_color_set_parameter(color, PvColorParameterIx_O, opacity * 100);
+	}
+	if(attribute_cache->attributes[PvSvgAttributeKind_stroke_opacity].is_exist){
+		PvColor *color = NULL;
+		double opacity = attribute_cache->attributes[PvSvgAttributeKind_stroke_opacity].value;
+
+		color = &(element->color_pair.colors[PvColorPairGround_ForGround]);
+		pv_color_set_parameter(color, PvColorParameterIx_O, opacity * 100);
+
+		color = &(conf->color_pair.colors[PvColorPairGround_ForGround]);
+		pv_color_set_parameter(color, PvColorParameterIx_O, opacity * 100);
+	}
 
 	return true;
 }
@@ -350,6 +370,8 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		gpointer data,
 		PvSvgReadConf *conf)
 {
+	PvSvgReadConf conf_save = *conf;
+
 	const PvSvgElementInfo *svg_element_info = pv_svg_get_svg_element_info_from_tagname((char *)xmlnode->name);
 	if(NULL == svg_element_info){
 		pv_warning("Not implement:'%s'(%d)",
@@ -363,8 +385,6 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		goto skiped;
 	}
 	pv_assertf(svg_element_info->func_new_element_from_svg, "'%s'", (char *)xmlnode->name);
-
-	PvSvgReadConf conf_save = *conf;
 
 	PvSvgAttributeCache attribute_cache_;
 	PvSvgAttributeCache *attribute_cache = &attribute_cache_;
@@ -382,6 +402,9 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		pv_error("");
 		goto failed0;
 	}
+
+	element_current->color_pair = conf->color_pair;
+	element_current->stroke.width = conf->stroke_width;
 
 	{
 		xmlAttr* attribute = xmlnode->properties;
@@ -435,13 +458,12 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		}
 	}
 
+/*
 	if(0 == strcmp("g", svg_element_info->tagname)){
-		conf->color_pair = PvColorPair_TransparentBlack;
-		conf->stroke_width = 1.0;
+		 conf->color_pair = PvColorPair_SvgDefault;
+		 conf->stroke_width = 1.0;
 	}
-
-	element_current->color_pair = conf->color_pair;
-	element_current->stroke.width = conf->stroke_width;
+*/
 
 	bool ret = svg_element_info->func_set_attribute_cache(element_current, attribute_cache);
 	if(!ret){
@@ -456,6 +478,21 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 			pv_error("strict");
 			goto failed1;
 		}
+	}
+
+	//! none color temporary implement.
+	{
+		double o;
+		PvColor *color = NULL;
+		color = &(element_current->color_pair.colors[PvColorPairGround_BackGround]);
+		o = pv_color_get_parameter(color, PvColorParameterIx_O);
+		o *= color->none_weight;
+		pv_color_set_parameter(color, PvColorParameterIx_O, o);
+
+		color = &(element_current->color_pair.colors[PvColorPairGround_ForGround]);
+		o = pv_color_get_parameter(color, PvColorParameterIx_O);
+		o *= color->none_weight;
+		pv_color_set_parameter(color, PvColorParameterIx_O, o);
 	}
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element_current->kind);

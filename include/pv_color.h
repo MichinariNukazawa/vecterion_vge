@@ -31,15 +31,19 @@ typedef struct{
 	 *		because feature implement to CMYK, color pallet relation.
 	 */
 	uint8_t values[NUM_COLOR_PARAMETER];
+	//! 0:enable 1:disable
+	uint8_t none_weight;
 }PvColor;
 
 //! none set color.
 static const PvColor PvColor_None = {
-	{0, 0, 0, 0,}
+	{0, 0, 0, 0,},
+	1,
 };
 
 static const PvColor PvColor_Working = {
 	{(uint8_t)(0.2 * 255), (uint8_t)(0.4 * 255), (uint8_t)(0.9 * 255), (uint8_t)(1.0 * 100),},
+	1,
 };
 
 typedef enum{
@@ -54,20 +58,22 @@ typedef struct{
 
 //! none set color. 
 static const PvColorPair PvColorPair_None = {
-	{{{0, 0, 0, 0,}}, {{0, 0, 0, 0,}},},
+	{{{0, 0, 0, 0,}, 1,}, {{0, 0, 0, 0,}, 1,},},
 };
 
 //! default color. stroke:Black/fill:White
 static const PvColorPair PvColorPair_Default = {
-	{{{0, 0, 0, 100,}}, {{255, 255, 255, 100,}},},
+	{{{0, 0, 0, 100,}, 1,}, {{255, 255, 255, 100,}, 1,},},
 };
 
 static const PvColorPair PvColorPair_Black = {
-	{{{0, 0, 0, 100,}}, {{0, 0, 0, 100,}},},
+	{{{0, 0, 0, 100,}, 1,}, {{0, 0, 0, 100,}, 1,},},
 };
 
-static const PvColorPair PvColorPair_TransparentBlack = {
-	{{{0, 0, 0, 0,}}, {{0, 0, 0, 0,}},},
+//! stroke:none fill:black
+#define PvColorPair_SvgDefault {{{0, 0, 0, 100,}, 0,}, {{0, 0, 0, 100,}, 1,},}
+static const PvColorPair PvColorPair_SvgDefault_ = {
+	PvColorPair_SvgDefault ,
 };
 
 typedef struct{
@@ -94,6 +100,7 @@ char* pv_color_new_str_svg_rgba_simple(PvColor);
  *		and return false.
  */
 bool pv_color_set_parameter(PvColor *, PvColorParameterIx, double);
+double pv_color_get_parameter(const PvColor *, PvColorParameterIx);
 
 bool pv_color_is_equal(PvColor, PvColor);
 bool pv_color_pair_is_equal(PvColorPair, PvColorPair);

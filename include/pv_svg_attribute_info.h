@@ -23,7 +23,7 @@ typedef struct{
 
 static const PvSvgReadConf PvSvgReadConf_Default = {
 	1.0,
-	{ {{{0, 0, 0, 100,}}, {{255, 255, 255, 100,}},}, },
+	{ PvColorPair_SvgDefault, },
 	{},
 	&PvImageFileReadOption_Default,
 };
@@ -37,6 +37,8 @@ typedef enum{
 	PvSvgAttributeKind_width,
 	PvSvgAttributeKind_height,
 	PvSvgAttributeKind_xlink_href,
+	PvSvgAttributeKind_fill_opacity,
+	PvSvgAttributeKind_stroke_opacity,
 	PvSvgAttributeKind_NUM,
 }PvSvgAttributeKind;
 

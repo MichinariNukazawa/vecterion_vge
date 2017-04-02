@@ -60,10 +60,10 @@ GdkColor pv_color_get_gdk_from_pv(PvColor pv_color)
 PvCairoRgbaColor pv_color_get_cairo_rgba(PvColor color)
 {
 	PvCairoRgbaColor c = {
-			(color.values[PvColorParameterIx_R] / 255.0),
-			(color.values[PvColorParameterIx_G] / 255.0),
-			(color.values[PvColorParameterIx_B] / 255.0),
-			(color.values[PvColorParameterIx_O] / 100.0)
+		(color.values[PvColorParameterIx_R] / 255.0),
+		(color.values[PvColorParameterIx_G] / 255.0),
+		(color.values[PvColorParameterIx_B] / 255.0),
+		(color.values[PvColorParameterIx_O] / 100.0)
 	};
 
 	return c;
@@ -85,7 +85,7 @@ bool pv_color_set_parameter(PvColor *color, PvColorParameterIx ix, double value)
 	bool ret = true;
 
 	const PvColorParameterProperty *color_parameter_property
-			= pv_color_get_parameter_property_from_ix(ix);
+		= pv_color_get_parameter_property_from_ix(ix);
 	assert(color_parameter_property);
 
 	if(value < color_parameter_property->min){
@@ -103,6 +103,13 @@ bool pv_color_set_parameter(PvColor *color, PvColorParameterIx ix, double value)
 	return ret;
 }
 
+double pv_color_get_parameter(const PvColor *color, PvColorParameterIx ix)
+{
+	assert(color);
+
+	return color->values[ix];
+}
+
 bool pv_color_is_equal(PvColor color1, PvColor color2)
 {
 	for(int i = 0; i < 4; i++){
@@ -117,12 +124,12 @@ bool pv_color_is_equal(PvColor color1, PvColor color2)
 bool pv_color_pair_is_equal(PvColorPair cp1, PvColorPair cp2)
 {
 	if(!pv_color_is_equal(cp1.colors[PvColorPairGround_ForGround],
-			cp2.colors[PvColorPairGround_ForGround])){
+				cp2.colors[PvColorPairGround_ForGround])){
 		return false;
 	}
 
 	if(!pv_color_is_equal(cp1.colors[PvColorPairGround_BackGround],
-			cp2.colors[PvColorPairGround_BackGround])){
+				cp2.colors[PvColorPairGround_BackGround])){
 		return false;
 	}
 

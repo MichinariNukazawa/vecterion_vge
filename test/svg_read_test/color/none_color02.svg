@@ -4,21 +4,12 @@
     height="400"
     width="400">
    <g
-     style="fill:none;stroke:#4c0000;"
+     style="fill:none;fill-opacity:1;stroke:#4c0000;stroke-width:4"
    >
         <path
-        stroke-width="6"
         d="M30 10 l 250,0 0,250 -250,0 "/>
         <path
-        stroke-width="6"
         d="M120 110 l 250,0 0,250 -250,0 "/>
-  </g>
-  <g
-     style="fill:#002266;"
-  >
-        <path
-        stroke-width="6"
-        d="M20 320 l 50,0 0,50 -25,0 "/>
   </g>
 </svg>
 

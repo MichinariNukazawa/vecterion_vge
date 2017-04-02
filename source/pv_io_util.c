@@ -22,17 +22,18 @@ double pv_io_util_get_double_from_str(const char *str)
 
 bool pv_io_util_get_pv_color_from_svg_str_rgba(PvColor *ret_color, const char *str)
 {
-	PvColor color = PvColor_None;
+	PvColor color = *ret_color;
 
 	int ret;
 	unsigned int r = 0, g = 0, b = 0;
 	double a = 100.0;
 	if(4 == (ret = sscanf(str, " rgba(%3u,%3u,%3u,%lf)", &r, &g, &b, &a))){
-		goto match;
+		color.none_weight = 1;
+		goto match_rgba;
 	}
 
 	char strv[9];
-	if(1 == (ret = sscanf(str, " #%8[0-9A-Fa-f]", strv))){
+	if(1 == (ret = sscanf(str, " #%6[0-9A-Fa-f]", strv))){
 		for(int i = 0; i < (int)strlen(strv); i++){
 			strv[i] = (char)tolower(strv[i]);
 		}
@@ -43,21 +44,11 @@ bool pv_io_util_get_pv_color_from_svg_str_rgba(PvColor *ret_color, const char *s
 						pv_warning("'%s'", str);
 						goto error;
 					}
+
 					a = 1.0;
+					color.none_weight = 1;
 
-					goto match;
-				}
-				break;
-			case 4:
-				{
-					unsigned int a_x = 0;
-					if(4 != sscanf(strv, "%1x%1x%1x%1x", &r, &g, &b, &a_x)){
-						pv_warning("'%s'", str);
-						goto error;
-					}
-					a = ((double)a_x / ((int)0xF));
-
-					goto match;
+					goto match_rgb;
 				}
 				break;
 			case 6:
@@ -66,21 +57,11 @@ bool pv_io_util_get_pv_color_from_svg_str_rgba(PvColor *ret_color, const char *s
 						pv_warning("'%s'", str);
 						goto error;
 					}
+
 					a = 1.0;
+					color.none_weight = 1;
 
-					goto match;
-				}
-				break;
-			case 8:
-				{
-					unsigned int a_x = 0;
-					if(4 != sscanf(strv, "%2x%2x%2x%2x", &r, &g, &b, &a_x)){
-						pv_warning("'%s'", str);
-						goto error;
-					}
-					a = ((double)a_x / ((int)0xFF));
-
-					goto match;
+					goto match_rgb;
 				}
 				break;
 			default:
@@ -90,20 +71,29 @@ bool pv_io_util_get_pv_color_from_svg_str_rgba(PvColor *ret_color, const char *s
 	}
 
 	if(NULL != strstr(str, "none")){
-		*ret_color = PvColor_None;
-		return true;
+		r = 0;
+		g = 0;
+		b = 0;
+		a = 1;
+		color.none_weight = 0;
+		goto match_rgba;
 	}
 
 	pv_warning("'%s'", str);
 	goto error;
 
-match:
+match_rgba:
+	if(!pv_color_set_parameter(&color, PvColorParameterIx_O, (double)a * 100)){
+		pv_warning("'%s'", str);
+		goto error;
+	}
+
+match_rgb:
 	{
 		// pv_debug(" rgba(%u,%u,%u,%f)", r, g, b, a);
 		bool ok = (pv_color_set_parameter(&color, PvColorParameterIx_R, (double)r)
 				&& pv_color_set_parameter(&color, PvColorParameterIx_G, (double)g)
 				&& pv_color_set_parameter(&color, PvColorParameterIx_B, (double)b)
-				&& pv_color_set_parameter(&color, PvColorParameterIx_O, (double)a * 100.0)
 			  );
 		if(!ok){
 			pv_warning("'%s'", str);

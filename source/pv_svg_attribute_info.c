@@ -17,7 +17,7 @@ void pv_svg_attribute_cache_init(PvSvgAttributeCache *attribute_cache)
 	const PvSvgAttributeItem PvSvgAttributeItem_Default = {
 		false,
 		0,
-		{{0, 0, 0, 0, },},
+		{{0, 0, 0, 0, }, 1,},
 	};
 	for(int i = 0; i < (int)PvSvgAttributeKind_NUM; i++){
 		attribute_cache->attributes[i] = PvSvgAttributeItem_Default;
@@ -90,7 +90,7 @@ static bool func_fill_set_(
 		const xmlAttr *attribute
 		)
 {
-	PvColor color;
+	PvColor color = conf->color_pair.colors[PvColorPairGround_BackGround];
 	if(! pv_io_util_get_pv_color_from_svg_str_rgba(&color, (const char *)value)){
 		pv_error("");
 		return false;
@@ -111,7 +111,7 @@ static bool func_stroke_set_(
 		const xmlAttr *attribute
 		)
 {
-	PvColor color;
+	PvColor color = conf->color_pair.colors[PvColorPairGround_ForGround];
 	if(! pv_io_util_get_pv_color_from_svg_str_rgba(&color, (const char *)value)){
 		pv_warning("");
 		return false;
@@ -1089,6 +1089,40 @@ failed:
 	return res;
 }
 
+static bool func_fill_opacity_set_(
+		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
+		PvSvgReadConf *conf,
+		const char *value,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	double opacity = pv_io_util_get_double_from_str((const char *)value);
+
+	attribute_cache->attributes[PvSvgAttributeKind_fill_opacity].is_exist = true;
+	attribute_cache->attributes[PvSvgAttributeKind_fill_opacity].value = opacity;
+
+	return true;
+}
+
+static bool func_stroke_opacity_set_(
+		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
+		PvSvgReadConf *conf,
+		const char *value,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	double opacity = pv_io_util_get_double_from_str((const char *)value);
+
+	attribute_cache->attributes[PvSvgAttributeKind_stroke_opacity].is_exist = true;
+	attribute_cache->attributes[PvSvgAttributeKind_stroke_opacity].value = opacity;
+
+	return true;
+}
+
 static bool func_groupmode_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
@@ -1273,6 +1307,16 @@ const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
 		.name = "transform",
 		.pv_svg_attribute_func_set = func_transform_set_,
 		.is_able_style = false,
+	},
+	{
+		.name = "fill-opacity",
+		.pv_svg_attribute_func_set = func_fill_opacity_set_,
+		.is_able_style = true,
+	},
+	{
+		.name = "stroke-opacity",
+		.pv_svg_attribute_func_set = func_stroke_opacity_set_,
+		.is_able_style = true,
 	},
 	{
 		.name = "groupmode",
