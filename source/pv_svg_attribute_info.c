@@ -182,6 +182,37 @@ static bool func_stroke_linejoin_set_(
 	return true;
 }
 
+static PvElement *_pv_element_to_recursively(PvElement *element)
+{
+	pv_assert(element);
+	PvElement *child_element = (PvElement *)malloc(sizeof(PvElement));
+	pv_assert(child_element);
+
+	*child_element = *element;
+	// child_element->kind = element->kind;
+	// child_element->data = element->data;
+
+	const PvElementInfo *info = pv_element_get_info_from_kind(PvElementKind_Group);
+	pv_assertf(info, "%d", PvElementKind_Group);
+	element->data = info->func_new_data();
+	pv_assert(element->data);
+	element->kind = PvElementKind_Group;
+
+	pv_assert(pv_element_append_child(element, NULL, child_element));
+
+	return child_element;
+}
+
+static PvElement *_pv_element_append_new(PvElement *parent, PvElement *sister, PvElementKind kind)
+{
+	PvElement *child_element = pv_element_new(kind);
+	pv_assertf(child_element, "%d", kind);
+
+	pv_assert(pv_element_append_child(parent, sister, child_element));
+
+	return child_element;
+}
+
 static bool func_d_set_inline_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
@@ -199,7 +230,8 @@ static bool func_d_set_inline_(
 	pv_assert(element->data);
 	pv_assert(PvElementKind_Curve == element->kind);
 
-	PvElementCurveData *data = element->data;
+	PvElement *parent_element = NULL;
+	PvPoint prev_point = PvPoint_Default;
 
 	char command_prev = ' '; // intialize character is nothing prev command.
 	const char *p = value;
@@ -223,7 +255,6 @@ static bool func_d_set_inline_(
 			case 'Z':
 			case 'z':
 				command = *p;
-				command_prev = command;
 				p++;
 				break;
 			default:
@@ -240,6 +271,24 @@ static bool func_d_set_inline_(
 		if(' ' == command){
 			continue;
 		}
+
+		if(' ' != command_prev){// not first command
+			if('M' == command || 'm' == command){// M|m.
+				if(NULL == parent_element){
+					parent_element = element;
+					element = _pv_element_to_recursively(element);
+					pv_assert(element);
+				}
+
+				element = _pv_element_append_new(
+						parent_element, element, PvElementKind_Curve);
+				pv_assert(element);
+			}
+		}
+
+		command_prev = command;
+
+		PvElementCurveData *data = element->data;
 
 		switch(command){
 			case 'M':
@@ -262,7 +311,7 @@ static bool func_d_set_inline_(
 					PvPoint point = PvPoint_Default;
 					size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
 					if(0 == num){
-						// 'm' first use by inkscape(v0.91 r13725).
+						point = prev_point;
 					}else{
 						const PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
 								data->anchor_path,
@@ -420,6 +469,7 @@ static bool func_d_set_inline_(
 
 		if(is_append){
 			pv_assert(pv_element_curve_add_anchor_point(element, ap));
+			prev_point = pv_anchor_point_get_point(&ap);
 		}
 	}
 

@@ -209,6 +209,22 @@ failed:
 	return NULL;
 }
 
+static bool func_path_set_attribute_cache_(
+		PvElement *element,
+		const PvSvgAttributeCache *attribute_cache
+		)
+{
+	pv_assert(element);
+	pv_assert(attribute_cache);
+
+	size_t num = pv_general_get_parray_num((void **)element->childs);
+	for(int i = 0; i < (int)num; i++){
+		pv_element_copy_property(element->childs[i], element);
+	}
+
+	return true;
+}
+
 static bool func_image_set_attribute_cache_(
 		PvElement *element,
 		const PvSvgAttributeCache *attribute_cache
@@ -278,7 +294,7 @@ const PvSvgElementInfo _pv_svg_element_infos[] = {
 	{
 		.tagname = "path",
 		.func_new_element_from_svg	= _pv_svg_path_new_element_from_svg,
-		.func_set_attribute_cache	= func_nop_set_attribute_cache_,
+		.func_set_attribute_cache	= func_path_set_attribute_cache_,
 	},
 	{
 		.tagname = "polygon",

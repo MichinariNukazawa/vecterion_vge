@@ -365,6 +365,26 @@ static bool set_attribute_cache_(
 	return true;
 }
 
+static void opacity_from_none_(PvElement *element)
+{
+	double o;
+	PvColor *color = NULL;
+	color = &(element->color_pair.colors[PvColorPairGround_BackGround]);
+	o = pv_color_get_parameter(color, PvColorParameterIx_O);
+	o *= color->none_weight;
+	pv_color_set_parameter(color, PvColorParameterIx_O, o);
+
+	color = &(element->color_pair.colors[PvColorPairGround_ForGround]);
+	o = pv_color_get_parameter(color, PvColorParameterIx_O);
+	o *= color->none_weight;
+	pv_color_set_parameter(color, PvColorParameterIx_O, o);
+
+	size_t num = pv_general_get_parray_num((void **)element->childs);
+	for(int i = 0; i < (int)num; i++){
+		opacity_from_none_(element->childs[i]);
+	}
+}
+
 static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_parent,
 		xmlNode *xmlnode,
 		gpointer data,
@@ -458,13 +478,12 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 		}
 	}
 
-/*
-	if(0 == strcmp("g", svg_element_info->tagname)){
-		 conf->color_pair = PvColorPair_SvgDefault;
-		 conf->stroke_width = 1.0;
+	if(!set_attribute_cache_(element_current, conf, attribute_cache)){
+		if(conf->imageFileReadOption->is_strict){
+			pv_error("strict");
+			goto failed1;
+		}
 	}
-*/
-
 	bool ret = svg_element_info->func_set_attribute_cache(element_current, attribute_cache);
 	if(!ret){
 		pv_warning("%d %s(%d)", ret, (char *)xmlnode->name, xmlnode->line);
@@ -473,27 +492,9 @@ static bool _new_elements_from_svg_elements_recursive_inline(PvElement *element_
 			goto failed1;
 		}
 	}
-	if(!set_attribute_cache_(element_current, conf, attribute_cache)){
-		if(conf->imageFileReadOption->is_strict){
-			pv_error("strict");
-			goto failed1;
-		}
-	}
 
 	//! none color temporary implement.
-	{
-		double o;
-		PvColor *color = NULL;
-		color = &(element_current->color_pair.colors[PvColorPairGround_BackGround]);
-		o = pv_color_get_parameter(color, PvColorParameterIx_O);
-		o *= color->none_weight;
-		pv_color_set_parameter(color, PvColorParameterIx_O, o);
-
-		color = &(element_current->color_pair.colors[PvColorPairGround_ForGround]);
-		o = pv_color_get_parameter(color, PvColorParameterIx_O);
-		o *= color->none_weight;
-		pv_color_set_parameter(color, PvColorParameterIx_O, o);
-	}
+	opacity_from_none_(element_current);
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element_current->kind);
 	pv_assert(info);
