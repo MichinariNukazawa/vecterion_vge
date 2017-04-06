@@ -122,7 +122,7 @@ static GdkPixbuf *_copy_new_pixbuf_rotate(const GdkPixbuf *pb_src, int rotate)
 
 bool et_mouse_cursor_info_init()
 {
-	et_assert(false == _is_init_mouse_cursor_infos);
+	et_assert(!_is_init_mouse_cursor_infos);
 
 	et_assertf(gdk_display_get_default(), "GdkDisplay not grub");
 
@@ -197,7 +197,7 @@ bool et_mouse_cursor_info_init()
 				break;
 			default:
 				{
-					et_assertf(false, "%d", info->id);
+					et_abortf("%d", info->id);
 				}
 		}
 

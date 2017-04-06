@@ -121,7 +121,7 @@ static GdkPixbuf *_conv_new_icon_focus(GdkPixbuf *pb_src)
 
 bool et_tool_info_init()
 {
-	et_assert(false == _et_tool_info_is_init);
+	et_assert(!_et_tool_info_is_init);
 
 	int num_tool = et_tool_get_num();
 	for(int tool_id = 0; tool_id < num_tool; tool_id++){
@@ -131,7 +131,7 @@ bool et_tool_info_init()
 		// ** make image(cursor,icons)
 		char *path = g_strdup_printf("%s/%s", et_etaion_get_application_base_dir(), info->filepath_cursor);
 		et_assertf(path, "%s", info->filepath_cursor)
-		GError *error = NULL;
+			GError *error = NULL;
 		info->icon_cursor = gdk_pixbuf_new_from_file(path, &error);
 		et_assertf(info->icon_cursor, "%d, '%s'", tool_id, error->message);
 		free(path);
@@ -242,7 +242,7 @@ static PvElement *_get_touch_element(EtDocId doc_id, PvPoint g_point)
 				NULL,
 				&rec_data,
 				&error)){
-		et_assertf(false, "level:%d", error.level);
+		et_abortf("level:%d", error.level);
 	}
 
 	return element;
@@ -327,7 +327,7 @@ static void get_resize_in_rect_(
 			size_after.y = (src_extent_rect.h + move.y);
 			break;
 		default:
-			et_assert(false);
+			et_abort();
 			break;
 	}
 
@@ -903,7 +903,7 @@ static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mou
 			index = num;
 			*is_reverse = false;
 		}else{
-			et_assertf(false, "%d %zu", index, num);
+			et_abortf("%d %zu", index, num);
 		}
 		head_ap = pv_anchor_path_get_anchor_point_from_index(
 				_data->anchor_path,

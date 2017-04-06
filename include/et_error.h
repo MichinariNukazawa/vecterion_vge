@@ -34,6 +34,13 @@
 		abort(); \
 	}while(0);
 
+#define et_abort() \
+	do{ \
+		fprintf(stderr, "et_abort: %s()[%d]\n", \
+				__func__, __LINE__); \
+		abort(); \
+	}while(0);
+
 // Caution: depend gcc
 #define et_bug(fmt, ...)  \
 	fprintf(stderr, "BUG: %s()[%d]: "fmt"\n", __func__, __LINE__, ## __VA_ARGS__)

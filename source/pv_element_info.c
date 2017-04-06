@@ -1486,7 +1486,7 @@ static void _basic_shape_draw_inline(
 			}
 			break;
 		default:
-			pv_assertf(false, "%d", basic_shapeDrawKind);
+			pv_abortf("%d", basic_shapeDrawKind);
 			break;
 	}
 	cairo_restore(cr); // end rorate

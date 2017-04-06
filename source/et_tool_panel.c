@@ -228,9 +228,7 @@ static GtkWidget *_et_tool_panel_get_tool_button_from_id(
 
 static bool _change_cursor_icon_from_tool_id(EtToolPanel *self, EtToolId tool_id)
 {
-	if(tool_id < 0){
-		et_assertf(false, "%d", tool_id);
-	}
+	et_assertf(0 <= tool_id, "%d", tool_id);
 
 	GdkWindow *window = gtk_widget_get_parent_window(self->widget);
 	if(!window){
