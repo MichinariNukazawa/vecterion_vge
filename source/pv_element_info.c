@@ -180,42 +180,26 @@ static gpointer _func_group_copy_new_data(void *_data)
 	return (gpointer)new_data;
 }
 
-static int _func_group_write_svg(
+static bool _func_group_write_svg(
 		InfoTargetSvg *target,
-		const PvElement *element, const ConfWriteSvg *conf)
+		const PvElement *element,
+		const ConfWriteSvg *conf)
 {
-	if(NULL == target){
-		pv_bug("");
-		return -1;
-	}
-
-	if(NULL == target->xml_parent_node){
-		pv_bug("");
-		return -1;
-	}
-
-	if(NULL == element){
-		pv_bug("");
-		return -1;
-	}
-
-	if(NULL == conf){
-		pv_bug("");
-		return -1;
-	}
+	pv_assert(target);
+	pv_assert(target->xml_parent_node);
+	pv_assert(element);
+	pv_assert(conf);
 
 	if(PvElementKind_Root == element->kind){
 		return true;
 	}
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
-	if(NULL == info){
-		pv_bug("%d", element->kind);
-		return -1;
-	}
+	pv_assertf(info, "%d", element->kind);
 
 	xmlNodePtr node = NULL;
 	node = xmlNewNode(NULL, BAD_CAST "g");
+	pv_assert(node);
 
 	// ** To Inkscape
 	if(PvElementKind_Layer == element->kind){
@@ -227,7 +211,7 @@ static int _func_group_write_svg(
 	target->xml_parent_node = node;
 	target->xml_new_node = node;
 
-	return 0;
+	return true;
 }
 
 static void _func_group_draw(
@@ -650,29 +634,15 @@ static gpointer _func_curve_copy_new_data(void *_data)
 	return (gpointer)new_data;
 }
 
-static int _func_curve_write_svg(
+static bool _func_curve_write_svg(
 		InfoTargetSvg *target,
-		const PvElement *element, const ConfWriteSvg *conf)
+		const PvElement *element,
+		const ConfWriteSvg *conf)
 {
-	if(NULL == target){
-		pv_bug("");
-		return -1;
-	}
-
-	if(NULL == target->xml_parent_node){
-		pv_bug("");
-		return -1;
-	}
-
-	if(NULL == element){
-		pv_bug("");
-		return -1;
-	}
-
-	if(NULL == conf){
-		pv_bug("");
-		return -1;
-	}
+	pv_assert(target);
+	pv_assert(target->xml_parent_node);
+	pv_assert(element);
+	pv_assert(conf);
 
 	PvElementCurveData *data = (PvElementCurveData *)element->data;
 
@@ -693,24 +663,18 @@ static int _func_curve_write_svg(
 		}else{
 			// other (not first)(true last)
 			const PvAnchorPoint *ap_prev_ = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, (i - 1), PvAnchorPathIndexTurn_Disable);
+			pv_assert(ap_prev_);
 			const PvAnchorPoint ap_prev = *ap_prev_;
 			str_point = _curve_new_str_from_anchor(ap, ap_prev);
 		}
-
-		if(NULL == str_point){
-			pv_critical("");
-			return -1;
-		}
+		pv_assert(str_point);
 
 		char *str_prev = str_current;
 		str_current = g_strdup_printf("%s %s",
 				((NULL == str_prev)? "":str_prev),
 				str_point
 				);
-		if(NULL == str_current){
-			pv_critical("");
-			return -1;
-		}
+		pv_assert(str_current);
 
 		g_free(str_point);
 		g_free(str_prev);
@@ -723,10 +687,7 @@ static int _func_curve_write_svg(
 		char *str_prev = str_current;
 		str_current = g_strjoin(" ", str_current, str_end, "Z", NULL);
 		g_free(str_prev);
-		if(NULL == str_current){
-			pv_critical("");
-			return -1;
-		}
+		pv_assert(str_current);
 	}
 
 	xmlNodePtr node = xmlNewNode(NULL, BAD_CAST "path");
@@ -742,7 +703,7 @@ static int _func_curve_write_svg(
 	//target->xml_parent_node = node;
 	target->xml_new_node = node;
 
-	return 0;
+	return true;
 }
 
 static void _func_curve_draw(
@@ -1344,7 +1305,7 @@ static gpointer _func_basic_shape_copy_new_data(void *_data)
 	return (gpointer)new_element_data;
 }
 
-static int _func_basic_shape_write_svg(
+static bool _func_basic_shape_write_svg(
 		InfoTargetSvg *target,
 		const PvElement *element,
 		const ConfWriteSvg *conf)
@@ -1364,13 +1325,14 @@ static int _func_basic_shape_write_svg(
 
 	xmlNodePtr node = NULL;
 	if(!info->func_write_svg(&node, target, element, conf)){
-		return -1;
+		pv_error("%d", element_data->kind);
+		return false;
 	}
 
 	node_add_color_props_(node, element);
 	node_add_stroke_props_(node, element->stroke);
 
-	return 0;
+	return true;
 }
 
 static void _func_basic_shape_apply_appearances(

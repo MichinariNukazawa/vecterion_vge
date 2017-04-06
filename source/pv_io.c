@@ -26,29 +26,20 @@ static bool _pv_io_svg_from_element_in_recursive_before(
 	const ConfWriteSvg *conf = _data->conf;
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
-	if(NULL == info){
-		pv_error("");
-		return false;
-	}
-	if(NULL == info->func_write_svg){
-		pv_error("");
-		return false;
-	}
+	pv_assertf(info, "%d", element->kind);
+	pv_assertf(info->func_write_svg, "%d", element->kind);
 
 	// push parent node stack
-	xmlNodePtr *new_nodes = realloc(target->xml_parent_nodes,
+	xmlNodePtr *new_nodes = realloc(
+			target->xml_parent_nodes,
 			(sizeof(xmlNodePtr) * (level + 2)));
-	if(NULL == new_nodes){
-		pv_critical("");
-		exit(-1);
-	}
+	pv_assert(new_nodes);
 	new_nodes[level+1] = NULL;
 	new_nodes[level] = target->xml_parent_node;
 	target->xml_parent_nodes = new_nodes;
 
-	int ret = info->func_write_svg(target, element, conf);
-	if(0 > ret){
-		pv_error("%d", ret);
+	if(!info->func_write_svg(target, element, conf)){
+		pv_error("");
 		return false;
 	}
 

@@ -28,12 +28,10 @@ typedef struct {
 typedef gpointer (*PvElementFuncNewData)(void);
 typedef bool (*PvElementFuncFreeData)(void *data);
 typedef gpointer (*PvElementFuncCopyNewData)(void *data);
-/** @brief
- * @return 0正常終了 負の値:異常終了
- */
-typedef int (*PvElementFuncWriteSvg)(
+typedef bool (*PvElementFuncWriteSvg)(
 		InfoTargetSvg *target,
-		const PvElement *element, const ConfWriteSvg *conf);
+		const PvElement *element,
+		const ConfWriteSvg *conf);
 typedef void (*PvElementFuncDraw)(
 		cairo_t *cr,
 		const PvRenderOption render_option,
