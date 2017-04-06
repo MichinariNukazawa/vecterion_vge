@@ -46,17 +46,9 @@ static bool pv_render_cairo_recursive_(
 		const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 		pv_assertf(info, "%d", element->kind);
 		if(render_option.render_context.is_focus){
-			if(!info->func_draw_focusing(cr, render_option, element)){
-				pv_bug("");
-				ret = false;
-				goto failed;
-			}
+			info->func_draw_focusing(cr, render_option, element);
 		}else{
-			if(!info->func_draw(cr, render_option, element)){
-				pv_bug("");
-				ret = false;
-				goto failed;
-			}
+			info->func_draw(cr, render_option, element);
 		}
 	}
 

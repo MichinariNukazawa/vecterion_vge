@@ -34,7 +34,7 @@ typedef gpointer (*PvElementFuncCopyNewData)(void *data);
 typedef int (*PvElementFuncWriteSvg)(
 		InfoTargetSvg *target,
 		const PvElement *element, const ConfWriteSvg *conf);
-typedef bool (*PvElementFuncDraw)(
+typedef void (*PvElementFuncDraw)(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element);

@@ -230,12 +230,12 @@ static int _func_group_write_svg(
 	return 0;
 }
 
-static bool _func_group_draw(
+static void _func_group_draw(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
-	return true;
+	return;
 }
 
 static bool _func_group_is_touch_element(
@@ -745,7 +745,7 @@ static int _func_curve_write_svg(
 	return 0;
 }
 
-static bool _func_curve_draw(
+static void _func_curve_draw(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
@@ -761,10 +761,10 @@ static bool _func_curve_draw(
 
 	_curve_simplify_free(simplify);
 
-	return true;
+	return;
 }
 
-static bool _func_curve_draw_focusing(
+static void _func_curve_draw_focusing(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
@@ -832,7 +832,7 @@ static bool _func_curve_draw_focusing(
 
 	_curve_simplify_free(simplify);
 
-	return true;
+	return;
 }
 
 static bool _func_curve_is_touch_element(
@@ -1412,7 +1412,7 @@ typedef enum{
 	BasicShapeDrawKind_IsTouch,
 }BasicShapeDrawKind;
 
-static bool _basic_shape_draw_inline(
+static void _basic_shape_draw_inline(
 		cairo_t *cr,
 		const PvRenderContext render_context,
 		const PvElement *element,
@@ -1494,25 +1494,25 @@ static bool _basic_shape_draw_inline(
 finally:
 	_basic_shape_simplify_free(simplify);
 
-	return true;
+	return;
 }
 
-static bool _func_basic_shape_draw(
+static void _func_basic_shape_draw(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
-	bool ret = _basic_shape_draw_inline(cr, render_option.render_context, element, 0, BasicShapeDrawKind_Draw);
-	return ret;
+	_basic_shape_draw_inline(cr, render_option.render_context, element, 0, BasicShapeDrawKind_Draw);
+	return;
 }
 
-static bool _func_basic_shape_draw_focusing(
+static void _func_basic_shape_draw_focusing(
 		cairo_t *cr,
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
-	bool ret = _basic_shape_draw_inline(cr, render_option.render_context, element, 1.0, BasicShapeDrawKind_DrawFocusing);
-	return ret;
+	_basic_shape_draw_inline(cr, render_option.render_context, element, 1.0, BasicShapeDrawKind_DrawFocusing);
+	return;
 }
 
 static bool _func_basic_shape_is_touch_element(
@@ -1531,8 +1531,7 @@ static bool _func_basic_shape_is_touch_element(
 
 	PvRenderContext render_context = PvRenderContext_Default;
 	double c_width = (element->stroke.width * render_context.scale) + offset;
-	bool ret = _basic_shape_draw_inline(cr, render_context, element, c_width, BasicShapeDrawKind_IsTouch);
-	pv_assert(ret);
+	_basic_shape_draw_inline(cr, render_context, element, c_width, BasicShapeDrawKind_IsTouch);
 
 	//! @fixme bug fill area not detection.(down below side in fill.)
 	*is_touch = cairo_in_stroke(cr, gx, gy) || cairo_in_fill(cr, gx, gy);
