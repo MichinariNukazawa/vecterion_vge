@@ -26,8 +26,8 @@ Download ubuntu package(.deb) @todo
 
 # Donate/Buy
 @todo  
-[project daisy bell][pixiv_booth_project_daisy_bell]  
-[RuneAMN fonts Pro][gumroad_runeamn_fonts_pro] is daisy bell product.  
+Online store [project daisy bell][pixiv_booth_project_daisy_bell] and [RuneAMN fonts Pro][gumroad_runeamn_fonts_pro] is product by daisy bell.  
+And please contact.  
 
 # Running
 In Linux. (Ubuntu 16.04LTS+)  
@@ -114,7 +114,8 @@ benchmark is [railmaps](https://github.com/hashcc/railmaps).
 mail: [michinari.nukazawa@gmail.com][mailto]  
 twitter: [@MNukazawa][twitter]  
 
-Develop by Michinari.Nukazawa, in project "daisy bell".
+Develop by Michinari.Nukazawa, in project "daisy bell".  
+
 [pixiv_booth_project_daisy_bell]: https://daisy-bell.booth.pm/
 [gumroad_runeamn_fonts_pro]: https://gumroad.com/l/UNWF
 [blog_article]: http://blog.michinari-nukazawa.com/
