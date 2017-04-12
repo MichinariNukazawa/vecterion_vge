@@ -74,7 +74,7 @@ Need for test.
 - layer
 - rgba color
 - import svg file (status of alpha)
-- save to svg file (ignore raster image)
+- save to svg file (ignore raster image rotation)
 - export png,jpg,bmp (raster image) file
 
 import svg file:  
@@ -86,9 +86,8 @@ benchmark is [File:Ghostscript Tiger.svg](https://commons.wikimedia.org/wiki/Fil
 benchmark is [railmaps](https://github.com/hashcc/railmaps).  
 
 - clipboard
-    - clipboard Ctrl+X,C,V
+    - clipboard Ctrl+X,C,V on system.
     - clipboard Bitmap
-- save svg included raster image
 - confirm dialog when close unsaved document Ctrl+D
 - more tools
 - snaps (for pixel, grid, guide line, other element.)
