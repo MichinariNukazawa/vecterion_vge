@@ -14,14 +14,14 @@ tags
 *~
 
 # tmporary
-/tmp
-/temp
-/gabage
-/work
+tmp/
+temp/
+gabage/
+work/
+log/
 /object
 /binary
 /build
-/log
 
 # object files
 *.d
@@ -52,7 +52,7 @@ tags
 /*.svg
 
 # doxygen
-/doxygen
+doxygen/
 
 
 
