@@ -462,9 +462,21 @@ static bool func_d_set_inline_(
 			case 'Z':
 			case 'z':
 				pv_anchor_path_set_is_close(data->anchor_path, true);
+				size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+				if(0 == num){
+					pv_warning("'%c' %td '%s'", command, (p - value), value);
+					return false;
+				}else{
+					const PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
+							data->anchor_path,
+							0,
+							PvAnchorPathIndexTurn_Disable);
+					prev_point = pv_anchor_point_get_point(ap_prev);
+				}
 				break;
 			default:
-				pv_abortf("'%c' %td '%s'", command, (p - value), value);
+				pv_warning("'%c' %td '%s'", command, (p - value), value);
+				return false;
 		}
 
 		if(is_append){
