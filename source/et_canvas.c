@@ -39,6 +39,7 @@ struct EtCanvas{
 
 	bool is_first_fitting;
 	bool is_fitting_scale;
+	int centering_control;
 
 	EtCanvasSlotChange slot_change;
 	gpointer slot_change_data;
@@ -203,6 +204,7 @@ EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 
 	self->is_first_fitting = true;
 	self->is_fitting_scale = false;
+	self->centering_control = 0;
 
 	return self;
 }
@@ -497,6 +499,38 @@ static gboolean _cb_button_scroll(GtkWidget *widget, GdkEventScroll *event, gpoi
 	return is_stop_signal;
 }
 
+static void et_scrolled_window_centering_(GtkScrolledWindow *scrolled_window)
+{
+	{
+		GtkAdjustment *vadj = gtk_scrolled_window_get_vadjustment (scrolled_window);
+		double v = (gtk_adjustment_get_upper(vadj) - gtk_adjustment_get_page_size(vadj)) / 2.0;
+		gtk_adjustment_set_value (vadj, v);
+		gtk_scrolled_window_set_vadjustment (GTK_SCROLLED_WINDOW(scrolled_window), vadj);
+	}
+
+	{
+		GtkAdjustment *hadj = gtk_scrolled_window_get_hadjustment (scrolled_window);
+		double h = (gtk_adjustment_get_upper(hadj) - gtk_adjustment_get_page_size(hadj)) / 2.0;
+		gtk_adjustment_set_value (hadj, h);
+		gtk_scrolled_window_set_hadjustment (GTK_SCROLLED_WINDOW(scrolled_window), hadj);
+	}
+}
+
+static void debug_print_adjustment_(EtCanvas *self)
+{
+	GtkAdjustment *adj = gtk_scrolled_window_get_vadjustment (GTK_SCROLLED_WINDOW(self->scroll));
+
+	et_debug("lower:%.1f upper:%.1f page-size:%.1f value:%.1f "
+			"width:%d height:%d "
+			,
+			gtk_adjustment_get_lower(adj),
+			gtk_adjustment_get_upper(adj),
+			gtk_adjustment_get_page_size(adj),
+			gtk_adjustment_get_value(adj),
+			gdk_pixbuf_get_width(self->pixbuf_buffer),
+			gdk_pixbuf_get_height(self->pixbuf_buffer)
+		);
+}
 
 static gboolean _cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 {
@@ -530,6 +564,21 @@ static gboolean _cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 		cairo_paint(cr);
 		//    cairo_fill (cr);
 		//		cairo_destroy (cr);
+
+		switch(self->centering_control){
+			case 0:
+				self->centering_control++;
+				// kick to re draw event, because only need centering.
+				gtk_widget_queue_draw(self->canvas);
+				break;
+			case 1:
+				self->centering_control++;
+				debug_print_adjustment_(self);
+				et_scrolled_window_centering_(GTK_SCROLLED_WINDOW(self->scroll));
+				break;
+			default:
+				break;
+		}
 	}
 
 	return FALSE;
