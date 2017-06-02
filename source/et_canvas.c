@@ -505,14 +505,12 @@ static void et_scrolled_window_centering_(GtkScrolledWindow *scrolled_window)
 		GtkAdjustment *vadj = gtk_scrolled_window_get_vadjustment (scrolled_window);
 		double v = (gtk_adjustment_get_upper(vadj) - gtk_adjustment_get_page_size(vadj)) / 2.0;
 		gtk_adjustment_set_value (vadj, v);
-		gtk_scrolled_window_set_vadjustment (GTK_SCROLLED_WINDOW(scrolled_window), vadj);
 	}
 
 	{
 		GtkAdjustment *hadj = gtk_scrolled_window_get_hadjustment (scrolled_window);
 		double h = (gtk_adjustment_get_upper(hadj) - gtk_adjustment_get_page_size(hadj)) / 2.0;
 		gtk_adjustment_set_value (hadj, h);
-		gtk_scrolled_window_set_hadjustment (GTK_SCROLLED_WINDOW(scrolled_window), hadj);
 	}
 }
 
