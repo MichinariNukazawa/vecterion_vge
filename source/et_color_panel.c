@@ -6,13 +6,15 @@
 #include "et_etaion.h"
 #include "et_error.h"
 
-const int W_PALLET = 200;
+const int W_PALLET = 100;
 const int H_PALLET = 60;
 const int BORDER_PALLET = 2;
 
 struct EtColorPanel{
 	GtkWidget *widget; // Top widget pointer.
 	GtkWidget *box;
+	GtkWidget *frame;
+	GtkWidget *box_color_panel;
 	GtkWidget *event_box_color_sliders;
 	GtkWidget *box_color_sliders;
 	GtkWidget *slider_boxs[NUM_COLOR_PARAMETER];
@@ -57,7 +59,15 @@ EtColorPanel *et_color_panel_init()
 		return NULL;
 	}
 
-	self->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+	self->box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+
+	self->frame = gtk_frame_new (NULL);
+	gtk_frame_set_label(GTK_FRAME (self->frame), "Color");
+	gtk_frame_set_shadow_type (GTK_FRAME (self->frame), GTK_SHADOW_IN);
+	gtk_box_pack_start(GTK_BOX(self->box), self->frame, true, true, 0);
+
+	self->box_color_panel = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+	gtk_container_add(GTK_CONTAINER(self->frame), self->box_color_panel);
 
 	// **sliders
 	self->event_box_color_sliders = gtk_event_box_new();
@@ -68,7 +78,6 @@ EtColorPanel *et_color_panel_init()
 			);
 	g_signal_connect(self->event_box_color_sliders, "button-release-event",
 			G_CALLBACK(_cb_button_release_sliders), NULL);
-	gtk_container_add(GTK_CONTAINER(self->box), self->event_box_color_sliders);
 	self->box_color_sliders = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
 	gtk_container_add(GTK_CONTAINER(self->event_box_color_sliders),
 			self->box_color_sliders);
@@ -79,7 +88,7 @@ EtColorPanel *et_color_panel_init()
 
 		self->slider_boxs[i] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 		et_assertf(self->slider_boxs[i], "%d", i);
-		gtk_container_add(GTK_CONTAINER(self->box_color_sliders), self->slider_boxs[i]);
+		gtk_box_pack_start(GTK_BOX(self->box_color_sliders), self->slider_boxs[i], true, true, 1);
 		self->slider_labels[i] = gtk_label_new_with_mnemonic(color_parameter_property->name);
 		et_assertf(self->slider_labels[i], "%d", i);
 		gtk_box_pack_start(GTK_BOX(self->slider_boxs[i]), self->slider_labels[i], false, false, 1);
@@ -108,7 +117,6 @@ EtColorPanel *et_color_panel_init()
 			G_CALLBACK(_cb_button_press_pallet), NULL);
 	g_signal_connect(self->event_box_pallet, "button-release-event",
 			G_CALLBACK(_cb_button_release_pallet), NULL);
-	gtk_container_add(GTK_CONTAINER(self->box), self->event_box_pallet);
 
 	self->pallet = gtk_drawing_area_new();
 	g_signal_connect (G_OBJECT (self->pallet), "draw",
@@ -120,6 +128,9 @@ EtColorPanel *et_color_panel_init()
 	self->is_multi_colors[PvColorPairGround_BackGround] = false;
 	self->color_pair = PvColorPair_Default;
 	self->color_pair_ground = PvColorPairGround_ForGround;
+
+	gtk_box_pack_start(GTK_BOX(self->box_color_panel), self->event_box_pallet, false, true, 0);
+	gtk_box_pack_start(GTK_BOX(self->box_color_panel), self->event_box_color_sliders, true, true, 0);
 
 	self->widget = self->box;
 	color_panel = self;
