@@ -20,6 +20,7 @@ struct EtColorPanel{
 	GtkWidget *slider_boxs[NUM_COLOR_PARAMETER];
 	GtkWidget *slider_labels[NUM_COLOR_PARAMETER];
 	GtkWidget *slider_sliders[NUM_COLOR_PARAMETER];
+	GtkWidget *slider_spins[NUM_COLOR_PARAMETER];
 	GtkWidget *event_box_pallet;
 	GtkWidget *pallet;
 
@@ -42,9 +43,15 @@ static gboolean cb_expose_event_pallet_(GtkWidget *widget, cairo_t *cr, gpointer
 
 static gboolean cb_button_release_event_box_color_sliders_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data);
+static gboolean cb_button_release_slider_spins_(
+		GtkWidget *widget, GdkEventButton *event, gpointer data);
 static gboolean cb_change_value_color_slider_slider_(
 		GtkRange *range, GtkScrollType scroll,
 		gdouble value, gpointer user_data);
+static void cb_value_changed_color_slider_spin_(
+		GtkSpinButton *spin_button,
+		GtkScrollType  scroll,
+		gpointer       user_data);
 
 static void et_color_panel_update_ui_();
 static void et_color_panel_update_focus_elements_();
@@ -86,21 +93,36 @@ EtColorPanel *et_color_panel_init()
 		self->slider_boxs[i] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 		et_assertf(self->slider_boxs[i], "%d", i);
 		gtk_box_pack_start(GTK_BOX(self->box_color_sliders), self->slider_boxs[i], true, true, 1);
+
 		self->slider_labels[i] = gtk_label_new_with_mnemonic(color_parameter_property->name);
 		et_assertf(self->slider_labels[i], "%d", i);
 		gtk_box_pack_start(GTK_BOX(self->slider_boxs[i]), self->slider_labels[i], false, false, 1);
+
 		self->slider_sliders[i] = gtk_scale_new_with_range(
 				GTK_ORIENTATION_HORIZONTAL,
 				color_parameter_property->min,
 				color_parameter_property->max,
 				1);
 		et_assertf(self->slider_sliders[i], "%d", i);
+		gtk_scale_set_draw_value(GTK_SCALE(self->slider_sliders[i]), false);
 		gtk_scale_set_value_pos(GTK_SCALE(self->slider_sliders[i]), GTK_POS_RIGHT);
 		gtk_box_pack_start(GTK_BOX(self->slider_boxs[i]), self->slider_sliders[i], true, true, 1);
-
 		g_signal_connect(G_OBJECT(self->slider_sliders[i]), "change-value",
 				G_CALLBACK(cb_change_value_color_slider_slider_),
 				(gpointer)color_parameter_property);
+
+		self->slider_spins[i] = gtk_spin_button_new_with_range(
+				color_parameter_property->min,
+				color_parameter_property->max,
+				1);
+		et_assertf(self->slider_spins[i], "%d", i);
+		gtk_box_pack_start(GTK_BOX(self->slider_boxs[i]), self->slider_spins[i], false, false, 1);
+		g_signal_connect(G_OBJECT(self->slider_spins[i]), "value-changed",
+				G_CALLBACK(cb_value_changed_color_slider_spin_),
+				(gpointer)color_parameter_property);
+		// spin button [+/-] is event_box not catch button-release-event.
+		g_signal_connect(self->slider_spins[i], "button-release-event",
+				G_CALLBACK(cb_button_release_slider_spins_), NULL);
 	}
 
 	// ** pallet
@@ -188,11 +210,11 @@ void slot_change_doc_or_focus_(EtDocId doc_id)
 		}else{
 			// compare color other focus elements
 			if(!pv_color_is_equal(color_pair.colors[PvColorPairGround_ForGround],
-					focus->elements[i]->color_pair.colors[PvColorPairGround_ForGround])){
+						focus->elements[i]->color_pair.colors[PvColorPairGround_ForGround])){
 				self->is_multi_colors[PvColorPairGround_ForGround] = true;
 			}
 			if(!pv_color_is_equal(color_pair.colors[PvColorPairGround_BackGround],
-					focus->elements[i]->color_pair.colors[PvColorPairGround_BackGround])){
+						focus->elements[i]->color_pair.colors[PvColorPairGround_BackGround])){
 				self->is_multi_colors[PvColorPairGround_BackGround] = true;
 			}
 		}
@@ -210,6 +232,13 @@ void slot_et_color_panel_from_etaion_change_state(EtState state, gpointer data)
 void slot_et_color_panel_from_doc_change(EtDoc *doc, gpointer data)
 {
 	slot_change_doc_or_focus_(et_doc_get_id(doc));
+}
+
+static gboolean cb_button_release_slider_spins_(
+		GtkWidget *widget, GdkEventButton *event, gpointer data)
+{
+	return cb_button_release_event_box_color_sliders_(
+			widget, event, data);
 }
 
 /*! @brief callback from completed color element slider. */
@@ -250,14 +279,40 @@ static gboolean cb_change_value_color_slider_slider_(
 		value = color_parameter_property->max;
 	}
 
-	pv_color_set_parameter(&(self->color_pair.colors[self->color_pair_ground]),
-			color_parameter_property->ix, value);
+	pv_color_set_parameter(
+			&(self->color_pair.colors[self->color_pair_ground]),
+			color_parameter_property->ix,
+			value);
 
 	et_color_panel_update_focus_elements_();
 
 	et_color_panel_update_ui_();
 
 	return FALSE;
+}
+
+static void cb_value_changed_color_slider_spin_(
+		GtkSpinButton *spin_button,
+		GtkScrollType  scroll,
+		gpointer       user_data)
+{
+	double value = gtk_spin_button_get_value(spin_button);
+	et_debug("%d", (int)value);
+
+	EtColorPanel *self = color_panel_;
+	et_assert(self);
+
+	const PvColorParameterProperty *color_parameter_property = user_data;
+	et_assert(color_parameter_property);
+
+	pv_color_set_parameter(
+			&(self->color_pair.colors[self->color_pair_ground]),
+			color_parameter_property->ix,
+			value);
+
+	et_color_panel_update_focus_elements_();
+
+	et_color_panel_update_ui_();
 }
 
 static PvRect _get_pv_rect_of_pallet_from_ground(
@@ -322,13 +377,29 @@ static void et_color_panel_set_slider_sliders_from_color_(PvColor color)
 	}
 }
 
+static void _et_color_panel_set_slider_spins_from_color(PvColor color)
+{
+	EtColorPanel *self = color_panel_;
+	assert(self);
+
+	for(int i = 0; i < pv_color_parameter_property_get_num(); i++){
+		const PvColorParameterProperty *color_parameter_property
+			= pv_color_get_parameter_property_from_ix(i);
+		assert(color_parameter_property);
+
+		gtk_spin_button_set_value(GTK_SPIN_BUTTON(self->slider_spins[i]),
+				color.values[color_parameter_property->ix]);
+	}
+}
+
 static void et_color_panel_update_ui_()
 {
 	EtColorPanel *self = color_panel_;
 	et_assert(self);
 
-	// ** update slider_sliders
 	et_color_panel_set_slider_sliders_from_color_(
+			self->color_pair.colors[self->color_pair_ground]);
+	_et_color_panel_set_slider_spins_from_color(
 			self->color_pair.colors[self->color_pair_ground]);
 
 	gtk_widget_queue_draw(self->pallet);
@@ -351,7 +422,7 @@ static void et_color_panel_update_focus_elements_()
 	int num = pv_general_get_parray_num((void **)focus->elements);
 	for(int i = 0; i < num; i++){
 		focus->elements[i]->color_pair.colors[self->color_pair_ground]
-				= self->color_pair.colors[self->color_pair_ground];
+			= self->color_pair.colors[self->color_pair_ground];
 	}
 
 	et_doc_signal_update_from_id(doc_id);
