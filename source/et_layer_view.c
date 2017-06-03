@@ -204,7 +204,7 @@ static bool read_layer_tree_(PvElement *element, gpointer data, int level)
 	return true;
 }
 
-static bool draw_(EtLayerView *self)
+static bool draw_element_tree_(EtLayerView *self)
 {
 	et_assert(self);
 
@@ -283,11 +283,30 @@ static bool draw_(EtLayerView *self)
 	gtk_text_buffer_set_text (buffer, buf, -1);
 	free(buf);
 
+	return true;
+}
+
+static bool update_ui_(EtLayerView *self)
+{
+	et_assert(self);
+
+	if(!draw_element_tree_(self)){
+		et_warning("");
+	}
+
 	// ターゲット状態でlayer_ctrlsのbutton状態を変更する
-	gtk_widget_set_sensitive(self->button_layer_ctrls[0], (0 <= self->doc_id));
-	gtk_widget_set_sensitive(self->button_layer_ctrls[1], (NULL != focus_element));
-	gtk_widget_set_sensitive(self->button_layer_ctrls[2], (NULL != focus_element));
-	gtk_widget_set_sensitive(self->button_layer_ctrls[3], (NULL != focus_element));
+	{
+		PvElement *focus_element = NULL;
+		const PvFocus *focus = et_doc_get_focus_ref_from_id(self->doc_id);
+		if(NULL != focus){
+			focus_element = pv_focus_get_first_element(focus);
+		}
+
+		gtk_widget_set_sensitive(self->button_layer_ctrls[0], (0 <= self->doc_id));
+		gtk_widget_set_sensitive(self->button_layer_ctrls[1], (NULL != focus_element));
+		gtk_widget_set_sensitive(self->button_layer_ctrls[2], (NULL != focus_element));
+		gtk_widget_set_sensitive(self->button_layer_ctrls[3], (NULL != focus_element));
+	}
 
 	return true;
 }
@@ -336,7 +355,7 @@ static bool update_doc_tree_()
 		}
 	}
 
-	return draw_(self);
+	return update_ui_(self);
 }
 
 bool et_layer_view_set_doc_id(EtDocId doc_id)
@@ -407,7 +426,7 @@ static gboolean cb_button_press_layer_view_content_(
 
 		pv_focus_clear_set_element(focus, self->elementDatas[index]->element);
 
-		if(!draw_(self)){
+		if(!update_ui_(self)){
 			et_error("");
 			return false;
 		}
