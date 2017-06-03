@@ -58,61 +58,7 @@ static gboolean cb_motion_notify_layer_view_content_(
 
 static gboolean cb_clicked_layer_ctrl_button_(GtkWidget *widget, gpointer data);
 
-static bool init_layer_ctrl_button_(EtLayerView *self, int index)
-{
-	GError *error = NULL;
-	GdkPixbuf *pixbuf = NULL;
-	char tmp[1024];
-	snprintf(tmp, sizeof(tmp),
-			"%s/resource/%s",
-			et_etaion_get_application_base_dir(),
-			et_layer_view_layer_ctrls_buttons_[index].filename_image);
-	pixbuf = gdk_pixbuf_new_from_file(tmp, &error);
-	{
-		GdkPixbuf *t = pixbuf;
-		pixbuf = gdk_pixbuf_scale_simple(
-				t,
-				32, 32,
-				GDK_INTERP_HYPER);
-		et_assert(pixbuf);
-		g_object_unref(t);
-	}
-	if(NULL == pixbuf){
-		et_error("%d, '%s'\n", index, tmp);
-		return false;
-	}
-	GtkWidget *image = gtk_image_new_from_pixbuf(pixbuf);
-	if(NULL == image){
-		et_error("");
-		return false;
-	}
-
-	self->button_layer_ctrls[index] = gtk_button_new();
-	if(NULL == self->button_layer_ctrls[index]){
-		et_error("");
-		return false;
-	}
-	// フォーカス状態でEnterKey押下した際に、誤作動する問題への対処
-#if GTK_CHECK_VERSION (3,20,0)
-	gtk_widget_set_focus_on_click(self->button_layer_ctrls[index], false);
-#else
-	gtk_button_set_focus_on_click(GTK_BUTTON(self->button_layer_ctrls[index]), false);
-#endif
-	// gtk_widget_set_can_focus(self->button_layer_ctrls[index], false);
-	gtk_container_add(GTK_CONTAINER(self->button_layer_ctrls[index]),
-			image);
-
-	gtk_container_add(GTK_CONTAINER(self->box_button_layer_ctrl),
-			self->button_layer_ctrls[index]);
-
-	g_signal_connect(self->button_layer_ctrls[index], "clicked",
-			G_CALLBACK(cb_clicked_layer_ctrl_button_), (gpointer)self);
-
-	// デフォルト無効からスタート
-	gtk_widget_set_sensitive(self->button_layer_ctrls[index], false);
-
-	return true;
-}
+static bool init_layer_ctrl_button_(EtLayerView *self, int index);
 
 EtLayerView *et_layer_view_init()
 {
@@ -391,6 +337,62 @@ void slot_et_layer_view_from_etaion_change_state(EtState state, gpointer data)
 		et_error("");
 		return;
 	}
+}
+
+static bool init_layer_ctrl_button_(EtLayerView *self, int index)
+{
+	GError *error = NULL;
+	GdkPixbuf *pixbuf = NULL;
+	char tmp[1024];
+	snprintf(tmp, sizeof(tmp),
+			"%s/resource/%s",
+			et_etaion_get_application_base_dir(),
+			et_layer_view_layer_ctrls_buttons_[index].filename_image);
+	pixbuf = gdk_pixbuf_new_from_file(tmp, &error);
+	{
+		GdkPixbuf *t = pixbuf;
+		pixbuf = gdk_pixbuf_scale_simple(
+				t,
+				32, 32,
+				GDK_INTERP_HYPER);
+		et_assert(pixbuf);
+		g_object_unref(t);
+	}
+	if(NULL == pixbuf){
+		et_error("%d, '%s'\n", index, tmp);
+		return false;
+	}
+	GtkWidget *image = gtk_image_new_from_pixbuf(pixbuf);
+	if(NULL == image){
+		et_error("");
+		return false;
+	}
+
+	self->button_layer_ctrls[index] = gtk_button_new();
+	if(NULL == self->button_layer_ctrls[index]){
+		et_error("");
+		return false;
+	}
+	// フォーカス状態でEnterKey押下した際に、誤作動する問題への対処
+#if GTK_CHECK_VERSION (3,20,0)
+	gtk_widget_set_focus_on_click(self->button_layer_ctrls[index], false);
+#else
+	gtk_button_set_focus_on_click(GTK_BUTTON(self->button_layer_ctrls[index]), false);
+#endif
+	// gtk_widget_set_can_focus(self->button_layer_ctrls[index], false);
+	gtk_container_add(GTK_CONTAINER(self->button_layer_ctrls[index]),
+			image);
+
+	gtk_container_add(GTK_CONTAINER(self->box_button_layer_ctrl),
+			self->button_layer_ctrls[index]);
+
+	g_signal_connect(self->button_layer_ctrls[index], "clicked",
+			G_CALLBACK(cb_clicked_layer_ctrl_button_), (gpointer)self);
+
+	// デフォルト無効からスタート
+	gtk_widget_set_sensitive(self->button_layer_ctrls[index], false);
+
+	return true;
 }
 
 int index_data_from_position_(EtLayerView *self, int x, int y)
