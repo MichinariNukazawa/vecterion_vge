@@ -631,6 +631,11 @@ static void _pvui_app_set_style(){
 			"   font: monospace;\n"
 			"   font-size: 12;\n"
 			"}\n"
+			"GtkSpinButton {\n"
+			"   font: monospace;\n"
+			"   padding: 4px;\n"
+			//"   font-size: 12;\n"
+			"}\n"
 			"", -1, NULL);
 	g_object_unref (provider);
 }
