@@ -68,6 +68,15 @@ static bool _et_layer_view_set_layer_ctrl(EtLayerView *self, int index)
 			et_etaion_get_application_base_dir(),
 			_et_layer_view_layer_ctrls[index].filename_image);
 	pixbuf = gdk_pixbuf_new_from_file(tmp, &error);
+	{
+		GdkPixbuf *t = pixbuf;
+		pixbuf = gdk_pixbuf_scale_simple(
+				t,
+				32, 32,
+				GDK_INTERP_HYPER);
+		et_assert(pixbuf);
+		g_object_unref(t);
+	}
 	if(NULL == pixbuf){
 		et_error("%d, '%s'\n", index, tmp);
 		return false;

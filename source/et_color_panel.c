@@ -70,7 +70,7 @@ EtColorPanel *et_color_panel_init()
 	gtk_frame_set_shadow_type (GTK_FRAME (self->frame), GTK_SHADOW_IN);
 	gtk_box_pack_start(GTK_BOX(self->box), self->frame, true, true, 0);
 
-	self->box_color_panel = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+	self->box_color_panel = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	gtk_container_add(GTK_CONTAINER(self->frame), self->box_color_panel);
 
 	// **sliders
@@ -82,7 +82,7 @@ EtColorPanel *et_color_panel_init()
 			);
 	g_signal_connect(self->event_box_color_sliders, "button-release-event",
 			G_CALLBACK(cb_button_release_event_box_color_sliders_), NULL);
-	self->box_color_sliders = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+	self->box_color_sliders = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	gtk_container_add(GTK_CONTAINER(self->event_box_color_sliders),
 			self->box_color_sliders);
 
@@ -92,7 +92,7 @@ EtColorPanel *et_color_panel_init()
 
 		self->slider_boxs[i] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 		et_assertf(self->slider_boxs[i], "%d", i);
-		gtk_box_pack_start(GTK_BOX(self->box_color_sliders), self->slider_boxs[i], true, true, 1);
+		gtk_box_pack_start(GTK_BOX(self->box_color_sliders), self->slider_boxs[i], true, true, 0);
 
 		self->slider_labels[i] = gtk_label_new_with_mnemonic(color_parameter_property->name);
 		et_assertf(self->slider_labels[i], "%d", i);
@@ -104,6 +104,7 @@ EtColorPanel *et_color_panel_init()
 				color_parameter_property->max,
 				1);
 		et_assertf(self->slider_sliders[i], "%d", i);
+		gtk_widget_set_size_request(self->slider_sliders[i], 100, 0);
 		gtk_scale_set_draw_value(GTK_SCALE(self->slider_sliders[i]), false);
 		gtk_scale_set_value_pos(GTK_SCALE(self->slider_sliders[i]), GTK_POS_RIGHT);
 		gtk_box_pack_start(GTK_BOX(self->slider_boxs[i]), self->slider_sliders[i], true, true, 1);

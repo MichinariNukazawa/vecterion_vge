@@ -76,30 +76,30 @@ EtStrokePanel *et_stroke_panel_init()
 	}
 
 
-	self->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+	self->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 
 	self->frame_stroke = gtk_frame_new (NULL);
 	gtk_frame_set_label(GTK_FRAME (self->frame_stroke), "Stroke");
 	gtk_frame_set_shadow_type (GTK_FRAME (self->frame_stroke), GTK_SHADOW_IN);
-	gtk_box_pack_start(GTK_BOX(self->box), self->frame_stroke, false, true, 3);
+	gtk_box_pack_start(GTK_BOX(self->box), self->frame_stroke, false, true, 0);
 
-	self->box_stroke = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+	self->box_stroke = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	gtk_container_add(GTK_CONTAINER(self->frame_stroke), self->box_stroke);
 
-	self->box_width = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
-	gtk_box_pack_start(GTK_BOX(self->box_stroke), self->box_width, false, true, 3);
+	self->box_width = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+	gtk_box_pack_start(GTK_BOX(self->box_stroke), self->box_width, false, true, 0);
 	self->label_width = gtk_label_new_with_mnemonic("width  ");
-	gtk_box_pack_start(GTK_BOX(self->box_width), self->label_width, false, true, 3);
+	gtk_box_pack_start(GTK_BOX(self->box_width), self->label_width, false, true, 0);
 	self->spin_width = gtk_spin_button_new_with_range(0, 20000, 1);
 	gtk_spin_button_set_digits (GTK_SPIN_BUTTON(self->spin_width), 3);
-	gtk_box_pack_start(GTK_BOX(self->box_width), self->spin_width, false, true, 3);
+	gtk_box_pack_start(GTK_BOX(self->box_width), self->spin_width, false, true, 0);
 
 	// ** linecap
 	{
 		self->box_linecap = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
-		gtk_box_pack_start(GTK_BOX(self->box_stroke), self->box_linecap, false, true, 3);
+		gtk_box_pack_start(GTK_BOX(self->box_stroke), self->box_linecap, false, true, 0);
 		self->label_linecap = gtk_label_new_with_mnemonic("linecap  ");
-		gtk_box_pack_start(GTK_BOX(self->box_linecap), self->label_linecap, false, true, 3);
+		gtk_box_pack_start(GTK_BOX(self->box_linecap), self->label_linecap, false, true, 0);
 		// self->combo_linecap = gtk_combo_box_new();
 		//	GtkListStore *liststore = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_INT);
 		GtkListStore *liststore = gtk_list_store_new(1, G_TYPE_STRING);
@@ -118,15 +118,15 @@ EtStrokePanel *et_stroke_panel_init()
 		gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(self->combo_linecap), column,
 				"text", 0, NULL);
 		gtk_combo_box_set_active(GTK_COMBO_BOX(self->combo_linecap), 0);
-		gtk_box_pack_start(GTK_BOX(self->box_linecap), self->combo_linecap, false, true, 3);
+		gtk_box_pack_start(GTK_BOX(self->box_linecap), self->combo_linecap, false, true, 0);
 	}
 
 	// ** linejoin
 	{
-		self->box_linejoin = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
-		gtk_box_pack_start(GTK_BOX(self->box_stroke), self->box_linejoin, false, true, 3);
+		self->box_linejoin = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+		gtk_box_pack_start(GTK_BOX(self->box_stroke), self->box_linejoin, false, true, 0);
 		self->label_linejoin = gtk_label_new_with_mnemonic("linejoin  ");
-		gtk_box_pack_start(GTK_BOX(self->box_linejoin), self->label_linejoin, false, true, 3);
+		gtk_box_pack_start(GTK_BOX(self->box_linejoin), self->label_linejoin, false, true, 0);
 		// self->combo_linejoin = gtk_combo_box_new();
 		//	GtkListStore *liststore = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_INT);
 		GtkListStore *liststore = gtk_list_store_new(1, G_TYPE_STRING);
@@ -145,7 +145,7 @@ EtStrokePanel *et_stroke_panel_init()
 		gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(self->combo_linejoin), column,
 				"text", 0, NULL);
 		gtk_combo_box_set_active(GTK_COMBO_BOX(self->combo_linejoin), 0);
-		gtk_box_pack_start(GTK_BOX(self->box_linejoin), self->combo_linejoin, false, true, 3);
+		gtk_box_pack_start(GTK_BOX(self->box_linejoin), self->combo_linejoin, false, true, 0);
 	}
 
 	self->stroke_property_signal_handler_id[STROKE_PROPERTY_WIDTH] = 
