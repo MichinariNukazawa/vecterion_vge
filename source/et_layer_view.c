@@ -14,7 +14,7 @@ typedef struct EtLayerViewLayerCtrl{
 	const char * const filename_image;
 }EtLayerViewLayerCtrl;
 
-const EtLayerViewLayerCtrl _et_layer_view_layer_ctrls[] = {
+const EtLayerViewLayerCtrl et_layer_view_layer_ctrls_buttons_[] = {
 	{"New", "layer_new_64x64.svg",},
 	{"Child", "layer_new_child_64x64.svg",},
 	{"Clone", "layer_clone_64x64.svg",},
@@ -47,18 +47,18 @@ typedef struct EtLayerViewRltDataPack{
 }EtLayerViewRltDataPack;
 
 
-static EtLayerView *layer_view = NULL;
+static EtLayerView *layer_view_ = NULL;
 
-static gboolean _et_layer_view_cb_button_press(
+static gboolean cb_button_press_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data);
-static gboolean _et_layer_view_cb_button_release(
+static gboolean cb_button_release_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data);
-static gboolean _et_layer_view_cb_motion_notify(
+static gboolean cb_motion_notify_(
 		GtkWidget *widget, GdkEventMotion *event, gpointer data);
 
-static gboolean _et_layer_view_cb_layer_ctrl(GtkWidget *widget, gpointer data);
+static gboolean cb_clicked_layer_ctrl_button_(GtkWidget *widget, gpointer data);
 
-static bool _et_layer_view_set_layer_ctrl(EtLayerView *self, int index)
+static bool init_layer_ctrl_button_(EtLayerView *self, int index)
 {
 	GError *error = NULL;
 	GdkPixbuf *pixbuf = NULL;
@@ -66,7 +66,7 @@ static bool _et_layer_view_set_layer_ctrl(EtLayerView *self, int index)
 	snprintf(tmp, sizeof(tmp),
 			"%s/resource/%s",
 			et_etaion_get_application_base_dir(),
-			_et_layer_view_layer_ctrls[index].filename_image);
+			et_layer_view_layer_ctrls_buttons_[index].filename_image);
 	pixbuf = gdk_pixbuf_new_from_file(tmp, &error);
 	{
 		GdkPixbuf *t = pixbuf;
@@ -106,7 +106,7 @@ static bool _et_layer_view_set_layer_ctrl(EtLayerView *self, int index)
 			self->button_layer_ctrls[index]);
 
 	g_signal_connect(self->button_layer_ctrls[index], "clicked",
-			G_CALLBACK(_et_layer_view_cb_layer_ctrl), (gpointer)self);
+			G_CALLBACK(cb_clicked_layer_ctrl_button_), (gpointer)self);
 
 	// デフォルト無効からスタート
 	gtk_widget_set_sensitive(self->button_layer_ctrls[index], false);
@@ -116,16 +116,10 @@ static bool _et_layer_view_set_layer_ctrl(EtLayerView *self, int index)
 
 EtLayerView *et_layer_view_init()
 {
-	if(NULL != layer_view){
-		et_bug("");
-		exit(-1);
-	}
+	et_assert(!layer_view_);
 
 	EtLayerView *self = (EtLayerView *)malloc(sizeof(EtLayerView));
-	if(NULL == self){
-		et_error("");
-		return NULL;
-	}
+	et_assert(self);
 
 	self->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
 
@@ -135,21 +129,18 @@ EtLayerView *et_layer_view_init()
 	gtk_container_add(GTK_CONTAINER(self->box), self->scroll);
 
 	self->event_box = gtk_event_box_new();
-	if(NULL == self->event_box){
-		et_error("");
-		return NULL;
-	}
+	et_assert(self->event_box);
 	gtk_widget_set_events(self->event_box,
 			GDK_BUTTON_PRESS_MASK |
 			GDK_BUTTON_RELEASE_MASK |
 			GDK_POINTER_MOTION_MASK
 			);
 	g_signal_connect(self->event_box, "button-press-event",
-			G_CALLBACK(_et_layer_view_cb_button_press), (gpointer)self);
+			G_CALLBACK(cb_button_press_), (gpointer)self);
 	g_signal_connect(self->event_box, "button-release-event",
-			G_CALLBACK(_et_layer_view_cb_button_release), (gpointer)self);
+			G_CALLBACK(cb_button_release_), (gpointer)self);
 	g_signal_connect(self->event_box, "motion-notify-event",
-			G_CALLBACK(_et_layer_view_cb_motion_notify), (gpointer)self);
+			G_CALLBACK(cb_motion_notify_), (gpointer)self);
 
 	gtk_container_add(GTK_CONTAINER(self->scroll), self->event_box);
 
@@ -166,54 +157,37 @@ EtLayerView *et_layer_view_init()
 	self->box_button_layer_ctrl = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 	gtk_container_add(GTK_CONTAINER(self->box), self->box_button_layer_ctrl);
 
-	if(!_et_layer_view_set_layer_ctrl(self, 0)){
-		et_error("");
-		return NULL;
-	}
-	if(!_et_layer_view_set_layer_ctrl(self, 1)){
-		et_error("");
-		return NULL;
-	}
-	if(!_et_layer_view_set_layer_ctrl(self, 2)){
-		et_error("");
-		return NULL;
-	}
-	if(!_et_layer_view_set_layer_ctrl(self, 3)){
-		et_error("");
-		return NULL;
-	}
+	et_assert(init_layer_ctrl_button_(self, 0));
+	et_assert(init_layer_ctrl_button_(self, 1));
+	et_assert(init_layer_ctrl_button_(self, 2));
+	et_assert(init_layer_ctrl_button_(self, 3));
 
 	self->widget = self->box;
 
 	self->doc_id = -1;
 	self->elementDatas = NULL;
 
-	layer_view = self;
+	layer_view_ = self;
 
 	return self;
 }
 
 GtkWidget *et_layer_view_get_widget_frame()
 {
-	EtLayerView *self = layer_view;
-	if(NULL == self){
-		et_error("");
-		return NULL;
-	}
+	EtLayerView *self = layer_view_;
+	et_assert(self);
 
 	return self->widget;
 }
 
-static bool _et_layer_view_read_layer_tree(PvElement *element, gpointer data, int level)
+static bool read_layer_tree_(PvElement *element, gpointer data, int level)
 {
 	EtLayerViewRltDataPack *func_rlt_data_pack = data;
 	EtLayerViewElementData ***datas = &(func_rlt_data_pack->datas);
 
 	EtLayerViewElementData *rlt = malloc(sizeof(EtLayerViewElementData));
-	if(NULL == rlt){
-		et_error("");
-		exit(-1);
-	}
+	et_assert(rlt);
+
 	rlt->level = level;
 	rlt->name = "";
 	rlt->kind = element->kind;
@@ -222,10 +196,7 @@ static bool _et_layer_view_read_layer_tree(PvElement *element, gpointer data, in
 	int num = pv_general_get_parray_num((void **)*datas);
 	*datas = (EtLayerViewElementData **)
 		realloc(*datas, sizeof(EtLayerViewElementData *) * (num + 2));
-	if(NULL == *datas){
-		et_critical("");
-		exit(-1);
-	}
+	et_assert(*datas);
 
 	(*datas)[num] = rlt;
 	(*datas)[num + 1] = NULL;
@@ -233,12 +204,9 @@ static bool _et_layer_view_read_layer_tree(PvElement *element, gpointer data, in
 	return true;
 }
 
-static bool _et_layer_view_draw(EtLayerView *self)
+static bool draw_(EtLayerView *self)
 {
-	if(NULL == self){
-		et_bug("");
-		return false;
-	}
+	et_assert(self);
 
 	char buf[102400]; //! @fixme static length.
 	const PvElement *focus_element = NULL;
@@ -319,13 +287,10 @@ static bool _et_layer_view_draw(EtLayerView *self)
 	return true;
 }
 
-static bool _et_layer_view_update_doc_tree()
+static bool update_doc_tree_()
 {
-	EtLayerView *self = layer_view;
-	if(NULL == self){
-		et_bug("");
-		exit(-1);
-	}
+	EtLayerView *self = layer_view_;
+	et_assert(self);
 
 	EtLayerViewRltDataPack func_rlt_data_pack = {
 		.datas = NULL
@@ -349,7 +314,7 @@ static bool _et_layer_view_update_doc_tree()
 
 		PvElementRecursiveError error;
 		if(!pv_element_recursive_desc_before(vg->element_root,
-					_et_layer_view_read_layer_tree, &func_rlt_data_pack,
+					read_layer_tree_, &func_rlt_data_pack,
 					&error)){
 			et_error("level:%d", error.level);
 			return false;
@@ -366,20 +331,17 @@ static bool _et_layer_view_update_doc_tree()
 		}
 	}
 
-	return _et_layer_view_draw(self);
+	return draw_(self);
 }
 
 bool et_layer_view_set_doc_id(EtDocId doc_id)
 {
-	EtLayerView *self = layer_view;
-	if(NULL == self){
-		et_bug("");
-		exit(-1);
-	}
+	EtLayerView *self = layer_view_;
+	et_assert(self);
 
 	self->doc_id = doc_id;
 
-	if(!_et_layer_view_update_doc_tree()){
+	if(!update_doc_tree_()){
 		et_error("");
 		return false;
 	}
@@ -389,18 +351,15 @@ bool et_layer_view_set_doc_id(EtDocId doc_id)
 
 void et_layer_view_slot_from_doc_change(EtDoc *doc, gpointer data)
 {
-	if(!_et_layer_view_update_doc_tree()){
+	if(!update_doc_tree_()){
 		et_error("");
 	}
 }
 
 void slot_et_layer_view_from_etaion_change_state(EtState state, gpointer data)
 {
-	EtLayerView *self = layer_view;
-	if(NULL == self){
-		et_bug("");
-		exit(-1);
-	}
+	EtLayerView *self = layer_view_;
+	et_assert(self);
 
 	self->doc_id = state.doc_id;
 
@@ -410,12 +369,10 @@ void slot_et_layer_view_from_etaion_change_state(EtState state, gpointer data)
 	}
 }
 
-int _et_layer_view_index_data_from_position(EtLayerView *self, int x, int y)
+int index_data_from_position_(EtLayerView *self, int x, int y)
 {
-	if(NULL == self){
-		et_bug("");
-		return -1;
-	}
+	et_assert(self);
+
 	int index = (y/16) + 1; // +1 = hidden root layer
 
 	int num = pv_general_get_parray_num((void **)self->elementDatas);
@@ -426,7 +383,7 @@ int _et_layer_view_index_data_from_position(EtLayerView *self, int x, int y)
 	return index;
 }
 
-static gboolean _et_layer_view_cb_button_press(
+static gboolean cb_button_press_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	EtLayerView *self = (EtLayerView *)data;
@@ -434,7 +391,7 @@ static gboolean _et_layer_view_cb_button_press(
 	et_mouse_util_button_kind(event->button);
 	et_mouse_util_modifier_kind(event->state);
 
-	int index = _et_layer_view_index_data_from_position(self, event->x, event->y);
+	int index = index_data_from_position_(self, event->x, event->y);
 	et_debug("%d", index);
 	if(0 <= index){
 		PvFocus *focus = et_doc_get_focus_ref_from_id(self->doc_id);
@@ -445,7 +402,7 @@ static gboolean _et_layer_view_cb_button_press(
 
 		pv_focus_clear_set_element(focus, self->elementDatas[index]->element);
 
-		if(!_et_layer_view_draw(self)){
+		if(!draw_(self)){
 			et_error("");
 			return false;
 		}
@@ -459,14 +416,14 @@ static gboolean _et_layer_view_cb_button_press(
 	return false;
 }
 
-static gboolean _et_layer_view_cb_button_release(
+static gboolean cb_button_release_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	et_debug("BUTTON RELEASE");
 	return false;
 }
 
-static gboolean _et_layer_view_cb_motion_notify(
+static gboolean cb_motion_notify_(
 		GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
 	// et_debug("(%3d, %3d)", (int)event->x, (int)event->y);
@@ -474,14 +431,11 @@ static gboolean _et_layer_view_cb_motion_notify(
 	return false;
 }
 
-static gboolean _et_layer_view_cb_layer_ctrl(
+static gboolean cb_clicked_layer_ctrl_button_(
 		GtkWidget *widget, gpointer data)
 {
 	EtLayerView *self = (EtLayerView *)data;
-	if(NULL == self){
-		et_bug("");
-		return false;
-	}
+	et_assert(self);
 
 	int index = -1;
 	for(int i = 0; i < 4; i++){
