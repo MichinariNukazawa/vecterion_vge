@@ -19,7 +19,7 @@ struct EtColorPanel{
 	GtkWidget *box_color_sliders;
 	GtkWidget *slider_boxs[NUM_COLOR_PARAMETER];
 	GtkWidget *slider_labels[NUM_COLOR_PARAMETER];
-	GtkWidget *sliders[NUM_COLOR_PARAMETER];
+	GtkWidget *slider_sliders[NUM_COLOR_PARAMETER];
 	GtkWidget *event_box_pallet;
 	GtkWidget *pallet;
 
@@ -31,33 +31,30 @@ struct EtColorPanel{
 	PvColorPair color_pair;
 };
 
-EtColorPanel *color_panel = NULL;
+EtColorPanel *color_panel_ = NULL;
 
-static gboolean _cb_button_press_pallet(
+static gboolean cb_button_press_pallet_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data);
-static gboolean _cb_button_release_pallet(
+static gboolean cb_button_release_pallet_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data);
-static gboolean _cb_expose_event_pallet(GtkWidget *widget, cairo_t *cr, gpointer data);
+static gboolean cb_expose_event_pallet_(GtkWidget *widget, cairo_t *cr, gpointer data);
 
 
-static gboolean _cb_button_release_sliders(
+static gboolean cb_button_release_event_box_color_sliders_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data);
-static gboolean _cb_change_value_color_slider(
+static gboolean cb_change_value_color_slider_slider_(
 		GtkRange *range, GtkScrollType scroll,
 		gdouble value, gpointer user_data);
 
-static void _et_color_panel_update_ui();
-static void _et_color_panel_update_focus_elements();
+static void et_color_panel_update_ui_();
+static void et_color_panel_update_focus_elements_();
 
 EtColorPanel *et_color_panel_init()
 {
-	assert(NULL == color_panel);
+	et_assert(NULL == color_panel_);
 
 	EtColorPanel *self = (EtColorPanel *)malloc(sizeof(EtColorPanel));
-	if(NULL == self){
-		et_critical("");
-		return NULL;
-	}
+	et_assert(self);
 
 	self->box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
@@ -77,7 +74,7 @@ EtColorPanel *et_color_panel_init()
 			| GDK_POINTER_MOTION_MASK
 			);
 	g_signal_connect(self->event_box_color_sliders, "button-release-event",
-			G_CALLBACK(_cb_button_release_sliders), NULL);
+			G_CALLBACK(cb_button_release_event_box_color_sliders_), NULL);
 	self->box_color_sliders = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
 	gtk_container_add(GTK_CONTAINER(self->event_box_color_sliders),
 			self->box_color_sliders);
@@ -92,17 +89,17 @@ EtColorPanel *et_color_panel_init()
 		self->slider_labels[i] = gtk_label_new_with_mnemonic(color_parameter_property->name);
 		et_assertf(self->slider_labels[i], "%d", i);
 		gtk_box_pack_start(GTK_BOX(self->slider_boxs[i]), self->slider_labels[i], false, false, 1);
-		self->sliders[i] = gtk_scale_new_with_range(
+		self->slider_sliders[i] = gtk_scale_new_with_range(
 				GTK_ORIENTATION_HORIZONTAL,
 				color_parameter_property->min,
 				color_parameter_property->max,
 				1);
-		et_assertf(self->sliders[i], "%d", i);
-		gtk_scale_set_value_pos(GTK_SCALE(self->sliders[i]), GTK_POS_RIGHT);
-		gtk_box_pack_start(GTK_BOX(self->slider_boxs[i]), self->sliders[i], true, true, 1);
+		et_assertf(self->slider_sliders[i], "%d", i);
+		gtk_scale_set_value_pos(GTK_SCALE(self->slider_sliders[i]), GTK_POS_RIGHT);
+		gtk_box_pack_start(GTK_BOX(self->slider_boxs[i]), self->slider_sliders[i], true, true, 1);
 
-		g_signal_connect(G_OBJECT(self->sliders[i]), "change-value",
-				G_CALLBACK(_cb_change_value_color_slider),
+		g_signal_connect(G_OBJECT(self->slider_sliders[i]), "change-value",
+				G_CALLBACK(cb_change_value_color_slider_slider_),
 				(gpointer)color_parameter_property);
 	}
 
@@ -114,13 +111,13 @@ EtColorPanel *et_color_panel_init()
 			| GDK_POINTER_MOTION_MASK
 			);
 	g_signal_connect(self->event_box_pallet, "button-press-event",
-			G_CALLBACK(_cb_button_press_pallet), NULL);
+			G_CALLBACK(cb_button_press_pallet_), NULL);
 	g_signal_connect(self->event_box_pallet, "button-release-event",
-			G_CALLBACK(_cb_button_release_pallet), NULL);
+			G_CALLBACK(cb_button_release_pallet_), NULL);
 
 	self->pallet = gtk_drawing_area_new();
 	g_signal_connect (G_OBJECT (self->pallet), "draw",
-			G_CALLBACK (_cb_expose_event_pallet), NULL);
+			G_CALLBACK (cb_expose_event_pallet_), NULL);
 	gtk_container_add(GTK_CONTAINER(self->event_box_pallet), self->pallet);
 	gtk_widget_set_size_request(self->pallet, (W_PALLET * 2), (H_PALLET * 1.5));
 
@@ -133,36 +130,33 @@ EtColorPanel *et_color_panel_init()
 	gtk_box_pack_start(GTK_BOX(self->box_color_panel), self->event_box_color_sliders, true, true, 0);
 
 	self->widget = self->box;
-	color_panel = self;
+	color_panel_ = self;
 
-	_et_color_panel_update_ui();
+	et_color_panel_update_ui_();
 
 	return self;
 }
 
 GtkWidget *et_color_panel_get_widget_frame()
 {
-	EtColorPanel *self = color_panel;
-	if(NULL == self){
-		et_bug("");
-		exit(-1);
-	}
+	EtColorPanel *self = color_panel_;
+	et_assert(self);
 
 	return self->box;
 }
 
 PvColorPair et_color_panel_get_color_pair()
 {
-	EtColorPanel *self = color_panel;
-	assert(self);
+	EtColorPanel *self = color_panel_;
+	et_assert(self);
 
 	return self->color_pair;
 }
 
-void _slot_change_doc_or_focus(EtDocId doc_id)
+void slot_change_doc_or_focus_(EtDocId doc_id)
 {
-	EtColorPanel *self = color_panel;
-	assert(self);
+	EtColorPanel *self = color_panel_;
+	et_assert(self);
 
 	//! update color panel is only current document.
 	if(doc_id != et_etaion_get_current_doc_id()){
@@ -205,25 +199,25 @@ void _slot_change_doc_or_focus(EtDocId doc_id)
 	}
 	self->color_pair = color_pair;
 
-	_et_color_panel_update_ui();
+	et_color_panel_update_ui_();
 }
 
 void slot_et_color_panel_from_etaion_change_state(EtState state, gpointer data)
 {
-	_slot_change_doc_or_focus(state.doc_id);
+	slot_change_doc_or_focus_(state.doc_id);
 }
 
 void slot_et_color_panel_from_doc_change(EtDoc *doc, gpointer data)
 {
-	_slot_change_doc_or_focus(et_doc_get_id(doc));
+	slot_change_doc_or_focus_(et_doc_get_id(doc));
 }
 
 /*! @brief callback from completed color element slider. */
-static gboolean _cb_button_release_sliders(
+static gboolean cb_button_release_event_box_color_sliders_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
-	EtColorPanel *self = color_panel;
-	assert(self);
+	EtColorPanel *self = color_panel_;
+	et_assert(self);
 
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -234,21 +228,21 @@ static gboolean _cb_button_release_sliders(
 
 	et_doc_save_from_id(doc_id);
 
-	_et_color_panel_update_ui();
+	et_color_panel_update_ui_();
 
 	return FALSE;
 }
 
 /*! @brief callback from move the color element slider. */
-static gboolean _cb_change_value_color_slider(
+static gboolean cb_change_value_color_slider_slider_(
 		GtkRange *range, GtkScrollType scroll,
 		gdouble value, gpointer user_data)
 {
-	EtColorPanel *self = color_panel;
-	assert(self);
+	EtColorPanel *self = color_panel_;
+	et_assert(self);
 
 	const PvColorParameterProperty *color_parameter_property = user_data;
-	assert(color_parameter_property);
+	et_assert(color_parameter_property);
 
 	//! limitation to GtkRange spec is over range max
 	if(color_parameter_property->max < value){
@@ -259,9 +253,9 @@ static gboolean _cb_change_value_color_slider(
 	pv_color_set_parameter(&(self->color_pair.colors[self->color_pair_ground]),
 			color_parameter_property->ix, value);
 
-	_et_color_panel_update_focus_elements();
+	et_color_panel_update_focus_elements_();
 
-	_et_color_panel_update_ui();
+	et_color_panel_update_ui_();
 
 	return FALSE;
 }
@@ -288,62 +282,62 @@ static PvRect _get_pv_rect_of_pallet_from_ground(
 	}
 }
 
-static gboolean _cb_button_press_pallet(
+static gboolean cb_button_press_pallet_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
-	EtColorPanel *self = color_panel;
-	assert(self);
+	EtColorPanel *self = color_panel_;
+	et_assert(self);
 
 	PvColorPairGround ground_check = !(self->color_pair_ground);
 	PvRect rect = _get_pv_rect_of_pallet_from_ground(ground_check, W_PALLET, H_PALLET);
 	if(pv_rect_is_inside(rect, (PvPoint){.x = event->x, .y = event->y})){
 		self->color_pair_ground = ground_check;
-		_et_color_panel_update_ui();
+		et_color_panel_update_ui_();
 	}
 
 	return FALSE;
 }
 
-static gboolean _cb_button_release_pallet(
+static gboolean cb_button_release_pallet_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
-	EtColorPanel *self = color_panel;
-	assert(self);
+	EtColorPanel *self = color_panel_;
+	et_assert(self);
 
 	return FALSE;
 }
 
-static void _et_color_panel_set_sliders_from_color(PvColor color)
+static void et_color_panel_set_slider_sliders_from_color_(PvColor color)
 {
-	EtColorPanel *self = color_panel;
-	assert(self);
+	EtColorPanel *self = color_panel_;
+	et_assert(self);
 
 	for(int i = 0; i < pv_color_parameter_property_get_num(); i++){
 		const PvColorParameterProperty *color_parameter_property
 			= pv_color_get_parameter_property_from_ix(i);
-		assert(color_parameter_property);
+		et_assert(color_parameter_property);
 
-		gtk_range_set_value(GTK_RANGE(self->sliders[i]),
+		gtk_range_set_value(GTK_RANGE(self->slider_sliders[i]),
 				color.values[color_parameter_property->ix]);
 	}
 }
 
-static void _et_color_panel_update_ui()
+static void et_color_panel_update_ui_()
 {
-	EtColorPanel *self = color_panel;
-	assert(self);
+	EtColorPanel *self = color_panel_;
+	et_assert(self);
 
-	// ** update sliders
-	_et_color_panel_set_sliders_from_color(
+	// ** update slider_sliders
+	et_color_panel_set_slider_sliders_from_color_(
 			self->color_pair.colors[self->color_pair_ground]);
 
 	gtk_widget_queue_draw(self->pallet);
 }
 
-static void _et_color_panel_update_focus_elements()
+static void et_color_panel_update_focus_elements_()
 {
-	EtColorPanel *self = color_panel;
-	assert(self);
+	EtColorPanel *self = color_panel_;
+	et_assert(self);
 
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -352,7 +346,7 @@ static void _et_color_panel_update_focus_elements()
 		return;
 	}
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-	assert(focus);
+	et_assert(focus);
 
 	int num = pv_general_get_parray_num((void **)focus->elements);
 	for(int i = 0; i < num; i++){
@@ -363,7 +357,7 @@ static void _et_color_panel_update_focus_elements()
 	et_doc_signal_update_from_id(doc_id);
 }
 
-static void _draw_multicolor(cairo_t *cr, PvRect rect)
+static void draw_multicolor_(cairo_t *cr, PvRect rect)
 {
 	PvCairoRgbaColor cc = {0.5, 0.5, 0.5, 0.8};
 	cairo_set_source_rgba (cr, cc.r, cc.g, cc.b, cc.a);
@@ -387,7 +381,7 @@ static void _draw_multicolor(cairo_t *cr, PvRect rect)
 	cairo_fill (cr);
 }
 
-static void _draw_pallet(cairo_t *cr, PvRect rect, PvCairoRgbaColor cc, bool is_multi)
+static void draw_pallet_(cairo_t *cr, PvRect rect, PvCairoRgbaColor cc, bool is_multi)
 {
 	cairo_save (cr);
 	cairo_rectangle (cr, rect.x, rect.y, rect.w, rect.h);
@@ -403,7 +397,7 @@ static void _draw_pallet(cairo_t *cr, PvRect rect, PvCairoRgbaColor cc, bool is_
 
 	// multi color
 	if(is_multi){
-		_draw_multicolor(cr, rect);
+		draw_multicolor_(cr, rect);
 	}else{
 		cairo_set_source_rgba (cr, 0.5, 0.5, 0.5, 1.0);
 	}
@@ -416,10 +410,10 @@ static void _draw_pallet(cairo_t *cr, PvRect rect, PvCairoRgbaColor cc, bool is_
 	cairo_restore(cr); // clear clipping
 }
 
-static gboolean _cb_expose_event_pallet (GtkWidget *widget, cairo_t *cr, gpointer data)
+static gboolean cb_expose_event_pallet_ (GtkWidget *widget, cairo_t *cr, gpointer data)
 {
-	EtColorPanel *self = color_panel;
-	assert(self);
+	EtColorPanel *self = color_panel_;
+	et_assert(self);
 
 	gtk_widget_set_size_request(self->pallet, W_PALLET + 10, H_PALLET + 10);
 
@@ -432,14 +426,14 @@ static gboolean _cb_expose_event_pallet (GtkWidget *widget, cairo_t *cr, gpointe
 	cc = pv_color_get_cairo_rgba(self->color_pair.colors[ground]);
 	rect = _get_pv_rect_of_pallet_from_ground(ground, W_PALLET, H_PALLET);
 
-	_draw_pallet(cr, rect, cc, self->is_multi_colors[ground]);
+	draw_pallet_(cr, rect, cc, self->is_multi_colors[ground]);
 
 	// * Ground of Enable(front)
 	ground = self->color_pair_ground;
 	cc = pv_color_get_cairo_rgba(self->color_pair.colors[ground]);
 	rect = _get_pv_rect_of_pallet_from_ground(ground, W_PALLET, H_PALLET);
 
-	_draw_pallet(cr, rect, cc, self->is_multi_colors[ground]);
+	draw_pallet_(cr, rect, cc, self->is_multi_colors[ground]);
 
 	return FALSE;
 }
