@@ -627,6 +627,10 @@ static void _pvui_app_set_style(){
 			"GtkStatusbar {\n"
 			"   font: monospace;\n"
 			"}\n"
+			"GtkTextView {\n"
+			"   font: monospace;\n"
+			"   font-size: 12;\n"
+			"}\n"
 			"", -1, NULL);
 	g_object_unref (provider);
 }

@@ -208,7 +208,14 @@ static bool draw_(EtLayerView *self)
 {
 	et_assert(self);
 
-	char buf[102400]; //! @fixme static length.
+	const int LEN_ELEMENT = 128;
+
+	EtLayerViewElementData **elementDatas = self->elementDatas;
+	size_t num = pv_general_get_parray_num((void **)elementDatas);
+	size_t len_elements = LEN_ELEMENT * num;
+	char *buf = malloc((sizeof(char) * len_elements) + 1);
+	et_assert(buf);
+
 	const PvElement *focus_element = NULL;
 	if(self->doc_id < 0){
 		strcpy(buf, "<None>");
@@ -220,12 +227,9 @@ static bool draw_(EtLayerView *self)
 			return false;
 		}
 
-		EtLayerViewElementData **elementDatas = self->elementDatas;
-
 		buf[0] = '\0';
-		int num = pv_general_get_parray_num((void **)elementDatas);
 		focus_element = pv_focus_get_first_element(focus);
-		for(int i = 0; i < num; i++){
+		for(int i = 0; i < (int)num; i++){
 			EtLayerViewElementData *data = elementDatas[i];
 
 			if(0 == i){
@@ -244,12 +248,12 @@ static bool draw_(EtLayerView *self)
 			unsigned long debug_pointer = 0;
 			memcpy(&debug_pointer, &data->element, sizeof(unsigned long));
 
-			char str_head[128];
-			str_head[0] = '\0';
+			char str_element_head[128];
+			str_element_head[0] = '\0';
 			for(int t = 0; t < data->level; t++){
-				str_head[t] = '_';
-				str_head[t + 1] = '\0';
-				if(!(t < ((int)sizeof(str_head) - 2))){
+				str_element_head[t] = '_';
+				str_element_head[t + 1] = '\0';
+				if(!(t < ((int)sizeof(str_element_head) - 2))){
 					break;
 				}
 			}
@@ -257,26 +261,27 @@ static bool draw_(EtLayerView *self)
 			if(NULL == kind_name){
 				kind_name = "";
 			}
-			char str_tmp[128];
-			snprintf(str_tmp, sizeof(str_tmp),
+			char str_element[128];
+			snprintf(str_element, sizeof(str_element),
 					"%s%c:%s\t:%08lx '%s'\n",
-					str_head,
+					str_element_head,
 					((focus_element == data->element)? '>':'_'),
 					//data->level,
 					kind_name,
 					debug_pointer,
 					((data->name)?"":data->name));
 
-			strncat(buf, str_tmp, (sizeof(buf) - 1) - strlen(buf));
-			buf[sizeof(buf)-1] = '\0';
-			if(!(strlen(buf) < (sizeof(buf) - 2))){
-				et_warning("%zu/%zu\n", strlen(buf), sizeof(buf));
+			strncat(buf, str_element, (len_elements - 1) - strlen(buf));
+			buf[(len_elements - 1)] = '\0';
+			if(!(strlen(buf) < (len_elements - 2))){
+				et_warning("%zu/%zu\n", strlen(buf), len_elements);
 			}
 		}
 	}
 
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->text));
 	gtk_text_buffer_set_text (buffer, buf, -1);
+	free(buf);
 
 	// ターゲット状態でlayer_ctrlsのbutton状態を変更する
 	gtk_widget_set_sensitive(self->button_layer_ctrls[0], (0 <= self->doc_id));
