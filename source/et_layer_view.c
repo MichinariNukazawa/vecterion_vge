@@ -49,11 +49,11 @@ typedef struct EtLayerViewRltDataPack{
 
 static EtLayerView *layer_view_ = NULL;
 
-static gboolean cb_button_press_(
+static gboolean cb_button_press_layer_view_content_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data);
-static gboolean cb_button_release_(
+static gboolean cb_button_release_layer_view_content_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data);
-static gboolean cb_motion_notify_(
+static gboolean cb_motion_notify_layer_view_content_(
 		GtkWidget *widget, GdkEventMotion *event, gpointer data);
 
 static gboolean cb_clicked_layer_ctrl_button_(GtkWidget *widget, gpointer data);
@@ -136,11 +136,11 @@ EtLayerView *et_layer_view_init()
 			GDK_POINTER_MOTION_MASK
 			);
 	g_signal_connect(self->event_box, "button-press-event",
-			G_CALLBACK(cb_button_press_), (gpointer)self);
+			G_CALLBACK(cb_button_press_layer_view_content_), (gpointer)self);
 	g_signal_connect(self->event_box, "button-release-event",
-			G_CALLBACK(cb_button_release_), (gpointer)self);
+			G_CALLBACK(cb_button_release_layer_view_content_), (gpointer)self);
 	g_signal_connect(self->event_box, "motion-notify-event",
-			G_CALLBACK(cb_motion_notify_), (gpointer)self);
+			G_CALLBACK(cb_motion_notify_layer_view_content_), (gpointer)self);
 
 	gtk_container_add(GTK_CONTAINER(self->scroll), self->event_box);
 
@@ -388,7 +388,7 @@ int index_data_from_position_(EtLayerView *self, int x, int y)
 	return index;
 }
 
-static gboolean cb_button_press_(
+static gboolean cb_button_press_layer_view_content_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	EtLayerView *self = (EtLayerView *)data;
@@ -421,14 +421,13 @@ static gboolean cb_button_press_(
 	return false;
 }
 
-static gboolean cb_button_release_(
+static gboolean cb_button_release_layer_view_content_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
-	et_debug("BUTTON RELEASE");
 	return false;
 }
 
-static gboolean cb_motion_notify_(
+static gboolean cb_motion_notify_layer_view_content_(
 		GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
 	// et_debug("(%3d, %3d)", (int)event->x, (int)event->y);
