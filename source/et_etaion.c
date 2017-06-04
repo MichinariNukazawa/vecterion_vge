@@ -48,18 +48,18 @@ EtEtaion *et_etaion_init()
 
 static void _signal_et_etaion_change_state(EtEtaion *self)
 {
-	int num = pv_general_get_parray_num((void **)self->slot_change_states);
-	et_debug("%d", num);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)self->slot_change_states);
+	et_debug("%zu", num);
+	for(int i = 0; i < (int)num; i++){
 		self->slot_change_states[i](self->state, self->slot_change_state_datas[i]);
 	}
 }
 
 static void _signal_et_etaion_change_tool_id(EtEtaion *self)
 {
-	int num = pv_general_get_parray_num((void **)self->slot_change_tool_ids);
-	et_debug("%d", num);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)self->slot_change_tool_ids);
+	et_debug("%zu", num);
+	for(int i = 0; i < (int)num; i++){
 		self->slot_change_tool_ids[i](self->tool_id, self->slot_change_tool_id_datas[i]);
 	}
 }
@@ -304,7 +304,7 @@ int et_etaion_add_slot_change_state(EtEtaionSlotChangeState slot, gpointer data)
 		exit(-1);
 	}
 
-	int num = pv_general_get_parray_num((void **)self->slot_change_states);
+	size_t num = pv_general_get_parray_num((void **)self->slot_change_states);
 	EtEtaionSlotChangeState *new_slots = realloc(self->slot_change_states,
 			sizeof(self->slot_change_states[0]) * (num + 2));
 	gpointer *new_datas = realloc(self->slot_change_state_datas,
@@ -327,7 +327,7 @@ int et_etaion_add_slot_change_tool_id(EtEtaionSlotChangeToolId slot, gpointer da
 		exit(-1);
 	}
 
-	int num = pv_general_get_parray_num((void **)self->slot_change_tool_ids);
+	size_t num = pv_general_get_parray_num((void **)self->slot_change_tool_ids);
 	EtEtaionSlotChangeToolId *new_slots = realloc(
 			self->slot_change_tool_ids,
 			sizeof(self->slot_change_tool_ids[0]) * (num + 2));

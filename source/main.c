@@ -1715,8 +1715,8 @@ static bool _cb_menu_tool_change(GtkMenuItem *menuitem, gpointer user_data)
 
 static bool _pv_element_is_exist_from_elements(const PvElement *element, PvElement **elements)
 {
-	int num = pv_general_get_parray_num((void **)elements);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)elements);
+	for(int i = 0; i < (int)num; i++){
 		if(element == elements[i]){
 			return true;
 		}
@@ -1838,7 +1838,7 @@ static void _cb_menu_select_invert (GtkMenuItem *menuitem, gpointer user_data)
 		return;
 	}
 
-	int num = pv_general_get_parray_num((void **)focus->elements);
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
 	PvElement **elements_prefocus = malloc(sizeof(PvElement *) * (num + 1));
 	if(NULL == elements_prefocus){
 		_show_error_dialog("Select Invert:internal error.");

@@ -32,7 +32,7 @@ bool et_pointing_manager_add_slot_mouse_action(EtPointingManagerSlotMouseAction 
 	EtPointingManager *self = pointing_manager;
 	assert(self);
 
-	int num = pv_general_get_parray_num((void *)self->slot_mouse_actions);
+	size_t num = pv_general_get_parray_num((void *)self->slot_mouse_actions);
 	EtPointingManagerSlotMouseAction *new_array = realloc(
 			self->slot_mouse_actions,
 			sizeof(EtPointingManagerSlotMouseAction) * (num + 2));
@@ -51,8 +51,8 @@ bool slot_et_pointing_manager_from_mouse_action(EtDocId doc_id, EtMouseAction mo
 	assert(self);
 	assert(self->slot_mouse_actions);
 
-	int num = pv_general_get_parray_num((void *)self->slot_mouse_actions);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void *)self->slot_mouse_actions);
+	for(int i = 0; i < (int)num; i++){
 		assert(self->slot_mouse_actions[i]);
 		if(!self->slot_mouse_actions[i](doc_id, mouse_action)){
 			et_error("");

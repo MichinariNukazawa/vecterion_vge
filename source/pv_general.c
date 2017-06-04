@@ -5,7 +5,7 @@
 #include <string.h>
 #include "pv_error.h"
 
-int pv_general_get_parray_num(void **pointers)
+size_t pv_general_get_parray_num(void **pointers)
 {
 	if(NULL == pointers){
 		return 0;

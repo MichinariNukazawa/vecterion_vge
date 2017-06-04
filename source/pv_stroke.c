@@ -18,8 +18,8 @@ int get_num_stroke_linecap_infos()
 
 const PvStrokeLinecapInfo *get_stroke_linecap_info_from_id(PvStrokeLinecap linecap)
 {
-	int num = get_num_stroke_linecap_infos();
-	for(int i = 0; i < num; i++){
+	size_t num = get_num_stroke_linecap_infos();
+	for(int i = 0; i < (int)num; i++){
 		const PvStrokeLinecapInfo *info = &(pvStrokeLinecapInfos[i]);
 		if(info->linecap == linecap){
 			return info;
@@ -43,8 +43,8 @@ int get_num_stroke_linejoin_infos()
 
 const PvStrokeLinejoinInfo *get_stroke_linejoin_info_from_id(PvStrokeLinejoin linejoin)
 {
-	int num = get_num_stroke_linejoin_infos();
-	for(int i = 0; i < num; i++){
+	size_t num = get_num_stroke_linejoin_infos();
+	for(int i = 0; i < (int)num; i++){
 		const PvStrokeLinejoinInfo *info = &(pvStrokeLinejoinInfos[i]);
 		if(info->linejoin == linejoin){
 			return info;

@@ -42,7 +42,7 @@ typedef struct EtToolInfo{
 }EtToolInfo;
 
 bool et_tool_info_init();
-int et_tool_get_num();
+size_t et_tool_get_num();
 const EtToolInfo *et_tool_get_info_from_id(EtToolId tool_id);
 
 #ifdef include_ET_TEST

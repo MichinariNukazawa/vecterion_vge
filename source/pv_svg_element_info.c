@@ -336,8 +336,8 @@ const PvSvgElementInfo _pv_svg_element_infos[] = {
 
 const PvSvgElementInfo *pv_svg_get_svg_element_info_from_tagname(const char *tagname)
 {
-	int num = sizeof(_pv_svg_element_infos) / sizeof(_pv_svg_element_infos[0]);
-	for(int i = 0; i < num; i++){
+	size_t num = sizeof(_pv_svg_element_infos) / sizeof(_pv_svg_element_infos[0]);
+	for(int i = 0; i < (int)num; i++){
 		const PvSvgElementInfo *info = &_pv_svg_element_infos[i];
 		if(0 == strcasecmp(tagname, info->tagname)){
 			return info;

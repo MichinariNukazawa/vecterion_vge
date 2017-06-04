@@ -80,7 +80,7 @@ static PvAnchorPath *pv_anchor_path_copy_new_range(const PvAnchorPath *src, int 
 PvAnchorPath *pv_anchor_path_copy_new(const PvAnchorPath *src_anchor_path)
 {
 	size_t num = pv_anchor_path_get_anchor_point_num(src_anchor_path);
-	int num_ = (int)num - 1;
+	size_t num_ = (int)num - 1;
 	PvAnchorPath *dst_anchor_path = pv_anchor_path_copy_new_range(src_anchor_path, 0, num_);
 	if(NULL == dst_anchor_path){
 		return NULL;

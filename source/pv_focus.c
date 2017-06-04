@@ -19,7 +19,7 @@ PvFocus *pv_focus_new(const PvVg *vg)
 		return NULL;
 	}
 
-	int num = pv_general_get_parray_num((void **)vg->element_root->childs);
+	size_t num = pv_general_get_parray_num((void **)vg->element_root->childs);
 	if(num < 1){
 		pv_bug("");
 		goto error;
@@ -47,8 +47,8 @@ error:
 
 bool pv_focus_is_focused(const PvFocus *focus)
 {
-	int num = pv_general_get_parray_num((void **)focus->elements);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < (int)num; i++){
 		switch(focus->elements[0]->kind){
 			case PvElementKind_Root:
 			case PvElementKind_Layer:
@@ -78,8 +78,8 @@ bool pv_focus_is_exist_element(const PvFocus *focus, const PvElement *element)
 	}
 
 	// check already exist in focus
-	int num = pv_general_get_parray_num((void **)focus->elements);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < (int)num; i++){
 		if(element == focus->elements[i]){
 			return true;
 		}
@@ -102,10 +102,10 @@ bool pv_focus_is_exist_anchor_point(const PvFocus *focus, const PvElement *eleme
 
 bool elements_change_head_element_(PvElement **elements, PvElement *element)
 {
-	int num = pv_general_get_parray_num((void **)elements);
+	size_t num = pv_general_get_parray_num((void **)elements);
 
 	int index = -1;
-	for(int i = 0; i < num; i++){
+	for(int i = 0; i < (int)num; i++){
 		if(element == elements[i]){
 			index = i;
 		}
@@ -139,7 +139,7 @@ bool pv_focus_add_element(PvFocus *focus, PvElement *element)
 	}
 
 	// add element.
-	int num = pv_general_get_parray_num((void **)focus->elements);
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
 	if(!pv_focus_is_focused(focus)){
 		return pv_focus_clear_set_element(focus, element);
 	}else{
@@ -176,7 +176,7 @@ bool pv_focus_add_anchor_point(PvFocus *focus, PvElement *element, PvAnchorPoint
 		pv_debug("");
 		return pv_focus_clear_set_anchor_point(focus, element, anchor_point);
 	}else{
-		int num = pv_general_get_parray_num((void **)focus->anchor_points);
+		size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
 		PvAnchorPoint **anchor_points = realloc(focus->anchor_points, sizeof(PvAnchorPoint *) * (num + 2));
 		pv_assert(anchor_points);
 
@@ -192,11 +192,11 @@ bool pv_focus_add_anchor_point(PvFocus *focus, PvElement *element, PvAnchorPoint
 
 bool pv_focus_remove_element(PvFocus *focus, PvElement *element)
 {
-	int num = pv_general_get_parray_num((void **)focus->elements);
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
 	if(1 == num && focus->elements[0] == element){
 		return pv_focus_clear_to_first_layer(focus);
 	}
-	for(int i = 0; i < num; i++){
+	for(int i = 0; i < (int)num; i++){
 		if(element == focus->elements[i]){
 			memmove(&focus->elements[i], &focus->elements[i + 1],
 					sizeof(PvElement *) * (num - i));
@@ -210,8 +210,8 @@ bool pv_focus_remove_element(PvFocus *focus, PvElement *element)
 
 bool _remove_anchor_point(PvFocus *focus, PvElement *element, PvAnchorPoint *anchor_point)
 {
-	int num = pv_general_get_parray_num((void **)focus->anchor_points);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
+	for(int i = 0; i < (int)num; i++){
 		if(anchor_point == focus->anchor_points[i]){
 			memmove(&focus->anchor_points[i], &focus->anchor_points[i + 1],
 					sizeof(PvElement *) * (num - i));
@@ -282,7 +282,7 @@ PvElement *pv_focus_get_first_element(const PvFocus *focus)
 		return NULL;
 	}
 
-	int num = pv_general_get_parray_num((void **)focus->elements);
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
 	if(0 == num){
 		pv_bug("");
 		return NULL;
@@ -292,7 +292,7 @@ PvElement *pv_focus_get_first_element(const PvFocus *focus)
 
 PvAnchorPoint *pv_focus_get_first_anchor_point(const PvFocus *focus)
 {
-	int num = pv_general_get_parray_num((void **)focus->anchor_points);
+	size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
 	if(0 == num){
 		return NULL;
 	}

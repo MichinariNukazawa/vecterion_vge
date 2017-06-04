@@ -161,7 +161,7 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 	EtCanvasCollectionCollect *new_collect = malloc(sizeof(EtCanvasCollectionCollect));
 	et_assert(new_collect);
 
-	unsigned int num_canvases = 0;
+	size_t num_canvases = 0;
 	new_collect->canvases = realloc(NULL, sizeof(EtCanvas *) * (num_canvases + 2));
 	et_assert(new_collect->canvases);
 
@@ -292,10 +292,10 @@ void et_canvas_collection_delete_canvases_from_doc_id(EtDocId doc_id)
 	EtCanvasCollectionCollect *collect = self->collects[index_collect];
 	et_assertf(collect, "%d", doc_id);
 
-	int num_canvases = pv_general_get_parray_num((void **)collect->canvases);
+	size_t num_canvases = pv_general_get_parray_num((void **)collect->canvases);
 	for(int i = 0; i < (int)num_canvases; i++){
 		GtkWidget *canvas_frame = et_canvas_get_widget_frame(collect->canvases[i]);
-		et_assertf(canvas_frame, "%d %d %d", doc_id, i, num_canvases);
+		et_assertf(canvas_frame, "%d %d %zu", doc_id, i, num_canvases);
 		gtk_notebook_detach_tab(GTK_NOTEBOOK(self->widget_tab), canvas_frame);
 
 		et_canvas_delete(collect->canvases[i]);
@@ -305,7 +305,7 @@ void et_canvas_collection_delete_canvases_from_doc_id(EtDocId doc_id)
 	size_t num_collects = pv_general_get_parray_num((void **)self->collects);
 	memmove(&(self->collects[index_collect]), &(self->collects[index_collect + 1]),
 			sizeof(EtCanvasCollectionCollect *) * (num_collects - index_collect));
-	et_assert(((int)num_collects - 1) == pv_general_get_parray_num((void **)self->collects));
+	et_assert(((int)num_collects - 1) == (int)pv_general_get_parray_num((void **)self->collects));
 	free(collect);
 }
 
@@ -433,8 +433,8 @@ static void _slot_et_canvas_collection_from_doc_change(EtDoc *doc, gpointer data
 			((et_doc_is_saved_from_id(doc_id)) ? ' ' : '*'),
 			((src_str_title) ? src_str_title : "(untitled)"));
 
-	int num = pv_general_get_parray_num((void **)collect->canvases);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)collect->canvases);
+	for(int i = 0; i < (int)num; i++){
 		et_assertf(collect->tab_label, "%d %d", doc_id, i);
 		et_assertf(str_title, "%d %d", doc_id, i);
 		gtk_label_set_text(GTK_LABEL(collect->tab_label), str_title);

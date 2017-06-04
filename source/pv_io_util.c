@@ -111,7 +111,7 @@ error:
 	return false;
 }
 
-bool pv_read_args_from_str(double *args, int num_args, const char **str)
+bool pv_read_args_from_str(double *args, size_t num_args, const char **str)
 {
 	const char *p = *str;
 	bool res = true;
@@ -130,11 +130,11 @@ bool pv_read_args_from_str(double *args, int num_args, const char **str)
 		}
 		p = next;
 		i++;
-		if(!(i < num_args)){
+		if(!(i < (int)num_args)){
 			break;
 		}
 	}
-	for(; i < num_args; i++){
+	for(; i < (int)num_args; i++){
 		args[i] = 0;
 	}
 
@@ -154,7 +154,7 @@ PvStrMap *pv_new_css_str_maps_from_str(const char *style_str)
 {
 	const char *head = style_str;
 
-	int num = 0;
+	size_t num = 0;
 	PvStrMap *map = NULL;
 	map = realloc(map, sizeof(PvStrMap) * (num + 1));
 	map[num - 0].key = NULL;

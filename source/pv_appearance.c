@@ -141,14 +141,14 @@ bool pv_appearance_parray_is_diff(PvAppearance **parray0, PvAppearance **parray1
 {
 	//! @todo appearances logical difference
 
-	int num0 = pv_general_get_parray_num((void **)parray0);
-	int num1 = pv_general_get_parray_num((void **)parray1);
+	size_t num0 = pv_general_get_parray_num((void **)parray0);
+	size_t num1 = pv_general_get_parray_num((void **)parray1);
 
 	if(num0 != num1){
 		return true;
 	}
 
-	for(int i = 0; i < num0; i++){
+	for(int i = 0; i < (int)num0; i++){
 		if(pv_appearance_is_diff(parray0[i], parray1[i])){
 			return true;
 		}

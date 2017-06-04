@@ -46,8 +46,8 @@ static bool _pv_element_recursive_inline_2(PvElement *element,
 
 	bool ret = true;
 
-	int num = pv_general_get_parray_num((void **)element->childs);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)element->childs);
+	for(int i = 0; i < (int)num; i++){
 		int ix = 0;
 		if(is_asc){
 			ix = i;
@@ -254,13 +254,7 @@ static PvElement *_pv_element_copy_recursive_inline(const PvElement *self,
 	// ** copy childs
 	(*level)++;
 
-	int num = pv_general_get_parray_num((void **)self->childs);
-	if(0 > num){
-		error->is_error = true;
-		error->level = *level;
-		error->element = self;
-		goto error1;
-	}
+	size_t num = pv_general_get_parray_num((void **)self->childs);
 
 	// pv_debug("copy childs:%3d:%d", *level, num);
 
@@ -274,7 +268,7 @@ static PvElement *_pv_element_copy_recursive_inline(const PvElement *self,
 			goto error1;
 		}
 
-		for(int i = 0; i < num; i++){
+		for(int i = 0; i < (int)num; i++){
 			PvElement *child = _pv_element_copy_recursive_inline(
 					self->childs[i],
 					level,
@@ -488,11 +482,7 @@ static bool _pv_element_free_single(PvElement *self)
 static bool _pv_element_remove_free_recursive_inline(PvElement *self,
 		int *level, PvElementRecursiveError *error)
 {
-	int num = pv_general_get_parray_num((void **)self->childs);
-	if(0 > num){
-		pv_bug("");
-		return false;
-	}
+	size_t num = pv_general_get_parray_num((void **)self->childs);
 
 	(*level)++;
 
@@ -537,9 +527,9 @@ bool pv_element_remove(PvElement * const self)
 	}
 
 	PvElement **childs = self->parent->childs;
-	int num = pv_general_get_parray_num((void **)childs);
+	size_t num = pv_general_get_parray_num((void **)childs);
 	bool is_exist = false;
-	for(int i = 0; i < num; i++){
+	for(int i = 0; i < (int)num; i++){
 		if(self == childs[i]){
 			is_exist = true;
 			memmove(&childs[i], &childs[i + 1], sizeof(PvElement*) * (num - i));
@@ -637,8 +627,8 @@ static bool _pv_element_is_diff_one(
 		return true;
 	}
 
-	int num0 = pv_general_get_parray_num((void **)element0->childs);
-	int num1 = pv_general_get_parray_num((void **)element1->childs);
+	size_t num0 = pv_general_get_parray_num((void **)element0->childs);
+	size_t num1 = pv_general_get_parray_num((void **)element1->childs);
 	if(num0 != num1){
 		data->is_diff = true;
 		return true;
@@ -681,15 +671,15 @@ static bool _pv_element_is_diff_recursive_inline(
 		return false;
 	}
 
-	int num0 = pv_general_get_parray_num((void **)element0->childs);
-	int num1 = pv_general_get_parray_num((void **)element1->childs);
+	size_t num0 = pv_general_get_parray_num((void **)element0->childs);
+	size_t num1 = pv_general_get_parray_num((void **)element1->childs);
 	if(num0 != num1){
 		// pv_debug("level:%d num:%d,%d", *level, num0, num1);
 		_data->is_diff = true;
 		return false;
 	}else{
 		(*level)++;
-		for(int i = 0; i < num0; i++){
+		for(int i = 0; i < (int)num0; i++){
 			ret = _pv_element_is_diff_recursive_inline(
 					element0->childs[i],
 					element1->childs[i],

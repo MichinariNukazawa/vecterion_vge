@@ -198,11 +198,11 @@ void slot_change_doc_or_focus_(EtDocId doc_id)
 	PvColorPair color_pair = self->color_pair;
 	const PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	bool is_first = true;
-	int num = pv_general_get_parray_num((void **)focus->elements);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < (int)num; i++){
 		if(!pv_element_kind_is_viewable_object(focus->elements[i]->kind)){
 			continue;
-			et_debug("CON %d %d", i, num);
+			et_debug("CON %d %zu", i, num);
 		}
 		if(is_first){
 			is_first = false;
@@ -420,8 +420,8 @@ static void et_color_panel_update_focus_elements_()
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assert(focus);
 
-	int num = pv_general_get_parray_num((void **)focus->elements);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < (int)num; i++){
 		focus->elements[i]->color_pair.colors[self->color_pair_ground]
 			= self->color_pair.colors[self->color_pair_ground];
 	}

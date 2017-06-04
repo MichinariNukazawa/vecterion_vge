@@ -142,7 +142,7 @@ static bool read_layer_tree_(PvElement *element, gpointer data, int level)
 	rlt->kind = element->kind;
 	rlt->element = element;
 
-	int num = pv_general_get_parray_num((void **)*datas);
+	size_t num = pv_general_get_parray_num((void **)*datas);
 	*datas = (EtLayerViewElementData **)
 		realloc(*datas, sizeof(EtLayerViewElementData *) * (num + 2));
 	et_assert(*datas);
@@ -390,8 +390,8 @@ static bool update_doc_tree_()
 	EtLayerViewElementData **before = self->elementDatas;
 	self->elementDatas = func_rlt_data_pack.datas;
 	if(NULL != before){
-		int num = pv_general_get_parray_num((void **)before);
-		for(int i = 0; i < num; i++){
+		size_t num = pv_general_get_parray_num((void **)before);
+		for(int i = 0; i < (int)num; i++){
 			EtLayerViewElementData *data = before[i];
 			free(data);
 		}
@@ -495,9 +495,14 @@ int index_data_from_position_(EtLayerView *self, int x, int y)
 {
 	et_assert(self);
 
-	int index = (y / ELEMENT_HEIGHT) + 1; // +1 = hidden root layer
+	if(y < 0){
+		et_bug("%d", y);
+		return -1;
+	}
 
-	int num = pv_general_get_parray_num((void **)self->elementDatas);
+	unsigned int index = (y / ELEMENT_HEIGHT) + 1; // +1 = hidden root layer
+
+	size_t num = pv_general_get_parray_num((void **)self->elementDatas);
 	if(!(index < num)){
 		return -1;
 	}

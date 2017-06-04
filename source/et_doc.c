@@ -209,13 +209,13 @@ bool et_doc_signal_update(EtDoc *self)
 {
 	// @todo check document change.
 
-	int num = _et_doc_get_num_slot_change_infos(self->slot_change_infos);
+	size_t num = _et_doc_get_num_slot_change_infos(self->slot_change_infos);
 	if(0 == num){
 		et_error("");
 		return false;
 	}
 
-	for(int i = 0; i < num; i++){
+	for(int i = 0; i < (int)num; i++){
 		self->slot_change_infos[i].slot(self, self->slot_change_infos[i].data);
 	}
 
@@ -270,7 +270,7 @@ EtCallbackId et_doc_add_slot_change(EtDocId doc_id, EtDocSlotChange slot, gpoint
 		return -1;
 	}
 
-	int num = _et_doc_get_num_slot_change_infos(self->slot_change_infos);
+	size_t num = _et_doc_get_num_slot_change_infos(self->slot_change_infos);
 	EtDocSlotChangeInfo *new = realloc(self->slot_change_infos,
 			sizeof(EtDocSlotChangeInfo) * (num + 2));
 	if(NULL == new){

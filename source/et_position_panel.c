@@ -212,8 +212,8 @@ static void _slot_change_doc_or_focus(EtDocId doc_id)
 	const PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	bool is_first = true;
 	if(tool_info->is_element_tool){
-		int num = pv_general_get_parray_num((void **)focus->elements);
-		for(int i = 0; i < num; i++){
+		size_t num = pv_general_get_parray_num((void **)focus->elements);
+		for(int i = 0; i < (int)num; i++){
 			if(!pv_element_kind_is_viewable_object(focus->elements[i]->kind)){
 				continue;
 			}
@@ -231,8 +231,8 @@ static void _slot_change_doc_or_focus(EtDocId doc_id)
 			}
 		}
 	}else{
-		int num = pv_general_get_parray_num((void **)focus->anchor_points);
-		for(int i = 0; i < num; i++){
+		size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
+		for(int i = 0; i < (int)num; i++){
 			PvPoint p = pv_anchor_point_get_point(focus->anchor_points[i]);
 			PvRect rect_ = (PvRect){
 				.x = p.x,
@@ -285,8 +285,8 @@ static void _update_focus_element_or_anchor_point_from_local()
 	et_assertf(tool_info, "%d", tool_id);
 
 	if(tool_info->is_element_tool){
-		int num = pv_general_get_parray_num((void **)focus->elements);
-		for(int i = 0; i < num; i++){
+		size_t num = pv_general_get_parray_num((void **)focus->elements);
+		for(int i = 0; i < (int)num; i++){
 			const PvElementInfo *info = pv_element_get_info_from_kind(focus->elements[i]->kind);
 			bool ret = info->func_move_element(focus->elements[i],
 					self->position_diff.p[PvPositionIndex_X],
@@ -295,8 +295,8 @@ static void _update_focus_element_or_anchor_point_from_local()
 			//! @todo implement resize
 		}
 	}else{
-		int num = pv_general_get_parray_num((void **)focus->anchor_points);
-		for(int i = 0; i < num; i++){
+		size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
+		for(int i = 0; i < (int)num; i++){
 			PvElement *element = pv_element_get_in_elements_from_member_anchor_point(
 					focus->elements,
 					focus->anchor_points[i]);

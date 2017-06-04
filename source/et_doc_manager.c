@@ -69,7 +69,7 @@ void et_doc_manager_delete_doc_from_id(EtDocId doc_id)
 
 	EtDocNode *node = self->doc_nodes[index];
 
-	int num = pv_general_get_parray_num((void **)self->doc_nodes);
+	size_t num = pv_general_get_parray_num((void **)self->doc_nodes);
 	memmove(&(self->doc_nodes[index]), &(self->doc_nodes[index + 1]),
 			sizeof(EtDocNode *) * (num - index));
 	et_assert((num - 1) == pv_general_get_parray_num((void **)self->doc_nodes));
@@ -99,7 +99,7 @@ static bool _et_doc_manager_add_doc(EtDoc *doc)
 	et_assert(node);
 	node->doc = doc;
 
-	int num = pv_general_get_parray_num((void **)self->doc_nodes);
+	size_t num = pv_general_get_parray_num((void **)self->doc_nodes);
 	EtDocNode **new_nodes = realloc(self->doc_nodes, sizeof(EtDocNode *) * (num + 2));
 	et_assert(new_nodes);
 	new_nodes[num + 1] = NULL;

@@ -123,8 +123,8 @@ bool et_tool_info_init()
 {
 	et_assert(!_et_tool_info_is_init);
 
-	int num_tool = et_tool_get_num();
-	for(int tool_id = 0; tool_id < num_tool; tool_id++){
+	size_t num_tool = et_tool_get_num();
+	for(int tool_id = 0; tool_id < (int)num_tool; tool_id++){
 		EtToolInfo *info = _et_tool_get_info_from_id(tool_id);
 		et_assertf(info, "%d", tool_id);
 
@@ -150,7 +150,7 @@ bool et_tool_info_init()
 
 	_et_tool_info_is_init = true;
 
-	et_debug("initialized EtToolInfo num:%d", num_tool);
+	et_debug("initialized EtToolInfo num:%zu", num_tool);
 
 	return true;
 }
@@ -172,8 +172,8 @@ static bool _is_bound_point(int radius, PvPoint p1, PvPoint p2)
 static PvRect _get_rect_extent_from_elements(PvElement **elements)
 {
 	PvRect rect_extent = PvRect_Default;
-	int num = pv_general_get_parray_num((void **)elements);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)elements);
+	for(int i = 0; i < (int)num; i++){
 		const PvElement *element = elements[i];
 		const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 		et_assertf(info, "%d", element->kind);
@@ -258,8 +258,8 @@ static void _translate_elements(
 
 	PvPoint move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
 
-	int num = pv_general_get_parray_num((void **)focus->elements);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < (int)num; i++){
 		PvElement *element = focus->elements[i];
 
 		// remove work appearance
@@ -370,8 +370,8 @@ static EdgeKind _resize_elements(
 	   resize.y = ((fabs(resize.y) > DELTA_OF_RESIZE) ? resize.y : DELTA_OF_RESIZE);
 	 */
 
-	int num = pv_general_get_parray_num((void **)focus->elements);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < (int)num; i++){
 		PvElement *element = focus->elements[i];
 		const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 
@@ -455,8 +455,8 @@ static EdgeKind _rotate_elements(
 	et_assertf(focus, "%d", doc_id);
 
 	PvElement **elements = focus->elements;
-	int num_ = pv_general_get_parray_num((void **)elements);
-	for(int i = 0; i < num_; i++){
+	size_t num_ = pv_general_get_parray_num((void **)elements);
+	for(int i = 0; i < (int)num_; i++){
 		PvElement *element = elements[i];
 		const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 
@@ -1114,8 +1114,8 @@ static int _edit_anchor_point_handle_grub_focus(PvFocus *focus, EtMouseAction mo
 	const PvElementInfo *info = pv_element_get_info_from_kind(focus->elements[0]->kind);
 	et_assertf(info, "%d", focus->elements[0]->kind);
 
-	int num = info->func_get_num_anchor_point(focus->elements[0]);
-	for(int i = 0; i < num; i++){
+	size_t num = info->func_get_num_anchor_point(focus->elements[0]);
+	for(int i = 0; i < (int)num; i++){
 		const PvAnchorPoint *ap_ = info->func_get_anchor_point(focus->elements[0], i);
 		handle = _edit_anchor_point_handle_bound_handle(ap_, mouse_action);
 		if(-1 != handle){
@@ -1461,8 +1461,8 @@ static bool knife_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction m
 	}
 
 	int index = -1;
-	int num = info->func_get_num_anchor_point(element);
-	for(int i = 0; i < num; i++){
+	size_t num = info->func_get_num_anchor_point(element);
+	for(int i = 0; i < (int)num; i++){
 		const PvAnchorPoint *ap = info->func_get_anchor_point(element, i);
 		if(_is_bound_point(
 					PX_SENSITIVE_OF_TOUCH,
@@ -1881,15 +1881,15 @@ EtToolInfo _et_tool_infos[] = {
 	},
 };
 
-int et_tool_get_num()
+size_t et_tool_get_num()
 {
 	return sizeof(_et_tool_infos) / sizeof(EtToolInfo);
 }
 
 static EtToolInfo *_et_tool_get_info_from_id(EtToolId tool_id)
 {
-	int num_tool = et_tool_get_num();
-	if(tool_id < 0 || num_tool <= tool_id){
+	size_t num_tool = et_tool_get_num();
+	if(tool_id < 0 || (int)num_tool <= tool_id){
 		et_error("");
 		return NULL;
 	}

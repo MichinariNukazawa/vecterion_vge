@@ -54,8 +54,8 @@ static bool _pv_io_svg_from_element_in_recursive_after(
 	// const ConfWriteSvg *conf = _data->conf;
 
 	// pop parent node stack
-	int num = pv_general_get_parray_num((void **)target->xml_parent_nodes);
-	if(!(level < num)){
+	size_t num = pv_general_get_parray_num((void **)target->xml_parent_nodes);
+	if(!(level < (int)num)){
 		pv_bug("");
 		return false;
 	}
@@ -579,7 +579,7 @@ static PvElement *pv_io_new_element_from_filepath_with_vg_(
 		goto error;
 	}
 
-	int num_svg_top = pv_general_get_parray_num((void **)layer->childs);
+	size_t num_svg_top = pv_general_get_parray_num((void **)layer->childs);
 	if(1 == num_svg_top && PvElementKind_Layer == layer->childs[0]->kind){
 		// cut self root layer if exist root layer in svg
 		top_layer = layer->childs[0];
@@ -616,8 +616,8 @@ PvVg *pv_io_new_from_file(const char *filepath, const PvImageFileReadOption *ima
 	}
 
 	bool is_toplevel_layer_all = false;
-	int num_svg_top = pv_general_get_parray_num((void **)layer->childs);
-	for(int i = 0; i < num_svg_top; i++){
+	size_t num_svg_top = pv_general_get_parray_num((void **)layer->childs);
+	for(int i = 0; i < (int)num_svg_top; i++){
 		is_toplevel_layer_all = true;
 		if(PvElementKind_Layer != layer->childs[i]->kind){
 			is_toplevel_layer_all = false;

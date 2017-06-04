@@ -95,7 +95,7 @@ static bool _et_tool_panel_add_tool(EtToolPanel *self, const EtToolInfo *info)
 	item->button = toggle_button;
 
 	const int column = 1;
-	int num_tool = pv_general_get_parray_num((void **)self->tools);
+	size_t num_tool = pv_general_get_parray_num((void **)self->tools);
 	int x = num_tool % column;
 	int y = num_tool / column;
 	printf("item:%s:%d, %d\n", info->name, x, y);
@@ -144,12 +144,12 @@ EtToolPanel *et_tool_panel_init()
 
 	self->tools = NULL;
 
-	int num_tool = et_tool_get_num();
+	size_t num_tool = et_tool_get_num();
 	if(num_tool <= 0){
 		et_bug("");
 		return NULL;
 	}
-	for(int i = 0; i < num_tool; i++){
+	for(int i = 0; i < (int)num_tool; i++){
 		const EtToolInfo *info = et_tool_get_info_from_id(i);
 		if(NULL == info){
 			et_error("");
@@ -195,8 +195,8 @@ static EtToolId _et_tool_panel_tool_id_from_button(
 		return -1;
 	}
 
-	int num_tool = pv_general_get_parray_num((void **)self->tools);
-	for(int i = 0; i < num_tool; i++){
+	size_t num_tool = pv_general_get_parray_num((void **)self->tools);
+	for(int i = 0; i < (int)num_tool; i++){
 		if((self->tools[i])->button == button){
 			et_debug("%d", (self->tools[i])->tool_id);
 			return (self->tools[i])->tool_id;
@@ -215,8 +215,8 @@ static GtkWidget *_et_tool_panel_get_tool_button_from_id(
 		return NULL;
 	}
 
-	int num_tool = pv_general_get_parray_num((void **)self->tools);
-	for(int i = 0; i < num_tool; i++){
+	size_t num_tool = pv_general_get_parray_num((void **)self->tools);
+	for(int i = 0; i < (int)num_tool; i++){
 		if((self->tools[i])->tool_id == tool_id){
 			return (self->tools[i])->button;
 		}
@@ -257,8 +257,8 @@ static bool _et_tool_panel_set_current_tool_from_button(
 		return false;
 	}
 
-	int num_tool = pv_general_get_parray_num((void **)self->tools);
-	for(int i = 0; i < num_tool; i++){
+	size_t num_tool = pv_general_get_parray_num((void **)self->tools);
+	for(int i = 0; i < (int)num_tool; i++){
 		EtToolPanelItem *item = self->tools[i];
 		const EtToolInfo *info = et_tool_get_info_from_id(item->tool_id);
 		et_assertf(info, "%d", item->tool_id);

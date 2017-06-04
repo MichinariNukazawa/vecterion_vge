@@ -42,7 +42,7 @@ static PvStrMap *new_transform_str_maps_from_str_(const char *src_str)
 {
 	const char *head = src_str;
 
-	int num = 0;
+	size_t num = 0;
 	PvStrMap *map = NULL;
 	map = realloc(map, sizeof(PvStrMap) * (num + 1));
 	pv_assert(map);
@@ -149,8 +149,8 @@ static bool func_stroke_linecap_set_(
 		const xmlAttr *attribute
 		)
 {
-	int num = get_num_stroke_linecap_infos();
-	for(int i = 0; i < num; i++){
+	size_t num = get_num_stroke_linecap_infos();
+	for(int i = 0; i < (int)num; i++){
 		const PvStrokeLinecapInfo *info = get_stroke_linecap_info_from_id(i);
 		if(0 == strcasecmp((char *)value, info->name)){
 			element->stroke.linecap = info->linecap;
@@ -170,8 +170,8 @@ static bool func_stroke_linejoin_set_(
 		const xmlAttr *attribute
 		)
 {
-	int num = get_num_stroke_linejoin_infos();
-	for(int i = 0; i < num; i++){
+	size_t num = get_num_stroke_linejoin_infos();
+	for(int i = 0; i < (int)num; i++){
 		const PvStrokeLinejoinInfo *info = get_stroke_linejoin_info_from_id(i);
 		if(0 == strcasecmp((char *)value, info->name)){
 			element->stroke.linejoin = info->linejoin;
@@ -219,7 +219,7 @@ static bool func_d_set_inline_(
 		const char *value
 		)
 {
-	const int num_args = 10;
+	const size_t num_args = 10;
 	double args[num_args];
 	double prev_args[num_args];
 	pv_double_array_fill(args, 0, num_args);
@@ -522,7 +522,7 @@ static bool func_points_set_inline_(
 		const char *value
 		)
 {
-	const int num_args = 10;
+	const size_t num_args = 10;
 	double args[num_args];
 	double prev_args[num_args];
 	pv_double_array_fill(args, 0, num_args);
@@ -604,7 +604,7 @@ static bool func_x1_set_(
 		return false;
 	}
 
-	int num = pv_element_curve_get_num_anchor_point(element);
+	size_t num = pv_element_curve_get_num_anchor_point(element);
 	if(2 != num){
 		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
 		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
@@ -647,7 +647,7 @@ static bool func_y1_set_(
 		return false;
 	}
 
-	int num = pv_element_curve_get_num_anchor_point(element);
+	size_t num = pv_element_curve_get_num_anchor_point(element);
 	if(2 != num){
 		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
 		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
@@ -689,7 +689,7 @@ static bool func_x2_set_(
 		return false;
 	}
 
-	int num = pv_element_curve_get_num_anchor_point(element);
+	size_t num = pv_element_curve_get_num_anchor_point(element);
 	if(2 != num){
 		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
 		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
@@ -731,7 +731,7 @@ static bool func_y2_set_(
 		return false;
 	}
 
-	int num = pv_element_curve_get_num_anchor_point(element);
+	size_t num = pv_element_curve_get_num_anchor_point(element);
 	if(2 != num){
 		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
 		pv_element_curve_add_anchor_point(element, PvAnchorPoint_Default);
@@ -1072,7 +1072,7 @@ static bool func_transform_set_(
 		goto failed;
 	}
 	for(int i = 0; NULL != transform_str_maps[i].key; i++){
-		const int num_args = 10;
+		const size_t num_args = 10;
 		double args[num_args];
 		pv_double_array_fill(args, 0, num_args);
 		const char *p = transform_str_maps[i].value;
@@ -1404,8 +1404,8 @@ const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
 
 const PvSvgAttributeInfo *pv_svg_get_svg_attribute_info_from_name(const char *name)
 {
-	int num = sizeof(_pv_svg_attribute_infos) / sizeof(_pv_svg_attribute_infos[0]);
-	for(int i = 0; i < num; i++){
+	size_t num = sizeof(_pv_svg_attribute_infos) / sizeof(_pv_svg_attribute_infos[0]);
+	for(int i = 0; i < (int)num; i++){
 		const PvSvgAttributeInfo *info = &_pv_svg_attribute_infos[i];
 		if(0 == strcasecmp(name, info->name)){
 			return info;

@@ -103,8 +103,8 @@ EtStrokePanel *et_stroke_panel_init()
 		// self->combo_linecap = gtk_combo_box_new();
 		//	GtkListStore *liststore = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_INT);
 		GtkListStore *liststore = gtk_list_store_new(1, G_TYPE_STRING);
-		int num = get_num_stroke_linecap_infos();
-		for(int i = 0; i < num; i++){
+		size_t num = get_num_stroke_linecap_infos();
+		for(int i = 0; i < (int)num; i++){
 			const PvStrokeLinecapInfo *info = get_stroke_linecap_info_from_id(i);
 			gtk_list_store_insert_with_values(liststore, NULL, -1,
 					0, info->name,
@@ -130,8 +130,8 @@ EtStrokePanel *et_stroke_panel_init()
 		// self->combo_linejoin = gtk_combo_box_new();
 		//	GtkListStore *liststore = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_INT);
 		GtkListStore *liststore = gtk_list_store_new(1, G_TYPE_STRING);
-		int num = get_num_stroke_linejoin_infos();
-		for(int i = 0; i < num; i++){
+		size_t num = get_num_stroke_linejoin_infos();
+		for(int i = 0; i < (int)num; i++){
 			const PvStrokeLinejoinInfo *info = get_stroke_linejoin_info_from_id(i);
 			gtk_list_store_insert_with_values(liststore, NULL, -1,
 					0, info->name,
@@ -248,11 +248,11 @@ static void _slot_change_doc_or_focus(EtDocId doc_id)
 	PvStroke stroke = self->stroke;
 	const PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	bool is_first = true;
-	int num = pv_general_get_parray_num((void **)focus->elements);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < (int)num; i++){
 		if(!pv_element_kind_is_viewable_object(focus->elements[i]->kind)){
 			continue;
-			et_debug("CON %d %d", i, num);
+			et_debug("CON %d %zu", i, num);
 		}
 		if(is_first){
 			is_first = false;
@@ -320,8 +320,8 @@ static void _update_focus_elements_from_local()
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	assert(focus);
 
-	int num = pv_general_get_parray_num((void **)focus->elements);
-	for(int i = 0; i < num; i++){
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < (int)num; i++){
 		focus->elements[i]->stroke = self->stroke;
 	}
 
