@@ -608,7 +608,7 @@ static void _pvui_app_set_style(){
 			   "GtkWidget {\n"
 			   "   background-color: rgb (103, 103, 103);\n"
 			   "}\n"
-			   */
+			 */
 			"GtkNotebook {\n"
 			"   padding: 2px;\n"
 			"}\n"
@@ -1430,6 +1430,64 @@ static gboolean _cb_menu_element_lower_to_end(gpointer data)
 	return false;
 }
 
+static gboolean _cb_menu_element_grouping(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// _show_error_dialog("Raise:nothing document.");
+		// et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	et_assertf(focus, "%d", doc_id);
+
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
+	if(0 == num){
+		_show_error_dialog("Grouping:element nothing.");
+		return false;
+	}
+
+	for(int i = 0; i < (int)num; i++){
+		switch(focus->elements[i]->kind){
+			case PvElementKind_Root:
+			case PvElementKind_Layer:
+				_show_error_dialog("Grouping:focus included layer.");
+				return false;
+				break;
+			default:
+				break;
+		}
+	}
+
+	PvElement *element_group = pv_element_new(PvElementKind_Group);
+	et_assert(element_group);
+
+	PvElement *first_element = pv_focus_get_first_element(focus);
+	bool ret = pv_element_append_child(
+			first_element->parent,
+			first_element,
+			element_group);
+	if(!ret){
+		et_bug("%zu", num);
+		pv_element_free(element_group);
+		goto finally;
+	}
+
+	for(int i = 0; i < (int)num; i++){
+		pv_element_remove(focus->elements[i]);
+		pv_element_append_child(
+				element_group,
+				NULL,
+				focus->elements[i]);
+	}
+
+finally:
+	et_doc_save_from_id(doc_id);
+	et_doc_signal_update_from_id(doc_id);
+	return false;
+}
+
 static bool _gui_quit()
 {
 	EtDocId doc_id = -1;
@@ -2221,6 +2279,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_element(GtkAccelGroup *accel_grou
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
 	GtkWidget *menu;
+	GtkWidget *separator;
 
 	menuitem_root = gtk_menu_item_new_with_label ("_Element");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
@@ -2259,6 +2318,17 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_element(GtkAccelGroup *accel_grou
 	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_lower_to_end), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_End, (0), GTK_ACCEL_VISIBLE);
+
+	separator = gtk_separator_menu_item_new();
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), separator);
+
+	// ** Accel to "/_Element/_Grouping(Ctrl+G)"
+	menuitem = gtk_menu_item_new_with_label ("_Grouping");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_grouping), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_g, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
 
 	return menuitem_root;
 }
@@ -2426,7 +2496,7 @@ static GtkWidget *_new_tree_of_help(GtkAccelGroup *accel_group){
 	/*
 	   gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 	   GDK_KEY_a, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
-	   */
+	 */
 
 	return menuitem_root;
 }

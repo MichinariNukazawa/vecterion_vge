@@ -244,6 +244,17 @@ Layer順序の並び替えを行った際、Layer内のElementが並び替えら
 * (准正常系)下に姉妹Elementが居ないElementをFocusし、Endショートカットを押下する。
 	Elementが並び替えられない。
 
+### ElementのGroup化とGroup解除
+* (准正常系)ElementをFocusしていない状態でCtrl+Gショートカットを押下する。
+	Groupが作成されない。
+* ElementTree階層上で同階層の上下に複数のElementが存在するElementを1つFocusし、Ctrl+Gショートカットを押下する。
+	Focus先頭のElementがあった階層位置にGroupが作成される。
+	FocusしていたElementの階層位置が、そのGroupの中に移動する。
+* ElementTree階層上で親Elementの異なりElementGroupを含むElementを2つFocusし、Ctrl+Gショートカットを押下する。
+	Focus先頭のElementがあった階層位置にGroupが作成される。
+	FocusしていたElementsの階層位置が、そのGroupの中に移動する。
+
+
 ### Cut, Copy, Paste
 
 #### Cut and Paste
