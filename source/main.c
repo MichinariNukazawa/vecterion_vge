@@ -1443,10 +1443,7 @@ static gboolean _cb_menu_element_grouping(gpointer data)
 	et_assertf(focus, "%d", doc_id);
 
 	size_t num = pv_general_get_parray_num((void **)focus->elements);
-	if(0 == num){
-		_show_error_dialog("Grouping:element nothing.");
-		return false;
-	}
+	et_assert(0 != num);
 
 	for(int i = 0; i < (int)num; i++){
 		switch(focus->elements[i]->kind){
@@ -1485,6 +1482,71 @@ static gboolean _cb_menu_element_grouping(gpointer data)
 finally:
 	et_doc_save_from_id(doc_id);
 	et_doc_signal_update_from_id(doc_id);
+	return false;
+}
+
+static PvElement *get_first_parent_group_(PvElement *element)
+{
+	switch(element->kind){
+		case PvElementKind_Group:
+			return element;
+			break;
+		case PvElementKind_Root:
+		case PvElementKind_Layer:
+			return NULL;
+			break;
+		default:
+			return get_first_parent_group_(element->parent);
+	}
+}
+
+static gboolean _cb_menu_element_ungrouping(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// _show_error_dialog("Raise:nothing document.");
+		// et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	et_assertf(focus, "%d", doc_id);
+
+	size_t num_focus = pv_general_get_parray_num((void **)focus->elements);
+	et_assert(0 != num_focus);
+
+	if(1 != num_focus){
+		_show_error_dialog("Ungrouping:element not ones.");
+		return false;
+	}
+
+	PvElement *element_group = get_first_parent_group_(pv_focus_get_first_element(focus));
+	if(NULL == element_group){
+		_show_error_dialog("Ungrouping:element not group.");
+		return false;
+	}
+
+	pv_focus_clear_to_first_layer(focus);
+
+	size_t num = pv_general_get_parray_num((void **)element_group->childs);
+	PvElement **elements = pv_element_copy_elements(element_group->childs);
+	et_assert(elements);
+	for(int i = 0; i <(int)num; i++){
+		PvElement *element = elements[i];
+		pv_element_remove(element);
+		pv_element_append_child(
+				element_group->parent,
+				element_group,
+				element);
+		pv_focus_add_element(focus, element);
+	}
+	free(elements);
+
+	pv_element_remove_free_recursive(element_group);
+
+	et_doc_save_from_id(doc_id);
+	et_doc_signal_update_from_id(doc_id);
+
 	return false;
 }
 
@@ -2329,6 +2391,14 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_element(GtkAccelGroup *accel_grou
 	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_grouping), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_g, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
+
+	// ** Accel to "/_Element/Ungrouping(Ctrl+Shift+G)"
+	menuitem = gtk_menu_item_new_with_label ("Ungrouping");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_ungrouping), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_g, (GDK_CONTROL_MASK | GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
 	return menuitem_root;
 }

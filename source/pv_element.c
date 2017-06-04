@@ -935,6 +935,20 @@ bool pv_element_kind_is_object(PvElementKind kind)
 	}
 }
 
+PvElement **pv_element_copy_elements(PvElement **src)
+{
+	size_t num = pv_general_get_parray_num((void **)src);
+	PvElement **dst = malloc((num + 1) * sizeof(PvElement *));
+	pv_assert(dst);
+
+	for(int i = 0; i < (int)num; i++){
+		dst[i + 0] = src[i];
+		dst[i + 1] = NULL;
+	}
+
+	return dst;
+}
+
 void pv_element_debug_print(const PvElement *element)
 {
 	if(NULL == element){

@@ -102,6 +102,11 @@ const char *pv_element_get_name_from_kind(PvElementKind kind);
 bool pv_element_kind_is_viewable_object(PvElementKind kind);
 bool pv_element_kind_is_object(PvElementKind kind);
 
+/**  @return array (@params is NULL(empty array) to size 1 array.)
+ * 		memory free: free(return_addr);
+ */
+PvElement **pv_element_copy_elements(PvElement **);
+
 
 
 // ******** ********

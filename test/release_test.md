@@ -253,7 +253,19 @@ Layer順序の並び替えを行った際、Layer内のElementが並び替えら
 * ElementTree階層上で親Elementの異なりElementGroupを含むElementを2つFocusし、Ctrl+Gショートカットを押下する。
 	Focus先頭のElementがあった階層位置にGroupが作成される。
 	FocusしていたElementsの階層位置が、そのGroupの中に移動する。
-
+* 1つの子Elementを持つElementGroupに含まれるElementをFocusし、Ctrl+Shift+Gショートカットを押下する。
+	Groupがあった階層位置にGroup内のElementsが移動される。
+	Groupは削除される。
+* 2つ以上の子Elementを持つElementGroupに含まれるElementをFocusし、Ctrl+Shift+Gショートカットを押下する。
+	Groupがあった階層位置にGroup内のElementsが元の順で移動される。
+	Groupは削除される。
+* ElementGroupをFocusし、Ctrl+Shift+Gショートカットを押下する。
+	Groupがあった階層位置にGroup内のElementsが元の順で移動される。
+	Groupは削除される。
+* (准正常系)ElementGroupの子Elementを2つ以上Focusし、Ctrl+Shift+Gショートカットを押下する。
+	エラーメッセージが表示される。
+* (准正常系)ElementGroupの子でないElementをFocusし、Ctrl+Shift+Gショートカットを押下する。
+	エラーメッセージが表示される。
 
 ### Cut, Copy, Paste
 
