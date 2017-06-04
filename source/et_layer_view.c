@@ -9,6 +9,10 @@
 #include "et_etaion.h"
 
 
+const int ELEMENT_WIDTH = 300;
+const int ELEMENT_HEIGHT = 18;
+const int FONT_SIZE = 14;
+
 typedef struct EtLayerViewLayerCtrl{
 	const char * const name;
 	const char * const filename_image;
@@ -33,13 +37,14 @@ struct EtLayerView{
 	GtkWidget *box;
 	GtkWidget *scroll;
 	GtkWidget *event_box;
-	GtkWidget *text;
+	GtkWidget *layer_tree_canvas;
 	GtkWidget *box_button_layer_ctrl;
 	GtkWidget *button_layer_ctrls[4];
 
 	EtDocId doc_id;
 	// buffer
 	EtLayerViewElementData **elementDatas;
+	GdkPixbuf *pixbuf_layer_tree;
 };
 
 typedef struct EtLayerViewRltDataPack{
@@ -48,6 +53,8 @@ typedef struct EtLayerViewRltDataPack{
 
 
 static EtLayerView *layer_view_ = NULL;
+
+static gboolean cb_expose_event_layer_tree_canvas_(GtkWidget *widget, cairo_t *cr, gpointer data);
 
 static gboolean cb_button_press_layer_view_content_(
 		GtkWidget *widget, GdkEventButton *event, gpointer data);
@@ -90,15 +97,10 @@ EtLayerView *et_layer_view_init()
 
 	gtk_container_add(GTK_CONTAINER(self->scroll), self->event_box);
 
-	self->text = gtk_text_view_new();
-	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (self->text));
-	gtk_text_buffer_set_text (buffer, "<Nothing document>", -1);
-	gtk_text_view_set_editable (GTK_TEXT_VIEW(self->text), false);
-#if GTK_CHECK_VERSION (3,16,0)
-	gtk_text_view_set_monospace (GTK_TEXT_VIEW(self->text), TRUE);
-#endif
-	gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW(self->text), false);
-	gtk_container_add(GTK_CONTAINER(self->event_box), self->text);
+	self->layer_tree_canvas = gtk_drawing_area_new();
+	g_signal_connect (G_OBJECT (self->layer_tree_canvas), "draw",
+			G_CALLBACK (cb_expose_event_layer_tree_canvas_), (gpointer)self);
+	gtk_container_add(GTK_CONTAINER(self->event_box), self->layer_tree_canvas);
 
 	self->box_button_layer_ctrl = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 	gtk_container_add(GTK_CONTAINER(self->box), self->box_button_layer_ctrl);
@@ -112,6 +114,7 @@ EtLayerView *et_layer_view_init()
 
 	self->doc_id = -1;
 	self->elementDatas = NULL;
+	self->pixbuf_layer_tree = NULL;
 
 	layer_view_ = self;
 
@@ -150,84 +153,158 @@ static bool read_layer_tree_(PvElement *element, gpointer data, int level)
 	return true;
 }
 
+static void set_font_(cairo_t *cr)
+{
+	cairo_select_font_face (cr, "Consolas",
+			CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+
+	cairo_set_font_size (cr, FONT_SIZE);
+}
+
+static GdkPixbuf *gen_empty_()
+{
+	const int WIDTH = ELEMENT_WIDTH;
+	const int HEIGHT = 24;
+	cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, WIDTH, HEIGHT);
+	et_assert(surface);
+
+	cairo_t *cr = cairo_create (surface);
+	et_assert(cr);
+
+	set_font_(cr);
+
+	cairo_move_to(cr, 0, FONT_SIZE);
+	cairo_show_text(cr, "<no document>");
+
+	return gdk_pixbuf_get_from_surface(surface, 0, 0, WIDTH, HEIGHT);
+}
+
+static gboolean cb_expose_event_layer_tree_canvas_(GtkWidget *widget, cairo_t *cr, gpointer data)
+{
+	EtLayerView *self = (EtLayerView *)data;
+
+	if(NULL == self->pixbuf_layer_tree){
+		self->pixbuf_layer_tree = gen_empty_();
+		et_assert(self->pixbuf_layer_tree);
+	}
+
+	gtk_widget_set_size_request(
+			self->layer_tree_canvas,
+			gdk_pixbuf_get_width(self->pixbuf_layer_tree),
+			gdk_pixbuf_get_height(self->pixbuf_layer_tree));
+
+	gdk_cairo_set_source_pixbuf(cr, self->pixbuf_layer_tree, 0, 0);
+
+	cairo_paint(cr);
+
+	return FALSE;
+}
+
 static bool draw_element_tree_(EtLayerView *self)
 {
 	et_assert(self);
 
-	const int LEN_ELEMENT = 128;
+	if(self->doc_id < 0){
+		if(NULL != self->pixbuf_layer_tree){
+			g_object_unref(G_OBJECT(self->pixbuf_layer_tree));
+		}
+		self->pixbuf_layer_tree = NULL;
+		return true;
+	}
 
 	EtLayerViewElementData **elementDatas = self->elementDatas;
 	size_t num = pv_general_get_parray_num((void **)elementDatas);
-	size_t len_elements = LEN_ELEMENT * num;
-	char *buf = malloc((sizeof(char) * len_elements) + 1);
-	et_assert(buf);
 
-	const PvElement *focus_element = NULL;
-	if(self->doc_id < 0){
-		strcpy(buf, "<None>");
-	}else{
 
-		const PvFocus *focus = et_doc_get_focus_ref_from_id(self->doc_id);
-		if(NULL == focus){
-			et_error("");
-			return false;
-		}
-
-		buf[0] = '\0';
+	PvElement *focus_element = NULL;
+	const PvFocus *focus = et_doc_get_focus_ref_from_id(self->doc_id);
+	if(NULL != focus){
 		focus_element = pv_focus_get_first_element(focus);
-		for(int i = 0; i < (int)num; i++){
-			EtLayerViewElementData *data = elementDatas[i];
-
-			if(0 == i){
-				// skip root element.
-				if(PvElementKind_Root != data->element->kind){
-					et_bug("%d\n", data->element->kind);
-				}
-				continue;
-			}else{
-				if(PvElementKind_Root == data->element->kind){
-					et_bug("%d\n", i);
-					continue;
-				}
-			}
-
-			unsigned long debug_pointer = 0;
-			memcpy(&debug_pointer, &data->element, sizeof(unsigned long));
-
-			char str_element_head[128];
-			str_element_head[0] = '\0';
-			for(int t = 0; t < data->level; t++){
-				str_element_head[t] = '_';
-				str_element_head[t + 1] = '\0';
-				if(!(t < ((int)sizeof(str_element_head) - 2))){
-					break;
-				}
-			}
-			const char *kind_name = pv_element_get_name_from_kind(data->kind);
-			if(NULL == kind_name){
-				kind_name = "";
-			}
-			char str_element[128];
-			snprintf(str_element, sizeof(str_element),
-					"%s%c:%s\t:%08lx '%s'\n",
-					str_element_head,
-					((focus_element == data->element)? '>':'_'),
-					//data->level,
-					kind_name,
-					debug_pointer,
-					((data->name)?"":data->name));
-
-			strncat(buf, str_element, (len_elements - 1) - strlen(buf));
-			buf[(len_elements - 1)] = '\0';
-			if(!(strlen(buf) < (len_elements - 2))){
-				et_warning("%zu/%zu\n", strlen(buf), len_elements);
-			}
-		}
 	}
 
-	GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW (self->text));
-	gtk_text_buffer_set_text (buffer, buf, -1);
-	free(buf);
+
+	int canvas_width = ELEMENT_WIDTH;
+	int canvas_height = num * ELEMENT_HEIGHT;
+	cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, canvas_width, canvas_height);
+	et_assert(surface);
+
+	cairo_t *cr = cairo_create (surface);
+	et_assert(cr);
+
+	set_font_(cr);
+
+	for(int i = 0; i < (int)num; i++){
+		EtLayerViewElementData *data = elementDatas[i];
+		if(0 == i){
+			// skip root element.
+			if(PvElementKind_Root != data->element->kind){
+				et_bug("%d\n", data->element->kind);
+			}
+			continue;
+		}else{
+			if(PvElementKind_Root == data->element->kind){
+				et_bug("%d\n", i);
+				continue;
+			}
+		}
+		int offset = 1;
+		int index = i - offset;
+
+
+		unsigned long debug_pointer = 0;
+		memcpy(&debug_pointer, &data->element, sizeof(unsigned long));
+
+		char str_element_head[128];
+		str_element_head[0] = '\0';
+		for(int t = 0; t < data->level; t++){
+			str_element_head[t] = '_';
+			str_element_head[t + 1] = '\0';
+			if(!(t < ((int)sizeof(str_element_head) - 2))){
+				break;
+			}
+		}
+		const char *kind_name = pv_element_get_name_from_kind(data->kind);
+		if(NULL == kind_name){
+			kind_name = "";
+		}
+		char str_element[128];
+		snprintf(str_element, sizeof(str_element),
+				"%s%c:%s    :%08lx '%s'",
+				str_element_head,
+				((focus_element == data->element)? '>':'_'),
+				//data->level,
+				kind_name,
+				debug_pointer,
+				((data->name)?"":data->name));
+
+		cairo_save(cr);
+		cairo_rectangle(cr, 0, (ELEMENT_HEIGHT * index), ELEMENT_WIDTH, ELEMENT_HEIGHT);
+		cairo_clip(cr);
+
+		cairo_text_extents_t te;
+		cairo_text_extents (cr, str_element, &te);
+		/*if(i < 10){
+		  et_debug("w:%.2f, %.2f, %.2f, h:%.2f, %.2f, %.2f, ",
+		  te.width, te.x_bearing, te.x_advance,
+		  te.height, te.y_bearing, te.y_advance);
+		  }*/
+		cairo_move_to(cr, 0, (ELEMENT_HEIGHT * index));
+		cairo_rel_move_to (cr, 0, te.height);
+		cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
+		cairo_show_text(cr, str_element);
+
+		cairo_rectangle(cr, 0, (ELEMENT_HEIGHT * index), ELEMENT_WIDTH, ELEMENT_HEIGHT);
+		cairo_set_source_rgba (cr, 0.9, 0.9, 0.9, 1.0);
+		cairo_set_line_width(cr, 1 * 2);
+		cairo_stroke(cr);
+
+		cairo_restore(cr); // clear clipping
+	}
+
+	self->pixbuf_layer_tree = gdk_pixbuf_get_from_surface(surface, 0, 0, canvas_width, canvas_height);
+	et_assert(self->pixbuf_layer_tree);
+
+	gtk_widget_queue_draw(self->layer_tree_canvas);
 
 	return true;
 }
@@ -399,7 +476,7 @@ int index_data_from_position_(EtLayerView *self, int x, int y)
 {
 	et_assert(self);
 
-	int index = (y/16) + 1; // +1 = hidden root layer
+	int index = (y / ELEMENT_HEIGHT) + 1; // +1 = hidden root layer
 
 	int num = pv_general_get_parray_num((void **)self->elementDatas);
 	if(!(index < num)){
