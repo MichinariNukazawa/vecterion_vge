@@ -215,13 +215,8 @@ static bool draw_element_tree_(EtLayerView *self)
 	EtLayerViewElementData **elementDatas = self->elementDatas;
 	size_t num = pv_general_get_parray_num((void **)elementDatas);
 
-
-	PvElement *focus_element = NULL;
 	const PvFocus *focus = et_doc_get_focus_ref_from_id(self->doc_id);
-	if(NULL != focus){
-		focus_element = pv_focus_get_first_element(focus);
-	}
-
+	et_assert(focus);
 
 	int canvas_width = ELEMENT_WIDTH;
 	int canvas_height = num * ELEMENT_HEIGHT;
@@ -250,7 +245,33 @@ static bool draw_element_tree_(EtLayerView *self)
 		int offset = 1;
 		int index = i - offset;
 
+		// ** clipping
+		cairo_save(cr);
+		cairo_rectangle(cr, 0, (ELEMENT_HEIGHT * index), ELEMENT_WIDTH, ELEMENT_HEIGHT);
+		cairo_clip(cr);
 
+		// ** background
+		bool is_fill_background = false;
+		if(PvElementKind_Layer != data->element->kind){
+			if(pv_focus_is_exist_element(focus, data->element)){
+				is_fill_background = true;
+				cairo_set_source_rgba (cr,  0.85, 0.95, 1.0, 1.0);
+				if(pv_focus_get_first_element(focus) == data->element){
+					cairo_set_source_rgba (cr,  0.3, 0.9, 1.0, 1.0);
+				}
+			}
+		}else{
+			if(pv_focus_get_first_layer(focus) == data->element){
+				is_fill_background = true;
+				cairo_set_source_rgba (cr, 0.5, 0.7, 1.0, 1.0);
+			}
+		}
+		if(is_fill_background){
+			cairo_rectangle(cr, 0, (ELEMENT_HEIGHT * index), ELEMENT_WIDTH, ELEMENT_HEIGHT);
+			cairo_fill(cr);
+		}
+
+		// ** element content
 		unsigned long debug_pointer = 0;
 		memcpy(&debug_pointer, &data->element, sizeof(unsigned long));
 
@@ -271,15 +292,11 @@ static bool draw_element_tree_(EtLayerView *self)
 		snprintf(str_element, sizeof(str_element),
 				"%s%c:%s    :%08lx '%s'",
 				str_element_head,
-				((focus_element == data->element)? '>':'_'),
+				((pv_focus_get_first_element(focus) == data->element)? '>':'_'),
 				//data->level,
 				kind_name,
 				debug_pointer,
 				((data->name)?"":data->name));
-
-		cairo_save(cr);
-		cairo_rectangle(cr, 0, (ELEMENT_HEIGHT * index), ELEMENT_WIDTH, ELEMENT_HEIGHT);
-		cairo_clip(cr);
 
 		cairo_text_extents_t te;
 		cairo_text_extents (cr, str_element, &te);
@@ -293,12 +310,14 @@ static bool draw_element_tree_(EtLayerView *self)
 		cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
 		cairo_show_text(cr, str_element);
 
+		// ** border
 		cairo_rectangle(cr, 0, (ELEMENT_HEIGHT * index), ELEMENT_WIDTH, ELEMENT_HEIGHT);
 		cairo_set_source_rgba (cr, 0.9, 0.9, 0.9, 1.0);
 		cairo_set_line_width(cr, 1 * 2);
 		cairo_stroke(cr);
 
-		cairo_restore(cr); // clear clipping
+		// ** clear clipping
+		cairo_restore(cr);
 	}
 
 	self->pixbuf_layer_tree = gdk_pixbuf_get_from_surface(surface, 0, 0, canvas_width, canvas_height);
