@@ -13,7 +13,7 @@ const int ELEMENT_WIDTH = 300;
 const int ELEMENT_HEIGHT = 18;
 const int FONT_SIZE = 14;
 
-typedef struct EtLayerViewLayerCtrl{
+typedef struct{
 	const char * const name;
 	const char * const filename_image;
 }EtLayerViewLayerCtrl;
@@ -25,7 +25,7 @@ const EtLayerViewLayerCtrl et_layer_view_layer_ctrls_buttons_[] = {
 	{"Delete", "layer_del_64x64.svg",},
 };
 
-typedef struct EtLayerViewElementData{
+typedef struct{
 	int level;
 	const char *name;
 	PvElementKind kind;
@@ -47,7 +47,7 @@ struct EtLayerView{
 	GdkPixbuf *pixbuf_layer_tree;
 };
 
-typedef struct EtLayerViewRltDataPack{
+typedef struct{
 	EtLayerViewElementData **datas;
 }EtLayerViewRltDataPack;
 
@@ -296,7 +296,7 @@ static bool draw_element_tree_(EtLayerView *self)
 				//data->level,
 				kind_name,
 				debug_pointer,
-				((data->name)?"":data->name));
+				data->name);
 
 		cairo_text_extents_t te;
 		cairo_text_extents (cr, str_element, &te);
