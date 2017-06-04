@@ -524,11 +524,6 @@ static gboolean cb_button_press_layer_view_content_(
 
 		pv_focus_clear_set_element(focus, self->elementDatas[index]->element);
 
-		if(!update_ui_(self)){
-			et_error("");
-			return false;
-		}
-
 		if(!et_doc_signal_update_from_id(self->doc_id)){
 			et_error("");
 			return false;
