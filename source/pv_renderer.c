@@ -7,7 +7,7 @@
 #include "pv_cairo.h"
 
 
-static bool pv_renderer_is_group_kind_(const PvElement *element)
+static bool pv_element_is_group_kind_(const PvElement *element)
 {
 	switch(element->kind){
 		case PvElementKind_Root:
@@ -29,7 +29,7 @@ static bool pv_render_cairo_recursive_(
 	bool ret = true;
 	(*level)++;
 
-	if(pv_renderer_is_group_kind_(element)){
+	if(pv_element_is_group_kind_(element)){
 		size_t num = pv_general_get_parray_num((void **)element->childs);
 		for(int i = 0; i < (int)num; i++){
 			if(!pv_render_cairo_recursive_(
@@ -148,10 +148,10 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(
 
 	if(NULL != focus){
 		PvRect rect_extent = PvRect_Default;
-		int num = pv_general_get_parray_num((void **)focus->elements);
-		for(int i = 0; i < num; i++){
+		size_t num = pv_general_get_parray_num((void **)focus->elements);
+		for(int i = 0; i < (int)num; i++){
 			const PvElement *focus_element = focus->elements[i];
-			if(!pv_renderer_is_group_kind_(focus_element)){
+			if(!pv_element_is_group_kind_(focus_element)){
 				render_option.render_context.is_focus = true;
 				if(!pv_render_cairo_recursive_(cr, focus_element, render_option, &level)){
 					pv_error("");
