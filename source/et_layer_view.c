@@ -321,7 +321,7 @@ static bool draw_element_tree_(EtLayerView *self)
 	}
 
 	self->pixbuf_layer_tree = gdk_pixbuf_get_from_surface(surface, 0, 0, canvas_width, canvas_height);
-	et_assert(self->pixbuf_layer_tree);
+	et_assertf(self->pixbuf_layer_tree, "%d, %d", canvas_width, canvas_height);
 
 	gtk_widget_queue_draw(self->layer_tree_canvas);
 
