@@ -179,52 +179,53 @@ static GdkPixbuf *gen_empty_()
 	return gdk_pixbuf_get_from_surface(surface, 0, 0, WIDTH, HEIGHT);
 }
 
+static bool draw_element_tree_(EtLayerView *self, cairo_t *cr);
+
 static gboolean cb_expose_event_layer_tree_canvas_(GtkWidget *widget, cairo_t *cr, gpointer data)
 {
+	et_debug("EXP");
+
 	EtLayerView *self = (EtLayerView *)data;
 
-	if(NULL == self->pixbuf_layer_tree){
+	EtLayerViewElementData **elementDatas = self->elementDatas;
+	size_t num = pv_general_get_parray_num((void **)elementDatas);
+
+	if(0 == num){
 		self->pixbuf_layer_tree = gen_empty_();
 		et_assert(self->pixbuf_layer_tree);
+
+		gtk_widget_set_size_request(
+				self->layer_tree_canvas,
+				gdk_pixbuf_get_width(self->pixbuf_layer_tree),
+				gdk_pixbuf_get_height(self->pixbuf_layer_tree));
+
+		gdk_cairo_set_source_pixbuf(cr, self->pixbuf_layer_tree, 0, 0);
+		cairo_paint(cr);
+
+		return FALSE;
 	}
 
+	int canvas_width = ELEMENT_WIDTH;
+	int canvas_height = num * ELEMENT_HEIGHT;
 	gtk_widget_set_size_request(
 			self->layer_tree_canvas,
-			gdk_pixbuf_get_width(self->pixbuf_layer_tree),
-			gdk_pixbuf_get_height(self->pixbuf_layer_tree));
+			canvas_width,
+			canvas_height);
 
-	gdk_cairo_set_source_pixbuf(cr, self->pixbuf_layer_tree, 0, 0);
-
-	cairo_paint(cr);
+	draw_element_tree_(self, cr);
 
 	return FALSE;
 }
 
-static bool draw_element_tree_(EtLayerView *self)
+static bool draw_element_tree_(EtLayerView *self, cairo_t *cr)
 {
 	et_assert(self);
-
-	if(self->doc_id < 0){
-		if(NULL != self->pixbuf_layer_tree){
-			g_object_unref(G_OBJECT(self->pixbuf_layer_tree));
-		}
-		self->pixbuf_layer_tree = NULL;
-		return true;
-	}
 
 	EtLayerViewElementData **elementDatas = self->elementDatas;
 	size_t num = pv_general_get_parray_num((void **)elementDatas);
 
 	const PvFocus *focus = et_doc_get_focus_ref_from_id(self->doc_id);
 	et_assert(focus);
-
-	int canvas_width = ELEMENT_WIDTH;
-	int canvas_height = num * ELEMENT_HEIGHT;
-	cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, canvas_width, canvas_height);
-	et_assert(surface);
-
-	cairo_t *cr = cairo_create (surface);
-	et_assert(cr);
 
 	set_font_(cr);
 
@@ -320,11 +321,6 @@ static bool draw_element_tree_(EtLayerView *self)
 		cairo_restore(cr);
 	}
 
-	self->pixbuf_layer_tree = gdk_pixbuf_get_from_surface(surface, 0, 0, canvas_width, canvas_height);
-	et_assertf(self->pixbuf_layer_tree, "%d, %d", canvas_width, canvas_height);
-
-	gtk_widget_queue_draw(self->layer_tree_canvas);
-
 	return true;
 }
 
@@ -332,9 +328,7 @@ static bool update_ui_(EtLayerView *self)
 {
 	et_assert(self);
 
-	if(!draw_element_tree_(self)){
-		et_warning("");
-	}
+	gtk_widget_queue_draw(self->layer_tree_canvas);
 
 	// ターゲット状態でlayer_ctrlsのbutton状態を変更する
 	{
