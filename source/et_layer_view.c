@@ -183,8 +183,6 @@ static bool draw_element_tree_(EtLayerView *self, cairo_t *cr);
 
 static gboolean cb_expose_event_layer_tree_canvas_(GtkWidget *widget, cairo_t *cr, gpointer data)
 {
-	et_debug("EXP");
-
 	EtLayerView *self = (EtLayerView *)data;
 
 	EtLayerViewElementData **elementDatas = self->elementDatas;
