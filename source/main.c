@@ -94,7 +94,7 @@ static gpointer _worker_func(gpointer data)
 	return NULL;
 }
 
-static gboolean _cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer user_data)
+static gboolean cb_key_press_(GtkWidget *widget, GdkEventKey * event, gpointer user_data)
 {
 	et_debug("keyval=0x%04x status=0x%04x",
 			event->keyval, event->state/*, event->string*/);
@@ -111,7 +111,7 @@ static gboolean _cb_key_press(GtkWidget *widget, GdkEventKey * event, gpointer u
 
 static bool _gui_quit();
 
-static gboolean _cb_delete_event(GtkWidget *widget,
+static gboolean cb_delete_event_(GtkWidget *widget,
 		GdkEvent  *event,
 		gpointer   user_data)
 {
@@ -314,9 +314,9 @@ int main (int argc, char **argv){
 	gtk_container_add(GTK_CONTAINER(window), box_root);
 
 	g_signal_connect(G_OBJECT(window), "key-press-event",
-			G_CALLBACK(_cb_key_press), NULL);
+			G_CALLBACK(cb_key_press_), NULL);
 	g_signal_connect(window, "delete-event",
-			G_CALLBACK(_cb_delete_event), NULL);
+			G_CALLBACK(cb_delete_event_), NULL);
 
 	if(!et_tool_info_init()){
 		et_bug("");
@@ -640,7 +640,7 @@ static void _pvui_app_set_style(){
 	g_object_unref (provider);
 }
 
-static gboolean _cb_menu_file_new(gpointer data)
+static gboolean cb_menu_file_new_(gpointer data)
 {
 	et_debug("");
 
@@ -874,7 +874,7 @@ static char *_save_dialog_run(const char *dialog_title, const char *accept_butto
 	return filepath;
 }
 
-static gboolean _cb_menu_file_save(gpointer data)
+static gboolean cb_menu_file_save_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -942,7 +942,7 @@ finally:
 	return false;
 }
 
-static gboolean _cb_menu_file_save_as(gpointer data)
+static gboolean cb_menu_file_save_as_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1009,7 +1009,7 @@ finally:
 	return false;
 }
 
-static gboolean _cb_menu_file_export(gpointer data)
+static gboolean cb_menu_file_export_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1058,7 +1058,7 @@ finally:
 	return false;
 }
 
-static gboolean _cb_menu_file_close(gpointer data)
+static gboolean cb_menu_file_close_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1072,13 +1072,13 @@ static gboolean _cb_menu_file_close(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_file_quit(gpointer data)
+static gboolean cb_menu_file_quit_(gpointer data)
 {
 	_gui_quit();
 	return FALSE;
 }
 
-static gboolean _cb_menu_edit_undo(gpointer data)
+static gboolean cb_menu_edit_undo_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1097,7 +1097,7 @@ static gboolean _cb_menu_edit_undo(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_edit_redo(gpointer data)
+static gboolean cb_menu_edit_redo_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1116,7 +1116,7 @@ static gboolean _cb_menu_edit_redo(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_edit_cut(gpointer data)
+static gboolean cb_menu_edit_cut_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1136,7 +1136,7 @@ static gboolean _cb_menu_edit_cut(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_edit_copy(gpointer data)
+static gboolean cb_menu_edit_copy_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1156,7 +1156,7 @@ static gboolean _cb_menu_edit_copy(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_edit_paste(gpointer data)
+static gboolean cb_menu_edit_paste_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1176,7 +1176,7 @@ static gboolean _cb_menu_edit_paste(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_edit_delete(gpointer data)
+static gboolean cb_menu_edit_delete_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1195,7 +1195,7 @@ static gboolean _cb_menu_edit_delete(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_layer_new(gpointer data)
+static gboolean cb_menu_layer_new_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1209,7 +1209,7 @@ static gboolean _cb_menu_layer_new(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_layer_copy(gpointer data)
+static gboolean cb_menu_layer_copy_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1223,7 +1223,7 @@ static gboolean _cb_menu_layer_copy(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_layer_new_child(gpointer data)
+static gboolean cb_menu_layer_new_child_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1237,7 +1237,7 @@ static gboolean _cb_menu_layer_new_child(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_layer_delete(gpointer data)
+static gboolean cb_menu_layer_delete_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1318,7 +1318,7 @@ static void _reordering_element(EtDocId doc_id, int move, bool is_end, bool is_l
 	et_abortf("");
 }
 
-static gboolean _cb_menu_layer_raise(gpointer data)
+static gboolean cb_menu_layer_raise_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1332,7 +1332,7 @@ static gboolean _cb_menu_layer_raise(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_layer_lower(gpointer data)
+static gboolean cb_menu_layer_lower_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1346,7 +1346,7 @@ static gboolean _cb_menu_layer_lower(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_layer_raise_to_top(gpointer data)
+static gboolean cb_menu_layer_raise_to_top_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1360,7 +1360,7 @@ static gboolean _cb_menu_layer_raise_to_top(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_layer_lower_to_end(gpointer data)
+static gboolean cb_menu_layer_lower_to_end_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1374,7 +1374,7 @@ static gboolean _cb_menu_layer_lower_to_end(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_element_raise(gpointer data)
+static gboolean cb_menu_element_raise_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1388,7 +1388,7 @@ static gboolean _cb_menu_element_raise(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_element_lower(gpointer data)
+static gboolean cb_menu_element_lower_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1402,7 +1402,7 @@ static gboolean _cb_menu_element_lower(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_element_raise_to_top(gpointer data)
+static gboolean cb_menu_element_raise_to_top_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1416,7 +1416,7 @@ static gboolean _cb_menu_element_raise_to_top(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_element_lower_to_end(gpointer data)
+static gboolean cb_menu_element_lower_to_end_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1430,7 +1430,7 @@ static gboolean _cb_menu_element_lower_to_end(gpointer data)
 	return false;
 }
 
-static gboolean _cb_menu_element_grouping(gpointer data)
+static gboolean cb_menu_element_grouping_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1500,7 +1500,7 @@ static PvElement *get_first_parent_group_(PvElement *element)
 	}
 }
 
-static gboolean _cb_menu_element_ungrouping(gpointer data)
+static gboolean cb_menu_element_ungrouping_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1567,7 +1567,7 @@ static bool _gui_quit()
 	return true;
 }
 
-static gboolean _cb_menu_file_open(gpointer data)
+static gboolean cb_menu_file_open_(gpointer data)
 {
 	et_debug("");
 
@@ -1643,7 +1643,7 @@ PvElement *_new_element_from_filepath(const char *filepath)
 	return element;
 }
 
-static gboolean _cb_menu_file_import(gpointer data)
+static gboolean cb_menu_file_import_(gpointer data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1723,7 +1723,7 @@ finally_1:
 
 }
 
-static void _cb_menu_view_zoom_in(GtkCheckMenuItem *menuitem, gpointer user_data)
+static void cb_menu_view_zoom_in_(GtkCheckMenuItem *menuitem, gpointer user_data)
 {
 	EtCanvas *current_canvas = et_canvas_collection_get_current_canvas();
 	if(NULL == current_canvas){
@@ -1733,7 +1733,7 @@ static void _cb_menu_view_zoom_in(GtkCheckMenuItem *menuitem, gpointer user_data
 	et_canvas_change_scale_of_unit(current_canvas, 1);
 }
 
-static void _cb_menu_view_zoom_out(GtkCheckMenuItem *menuitem, gpointer user_data)
+static void cb_menu_view_zoom_out_(GtkCheckMenuItem *menuitem, gpointer user_data)
 {
 	EtCanvas *current_canvas = et_canvas_collection_get_current_canvas();
 	if(NULL == current_canvas){
@@ -1743,19 +1743,19 @@ static void _cb_menu_view_zoom_out(GtkCheckMenuItem *menuitem, gpointer user_dat
 	et_canvas_change_scale_of_unit(current_canvas, -1);
 }
 
-static void _cb_menu_view_extent(GtkCheckMenuItem *menuitem, gpointer user_data)
+static void cb_menu_view_extent_(GtkCheckMenuItem *menuitem, gpointer user_data)
 {
 	if(!et_etaion_set_is_extent_view(gtk_check_menu_item_get_active(menuitem))){
 		et_error("");
 	}
 }
 
-static void _cb_menu_view_transparent_grid(GtkCheckMenuItem *menuitem, gpointer user_data)
+static void cb_menu_view_transparent_grid_(GtkCheckMenuItem *menuitem, gpointer user_data)
 {
 	et_etaion_set_is_transparent_grid(gtk_check_menu_item_get_active(menuitem));
 }
 
-static bool _cb_menu_document_resize (GtkMenuItem *menuitem, gpointer user_data)
+static bool cb_menu_document_resize_ (GtkMenuItem *menuitem, gpointer user_data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1822,7 +1822,7 @@ static bool _cb_menu_document_resize (GtkMenuItem *menuitem, gpointer user_data)
 	return false;
 }
 
-static bool _cb_menu_tool_change(GtkMenuItem *menuitem, gpointer user_data)
+static bool cb_menu_tool_change_(GtkMenuItem *menuitem, gpointer user_data)
 {
 	et_assert(user_data);
 	EtToolInfo *info = user_data;
@@ -1850,7 +1850,7 @@ typedef struct{
 	PvElement **elements_ignore;
 }EtSelectAllFuncRecurseDataPack;
 
-static bool _cb_menu_select_all_func_recurse_prev(PvElement *element, gpointer data, int level)
+static bool cb_menu_select_all_func_recurse_prev_(PvElement *element, gpointer data, int level)
 {
 	EtSelectAllFuncRecurseDataPack *func_safr_data_pack = data;
 	PvFocus *focus = func_safr_data_pack->focus;
@@ -1869,7 +1869,7 @@ static bool _cb_menu_select_all_func_recurse_prev(PvElement *element, gpointer d
 	return true;
 }
 
-static void _cb_menu_select_all (GtkMenuItem *menuitem, gpointer user_data)
+static void cb_menu_select_all_ (GtkMenuItem *menuitem, gpointer user_data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1898,7 +1898,7 @@ static void _cb_menu_select_all (GtkMenuItem *menuitem, gpointer user_data)
 	PvElementRecursiveError error;
 	if(!pv_element_recursive_desc_before(
 				vg->element_root,
-				_cb_menu_select_all_func_recurse_prev,
+				cb_menu_select_all_func_recurse_prev_,
 				&func_safr_data_pack,
 				&error))
 	{
@@ -1910,7 +1910,7 @@ static void _cb_menu_select_all (GtkMenuItem *menuitem, gpointer user_data)
 	et_doc_signal_update_from_id(doc_id);
 }
 
-static void _cb_menu_select_none (GtkMenuItem *menuitem, gpointer user_data)
+static void cb_menu_select_none_ (GtkMenuItem *menuitem, gpointer user_data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1935,7 +1935,7 @@ static void _cb_menu_select_none (GtkMenuItem *menuitem, gpointer user_data)
 	et_doc_signal_update_from_id(doc_id);
 }
 
-static void _cb_menu_select_invert (GtkMenuItem *menuitem, gpointer user_data)
+static void cb_menu_select_invert_ (GtkMenuItem *menuitem, gpointer user_data)
 {
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
@@ -1980,7 +1980,7 @@ static void _cb_menu_select_invert (GtkMenuItem *menuitem, gpointer user_data)
 	PvElementRecursiveError error;
 	if(!pv_element_recursive_desc_before(
 				vg->element_root,
-				_cb_menu_select_all_func_recurse_prev,
+				cb_menu_select_all_func_recurse_prev_,
 				&func_safr_data_pack,
 				&error))
 	{
@@ -1996,7 +1996,7 @@ finally:
 }
 
 #include <libxml/xmlversion.h>
-static void _cb_menu_help_about (GtkMenuItem *menuitem, gpointer user_data)
+static void cb_menu_help_about_ (GtkMenuItem *menuitem, gpointer user_data)
 {
 	gchar *gtk_version = g_strdup_printf("libgtk:%d.%2d.%2d %s",
 			gtk_get_major_version(),
@@ -2092,21 +2092,21 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_select(GtkAccelGroup *accel_group
 	menuitem = gtk_menu_item_new_with_label ("_All");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_select_all), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_select_all_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_a, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 	// ** Accel to "/_Select/_None (Shift+Ctrl+A)"
 	menuitem = gtk_menu_item_new_with_label ("_None");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_select_none), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_select_none_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_a, (GDK_SHIFT_MASK | GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
 	// ** Accel to "/_Select/_Invert (Ctrl+I)"
 	menuitem = gtk_menu_item_new_with_label ("_Invert");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_select_invert), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_select_invert_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_i, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
@@ -2128,7 +2128,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	menuitem = gtk_menu_item_new_with_label ("_New");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_new), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_file_new_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_n, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
@@ -2136,7 +2136,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	menuitem = gtk_menu_item_new_with_label ("_Open");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_open), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_file_open_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_o, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
@@ -2144,13 +2144,13 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	menuitem = gtk_menu_item_new_with_label ("_Import");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_import), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_file_import_), NULL);
 
 	// ** "/_File/_Save (Ctrl+S)"
 	menuitem = gtk_menu_item_new_with_label ("_Save");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_save), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_file_save_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_s, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
@@ -2158,7 +2158,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	menuitem = gtk_menu_item_new_with_label ("Save _As");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_save_as), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_file_save_as_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_s, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2166,7 +2166,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	menuitem = gtk_menu_item_new_with_label ("_Export");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_export), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_file_export_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_e, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2174,7 +2174,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	menuitem = gtk_menu_item_new_with_label ("_Close");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_close), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_file_close_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_w, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2182,7 +2182,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	menuitem = gtk_menu_item_new_with_label ("_Quit");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_file_quit), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_file_quit_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_q, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2206,7 +2206,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_edit(GtkAccelGroup *accel_group)
 	menuitem = gtk_menu_item_new_with_label ("_Undo");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_edit_undo), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_edit_undo_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_z, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
@@ -2214,7 +2214,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_edit(GtkAccelGroup *accel_group)
 	menuitem = gtk_menu_item_new_with_label ("_Redo");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_edit_redo), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_edit_redo_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_z, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2225,7 +2225,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_edit(GtkAccelGroup *accel_group)
 	menuitem = gtk_menu_item_new_with_label ("_Cut");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_edit_cut), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_edit_cut_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_x, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2233,7 +2233,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_edit(GtkAccelGroup *accel_group)
 	menuitem = gtk_menu_item_new_with_label ("_Copy");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_edit_copy), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_edit_copy_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_c, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2241,7 +2241,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_edit(GtkAccelGroup *accel_group)
 	menuitem = gtk_menu_item_new_with_label ("_Paste");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_edit_paste), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_edit_paste_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_v, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2252,7 +2252,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_edit(GtkAccelGroup *accel_group)
 	menuitem = gtk_menu_item_new_with_label ("_Delete");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_edit_delete), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_edit_delete_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_Delete, 0, GTK_ACCEL_VISIBLE);
 
@@ -2276,7 +2276,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group)
 	menuitem = gtk_menu_item_new_with_label ("_New Layer");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_new), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_layer_new_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_n, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2284,19 +2284,19 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group)
 	menuitem = gtk_menu_item_new_with_label ("_Copy Layer");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_copy), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_layer_copy_), NULL);
 
 	// ** Accel to "/_Layer/New Child Layer"
 	menuitem = gtk_menu_item_new_with_label ("New Child Layer");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_new_child), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_layer_new_child_), NULL);
 
 	// ** Accel to "/_Layer/_Delete Layer"
 	menuitem = gtk_menu_item_new_with_label ("_Delete Layer");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_delete), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_layer_delete_), NULL);
 
 	separator = gtk_separator_menu_item_new();
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), separator);
@@ -2305,7 +2305,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group)
 	menuitem = gtk_menu_item_new_with_label ("_Raise");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_raise), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_layer_raise_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_Page_Up, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2313,7 +2313,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group)
 	menuitem = gtk_menu_item_new_with_label ("_Lower");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_lower), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_layer_lower_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_Page_Down, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2321,7 +2321,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group)
 	menuitem = gtk_menu_item_new_with_label ("Raise to Top");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_raise_to_top), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_layer_raise_to_top_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_Home, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2329,7 +2329,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group)
 	menuitem = gtk_menu_item_new_with_label ("Lower to _End");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_layer_lower_to_end), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_layer_lower_to_end_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_End, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2353,7 +2353,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_element(GtkAccelGroup *accel_grou
 	menuitem = gtk_menu_item_new_with_label ("_Raise");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_raise), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_element_raise_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_Page_Up, (0), GTK_ACCEL_VISIBLE);
 
@@ -2361,7 +2361,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_element(GtkAccelGroup *accel_grou
 	menuitem = gtk_menu_item_new_with_label ("_Lower");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_lower), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_element_lower_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_Page_Down, (0), GTK_ACCEL_VISIBLE);
 
@@ -2369,7 +2369,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_element(GtkAccelGroup *accel_grou
 	menuitem = gtk_menu_item_new_with_label ("Raise to Top");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_raise_to_top), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_element_raise_to_top_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_Home, (0), GTK_ACCEL_VISIBLE);
 
@@ -2377,7 +2377,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_element(GtkAccelGroup *accel_grou
 	menuitem = gtk_menu_item_new_with_label ("Lower to _End");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_lower_to_end), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_element_lower_to_end_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_End, (0), GTK_ACCEL_VISIBLE);
 
@@ -2388,7 +2388,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_element(GtkAccelGroup *accel_grou
 	menuitem = gtk_menu_item_new_with_label ("_Grouping");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_grouping), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_element_grouping_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_g, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2396,7 +2396,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_element(GtkAccelGroup *accel_grou
 	menuitem = gtk_menu_item_new_with_label ("Ungrouping");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_element_ungrouping), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_element_ungrouping_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_g, (GDK_CONTROL_MASK | GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2419,7 +2419,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_view_zoom(GtkAccelGroup *accel_gr
 	menuitem = gtk_menu_item_new_with_label ("Zoom _In");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_view_zoom_in), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_view_zoom_in_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_plus, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
@@ -2429,7 +2429,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_view_zoom(GtkAccelGroup *accel_gr
 	menuitem = gtk_menu_item_new_with_label ("Zoom _Out");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_view_zoom_out), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_view_zoom_out_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_minus, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
@@ -2459,13 +2459,13 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_view(GtkAccelGroup *accel_group)
 	menuitem = gtk_check_menu_item_new_with_mnemonic ("_Extent View");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "toggled", G_CALLBACK(_cb_menu_view_extent), NULL);
+	g_signal_connect(menuitem, "toggled", G_CALLBACK(cb_menu_view_extent_), NULL);
 
 	// ** Accel to "/_View/_Transparent Grid"
 	menuitem = gtk_check_menu_item_new_with_mnemonic ("_Transparent Grid");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "toggled", G_CALLBACK(_cb_menu_view_transparent_grid), NULL);
+	g_signal_connect(menuitem, "toggled", G_CALLBACK(cb_menu_view_transparent_grid_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_d, (GDK_CONTROL_MASK|GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
@@ -2488,7 +2488,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_document(GtkAccelGroup *accel_gro
 	menuitem = gtk_menu_item_new_with_mnemonic ("_Resize Document");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_document_resize), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_document_resize_), NULL);
 
 	return menuitem_root;
 }
@@ -2513,7 +2513,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_tool_tool(GtkAccelGroup *accel_gr
 		menuitem = gtk_menu_item_new_with_mnemonic(info->name);
 		gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 		gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-		g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_tool_change), (gpointer)info);
+		g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_tool_change_), (gpointer)info);
 
 		int t = 0;
 		while(0 != info->shortcuts[t].accel_key){
@@ -2562,7 +2562,7 @@ static GtkWidget *_new_tree_of_help(GtkAccelGroup *accel_group){
 	menuitem = gtk_menu_item_new_with_mnemonic ("_About");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
-	g_signal_connect(menuitem, "activate", G_CALLBACK(_cb_menu_help_about), NULL);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_help_about_), NULL);
 	/*
 	   gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 	   GDK_KEY_a, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
