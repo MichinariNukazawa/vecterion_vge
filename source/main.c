@@ -52,13 +52,12 @@ typedef struct{
 static EtWindow window_;
 static EtWindow *self = &window_;
 
-static void _pvui_app_set_style();
-static bool _init_menu(GtkWidget *window, GtkWidget *box_root);
+static void et_app_set_style_();
+static bool init_menu_(GtkWidget *window, GtkWidget *box_root);
 // static bool _debug_init();
-static EtDocId _open_doc_new(PvVg *pv_src);
-static EtDocId _open_doc_new_from_file(const char* filepath, const PvImageFileReadOption *imageFileReadOption);
-static bool _output_file_from_doc_id(const char *filepath, EtDocId doc_id);
-static bool _output_svg_from_doc_id(const char *filepath, EtDocId doc_id);
+static EtDocId open_doc_new_from_file_(const char* filepath, const PvImageFileReadOption *imageFileReadOption);
+static bool output_file_from_doc_id_(const char *filepath, EtDocId doc_id);
+static bool output_svg_from_doc_id_(const char *filepath, EtDocId doc_id);
 
 
 
@@ -68,10 +67,10 @@ static bool slot_from_mouse_action_(EtDocId, EtMouseAction);
 	do{ \
 		et_error(""fmt"", ## __VA_ARGS__); \
 		char *message = g_strdup_printf(""fmt"", ## __VA_ARGS__ ); \
-		_show_error_dialog_impl(message); \
+		show_error_dialog_impl_(message); \
 		g_free(message); \
 	}while(0)
-static void _show_error_dialog_impl(const char *message);
+static void show_error_dialog_impl_(const char *message);
 
 
 static gboolean in_worker_func(gpointer data)
@@ -109,13 +108,13 @@ static gboolean cb_key_press_(GtkWidget *widget, GdkEventKey * event, gpointer u
 	return FALSE;
 }
 
-static bool _gui_quit();
+static bool gui_quit_();
 
 static gboolean cb_delete_event_(GtkWidget *widget,
 		GdkEvent  *event,
 		gpointer   user_data)
 {
-	return !_gui_quit();
+	return !gui_quit_();
 }
 
 
@@ -323,7 +322,7 @@ int main (int argc, char **argv){
 		return -1;
 	}
 
-	if(! _init_menu(window, box_root)){
+	if(! init_menu_(window, box_root)){
 		et_bug("");
 		return -1;
 	}
@@ -477,7 +476,7 @@ int main (int argc, char **argv){
 
 
 	if(NULL != args->input_filepath){
-		EtDocId doc_id = _open_doc_new_from_file(args->input_filepath, imageFileReadOption);
+		EtDocId doc_id = open_doc_new_from_file_(args->input_filepath, imageFileReadOption);
 		if(doc_id < 0){
 			et_error("");
 			fprintf(stderr, "input_filepath can't open. :'%s'\n", args->input_filepath);
@@ -487,7 +486,7 @@ int main (int argc, char **argv){
 		et_debug("input_filepath success open.:'%s'", args->input_filepath);
 
 		if(NULL != args->output_filepath){
-			if(!_output_file_from_doc_id(args->output_filepath, doc_id)){
+			if(!output_file_from_doc_id_(args->output_filepath, doc_id)){
 				et_error("output_filepath not success.:%s", args->output_filepath);
 				usage();
 				exit(EXIT_FAILURE);
@@ -506,7 +505,7 @@ int main (int argc, char **argv){
 
 	char *window_title = g_strdup_printf("%s %s", "Vecterion", SHOW_VERSION);
 	gtk_window_set_title(GTK_WINDOW(window), window_title);
-	_pvui_app_set_style();
+	et_app_set_style_();
 	gtk_widget_show_all(window);
 	gtk_main();
 
@@ -516,7 +515,7 @@ int main (int argc, char **argv){
 	return 0;
 }
 
-static EtDocId _open_doc_new_from_file(const char* filepath, const PvImageFileReadOption *imageFileReadOption)
+static EtDocId open_doc_new_from_file_(const char* filepath, const PvImageFileReadOption *imageFileReadOption)
 {
 	et_debug("filepath:'%s'", (NULL == filepath)? "NULL":filepath);
 
@@ -566,7 +565,7 @@ static EtDocId _open_doc_new_from_file(const char* filepath, const PvImageFileRe
 		vg_src->rect.h = gdk_pixbuf_get_height(data->pixbuf);
 	}
 
-	doc_id = _open_doc_new(vg_src);
+	doc_id = open_doc_new(vg_src);
 	if(0 > doc_id){
 		et_error("");
 		goto finally;
@@ -583,12 +582,7 @@ finally:
 	return doc_id;
 }
 
-static EtDocId _open_doc_new(PvVg *vg_src)
-{
-	return open_doc_new(vg_src);
-}
-
-static void _pvui_app_set_style(){
+static void et_app_set_style_(){
 	GtkCssProvider *provider;
 	provider = gtk_css_provider_new ();
 
@@ -692,7 +686,7 @@ static gboolean cb_menu_file_new_(gpointer data)
 				vg->rect.h = gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_h));
 				et_debug("size:%f,%f,%f,%f",
 						vg->rect.x, vg->rect.y, vg->rect.w, vg->rect.h);
-				_open_doc_new(vg);
+				open_doc_new(vg);
 			}
 			break;
 		default:
@@ -706,7 +700,7 @@ static gboolean cb_menu_file_new_(gpointer data)
 	return false;
 }
 
-static bool _output_file_from_doc_id(const char *filepath, EtDocId doc_id)
+static bool output_file_from_doc_id_(const char *filepath, EtDocId doc_id)
 {
 	if(NULL == filepath){
 		et_error("");
@@ -720,7 +714,7 @@ static bool _output_file_from_doc_id(const char *filepath, EtDocId doc_id)
 	}
 
 	if(0 == strcmp("svg", format->gdk_file_type)){
-		if(!_output_svg_from_doc_id(filepath, doc_id)){
+		if(!output_svg_from_doc_id_(filepath, doc_id)){
 			et_error("");
 			return false;
 		}
@@ -780,7 +774,7 @@ static bool _output_file_from_doc_id(const char *filepath, EtDocId doc_id)
 	return true;
 }
 
-static bool _output_svg_from_doc_id(const char *filepath, EtDocId doc_id)
+static bool output_svg_from_doc_id_(const char *filepath, EtDocId doc_id)
 {
 	if(NULL == filepath){
 		et_bug("");
@@ -811,7 +805,7 @@ error:
 	return false;
 }
 
-static char *_get_dirpath_from_filepath(const char *filepath)
+static char *get_dirpath_from_filepath_(const char *filepath)
 {
 	if(NULL == filepath){
 		return NULL;
@@ -832,7 +826,7 @@ static char *_get_dirpath_from_filepath(const char *filepath)
 }
 
 /*! @return Acceps:new string of filepath(need g_free()). Cancel:NULL */
-static char *_save_dialog_run(const char *dialog_title, const char *accept_button_title, const char *default_filepath)
+static char *save_dialog_run_(const char *dialog_title, const char *accept_button_title, const char *default_filepath)
 {
 	et_assert(default_filepath);
 
@@ -853,7 +847,7 @@ static char *_save_dialog_run(const char *dialog_title, const char *accept_butto
 	if(NULL == filename){
 		gtk_file_chooser_set_current_name (chooser, default_filepath);
 	}else{
-		char *dirpath = _get_dirpath_from_filepath(default_filepath);
+		char *dirpath = get_dirpath_from_filepath_(default_filepath);
 		if(NULL != dirpath){
 			gtk_file_chooser_set_current_folder (chooser, dirpath);
 			g_free(dirpath);
@@ -900,7 +894,7 @@ static gboolean cb_menu_file_save_(gpointer data)
 			g_free(filepath);
 			filepath = next_filepath;
 
-			next_filepath = _save_dialog_run("Save File", _("_Save"), filepath);
+			next_filepath = save_dialog_run_("Save File", _("_Save"), filepath);
 			g_free(filepath);
 			filepath = next_filepath;
 		}
@@ -908,7 +902,7 @@ static gboolean cb_menu_file_save_(gpointer data)
 
 	if(NULL == filepath){
 		// ** user select filepath
-		filepath = _save_dialog_run("Save File", _("_Save"), _("untitled_document.svg"));
+		filepath = save_dialog_run_("Save File", _("_Save"), _("untitled_document.svg"));
 	}
 
 	if(NULL == filepath){
@@ -927,7 +921,7 @@ static gboolean cb_menu_file_save_(gpointer data)
 		_show_error_dialog("Save:'%s'", filepath);
 		goto finally;
 	}
-	if(!_output_svg_from_doc_id(filepath, doc_id)){
+	if(!output_svg_from_doc_id_(filepath, doc_id)){
 		_show_error_dialog("Save:'%s'", filepath);
 		goto finally;
 	}
@@ -972,7 +966,7 @@ static gboolean cb_menu_file_save_as_(gpointer data)
 
 	char *tmp_filepath = ((src_filepath)? src_filepath : _("untitled_document.svg"));
 	// ** user select filepath
-	filepath = _save_dialog_run("Save File", _("_Save"), tmp_filepath);
+	filepath = save_dialog_run_("Save File", _("_Save"), tmp_filepath);
 
 	if(NULL == filepath){
 		et_debug("Cancel");
@@ -986,11 +980,11 @@ static gboolean cb_menu_file_save_as_(gpointer data)
 		goto finally;
 	}
 
-	if(!_output_svg_from_doc_id(filepath, doc_id)){
+	if(!output_svg_from_doc_id_(filepath, doc_id)){
 		_show_error_dialog("Save:'%s'", filepath);
 		goto finally;
 	}
-	EtDocId dst_doc_id = _open_doc_new_from_file(filepath, &PvImageFileReadOption_Default);
+	EtDocId dst_doc_id = open_doc_new_from_file_(filepath, &PvImageFileReadOption_Default);
 	if(dst_doc_id < 0){
 		_show_error_dialog("Save:'%s'", filepath);
 		goto finally;
@@ -1033,14 +1027,14 @@ static gboolean cb_menu_file_export_(gpointer data)
 		prev_filepath = next_filepath;
 	}
 
-	filepath = _save_dialog_run("Export File", _("_Export"), prev_filepath);
+	filepath = save_dialog_run_("Export File", _("_Export"), prev_filepath);
 	if(NULL == filepath){
 		// cancel
 		et_debug("Cancel:%s", prev_filepath);
 		goto finally;
 	}
 
-	if(!_output_file_from_doc_id(filepath, doc_id)){
+	if(!output_file_from_doc_id_(filepath, doc_id)){
 		_show_error_dialog("Export:'%s'", filepath);
 		goto finally;
 	}
@@ -1074,7 +1068,7 @@ static gboolean cb_menu_file_close_(gpointer data)
 
 static gboolean cb_menu_file_quit_(gpointer data)
 {
-	_gui_quit();
+	gui_quit_();
 	return FALSE;
 }
 
@@ -1251,7 +1245,7 @@ static gboolean cb_menu_layer_delete_(gpointer data)
 	return false;
 }
 
-static void _reordering_element(EtDocId doc_id, int move, bool is_end, bool is_layer)
+static void reordering_element_(EtDocId doc_id, int move, bool is_end, bool is_layer)
 {
 	et_assertf((1 == move || -1 == move), "%d", move);
 
@@ -1327,7 +1321,7 @@ static gboolean cb_menu_layer_raise_(gpointer data)
 		return false;
 	}
 
-	_reordering_element(doc_id, -1, false, true);
+	reordering_element_(doc_id, -1, false, true);
 
 	return false;
 }
@@ -1341,7 +1335,7 @@ static gboolean cb_menu_layer_lower_(gpointer data)
 		return false;
 	}
 
-	_reordering_element(doc_id, 1, false, true);
+	reordering_element_(doc_id, 1, false, true);
 
 	return false;
 }
@@ -1355,7 +1349,7 @@ static gboolean cb_menu_layer_raise_to_top_(gpointer data)
 		return false;
 	}
 
-	_reordering_element(doc_id, -1, true, true);
+	reordering_element_(doc_id, -1, true, true);
 
 	return false;
 }
@@ -1369,7 +1363,7 @@ static gboolean cb_menu_layer_lower_to_end_(gpointer data)
 		return false;
 	}
 
-	_reordering_element(doc_id, 1, true, true);
+	reordering_element_(doc_id, 1, true, true);
 
 	return false;
 }
@@ -1383,7 +1377,7 @@ static gboolean cb_menu_element_raise_(gpointer data)
 		return false;
 	}
 
-	_reordering_element(doc_id, -1, false, false);
+	reordering_element_(doc_id, -1, false, false);
 
 	return false;
 }
@@ -1397,7 +1391,7 @@ static gboolean cb_menu_element_lower_(gpointer data)
 		return false;
 	}
 
-	_reordering_element(doc_id, 1, false, false);
+	reordering_element_(doc_id, 1, false, false);
 
 	return false;
 }
@@ -1411,7 +1405,7 @@ static gboolean cb_menu_element_raise_to_top_(gpointer data)
 		return false;
 	}
 
-	_reordering_element(doc_id, -1, true, false);
+	reordering_element_(doc_id, -1, true, false);
 
 	return false;
 }
@@ -1425,7 +1419,7 @@ static gboolean cb_menu_element_lower_to_end_(gpointer data)
 		return false;
 	}
 
-	_reordering_element(doc_id, 1, true, false);
+	reordering_element_(doc_id, 1, true, false);
 
 	return false;
 }
@@ -1550,7 +1544,7 @@ static gboolean cb_menu_element_ungrouping_(gpointer data)
 	return false;
 }
 
-static bool _gui_quit()
+static bool gui_quit_()
 {
 	EtDocId doc_id = -1;
 	while(-1 != (doc_id = et_etaion_get_current_doc_id())){
@@ -1587,7 +1581,7 @@ static gboolean cb_menu_file_open_(gpointer data)
 		char *filename;
 		GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
 		filename = gtk_file_chooser_get_filename (chooser);
-		EtDocId doc_id = _open_doc_new_from_file(filename, &PvImageFileReadOption_Default);
+		EtDocId doc_id = open_doc_new_from_file_(filename, &PvImageFileReadOption_Default);
 		if(doc_id < 0){
 			_show_error_dialog("Open:open error.:'%s'", filename);
 		}
@@ -1601,7 +1595,7 @@ static gboolean cb_menu_file_open_(gpointer data)
 	return false;
 }
 
-static bool _pv_element_append_near_first_parrent_layer(PvFocus *focus, PvElement *element)
+static bool pv_element_append_near_first_parrent_layer_(PvFocus *focus, PvElement *element)
 {
 	PvElement *first_parent = pv_focus_get_first_layer(focus);
 
@@ -1621,7 +1615,7 @@ static bool _pv_element_append_near_first_parrent_layer(PvFocus *focus, PvElemen
 	return pv_element_append_child(parent_layer, sister_layer, element);
 }
 
-PvElement *_new_element_from_filepath(const char *filepath)
+static PvElement *new_element_from_filepath_(const char *filepath)
 {
 	PvElement *element = NULL;
 	const PvFileFormat *format = get_file_format_from_filepath(filepath);
@@ -1676,14 +1670,14 @@ static gboolean cb_menu_file_import_(gpointer data)
 			goto finally_1;
 		}
 
-		PvElement *import_element = _new_element_from_filepath(filename);
+		PvElement *import_element = new_element_from_filepath_(filename);
 		if(NULL == import_element){
 			_show_error_dialog("Import:open error.:%s", filename);
 			et_debug("%d", doc_id);
 			goto finally_1;
 		}
 
-		if(!_pv_element_append_near_first_parrent_layer(focus, import_element)){
+		if(!pv_element_append_near_first_parrent_layer_(focus, import_element)){
 			pv_element_remove_free_recursive(import_element);
 
 			_show_error_dialog("Import:open error.:%s", filename);
@@ -1833,7 +1827,7 @@ static bool cb_menu_tool_change_(GtkMenuItem *menuitem, gpointer user_data)
 	return false;
 }
 
-static bool _pv_element_is_exist_from_elements(const PvElement *element, PvElement **elements)
+static bool pv_element_is_exist_from_elements_(const PvElement *element, PvElement **elements)
 {
 	size_t num = pv_general_get_parray_num((void **)elements);
 	for(int i = 0; i < (int)num; i++){
@@ -1858,7 +1852,7 @@ static bool cb_menu_select_all_func_recurse_prev_(PvElement *element, gpointer d
 	if(PvElementKind_Layer == element->kind){
 		return true;
 	}
-	if(_pv_element_is_exist_from_elements(element, func_safr_data_pack->elements_ignore)){
+	if(pv_element_is_exist_from_elements_(element, func_safr_data_pack->elements_ignore)){
 		return true;
 	}
 
@@ -2077,7 +2071,7 @@ static void cb_menu_help_about_ (GtkMenuItem *menuitem, gpointer user_data)
 	g_free(gtk_version);
 }
 
-static GtkWidget *_pv_get_menuitem_new_tree_of_select(GtkAccelGroup *accel_group){
+static GtkWidget *pv_get_menuitem_new_tree_of_select_(GtkAccelGroup *accel_group){
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
 	GtkWidget *menu;
@@ -2113,7 +2107,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_select(GtkAccelGroup *accel_group
 	return menuitem_root;
 }
 
-static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
+static GtkWidget *pv_get_menuitem_new_tree_of_file_(GtkAccelGroup *accel_group){
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
 	GtkWidget *menu;
@@ -2189,7 +2183,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_file(GtkAccelGroup *accel_group){
 	return menuitem_root;
 }
 
-static GtkWidget *_pv_get_menuitem_new_tree_of_edit(GtkAccelGroup *accel_group)
+static GtkWidget *pv_get_menuitem_new_tree_of_edit_(GtkAccelGroup *accel_group)
 {
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
@@ -2259,7 +2253,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_edit(GtkAccelGroup *accel_group)
 	return menuitem_root;
 }
 
-static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group)
+static GtkWidget *pv_get_menuitem_new_tree_of_layer_(GtkAccelGroup *accel_group)
 {
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
@@ -2336,7 +2330,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_layer(GtkAccelGroup *accel_group)
 	return menuitem_root;
 }
 
-static GtkWidget *_pv_get_menuitem_new_tree_of_element(GtkAccelGroup *accel_group)
+static GtkWidget *pv_get_menuitem_new_tree_of_element_(GtkAccelGroup *accel_group)
 {
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
@@ -2403,7 +2397,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_element(GtkAccelGroup *accel_grou
 	return menuitem_root;
 }
 
-static GtkWidget *_pv_get_menuitem_new_tree_of_view_zoom(GtkAccelGroup *accel_group)
+static GtkWidget *pv_get_menuitem_new_tree_of_view_zoom_(GtkAccelGroup *accel_group)
 {
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
@@ -2438,7 +2432,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_view_zoom(GtkAccelGroup *accel_gr
 	return menuitem_root;
 }
 
-static GtkWidget *_pv_get_menuitem_new_tree_of_view(GtkAccelGroup *accel_group)
+static GtkWidget *pv_get_menuitem_new_tree_of_view_(GtkAccelGroup *accel_group)
 {
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
@@ -2452,7 +2446,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_view(GtkAccelGroup *accel_group)
 	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
 
 	// ** "/_View/_Zoom/*"
-	menuitem = _pv_get_menuitem_new_tree_of_view_zoom(accel_group);
+	menuitem = pv_get_menuitem_new_tree_of_view_zoom_(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 
 	// ** Accel to "View > extent show
@@ -2472,7 +2466,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_view(GtkAccelGroup *accel_group)
 	return menuitem_root;
 }
 
-static GtkWidget *_pv_get_menuitem_new_tree_of_document(GtkAccelGroup *accel_group)
+static GtkWidget *pv_get_menuitem_new_tree_of_document_(GtkAccelGroup *accel_group)
 {
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
@@ -2493,7 +2487,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_document(GtkAccelGroup *accel_gro
 	return menuitem_root;
 }
 
-static GtkWidget *_pv_get_menuitem_new_tree_of_tool_tool(GtkAccelGroup *accel_group)
+static GtkWidget *pv_get_menuitem_new_tree_of_tool_tool_(GtkAccelGroup *accel_group)
 {
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
@@ -2528,7 +2522,7 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_tool_tool(GtkAccelGroup *accel_gr
 	return menuitem_root;
 }
 
-static GtkWidget *_pv_get_menuitem_new_tree_of_tool(GtkAccelGroup *accel_group)
+static GtkWidget *pv_get_menuitem_new_tree_of_tool_(GtkAccelGroup *accel_group)
 {
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
@@ -2541,13 +2535,13 @@ static GtkWidget *_pv_get_menuitem_new_tree_of_tool(GtkAccelGroup *accel_group)
 	gtk_menu_item_set_submenu (GTK_MENU_ITEM (menuitem_root), menu);
 
 	// ** "/_Tool/_Tool/*"
-	menuitem = _pv_get_menuitem_new_tree_of_tool_tool(accel_group);
+	menuitem = pv_get_menuitem_new_tree_of_tool_tool_(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 
 	return menuitem_root;
 }
 
-static GtkWidget *_new_tree_of_help(GtkAccelGroup *accel_group){
+static GtkWidget *pv_get_menuitem_new_tree_of_help_(GtkAccelGroup *accel_group){
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
 	GtkWidget *menu;
@@ -2572,7 +2566,7 @@ static GtkWidget *_new_tree_of_help(GtkAccelGroup *accel_group){
 }
 
 // ** Issue: Mnemonic not works on submenu in Ubuntu15.10(cause Unity/Ubuntu?).
-static bool _init_menu(GtkWidget *window, GtkWidget *box_root)
+static bool init_menu_(GtkWidget *window, GtkWidget *box_root)
 {
 	GtkWidget *menubar;
 	GtkWidget *menuitem;
@@ -2584,31 +2578,31 @@ static bool _init_menu(GtkWidget *window, GtkWidget *box_root)
 	menubar = gtk_menu_bar_new ();
 	gtk_box_pack_start (GTK_BOX (box_root), menubar, FALSE, TRUE, 0);
 
-	menuitem = _pv_get_menuitem_new_tree_of_file(accel_group);
+	menuitem = pv_get_menuitem_new_tree_of_file_(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
-	menuitem = _pv_get_menuitem_new_tree_of_edit(accel_group);
+	menuitem = pv_get_menuitem_new_tree_of_edit_(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
-	menuitem = _pv_get_menuitem_new_tree_of_layer(accel_group);
+	menuitem = pv_get_menuitem_new_tree_of_layer_(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
-	menuitem = _pv_get_menuitem_new_tree_of_element(accel_group);
+	menuitem = pv_get_menuitem_new_tree_of_element_(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
-	menuitem = _pv_get_menuitem_new_tree_of_select(accel_group);
+	menuitem = pv_get_menuitem_new_tree_of_select_(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
-	menuitem = _pv_get_menuitem_new_tree_of_view(accel_group);
+	menuitem = pv_get_menuitem_new_tree_of_view_(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
-	menuitem = _pv_get_menuitem_new_tree_of_document(accel_group);
+	menuitem = pv_get_menuitem_new_tree_of_document_(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
-	menuitem = _pv_get_menuitem_new_tree_of_tool(accel_group);
+	menuitem = pv_get_menuitem_new_tree_of_tool_(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
-	menuitem = _new_tree_of_help(accel_group);
+	menuitem = pv_get_menuitem_new_tree_of_help_(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	return true;
@@ -2628,7 +2622,7 @@ static bool slot_from_mouse_action_(EtDocId doc_id, EtMouseAction mouse_action)
 	return true;
 }
 
-static void _show_error_dialog_impl(const char *message)
+static void show_error_dialog_impl_(const char *message)
 {
 	et_assert(message);
 
