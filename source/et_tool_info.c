@@ -707,7 +707,7 @@ static bool _func_edit_element_mouse_action(
 				src_extent_rect, mouse_action.point, mouse_action.scale);
 	}
 
-	PvRect focusing_mouse_rect;
+	PvRect focusing_mouse_rect = {mouse_action.point.x, mouse_action.point.y, 0, 0};
 
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
@@ -1205,7 +1205,7 @@ static bool _func_edit_anchor_point_mouse_action(
 				src_extent_rect, mouse_action.point, mouse_action.scale);
 	}
 
-	PvRect focusing_mouse_rect;
+	PvRect focusing_mouse_rect = {mouse_action.point.x, mouse_action.point.y, 0, 0};
 
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
