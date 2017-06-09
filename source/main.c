@@ -1424,12 +1424,9 @@ static gboolean cb_menu_element_lower_to_end_(gpointer data)
 	return false;
 }
 
-static gboolean cb_menu_element_grouping_(gpointer data)
+static bool cb_menu_element_grouping_inline_(EtDocId doc_id)
 {
-	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
-		// _show_error_dialog("Raise:nothing document.");
-		// et_bug("%d\n", doc_id);
 		return false;
 	}
 
@@ -1444,7 +1441,7 @@ static gboolean cb_menu_element_grouping_(gpointer data)
 			case PvElementKind_Root:
 			case PvElementKind_Layer:
 				_show_error_dialog("Grouping:focus included layer.");
-				return false;
+				return true;
 				break;
 			default:
 				break;
@@ -1473,10 +1470,31 @@ static gboolean cb_menu_element_grouping_(gpointer data)
 				focus->elements[i]);
 	}
 
+	pv_focus_add_element(focus, element_group);
+
 finally:
+	return true;
+}
+
+
+static gboolean cb_menu_element_grouping_(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// _show_error_dialog("Raise:nothing document.");
+		// et_bug("%d\n", doc_id);
+		return FALSE;
+	}
+
+	if(!cb_menu_element_grouping_inline_(doc_id)){
+		et_warning("");
+		return FALSE;
+	}
+
 	et_doc_save_from_id(doc_id);
 	et_doc_signal_update_from_id(doc_id);
-	return false;
+
+	return FALSE;
 }
 
 static PvElement *get_first_parent_group_(PvElement *element)
@@ -1509,12 +1527,16 @@ static gboolean cb_menu_element_ungrouping_(gpointer data)
 	size_t num_focus = pv_general_get_parray_num((void **)focus->elements);
 	et_assert(0 != num_focus);
 
+	PvElement *element_group = NULL;
 	if(1 != num_focus){
-		_show_error_dialog("Ungrouping:element not ones.");
-		return false;
+		element_group = pv_focus_get_first_element(focus);
+		if(PvElementKind_Group != element_group->kind){
+			_show_error_dialog("Ungrouping:element not ones or group.");
+			return false;
+		}
+	}else{
+		element_group = get_first_parent_group_(pv_focus_get_first_element(focus));
 	}
-
-	PvElement *element_group = get_first_parent_group_(pv_focus_get_first_element(focus));
 	if(NULL == element_group){
 		_show_error_dialog("Ungrouping:element not group.");
 		return false;
@@ -1542,6 +1564,38 @@ static gboolean cb_menu_element_ungrouping_(gpointer data)
 	et_doc_signal_update_from_id(doc_id);
 
 	return false;
+}
+
+static gboolean cb_menu_element_mask_grouping_(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		// _show_error_dialog("Raise:nothing document.");
+		// et_bug("%d\n", doc_id);
+		return FALSE;
+	}
+
+	if(!cb_menu_element_grouping_inline_(doc_id)){
+		return FALSE;
+	}
+
+	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
+	et_assertf(focus, "%d", doc_id);
+
+	size_t num_focus = pv_general_get_parray_num((void **)focus->elements);
+	et_assert(0 != num_focus);
+
+	PvElement *element = pv_focus_get_first_element(focus);
+	et_assertf(PvElementKind_Group == element->kind, "%d", element->kind);
+
+	PvElementGroupData *group_data = element->data;
+	group_data->kind = PvElementGroupKind_MaskCurveSimple;
+	group_data->cairo_fill_rule = CAIRO_FILL_RULE_EVEN_ODD;
+
+	et_doc_save_from_id(doc_id);
+	et_doc_signal_update_from_id(doc_id);
+
+	return FALSE;
 }
 
 static bool gui_quit_()
@@ -2393,6 +2447,12 @@ static GtkWidget *pv_get_menuitem_new_tree_of_element_(GtkAccelGroup *accel_grou
 	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_element_ungrouping_), NULL);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_g, (GDK_CONTROL_MASK | GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
+
+	// ** Accel to "/_Element/Mask Grouping"
+	menuitem = gtk_menu_item_new_with_label ("Mask Grouping");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_element_mask_grouping_), NULL);
 
 	return menuitem_root;
 }

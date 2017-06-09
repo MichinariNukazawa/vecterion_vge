@@ -13,7 +13,14 @@
 #include "pv_element_general.h"
 #include "pv_element.h"
 #include "pv_render_option.h"
+#include "pv_element_render_context.h"
+#include "pv_element_write_svg_context.h"
 #include "pv_appearance.h"
+
+typedef enum{
+	PvElementDrawRecursive_Continues,
+	PvElementDrawRecursive_End,
+}PvElementDrawRecursive;
 
 typedef struct {
 	int dummy;
@@ -31,12 +38,16 @@ typedef gpointer (*PvElementFuncCopyNewData)(void *data);
 typedef bool (*PvElementFuncWriteSvg)(
 		InfoTargetSvg *target,
 		const PvElement *element,
+		PvElementWriteSvgContext *element_write_svg_context,
 		const ConfWriteSvg *conf);
-typedef void (*PvElementFuncDraw)(
+typedef PvElementFuncWriteSvg PvElementFuncWriteSvgAfter;
+typedef PvElementDrawRecursive (*PvElementFuncDraw)(
 		cairo_t *cr,
+		PvElementRenderContext *element_render_context,
 		const PvRenderOption render_option,
 		const PvElement *element);
 typedef PvElementFuncDraw PvElementFuncDrawFocusing;
+typedef PvElementFuncDraw PvElementFuncDrawAfter;
 typedef bool (*PvElementFuncIsTouchElement)(
 		bool *is_touch,
 		const PvElement *element,
@@ -97,8 +108,10 @@ typedef struct PvElementInfo{
 	PvElementFuncFreeData			func_free_data;
 	PvElementFuncCopyNewData		func_copy_new_data;
 	PvElementFuncWriteSvg			func_write_svg;
+	PvElementFuncWriteSvgAfter		func_write_svg_after;
 	PvElementFuncDraw			func_draw;
 	PvElementFuncDrawFocusing		func_draw_focusing;
+	PvElementFuncDrawAfter			func_draw_after;
 	PvElementFuncIsTouchElement		func_is_touch_element;
 	PvElementFuncIsOverlapRect		func_is_overlap_rect;
 	PvElementFuncIsDiffOne			func_is_diff_one;

@@ -14,6 +14,7 @@
 #include "pv_general.h"
 #include "pv_anchor_path.h"
 #include "pv_appearance.h"
+#include "pv_element_group_info.h"
 
 
 // ** 各 ElementKindのdata構造
@@ -23,6 +24,8 @@ struct PvElementGroupData;
 typedef struct PvElementGroupData PvElementGroupData;
 struct PvElementGroupData{
 	char *name;
+	PvElementGroupKind kind;
+	cairo_fill_rule_t cairo_fill_rule;
 };
 
 //! @todo this is not true matrix, do rename.

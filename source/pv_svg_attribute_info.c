@@ -278,10 +278,15 @@ static bool func_d_set_inline_(
 					parent_element = element;
 					element = _pv_element_to_recursively(element);
 					pv_assert(element);
+					pv_element_group_set_kind(parent_element, PvElementGroupKind_MaskCurveSimple);
+
+					PvElementGroupData *data = parent_element->data;
+					data->cairo_fill_rule = CAIRO_FILL_RULE_WINDING; // SVG Default
 				}
 
 				element = _pv_element_append_new(
 						parent_element, element, PvElementKind_Curve);
+				pv_element_copy_property(element, parent_element);
 				pv_assert(element);
 			}
 		}
@@ -1185,6 +1190,30 @@ static bool func_stroke_opacity_set_(
 	return true;
 }
 
+static bool func_fill_rule_set_(
+		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
+		PvSvgReadConf *conf,
+		const char *value,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	pv_bug("'%s'", attribute->name);
+
+	double v;
+	if( 0 == strcasecmp("evenodd", (char *)value)){
+		v = CAIRO_FILL_RULE_EVEN_ODD;
+	}else{
+		v = CAIRO_FILL_RULE_WINDING;
+	}
+
+	attribute_cache->attributes[PvSvgAttributeKind_fill_rule].is_exist = true;
+	attribute_cache->attributes[PvSvgAttributeKind_fill_rule].value = v;
+
+	return true;
+}
+
 static bool func_groupmode_set_(
 		PvElement *element,
 		PvSvgAttributeCache *attribute_cache,
@@ -1378,6 +1407,11 @@ const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
 	{
 		.name = "stroke-opacity",
 		.pv_svg_attribute_func_set = func_stroke_opacity_set_,
+		.is_able_style = true,
+	},
+	{
+		.name = "fill-rule",
+		.pv_svg_attribute_func_set = func_fill_rule_set_,
 		.is_able_style = true,
 	},
 	{

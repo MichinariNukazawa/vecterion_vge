@@ -267,6 +267,12 @@ Layer順序の並び替えを行った際、Layer内のElementが並び替えら
 * (准正常系)ElementGroupの子でないElementをFocusし、Ctrl+Shift+Gショートカットを押下する。
 	エラーメッセージが表示される。
 
+### MaskGroup
+* (准正常系)ElementをFocusしていない状態でMenuの Element > Mask Grouping を押下する。
+	MaskGroupが作成されない。
+* CurveElementを2つFocusし、Ctrl+Gショートカットを押下する。
+	FocusされているElementsを含んだGroupが作成され、EvenOddマスクが設定される。
+
 ### Cut, Copy, Paste
 
 #### Cut and Paste

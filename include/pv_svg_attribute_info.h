@@ -39,6 +39,7 @@ typedef enum{
 	PvSvgAttributeKind_xlink_href,
 	PvSvgAttributeKind_fill_opacity,
 	PvSvgAttributeKind_stroke_opacity,
+	PvSvgAttributeKind_fill_rule,
 	PvSvgAttributeKind_NUM,
 }PvSvgAttributeKind;
 

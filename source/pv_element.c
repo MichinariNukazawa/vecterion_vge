@@ -727,6 +727,14 @@ bool pv_element_is_diff_recursive(PvElement *element0, PvElement *element1)
 	return _data.is_diff;
 }
 
+void pv_element_group_set_kind(PvElement *element, PvElementGroupKind kind)
+{
+	pv_assert(element);
+	pv_assert(PvElementKind_Group == element->kind);
+	PvElementGroupData *data = element->data;
+	data->kind = kind;
+}
+
 PvElement *pv_element_curve_new_from_rect(PvRect rect)
 {
 	PvElement *self = pv_element_new(PvElementKind_Curve);
@@ -897,6 +905,27 @@ const char *pv_element_get_name_from_kind(PvElementKind kind)
 	}
 
 	return info->name;
+}
+
+const char *pv_element_get_group_name_from_element(const PvElement *element)
+{
+	if(PvElementKind_Group != element->kind){
+		return NULL;
+	}
+
+	PvElementGroupData *group_data = element->data;
+	switch(group_data->kind){
+		case PvElementGroupKind_MaskCurveSimple:
+			if(CAIRO_FILL_RULE_EVEN_ODD == group_data->cairo_fill_rule){
+				return "EvenOdd";
+			}else{
+				return "Nonzero";
+			}
+			break;
+		case PvElementGroupKind_Normal:
+		default:
+			return "Group";
+	}
 }
 
 bool pv_element_kind_is_viewable_object(PvElementKind kind)

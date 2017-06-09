@@ -4,6 +4,7 @@
 #include "pv_error.h"
 #include "pv_render_option.h"
 #include "pv_element_info.h"
+#include "pv_element_render_context.h"
 #include "pv_cairo.h"
 
 
@@ -23,34 +24,60 @@ static bool pv_element_is_group_kind_(const PvElement *element)
 static bool pv_render_cairo_recursive_(
 		cairo_t *cr,
 		const PvElement *element,
+		PvElementRenderContext *element_render_context,
 		const PvRenderOption render_option,
 		int *level)
 {
 	bool ret = true;
 	(*level)++;
 
-	if(pv_element_is_group_kind_(element)){
-		size_t num = pv_general_get_parray_num((void **)element->childs);
-		for(int i = 0; i < (int)num; i++){
-			if(!pv_render_cairo_recursive_(
-						cr,
-						element->childs[i],
-						render_option,
-						level)){
-				pv_error("%d", i);
-				ret = false;
-				goto failed;
-			}
-		}
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	pv_assertf(info, "%d", element->kind);
+	PvElementDrawRecursive recursive;
+	if(render_option.render_context.is_focus){
+		recursive = info->func_draw_focusing(
+				cr,
+				element_render_context,
+				render_option,
+				element);
+		recursive = PvElementDrawRecursive_Continues;
 	}else{
-		const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
-		pv_assertf(info, "%d", element->kind);
-		if(render_option.render_context.is_focus){
-			info->func_draw_focusing(cr, render_option, element);
-		}else{
-			info->func_draw(cr, render_option, element);
-		}
+		recursive = info->func_draw(
+				cr,
+				element_render_context,
+				render_option,
+				element);
 	}
+
+	switch(recursive){
+		case PvElementDrawRecursive_Continues:
+			{
+				size_t num = pv_general_get_parray_num((void **)element->childs);
+				for(int i = 0; i < (int)num; i++){
+					if(!pv_render_cairo_recursive_(
+								cr,
+								element->childs[i],
+								element_render_context,
+								render_option,
+								level)){
+						pv_error("%d", i);
+						ret = false;
+						goto failed;
+					}
+				}
+			}
+			break;
+		case PvElementDrawRecursive_End:
+			break;
+		default:
+			pv_abortf("%d", recursive);
+	}
+
+	info->func_draw_after(
+			cr,
+			element_render_context,
+			render_option,
+			element);
 
 failed:
 	(*level)--;
@@ -136,12 +163,20 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(
 
 	pv_rendererd_cairo_background_(cr, vg, render_context);
 
+	PvElementRenderContext element_render_context_ = PvElementRenderContext_Default;
+	PvElementRenderContext *element_render_context = &element_render_context_;
+
 	PvRenderOption render_option = {
 		.render_context = render_context,
 		.focus = focus,
 	};
 	int level = 0;
-	if(!pv_render_cairo_recursive_(cr, vg->element_root, render_option, &level)){
+	if(!pv_render_cairo_recursive_(
+				cr,
+				vg->element_root,
+				element_render_context,
+				render_option,
+				&level)){
 		pv_error("");
 		goto failed;
 	}
@@ -153,7 +188,12 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(
 			const PvElement *focus_element = focus->elements[i];
 			if(!pv_element_is_group_kind_(focus_element)){
 				render_option.render_context.is_focus = true;
-				if(!pv_render_cairo_recursive_(cr, focus_element, render_option, &level)){
+				if(!pv_render_cairo_recursive_(
+							cr,
+							focus_element,
+							element_render_context,
+							render_option,
+							&level)){
 					pv_error("");
 					goto failed;
 				}
@@ -180,7 +220,12 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(
 		render_option.focus = NULL;
 		render_option.render_context.is_focus = false;
 		level = 0;
-		if(!pv_render_cairo_recursive_(cr, element_overwrite, render_option, &level)){
+		if(!pv_render_cairo_recursive_(
+					cr,
+					element_overwrite,
+					element_render_context,
+					render_option,
+					&level)){
 			pv_error("");
 			return NULL;
 		}

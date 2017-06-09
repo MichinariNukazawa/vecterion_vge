@@ -10,9 +10,11 @@
 #include "pv_element_info.h"
 #include "pv_svg_element_info.h"
 #include "pv_io_util.h"
+#include "pv_element_write_svg_context.h"
 
 typedef struct{
 	InfoTargetSvg *target;
+	PvElementWriteSvgContext *element_write_svg_context;
 	const ConfWriteSvg *conf;
 }PvIoSvgRecursiveData;
 
@@ -23,6 +25,7 @@ static bool _pv_io_svg_from_element_in_recursive_before(
 {
 	PvIoSvgRecursiveData *_data = data;
 	InfoTargetSvg *target = _data->target;
+	PvElementWriteSvgContext *element_write_svg_context = _data->element_write_svg_context;
 	const ConfWriteSvg *conf = _data->conf;
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
@@ -38,7 +41,7 @@ static bool _pv_io_svg_from_element_in_recursive_before(
 	new_nodes[level] = target->xml_parent_node;
 	target->xml_parent_nodes = new_nodes;
 
-	if(!info->func_write_svg(target, element, conf)){
+	if(!info->func_write_svg(target, element, element_write_svg_context, conf)){
 		pv_error("");
 		return false;
 	}
@@ -51,7 +54,16 @@ static bool _pv_io_svg_from_element_in_recursive_after(
 {
 	PvIoSvgRecursiveData *_data = data;
 	InfoTargetSvg *target = _data->target;
-	// const ConfWriteSvg *conf = _data->conf;
+	PvElementWriteSvgContext *element_write_svg_context = _data->element_write_svg_context;
+	const ConfWriteSvg *conf = _data->conf;
+
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	pv_assertf(info, "%d", element->kind);
+
+	if(!info->func_write_svg_after(target, element, element_write_svg_context, conf)){
+		pv_error("");
+		return false;
+	}
 
 	// pop parent node stack
 	size_t num = pv_general_get_parray_num((void **)target->xml_parent_nodes);
@@ -89,8 +101,10 @@ static bool _pv_io_svg_from_pvvg_element_recursive(
 		.xml_parent_node = xml_svg,
 		.xml_new_node = NULL,
 	};
+	PvElementWriteSvgContext element_write_svg_context_ = PvElementWriteSvgContext_Default;
 	PvIoSvgRecursiveData data = {
 		.target = &target,
+		.element_write_svg_context = &element_write_svg_context_,
 		.conf = conf,
 	};
 	PvElementRecursiveError error;
@@ -352,6 +366,22 @@ static bool set_attribute_cache_(
 		color = &(conf->color_pair.colors[PvColorPairGround_ForGround]);
 		pv_color_set_parameter(color, PvColorParameterIx_O, opacity * 100);
 	}
+	if(attribute_cache->attributes[PvSvgAttributeKind_fill_rule].is_exist){
+		double v = attribute_cache->attributes[PvSvgAttributeKind_fill_rule].value;
+		if(CAIRO_FILL_RULE_EVEN_ODD == v){
+			if(PvElementKind_Group != element->kind){
+				if(conf->imageFileReadOption->is_strict){
+					pv_error("strict");
+					return false;
+				}else{
+					goto break_fill_rule;
+				}
+			}
+			PvElementGroupData *data = element->data;
+			data->cairo_fill_rule = v;
+		}
+	}
+break_fill_rule:
 
 	return true;
 }

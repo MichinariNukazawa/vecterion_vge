@@ -32,6 +32,24 @@ static PvRect _get_rect_extent_from_cr(cairo_t *cr)
 // ******** ********
 
 
+static bool _func_nop_write_svg_after(
+		InfoTargetSvg *target,
+		const PvElement *element,
+		PvElementWriteSvgContext *element_write_svg_context,
+		const ConfWriteSvg *conf)
+{
+	return true;
+}
+
+static PvElementDrawRecursive _func_nop_draw_after(
+		cairo_t *cr,
+		PvElementRenderContext *element_render_context,
+		const PvRenderOption render_option,
+		const PvElement *element)
+{
+	return PvElementDrawRecursive_Continues;
+}
+
 static int _func_zero_get_num_anchor_point(
 		const PvElement *element)
 {
@@ -139,6 +157,8 @@ static gpointer _func_group_new_data()
 	}
 
 	data->name = NULL;
+	data->kind = PvElementGroupKind_Normal;
+	data->cairo_fill_rule = CAIRO_FILL_RULE_EVEN_ODD;
 
 	return (gpointer)data;
 }
@@ -183,6 +203,7 @@ static gpointer _func_group_copy_new_data(void *_data)
 static bool _func_group_write_svg(
 		InfoTargetSvg *target,
 		const PvElement *element,
+		PvElementWriteSvgContext *element_write_svg_context,
 		const ConfWriteSvg *conf)
 {
 	pv_assert(target);
@@ -192,6 +213,18 @@ static bool _func_group_write_svg(
 
 	if(PvElementKind_Root == element->kind){
 		return true;
+	}
+
+	PvElementGroupData *data = (PvElementGroupData *)element->data;
+	switch(data->kind){
+		case PvElementGroupKind_MaskCurveSimple:
+			element_write_svg_context->element_group_kind = PvElementGroupKind_MaskCurveSimple;
+			return true;
+			break;
+		case PvElementGroupKind_Normal:
+			// NOP
+		default:
+			break;
 	}
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
@@ -214,12 +247,68 @@ static bool _func_group_write_svg(
 	return true;
 }
 
-static void _func_group_draw(
+static bool _func_group_write_svg_after(
+		InfoTargetSvg *target,
+		const PvElement *element,
+		PvElementWriteSvgContext *element_write_svg_context,
+		const ConfWriteSvg *conf)
+{
+	PvElementGroupData *data = (PvElementGroupData *)element->data;
+	switch(data->kind){
+		case PvElementGroupKind_MaskCurveSimple:
+			element_write_svg_context->element_group_kind = PvElementGroupKind_MaskCurveSimple;
+			break;
+		default:
+			break;
+	}
+	return true;
+}
+
+static void _func_curve_draw_inline(
 		cairo_t *cr,
+		PvElementRenderContext *element_render_context,
+		const PvElement *element);
+static void _curve_command_path(
+		cairo_t *cr,
+		const PvElement *element);
+
+static PvElementDrawRecursive _func_group_draw(
+		cairo_t *cr,
+		PvElementRenderContext *element_render_context,
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
-	return;
+	PvElementGroupData *data = (PvElementGroupData *)element->data;
+
+	if(PvElementGroupKind_MaskCurveSimple == data->kind){
+		element_render_context->element_group_kind = data->kind;
+		element_render_context->nest_mask_curve_simple++;
+
+		cairo_set_fill_rule(cr, data->cairo_fill_rule);
+	}
+
+	return PvElementDrawRecursive_Continues;
+}
+
+static PvElementDrawRecursive _func_group_draw_after(
+		cairo_t *cr,
+		PvElementRenderContext *element_render_context,
+		const PvRenderOption render_option,
+		const PvElement *element)
+{
+	PvElementGroupData *data = (PvElementGroupData *)element->data;
+
+	if(PvElementGroupKind_MaskCurveSimple == data->kind){
+		element_render_context->nest_mask_curve_simple--;
+		//! @todo pop parent group fill_rule?
+		if(0 == element_render_context->nest_mask_curve_simple){
+			// exit masking
+			element_render_context->element_group_kind = PvElementGroupKind_Normal;
+
+			cairo_set_fill_rule(cr, CAIRO_FILL_RULE_WINDING); // cairo default
+		}
+	}
+	return PvElementDrawRecursive_Continues;
 }
 
 static bool _func_group_is_touch_element(
@@ -387,7 +476,7 @@ static void _draw_extent_from_rect(cairo_t *cr, PvRect rect)
 	cairo_fill(cr);
 }
 
-void _curve_command_path(
+static void _curve_command_path(
 		cairo_t *cr,
 		const PvElement *element)
 {
@@ -441,12 +530,8 @@ void _curve_command_path(
 	}
 }
 
-static void _func_curve_draw_inline(
-		cairo_t *cr,
-		const PvElement *element)
+void storke_and_fill_(cairo_t *cr, const PvElement *element)
 {
-	_curve_command_path(cr, element);
-
 	cairo_set_line_width(cr, element->stroke.width);
 
 	//! fill
@@ -461,7 +546,14 @@ static void _func_curve_draw_inline(
 	PvCairoRgbaColor cc_s = pv_color_get_cairo_rgba(element->color_pair.colors[PvColorPairGround_ForGround]);
 	cairo_set_source_rgba (cr, cc_s.r, cc_s.g, cc_s.b, cc_s.a);
 	cairo_stroke_preserve(cr);
+}
 
+static void _func_curve_draw_inline(
+		cairo_t *cr,
+		PvElementRenderContext *element_render_context,
+		const PvElement *element)
+{
+	_curve_command_path(cr, element);
 }
 
 static char *_curve_new_str_from_anchor(const PvAnchorPoint ap_current, const PvAnchorPoint ap_prev)
@@ -637,6 +729,7 @@ static gpointer _func_curve_copy_new_data(void *_data)
 static bool _func_curve_write_svg(
 		InfoTargetSvg *target,
 		const PvElement *element,
+		PvElementWriteSvgContext *element_write_svg_context,
 		const ConfWriteSvg *conf)
 {
 	pv_assert(target);
@@ -690,24 +783,65 @@ static bool _func_curve_write_svg(
 		pv_assert(str_current);
 	}
 
-	xmlNodePtr node = xmlNewNode(NULL, BAD_CAST "path");
-	pv_assert(node);
+	bool is_append = false;
+	switch(element_write_svg_context->element_group_kind){
+		case PvElementGroupKind_MaskCurveSimple:
+			{
+				if(element != element->parent->childs[0]){
+					is_append = true;
+				}
+			}
+			break;
+		default:
+			break;
+	}
 
-	xmlNewProp(node, BAD_CAST "d", BAD_CAST str_current);
+	if(is_append){
+		xmlNodePtr node = target->xml_new_node;
+		xmlChar *prop = xmlGetProp(node, BAD_CAST "d");
+		if(NULL == prop){
+			pv_warning("");
+			return false;
+		}
+		char *str_prev = str_current;
+		str_current = g_strdup_printf("%s %s",
+				prop, str_prev);
+		pv_assert(str_current);
+		xmlSetProp(node, BAD_CAST "d", (xmlChar *)str_current);
+	}else{
+		xmlNodePtr node = xmlNewNode(NULL, BAD_CAST "path");
+		pv_assert(node);
+
+		switch(element_write_svg_context->element_group_kind){
+			case PvElementGroupKind_MaskCurveSimple:
+				{
+					PvElementGroupData *group_data = element->parent->data;
+					if(CAIRO_FILL_RULE_EVEN_ODD == group_data->cairo_fill_rule){
+						xmlNewProp(node, BAD_CAST "fill-rule", BAD_CAST "evenodd");
+					}
+				}
+				break;
+			default:
+				break;
+		}
+
+		xmlNewProp(node, BAD_CAST "d", BAD_CAST str_current);
+		node_add_color_props_(node, element);
+		node_add_stroke_props_(node, element->stroke);
+
+		xmlAddChild(target->xml_parent_node, node);
+		//target->xml_parent_node = node;
+		target->xml_new_node = node;
+	}
+
 	g_free(str_current);
-
-	node_add_color_props_(node, element);
-	node_add_stroke_props_(node, element->stroke);
-
-	xmlAddChild(target->xml_parent_node, node);
-	//target->xml_parent_node = node;
-	target->xml_new_node = node;
 
 	return true;
 }
 
-static void _func_curve_draw(
+static PvElementDrawRecursive _func_curve_draw(
 		cairo_t *cr,
+		PvElementRenderContext *element_render_context,
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
@@ -717,16 +851,39 @@ static void _func_curve_draw(
 			PvSimplifyOption_All);
 	pv_assert(simplify);
 
-	_func_curve_draw_inline(cr, simplify);
-	cairo_new_path(cr);
+	_func_curve_draw_inline(cr, element_render_context, simplify);
+
+	switch(element_render_context->element_group_kind){
+		case PvElementGroupKind_Normal:
+			{
+				storke_and_fill_(cr, element);
+				cairo_new_path(cr);
+			}
+			break;
+		case PvElementGroupKind_MaskCurveSimple:
+			{
+				size_t num = pv_general_get_parray_num((void **)element->parent->childs);
+				pv_assert(0 < num);
+				if(element == element->parent->childs[(int)num - 1]){
+					storke_and_fill_(cr, element);
+					cairo_new_path(cr);
+				}else{
+					// NOP
+				}
+			}
+			break;
+		default:
+			pv_abortf("%d", element_render_context->element_group_kind);
+	}
 
 	_curve_simplify_free(simplify);
 
-	return;
+	return PvElementDrawRecursive_End;
 }
 
-static void _func_curve_draw_focusing(
+static PvElementDrawRecursive _func_curve_draw_focusing(
 		cairo_t *cr,
+		PvElementRenderContext *element_render_context,
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
@@ -793,7 +950,7 @@ static void _func_curve_draw_focusing(
 
 	_curve_simplify_free(simplify);
 
-	return;
+	return PvElementDrawRecursive_End;
 }
 
 static bool _func_curve_is_touch_element(
@@ -1168,7 +1325,8 @@ static PvRect _func_curve_get_rect_by_draw(
 	cairo_t *cr = cairo_create (surface);
 	pv_assert(cr);
 
-	_func_curve_draw_inline(cr, element);
+	_curve_command_path(cr, element);
+	storke_and_fill_(cr, element);
 
 	PvRect rect = _get_rect_extent_from_cr(cr);
 
@@ -1308,6 +1466,7 @@ static gpointer _func_basic_shape_copy_new_data(void *_data)
 static bool _func_basic_shape_write_svg(
 		InfoTargetSvg *target,
 		const PvElement *element,
+		PvElementWriteSvgContext *element_write_svg_context,
 		const ConfWriteSvg *conf)
 {
 	pv_assert(target);
@@ -1459,22 +1618,26 @@ finally:
 	return;
 }
 
-static void _func_basic_shape_draw(
+static PvElementDrawRecursive _func_basic_shape_draw(
 		cairo_t *cr,
+		PvElementRenderContext *element_render_context,
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
 	_basic_shape_draw_inline(cr, render_option.render_context, element, 0, BasicShapeDrawKind_Draw);
-	return;
+
+	return PvElementDrawRecursive_End;
 }
 
-static void _func_basic_shape_draw_focusing(
+static PvElementDrawRecursive _func_basic_shape_draw_focusing(
 		cairo_t *cr,
+		PvElementRenderContext *element_render_context,
 		const PvRenderOption render_option,
 		const PvElement *element)
 {
 	_basic_shape_draw_inline(cr, render_option.render_context, element, 1.0, BasicShapeDrawKind_DrawFocusing);
-	return;
+
+	return PvElementDrawRecursive_End;
 }
 
 static bool _func_basic_shape_is_touch_element(
@@ -1780,8 +1943,10 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_free_data				= _func_group_free_data,
 		.func_copy_new_data			= _func_group_copy_new_data,
 		.func_write_svg				= _func_group_write_svg,
+		.func_write_svg_after			= _func_group_write_svg_after,
 		.func_draw				= _func_group_draw,
 		.func_draw_focusing			= _func_group_draw,
+		.func_draw_after			= _func_nop_draw_after,
 		.func_is_touch_element			= _func_group_is_touch_element,
 		.func_is_overlap_rect			= _func_nop_is_overlap_rect,
 		.func_remove_delete_anchor_point	= _func_nop_remove_delete_anchor_point,
@@ -1803,8 +1968,10 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_free_data				= _func_group_free_data,
 		.func_copy_new_data			= _func_group_copy_new_data,
 		.func_write_svg				= _func_group_write_svg,
+		.func_write_svg_after			= _func_group_write_svg_after,
 		.func_draw				= _func_group_draw,
 		.func_draw_focusing			= _func_group_draw,
+		.func_draw_after			= _func_nop_draw_after,
 		.func_is_touch_element			= _func_group_is_touch_element,
 		.func_is_overlap_rect			= _func_nop_is_overlap_rect,
 		.func_remove_delete_anchor_point	= _func_nop_remove_delete_anchor_point,
@@ -1826,8 +1993,10 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_free_data				= _func_group_free_data,
 		.func_copy_new_data			= _func_group_copy_new_data,
 		.func_write_svg				= _func_group_write_svg,
+		.func_write_svg_after			= _func_group_write_svg_after,
 		.func_draw				= _func_group_draw,
 		.func_draw_focusing			= _func_group_draw,
+		.func_draw_after			= _func_group_draw_after,
 		.func_is_touch_element			= _func_group_is_touch_element,
 		.func_is_overlap_rect			= _func_nop_is_overlap_rect,
 		.func_remove_delete_anchor_point	= _func_nop_remove_delete_anchor_point,
@@ -1849,8 +2018,10 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_free_data				= _func_curve_free_data,
 		.func_copy_new_data			= _func_curve_copy_new_data,
 		.func_write_svg				= _func_curve_write_svg,
+		.func_write_svg_after			= _func_nop_write_svg_after,
 		.func_draw				= _func_curve_draw,
 		.func_draw_focusing			= _func_curve_draw_focusing,
+		.func_draw_after			= _func_nop_draw_after,
 		.func_is_touch_element			= _func_curve_is_touch_element,
 		.func_is_overlap_rect			= _func_curve_is_overlap_rect,
 		.func_remove_delete_anchor_point	= _func_curve_remove_delete_anchor_point,
@@ -1872,8 +2043,10 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_free_data				= _func_basic_shape_free_data,
 		.func_copy_new_data			= _func_basic_shape_copy_new_data,
 		.func_write_svg				= _func_basic_shape_write_svg,
+		.func_write_svg_after			= _func_nop_write_svg_after,
 		.func_draw				= _func_basic_shape_draw,
 		.func_draw_focusing			= _func_basic_shape_draw_focusing,
+		.func_draw_after			= _func_nop_draw_after,
 		.func_is_touch_element			= _func_basic_shape_is_touch_element,
 		.func_is_overlap_rect			= _func_basic_shape_is_overlap_rect,
 		.func_remove_delete_anchor_point	= _func_nop_remove_delete_anchor_point,

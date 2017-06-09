@@ -283,10 +283,15 @@ static bool draw_element_tree_(EtLayerView *self, cairo_t *cr)
 				break;
 			}
 		}
+
 		const char *kind_name = pv_element_get_name_from_kind(data->kind);
+		if(PvElementKind_Group == data->element->kind){
+			kind_name = pv_element_get_group_name_from_element(data->element);
+		}
 		if(NULL == kind_name){
 			kind_name = "";
 		}
+
 		char str_element[128];
 		snprintf(str_element, sizeof(str_element),
 				"%s%c:%s    :%08lx '%s'",
