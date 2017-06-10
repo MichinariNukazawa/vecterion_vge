@@ -1634,7 +1634,7 @@ static void element_curve_get_nearest_index_percent_(
 	return;
 }
 
-void pv_anchor_path_get_subdivide_anchor_ponts_form_percent(
+void pv_anchor_path_get_subdivide_anchor_points_form_percent(
 		PvAnchorPoint dst_aps[3],
 		PvAnchorPath *anchor_path,
 		int index,
@@ -1676,7 +1676,7 @@ static int element_curve_insert_anchor_point_from_index_percent_(
 	et_assert(data);
 
 	PvAnchorPoint dst_aps[3];
-	pv_anchor_path_get_subdivide_anchor_ponts_form_percent(dst_aps, data->anchor_path, index, percent);
+	pv_anchor_path_get_subdivide_anchor_points_form_percent(dst_aps, data->anchor_path, index, percent);
 	PvAnchorPoint *ap = pv_anchor_path_insert_anchor_point(data->anchor_path, &dst_aps[1], index + 1);
 	et_assert(ap);
 	int new_index = index + 1;
