@@ -46,7 +46,7 @@ typedef struct EtToolInfo{
 	GdkCursor *mouse_cursor;
 }EtToolInfo;
 
-bool et_tool_info_init();
+bool et_tool_info_init(const char *dirpath_application_base);
 size_t et_tool_get_num();
 const EtToolInfo *et_tool_get_info_from_id(EtToolId tool_id);
 

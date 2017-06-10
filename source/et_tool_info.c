@@ -10,7 +10,6 @@
 #include "pv_anchor_path.h"
 #include "et_doc.h"
 #include "et_doc_manager.h"
-#include "et_etaion.h"
 #include "et_color_panel.h"
 #include "et_stroke_panel.h"
 #include "et_mouse_cursor.h"
@@ -119,7 +118,7 @@ static GdkPixbuf *conv_new_icon_focus_(GdkPixbuf *pb_src)
 	return pb;
 }
 
-bool et_tool_info_init()
+bool et_tool_info_init(const char *dirpath_application_base)
 {
 	et_assert(!et_tool_info_is_init_);
 
@@ -129,7 +128,7 @@ bool et_tool_info_init()
 		et_assertf(info, "%d", tool_id);
 
 		// ** make image(cursor,icons)
-		char *path = g_strdup_printf("%s/%s", et_etaion_get_application_base_dir(), info->filepath_cursor);
+		char *path = g_strdup_printf("%s/%s", dirpath_application_base, info->filepath_cursor);
 		et_assertf(path, "%s", info->filepath_cursor)
 			GError *error = NULL;
 		info->icon_cursor = gdk_pixbuf_new_from_file(path, &error);

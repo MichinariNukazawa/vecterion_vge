@@ -317,7 +317,7 @@ int main (int argc, char **argv){
 	g_signal_connect(window, "delete-event",
 			G_CALLBACK(cb_delete_event_), NULL);
 
-	if(!et_tool_info_init()){
+	if(!et_tool_info_init(et_etaion_get_application_base_dir())){
 		et_bug("");
 		return -1;
 	}
