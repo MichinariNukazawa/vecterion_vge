@@ -1711,23 +1711,28 @@ static int insert_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction m
 {
 	size_t num = pv_general_get_parray_num((void **)focus->elements);
 	for(int i = 0; i < (int)num; i++){
-		if(PvElementKind_Curve != focus->elements[i]->kind){
+		PvElement *element = focus->elements[i];
+		if(PvElementKind_Curve != element->kind){
 			continue;
 		}
 
 		int percent = -1;
 		int index = -1;
 		element_curve_get_nearest_index_percent_(
-				&index, &percent,
+				&index,
+				&percent,
 				PX_SENSITIVE_OF_TOUCH,
-				focus->elements[i], mouse_action);
+				element,
+				mouse_action);
 		if(-1 != index){
 			int new_index = element_curve_insert_anchor_point_from_index_percent_(
-					focus->elements[i], index, percent);
+					element,
+					index,
+					percent);
 			if(-1 != new_index){
 				bool ret = pv_focus_clear_set_element_index(
 						focus,
-						pv_focus_get_first_element(focus),
+						element,
 						new_index);
 				et_assertf(ret, "%d", new_index);
 			}
