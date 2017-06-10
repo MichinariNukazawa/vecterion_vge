@@ -16,9 +16,9 @@
 #include "et_mouse_cursor.h"
 
 
-bool _et_tool_info_is_init = false; // check initialized tools
+bool et_tool_info_is_init_ = false; // check initialized tools
 
-EtToolInfo _et_tool_infos[];
+EtToolInfo et_tool_infos_[];
 
 
 static int PX_SENSITIVE_OF_TOUCH = 16;
@@ -38,12 +38,12 @@ typedef enum{
 }EdgeKind;
 
 
-static EdgeKind _get_outside_touch_edge_kind_from_rect(PvRect rect, PvPoint point, double scale);
+static EdgeKind get_outside_touch_edge_kind_from_rect_(PvRect rect, PvPoint point, double scale);
 
 
-static EtToolInfo *_et_tool_get_info_from_id(EtToolId tool_id);
+static EtToolInfo *et_tool_get_info_from_id_(EtToolId tool_id);
 
-static EdgeKind _get_outside_touch_edge_kind_from_rect(PvRect rect, PvPoint point, double scale)
+static EdgeKind get_outside_touch_edge_kind_from_rect_(PvRect rect, PvPoint point, double scale)
 {
 	const int PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH = 16;
 	const double SENSE = PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH / scale;
@@ -91,7 +91,7 @@ static EdgeKind _get_outside_touch_edge_kind_from_rect(PvRect rect, PvPoint poin
 	}
 }
 
-static GdkPixbuf *_conv_new_icon_focus(GdkPixbuf *pb_src)
+static GdkPixbuf *conv_new_icon_focus_(GdkPixbuf *pb_src)
 {
 
 	double w = gdk_pixbuf_get_width(pb_src);
@@ -121,11 +121,11 @@ static GdkPixbuf *_conv_new_icon_focus(GdkPixbuf *pb_src)
 
 bool et_tool_info_init()
 {
-	et_assert(!_et_tool_info_is_init);
+	et_assert(!et_tool_info_is_init_);
 
 	size_t num_tool = et_tool_get_num();
 	for(int tool_id = 0; tool_id < (int)num_tool; tool_id++){
-		EtToolInfo *info = _et_tool_get_info_from_id(tool_id);
+		EtToolInfo *info = et_tool_get_info_from_id_(tool_id);
 		et_assertf(info, "%d", tool_id);
 
 		// ** make image(cursor,icons)
@@ -137,7 +137,7 @@ bool et_tool_info_init()
 		free(path);
 
 		info->icon = info->icon_cursor;
-		info->icon_focus = _conv_new_icon_focus(info->icon);
+		info->icon_focus = conv_new_icon_focus_(info->icon);
 
 		// ** mouse cursor
 		assert(gdk_display_get_default());
@@ -148,14 +148,14 @@ bool et_tool_info_init()
 		et_assertf(info->mouse_cursor, "%d", tool_id);
 	}
 
-	_et_tool_info_is_init = true;
+	et_tool_info_is_init_ = true;
 
 	et_debug("initialized EtToolInfo num:%zu", num_tool);
 
 	return true;
 }
 
-static bool _is_bound_point(int radius, PvPoint p1, PvPoint p2)
+static bool is_bound_point_(int radius, PvPoint p1, PvPoint p2)
 {
 	if(
 			(p1.x - radius) < p2.x
@@ -169,7 +169,7 @@ static bool _is_bound_point(int radius, PvPoint p1, PvPoint p2)
 	}
 }
 
-static PvRect _get_rect_extent_from_elements(PvElement **elements)
+static PvRect get_rect_extent_from_elements_(PvElement **elements)
 {
 	PvRect rect_extent = PvRect_Default;
 	size_t num = pv_general_get_parray_num((void **)elements);
@@ -197,10 +197,10 @@ typedef struct RecursiveDataGetFocus{
 	PvPoint g_point;
 }RecursiveDataGetFocus;
 
-static bool _func_recursive_get_touch_element(PvElement *element, gpointer data, int level)
+static bool func_recursive_get_touch_element_(PvElement *element, gpointer data, int level)
 {
-	RecursiveDataGetFocus *_data = data;
-	et_assert(_data);
+	RecursiveDataGetFocus *data_ = data;
+	et_assert(data_);
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 	et_assertf(info, "%d", element->kind);
@@ -210,22 +210,22 @@ static bool _func_recursive_get_touch_element(PvElement *element, gpointer data,
 			&is_touch,
 			element,
 			PX_SENSITIVE_OF_TOUCH,
-			_data->g_point.x,
-			_data->g_point.y);
+			data_->g_point.x,
+			data_->g_point.y);
 	if(!ret){
 		et_bug("");
 		return false;
 	}
 	if(is_touch){
 		// ** detect is stop search.
-		*(_data->p_element) = element;
+		*(data_->p_element) = element;
 		return false;
 	}
 
 	return true;
 }
 
-static PvElement *_get_touch_element(EtDocId doc_id, PvPoint g_point)
+static PvElement *get_touch_element_(EtDocId doc_id, PvPoint g_point)
 {
 	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
 	et_assertf(vg, "%d", doc_id);
@@ -238,7 +238,7 @@ static PvElement *_get_touch_element(EtDocId doc_id, PvPoint g_point)
 	PvElementRecursiveError error;
 	if(!pv_element_recursive_asc(
 				vg->element_root,
-				_func_recursive_get_touch_element,
+				func_recursive_get_touch_element_,
 				NULL,
 				&rec_data,
 				&error)){
@@ -249,7 +249,7 @@ static PvElement *_get_touch_element(EtDocId doc_id, PvPoint g_point)
 }
 
 /*! @return is move */
-static void _translate_elements(
+static void translate_elements_(
 		EtDocId doc_id,
 		EtMouseAction mouse_action)
 {
@@ -346,13 +346,13 @@ static void get_resize_in_rect_(
 	*move_upleft_ = move_upleft;
 	*resize_ = resize;
 }
-static EdgeKind _resize_elements(
+static EdgeKind resize_elements_(
 		EtDocId doc_id,
 		EtMouseAction mouse_action,
-		EdgeKind _src_edge_kind,
+		EdgeKind src_edge_kind_,
 		PvRect src_extent_rect)
 {
-	EdgeKind dst_edge_kind = _src_edge_kind;
+	EdgeKind dst_edge_kind = src_edge_kind_;
 
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
@@ -415,7 +415,7 @@ static EdgeKind _resize_elements(
 	return dst_edge_kind;
 }
 
-static double _get_degree_from_radian(double radian)
+static double get_degree_from_radian_(double radian)
 {
 	return radian * (180.0 / M_PI);
 	// return radian * 180.0 / (atan(1.0) * 4.0);
@@ -424,17 +424,17 @@ static double _get_degree_from_radian(double radian)
 static double get_degree_from_point(PvPoint point)
 {
 	double radian = atan2(point.y, point.x);
-	double degree = _get_degree_from_radian(radian);
+	double degree = get_degree_from_radian_(radian);
 	return degree;
 }
 
-static EdgeKind _rotate_elements(
+static EdgeKind rotate_elements_(
 		EtDocId doc_id,
 		EtMouseAction mouse_action,
-		EdgeKind _src_edge_kind,
+		EdgeKind src_edge_kind_,
 		PvRect src_extent_rect)
 {
-	EdgeKind dst_edge_kind = _src_edge_kind;
+	EdgeKind dst_edge_kind = src_edge_kind_;
 
 	PvPoint diff = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
 
@@ -496,7 +496,7 @@ typedef struct {
 	int offset;
 }RecursiveInlineFocusingByAreaData;
 
-static bool _recursive_inline_focusing_by_area(PvElement *element, gpointer data, int level)
+static bool recursive_inline_focusing_by_area_(PvElement *element, gpointer data, int level)
 {
 	RecursiveInlineFocusingByAreaData *data_ = data;
 	PvFocus *focus = data_->focus;
@@ -524,7 +524,7 @@ static bool _recursive_inline_focusing_by_area(PvElement *element, gpointer data
 	return true;
 }
 
-static PvRect _focusing_by_area(
+static PvRect focusing_by_area_(
 		EtDocId doc_id,
 		EtMouseAction mouse_action)
 {
@@ -552,7 +552,7 @@ static PvRect _focusing_by_area(
 	PvElementRecursiveError error;
 	bool ret = pv_element_recursive_desc_before(
 			vg->element_root,
-			_recursive_inline_focusing_by_area,
+			recursive_inline_focusing_by_area_,
 			&data,
 			&error);
 
@@ -570,7 +570,7 @@ typedef enum{
 	EtFocusElementMouseActionMode_Handle,
 }EtFocusElementMouseActionMode;
 
-static GdkCursor *_get_cursor_from_edge(EdgeKind edge)
+static GdkCursor *get_cursor_from_edge_(EdgeKind edge)
 {
 	EtMouseCursorId mouse_cursor_id;
 	switch(edge){
@@ -622,7 +622,7 @@ PvRect get_square_rect_from_center_point_(PvPoint center, double size)
 	};
 }
 
-static PvElement *_element_new_from_circle(PvPoint center, double size)
+static PvElement *element_new_from_circle_(PvPoint center, double size)
 {
 	PvRect rect = {
 		center.x - (size / 2),
@@ -634,7 +634,7 @@ static PvElement *_element_new_from_circle(PvPoint center, double size)
 	return pv_element_curve_new_from_rect(rect);
 }
 
-static void group_edit_(EtDocId doc_id, EtFocusElementMouseActionMode _mode, PvRect focusing_mouse_rect, double scale)
+static void group_edit_(EtDocId doc_id, EtFocusElementMouseActionMode mode_, PvRect focusing_mouse_rect, double scale)
 {
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
@@ -642,11 +642,11 @@ static void group_edit_(EtDocId doc_id, EtFocusElementMouseActionMode _mode, PvR
 	PvElement *element_group_edit_draw = pv_element_new(PvElementKind_Group);
 	et_assert(element_group_edit_draw);
 
-	PvRect _after_extent_rect = _get_rect_extent_from_elements(focus->elements);
+	PvRect after_extent_rect_ = get_rect_extent_from_elements_(focus->elements);
 	if(pv_focus_is_focused(focus)){
 		int size = 5.0 / scale;
 		for(int i = 0; i < 4; i++){
-			PvPoint center = pv_rect_get_edge_point(_after_extent_rect, i);
+			PvPoint center = pv_rect_get_edge_point(after_extent_rect_, i);
 			PvRect rect = get_square_rect_from_center_point_(center, size);
 			PvElement *element_curve = pv_element_curve_new_from_rect(rect);
 			et_assert(element_curve);
@@ -654,14 +654,14 @@ static void group_edit_(EtDocId doc_id, EtFocusElementMouseActionMode _mode, PvR
 		}
 	}
 
-	switch(_mode){
+	switch(mode_){
 		case EtFocusElementMouseActionMode_Rotate:
 			{
 				if(pv_focus_is_focused(focus)){
 					// rotate center mark
-					PvPoint center = pv_rect_get_center(_after_extent_rect);
+					PvPoint center = pv_rect_get_center(after_extent_rect_);
 					int diameter = 8.0 / scale;
-					PvElement *element_center = _element_new_from_circle(center, diameter);
+					PvElement *element_center = element_new_from_circle_(center, diameter);
 					et_assert(element_center);
 					pv_element_append_child(element_group_edit_draw, NULL, element_center);
 				}
@@ -685,7 +685,7 @@ static void group_edit_(EtDocId doc_id, EtFocusElementMouseActionMode _mode, PvR
 	pv_element_remove_free_recursive(element_group_edit_draw);
 }
 
-static bool _func_edit_element_mouse_action(
+static bool func_edit_element_mouse_action_(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
 	static PvElement *touch_element_ = NULL;
@@ -702,8 +702,8 @@ static bool _func_edit_element_mouse_action(
 	EdgeKind edge = EdgeKind_None;
 
 	if(pv_focus_is_focused(focus)){
-		src_extent_rect = _get_rect_extent_from_elements(focus->elements);
-		edge = _get_outside_touch_edge_kind_from_rect(
+		src_extent_rect = get_rect_extent_from_elements_(focus->elements);
+		edge = get_outside_touch_edge_kind_from_rect_(
 				src_extent_rect, mouse_action.point, mouse_action.scale);
 	}
 
@@ -739,7 +739,7 @@ static bool _func_edit_element_mouse_action(
 						{
 							mode_ = EtFocusElementMouseActionMode_Translate;
 
-							touch_element_ = _get_touch_element(doc_id, mouse_action.point);
+							touch_element_ = get_touch_element_(doc_id, mouse_action.point);
 
 							if(NULL == touch_element_){
 								et_assertf(pv_focus_clear_to_first_layer(focus), "%d", doc_id);
@@ -779,22 +779,22 @@ static bool _func_edit_element_mouse_action(
 				switch(mode_){
 					case EtFocusElementMouseActionMode_Translate:
 						{
-							_translate_elements(doc_id, mouse_action);
+							translate_elements_(doc_id, mouse_action);
 						}
 						break;
 					case EtFocusElementMouseActionMode_Resize:
 						{
-							_resize_elements(doc_id, mouse_action, mode_edge_, src_extent_rect_);
+							resize_elements_(doc_id, mouse_action, mode_edge_, src_extent_rect_);
 						}
 						break;
 					case EtFocusElementMouseActionMode_Rotate:
 						{
-							_rotate_elements(doc_id, mouse_action, mode_edge_, src_extent_rect_);
+							rotate_elements_(doc_id, mouse_action, mode_edge_, src_extent_rect_);
 						}
 						break;
 					case EtFocusElementMouseActionMode_FocusingByArea:
 						{
-							focusing_mouse_rect = _focusing_by_area(doc_id, mouse_action);
+							focusing_mouse_rect = focusing_by_area_(doc_id, mouse_action);
 						}
 						break;
 					default:
@@ -847,9 +847,9 @@ static bool _func_edit_element_mouse_action(
 
 	// ** mouse cursor
 	if(EtFocusElementMouseActionMode_None == mode_){ // tool is not active
-		*cursor = _get_cursor_from_edge(edge);
+		*cursor = get_cursor_from_edge_(edge);
 	}else{
-		*cursor = _get_cursor_from_edge(mode_edge_);
+		*cursor = get_cursor_from_edge_(mode_edge_);
 	}
 
 	// ** focusing view by tool
@@ -860,37 +860,37 @@ static bool _func_edit_element_mouse_action(
 
 static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action, bool *is_reverse)
 {
-	PvElement *_element = pv_focus_get_first_element(focus);
-	et_assert(_element);
-	PvElementCurveData *_data = (PvElementCurveData *) _element->data;
-	et_assert(_data);
+	PvElement *element_ = pv_focus_get_first_element(focus);
+	et_assert(element_);
+	PvElementCurveData *data_ = (PvElementCurveData *) element_->data;
+	et_assert(data_);
 
 	PvAnchorPoint *anchor_point = pv_focus_get_first_anchor_point(focus);
 
 	int index = 0;
 	size_t num = 0;
 
-	if(PvElementKind_Curve == _element->kind){
-		index = pv_anchor_path_get_index_from_anchor_point(_data->anchor_path, anchor_point);
-		num = pv_anchor_path_get_anchor_point_num(_data->anchor_path);
+	if(PvElementKind_Curve == element_->kind){
+		index = pv_anchor_path_get_index_from_anchor_point(data_->anchor_path, anchor_point);
+		num = pv_anchor_path_get_anchor_point_num(data_->anchor_path);
 	}
 
-	if(PvElementKind_Curve != _element->kind
+	if(PvElementKind_Curve != element_->kind
 			|| NULL == anchor_point
 			|| (!((0 == index) || index == ((int)num - 1)))
-			|| pv_anchor_path_get_is_close(_data->anchor_path)){
+			|| pv_anchor_path_get_is_close(data_->anchor_path)){
 		// add new ElementCurve.
 
 		anchor_point = pv_anchor_point_new_from_point(mouse_action.point);
 		et_assert(anchor_point);
 		PvElement *new_element = pv_element_curve_new_set_anchor_point(anchor_point);
 		et_assert(new_element);
-		pv_element_append_on_focusing(_element, new_element);
+		pv_element_append_on_focusing(element_, new_element);
 
 		new_element->color_pair = et_color_panel_get_color_pair();
 		new_element->stroke = et_stroke_panel_get_stroke();
 
-		_element = new_element;
+		element_ = new_element;
 	}else{
 		// edit focused ElementCurve
 		int index_end = 0;
@@ -906,28 +906,28 @@ static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mou
 			et_abortf("%d %zu", index, num);
 		}
 		head_ap = pv_anchor_path_get_anchor_point_from_index(
-				_data->anchor_path,
+				data_->anchor_path,
 				index_end,
 				PvAnchorPathIndexTurn_Disable);
 		et_assertf(head_ap, "%d %d %zu", index_end, index, num);
 
-		if(_is_bound_point(
+		if(is_bound_point_(
 					PX_SENSITIVE_OF_TOUCH,
 					head_ap->points[PvAnchorPointIndex_Point],
 					mouse_action.point)){
 			// ** do close anchor_point
-			pv_anchor_path_set_is_close(_data->anchor_path, true);
+			pv_anchor_path_set_is_close(data_->anchor_path, true);
 			anchor_point = head_ap;
 		}else{
 			// add AnchorPoint for ElementCurve.
 			anchor_point = pv_anchor_point_new_from_point(mouse_action.point);
 			et_assert(anchor_point);
 
-			pv_element_curve_append_anchor_point(_element, anchor_point, index);
+			pv_element_curve_append_anchor_point(element_, anchor_point, index);
 		}
 	}
 
-	pv_focus_clear_set_anchor_point(focus, _element, anchor_point);
+	pv_focus_clear_set_anchor_point(focus, element_, anchor_point);
 }
 
 static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action, bool is_reverse)
@@ -941,15 +941,15 @@ static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction
 		return true;
 	}
 
-	PvElement *_element = pv_focus_get_first_element(focus);
-	et_assert(_element);
-	if(PvElementKind_Curve != _element->kind){
+	PvElement *element_ = pv_focus_get_first_element(focus);
+	et_assert(element_);
+	if(PvElementKind_Curve != element_->kind){
 		et_error("");
 		return false;
 	}
 
-	PvElementCurveData *_data = (PvElementCurveData *) _element->data;
-	et_assert(_data);
+	PvElementCurveData *data_ = (PvElementCurveData *) element_->data;
+	et_assert(data_);
 
 	PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
 	PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
@@ -967,7 +967,7 @@ static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction
 	return true;
 }
 
-static bool _func_add_anchor_point_mouse_action(
+static bool func_add_anchor_point_mouse_action_(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
@@ -1006,10 +1006,10 @@ static bool _func_add_anchor_point_mouse_action(
 	return result;
 }
 
-static bool _get_touch_anchor_point_recursive_inline(
+static bool get_touch_anchor_point_recursive_inline_(
 		PvElement *element, gpointer data_0, int level)
 {
-	RecursiveDataGetFocus *_data = data_0;
+	RecursiveDataGetFocus *data_ = data_0;
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 	assert(info);
@@ -1018,13 +1018,13 @@ static bool _get_touch_anchor_point_recursive_inline(
 	for(int i = 0; i < (int)num; i++){
 		PvAnchorPoint *anchor_point = info->func_get_anchor_point(element, i);
 
-		if(_is_bound_point(
+		if(is_bound_point_(
 					PX_SENSITIVE_OF_TOUCH,
 					anchor_point->points[PvAnchorPointIndex_Point],
-					_data->g_point))
+					data_->g_point))
 		{
-			*(_data->p_anchor_point) = anchor_point;
-			*(_data->p_element) = element;
+			*(data_->p_anchor_point) = anchor_point;
+			*(data_->p_element) = element;
 			return false;
 		}
 	}
@@ -1032,7 +1032,7 @@ static bool _get_touch_anchor_point_recursive_inline(
 	return true;
 }
 
-void _get_touch_anchor_point(
+void get_touch_anchor_point_(
 		PvElement **p_element,
 		PvAnchorPoint **p_anchor_point,
 		EtDocId doc_id,
@@ -1051,7 +1051,7 @@ void _get_touch_anchor_point(
 	};
 	PvElementRecursiveError error;
 	if(!pv_element_recursive_asc(vg->element_root,
-				_get_touch_anchor_point_recursive_inline,
+				get_touch_anchor_point_recursive_inline_,
 				NULL,
 				&rec_data,
 				&error)){
@@ -1063,28 +1063,28 @@ void _get_touch_anchor_point(
 }
 
 /*! @return handle(PvAnchorPointHandle) not grub: -1 */
-int _edit_anchor_point_handle_bound_handle(const PvAnchorPoint *ap, EtMouseAction mouse_action)
+int edit_anchor_point_handle_bound_handle_(const PvAnchorPoint *ap, EtMouseAction mouse_action)
 {
 	// ** grub handle.
 	PvPoint p_point = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
 	PvPoint p_prev = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandlePrev);
 	PvPoint p_next = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandleNext);
 
-	if(_is_bound_point(
+	if(is_bound_point_(
 				PX_SENSITIVE_OF_TOUCH,
 				p_prev,
 				mouse_action.point))
 	{
 		return PvAnchorPointIndex_HandlePrev;
 	}
-	if(_is_bound_point(
+	if(is_bound_point_(
 				PX_SENSITIVE_OF_TOUCH,
 				p_next,
 				mouse_action.point))
 	{
 		return PvAnchorPointIndex_HandleNext;
 	}
-	if(_is_bound_point(
+	if(is_bound_point_(
 				PX_SENSITIVE_OF_TOUCH,
 				p_point,
 				mouse_action.point))
@@ -1097,14 +1097,14 @@ int _edit_anchor_point_handle_bound_handle(const PvAnchorPoint *ap, EtMouseActio
 
 /*! @brief
  * @return handle(PvAnchorPointHandle) not grub: -1 */
-static int _edit_anchor_point_handle_grub_focus(PvFocus *focus, EtMouseAction mouse_action)
+static int edit_anchor_point_handle_grub_focus_(PvFocus *focus, EtMouseAction mouse_action)
 {
 	int handle = -1; //!< Handle not grub.
 
 	//! first check already focus AnchorPoint.
 	const PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
 	if(NULL != ap){
-		handle = _edit_anchor_point_handle_bound_handle(ap, mouse_action);
+		handle = edit_anchor_point_handle_bound_handle_(ap, mouse_action);
 		if(-1 != handle){
 			return handle;
 		}
@@ -1117,7 +1117,7 @@ static int _edit_anchor_point_handle_grub_focus(PvFocus *focus, EtMouseAction mo
 	size_t num = info->func_get_num_anchor_point(focus->elements[0]);
 	for(int i = 0; i < (int)num; i++){
 		const PvAnchorPoint *ap_ = info->func_get_anchor_point(focus->elements[0], i);
-		handle = _edit_anchor_point_handle_bound_handle(ap_, mouse_action);
+		handle = edit_anchor_point_handle_bound_handle_(ap_, mouse_action);
 		if(-1 != handle){
 			// ** change focus.
 			pv_focus_clear_set_element_index(focus, focus->elements[0], i);
@@ -1128,7 +1128,7 @@ static int _edit_anchor_point_handle_grub_focus(PvFocus *focus, EtMouseAction mo
 	return handle;
 }
 
-static bool _translate_anchor_points(EtDocId doc_id, EtMouseAction mouse_action)
+static bool translate_anchor_points_(EtDocId doc_id, EtMouseAction mouse_action)
 {
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	assert(focus);
@@ -1145,7 +1145,7 @@ static bool _translate_anchor_points(EtDocId doc_id, EtMouseAction mouse_action)
 
 static void edit_anchor_point_handle_down_(int *handle, PvFocus *focus, EtMouseAction mouse_action)
 {
-	*handle = _edit_anchor_point_handle_grub_focus(focus, mouse_action);
+	*handle = edit_anchor_point_handle_grub_focus_(focus, mouse_action);
 	PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
 	if(NULL != ap && PvAnchorPointIndex_Point == *handle){
 		pv_anchor_point_set_handle_zero(
@@ -1181,7 +1181,7 @@ static void edit_anchor_point_handle_move_(int handle, PvFocus *focus, EtMouseAc
 	}
 }
 
-static bool _func_edit_anchor_point_mouse_action(
+static bool func_edit_anchor_point_mouse_action_(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
 	static PvElement *touch_element_ = NULL;
@@ -1200,8 +1200,8 @@ static bool _func_edit_anchor_point_mouse_action(
 	EdgeKind edge = EdgeKind_None;
 
 	if(pv_focus_is_focused(focus)){
-		src_extent_rect = _get_rect_extent_from_elements(focus->elements);
-		edge = _get_outside_touch_edge_kind_from_rect(
+		src_extent_rect = get_rect_extent_from_elements_(focus->elements);
+		edge = get_outside_touch_edge_kind_from_rect_(
 				src_extent_rect, mouse_action.point, mouse_action.scale);
 	}
 
@@ -1218,7 +1218,7 @@ static bool _func_edit_anchor_point_mouse_action(
 				handle = -1;
 				//				src_extent_rect_ = src_extent_rect;
 
-				_get_touch_anchor_point(
+				get_touch_anchor_point_(
 						&touch_element_,
 						&touch_anchor_point_,
 						doc_id,
@@ -1289,7 +1289,7 @@ static bool _func_edit_anchor_point_mouse_action(
 				switch(mode_){
 					case EtFocusElementMouseActionMode_Translate:
 						{
-							_translate_anchor_points(doc_id, mouse_action);
+							translate_anchor_points_(doc_id, mouse_action);
 						}
 						break;
 					case EtFocusElementMouseActionMode_Resize:
@@ -1302,7 +1302,7 @@ static bool _func_edit_anchor_point_mouse_action(
 						break;
 					case EtFocusElementMouseActionMode_FocusingByArea:
 						{
-							focusing_mouse_rect = _focusing_by_area(doc_id, mouse_action);
+							focusing_mouse_rect = focusing_by_area_(doc_id, mouse_action);
 						}
 						break;
 					case EtFocusElementMouseActionMode_Handle:
@@ -1353,9 +1353,9 @@ static bool _func_edit_anchor_point_mouse_action(
 
 	// ** mouse cursor
 	if(EtFocusElementMouseActionMode_None == mode_){ // tool is not active
-		*cursor = _get_cursor_from_edge(edge);
+		*cursor = get_cursor_from_edge_(edge);
 	}else{
-		*cursor = _get_cursor_from_edge(mode_edge_);
+		*cursor = get_cursor_from_edge_(mode_edge_);
 	}
 
 	// ** focusing view by tool
@@ -1364,7 +1364,7 @@ static bool _func_edit_anchor_point_mouse_action(
 	return true;
 }
 
-static bool _func_edit_anchor_point_handle_mouse_action(
+static bool func_edit_anchor_point_handle_mouse_action_(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
@@ -1464,7 +1464,7 @@ static bool knife_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction m
 	size_t num = info->func_get_num_anchor_point(element);
 	for(int i = 0; i < (int)num; i++){
 		const PvAnchorPoint *ap = info->func_get_anchor_point(element, i);
-		if(_is_bound_point(
+		if(is_bound_point_(
 					PX_SENSITIVE_OF_TOUCH,
 					ap->points[PvAnchorPointIndex_Point],
 					mouse_action.point)){
@@ -1492,7 +1492,7 @@ static bool knife_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction m
 	return true;
 }
 
-static bool _func_add_basic_shape_element_mouse_action(
+static bool func_add_basic_shape_element_mouse_action_(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
@@ -1507,7 +1507,7 @@ static bool _func_add_basic_shape_element_mouse_action(
 		case EtMouseAction_Down:
 			{
 				add_basic_shape_element_down_(doc, focus, mouse_action);
-				src_extent_rect_ = _get_rect_extent_from_elements(focus->elements);
+				src_extent_rect_ = get_rect_extent_from_elements_(focus->elements);
 				mode_ = EtFocusElementMouseActionMode_Resize;
 			}
 			break;
@@ -1515,7 +1515,7 @@ static bool _func_add_basic_shape_element_mouse_action(
 			{
 				if(EtFocusElementMouseActionMode_Resize == mode_){
 					static EdgeKind mode_edge_ = EdgeKind_Resize_DownLeft;
-					_resize_elements(doc_id, mouse_action, mode_edge_, src_extent_rect_);
+					resize_elements_(doc_id, mouse_action, mode_edge_, src_extent_rect_);
 				}
 			}
 			break;
@@ -1540,7 +1540,7 @@ static bool _func_add_basic_shape_element_mouse_action(
 	return true;
 }
 
-static bool _func_knife_anchor_point_mouse_action(
+static bool func_knife_anchor_point_mouse_action_(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
@@ -1743,7 +1743,7 @@ static int insert_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction m
 	return -1;
 }
 
-static bool _func_insert_anchor_point_mouse_action(
+static bool func_insert_anchor_point_mouse_action_(
 		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
 {
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
@@ -1771,7 +1771,7 @@ static bool _func_insert_anchor_point_mouse_action(
 	return true;
 }
 
-EtToolInfo _et_tool_infos[] = {
+EtToolInfo et_tool_infos_[] = {
 	{
 		.tool_id = EtToolId_EditElement,
 		.name = "Edit Element",
@@ -1785,7 +1785,7 @@ EtToolInfo _et_tool_infos[] = {
 			{GDK_KEY_v, 0,},
 			{0, (0),},
 		},
-		.func_mouse_action = _func_edit_element_mouse_action,
+		.func_mouse_action = func_edit_element_mouse_action_,
 		.mouse_cursor = NULL,
 	},
 	{
@@ -1797,7 +1797,7 @@ EtToolInfo _et_tool_infos[] = {
 		.icon_cursor = NULL,
 		.filepath_icon = NULL,
 		.filepath_cursor = "resource/tool/tool_anchor_point_edit_allow_24x24.svg",
-		.func_mouse_action = _func_edit_anchor_point_mouse_action,
+		.func_mouse_action = func_edit_anchor_point_mouse_action_,
 		.shortcuts = {
 			{GDK_KEY_a, 0,},
 			{0, (0),},
@@ -1817,7 +1817,7 @@ EtToolInfo _et_tool_infos[] = {
 			{GDK_KEY_p, 0,},
 			{0, (0),},
 		},
-		.func_mouse_action = _func_add_anchor_point_mouse_action,
+		.func_mouse_action = func_add_anchor_point_mouse_action_,
 		.mouse_cursor = NULL,
 	},
 	{
@@ -1833,7 +1833,7 @@ EtToolInfo _et_tool_infos[] = {
 			{GDK_KEY_c, (GDK_SHIFT_MASK),},
 			{0, (0),},
 		},
-		.func_mouse_action = _func_edit_anchor_point_handle_mouse_action,
+		.func_mouse_action = func_edit_anchor_point_handle_mouse_action_,
 		.mouse_cursor = NULL,
 	},
 	{
@@ -1848,7 +1848,7 @@ EtToolInfo _et_tool_infos[] = {
 		.shortcuts = {
 			{0, (0),},
 		},
-		.func_mouse_action = _func_add_basic_shape_element_mouse_action,
+		.func_mouse_action = func_add_basic_shape_element_mouse_action_,
 		.mouse_cursor = NULL,
 	},
 	{
@@ -1864,7 +1864,7 @@ EtToolInfo _et_tool_infos[] = {
 			{GDK_KEY_c, 0,},
 			{0, (0),},
 		},
-		.func_mouse_action = _func_knife_anchor_point_mouse_action,
+		.func_mouse_action = func_knife_anchor_point_mouse_action_,
 		.mouse_cursor = NULL,
 	},
 	{
@@ -1881,17 +1881,17 @@ EtToolInfo _et_tool_infos[] = {
 			{GDK_KEY_KP_Add, (GDK_SHIFT_MASK),},
 			{0, (0),},
 		},
-		.func_mouse_action = _func_insert_anchor_point_mouse_action,
+		.func_mouse_action = func_insert_anchor_point_mouse_action_,
 		.mouse_cursor = NULL,
 	},
 };
 
 size_t et_tool_get_num()
 {
-	return sizeof(_et_tool_infos) / sizeof(EtToolInfo);
+	return sizeof(et_tool_infos_) / sizeof(EtToolInfo);
 }
 
-static EtToolInfo *_et_tool_get_info_from_id(EtToolId tool_id)
+static EtToolInfo *et_tool_get_info_from_id_(EtToolId tool_id)
 {
 	size_t num_tool = et_tool_get_num();
 	if(tool_id < 0 || (int)num_tool <= tool_id){
@@ -1899,13 +1899,13 @@ static EtToolInfo *_et_tool_get_info_from_id(EtToolId tool_id)
 		return NULL;
 	}
 
-	return &_et_tool_infos[tool_id];
+	return &et_tool_infos_[tool_id];
 }
 
 const EtToolInfo *et_tool_get_info_from_id(EtToolId tool_id)
 {
-	et_assert(_et_tool_info_is_init);
+	et_assert(et_tool_info_is_init_);
 
-	return _et_tool_get_info_from_id(tool_id);
+	return et_tool_get_info_from_id_(tool_id);
 }
 
