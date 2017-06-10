@@ -11,11 +11,16 @@
 #include <stdbool.h>
 #include "et_tool_id.h"
 #include "et_doc_id.h"
+#include "pv_element.h"
 #include "et_mouse_action.h"
 
 
 
-typedef bool (*EtToolFuncMouseAction)(EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **);
+typedef bool (*EtToolFuncMouseAction)(
+		EtDocId doc_id,
+		EtMouseAction mouse_action,
+		PvElement **edit_draw_element,
+		GdkCursor **);
 
 typedef struct{
 	// shortcut key

@@ -239,16 +239,22 @@ bool slot_et_etaion_from_mouse_action(EtDocId doc_id, EtMouseAction mouse_action
 	et_assert(info);
 	et_assert(info->func_mouse_action);
 
+	PvElement *edit_draw_element = NULL;
 	GdkCursor *cursor = NULL;
-	if(!info->func_mouse_action(doc_id, mouse_action, &cursor)){
+	if(!info->func_mouse_action(doc_id, mouse_action, &edit_draw_element, &cursor)){
 		et_error("");
 		return false;
 	}
+
+	et_doc_set_element_group_edit_draw_from_id(doc_id, edit_draw_element);
+	if(NULL != edit_draw_element){
+		pv_element_remove_free_recursive(edit_draw_element);
+	}
+
 	if(!cursor){
 		cursor = info->mouse_cursor;
 	}
 	et_assert(cursor);
-
 	et_assert(set_mouse_cursor_(cursor));
 
 	/*

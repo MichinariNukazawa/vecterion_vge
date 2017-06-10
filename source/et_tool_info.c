@@ -634,7 +634,7 @@ static PvElement *element_new_from_circle_(PvPoint center, double size)
 	return pv_element_curve_new_from_rect(rect);
 }
 
-static void group_edit_(EtDocId doc_id, EtFocusElementMouseActionMode mode_, PvRect focusing_mouse_rect, double scale)
+static PvElement *group_edit_(EtDocId doc_id, EtFocusElementMouseActionMode mode_, PvRect focusing_mouse_rect, double scale)
 {
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
@@ -680,13 +680,14 @@ static void group_edit_(EtDocId doc_id, EtFocusElementMouseActionMode mode_, PvR
 			break;
 	}
 
-
-	et_doc_set_element_group_edit_draw_from_id(doc_id, element_group_edit_draw);
-	pv_element_remove_free_recursive(element_group_edit_draw);
+	return element_group_edit_draw;
 }
 
 static bool func_edit_element_mouse_action_(
-		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
+		EtDocId doc_id,
+		EtMouseAction mouse_action,
+		PvElement **edit_draw_element,
+		GdkCursor **cursor)
 {
 	static PvElement *touch_element_ = NULL;
 	static bool is_already_focus_ = false;
@@ -853,7 +854,7 @@ static bool func_edit_element_mouse_action_(
 	}
 
 	// ** focusing view by tool
-	group_edit_(doc_id, mode_, focusing_mouse_rect, mouse_action.scale);
+	*edit_draw_element = group_edit_(doc_id, mode_, focusing_mouse_rect, mouse_action.scale);
 
 	return true;
 }
@@ -968,7 +969,10 @@ static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction
 }
 
 static bool func_add_anchor_point_mouse_action_(
-		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
+		EtDocId doc_id,
+		EtMouseAction mouse_action,
+		PvElement **edit_draw_element,
+		GdkCursor **cursor)
 {
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
 	et_assertf(doc, "%d", doc_id);
@@ -1000,8 +1004,6 @@ static bool func_add_anchor_point_mouse_action_(
 			et_bug("0x%x", mouse_action.action);
 			break;
 	}
-
-	et_doc_set_element_group_edit_draw_from_id(doc_id, NULL);
 
 	return result;
 }
@@ -1182,7 +1184,10 @@ static void edit_anchor_point_handle_move_(int handle, PvFocus *focus, EtMouseAc
 }
 
 static bool func_edit_anchor_point_mouse_action_(
-		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
+		EtDocId doc_id,
+		EtMouseAction mouse_action,
+		PvElement **edit_draw_element,
+		GdkCursor **cursor)
 {
 	static PvElement *touch_element_ = NULL;
 	static PvAnchorPoint *touch_anchor_point_ = NULL;
@@ -1358,14 +1363,17 @@ static bool func_edit_anchor_point_mouse_action_(
 		*cursor = get_cursor_from_edge_(mode_edge_);
 	}
 
-	// ** focusing view by tool
-	group_edit_(doc_id, mode_, focusing_mouse_rect, mouse_action.scale); //! @todo to AnchorPoint Edit
+	// ** focusing view by tool //! @todo to AnchorPoint Edit
+	*edit_draw_element = group_edit_(doc_id, mode_, focusing_mouse_rect, mouse_action.scale);
 
 	return true;
 }
 
 static bool func_edit_anchor_point_handle_mouse_action_(
-		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
+		EtDocId doc_id,
+		EtMouseAction mouse_action,
+		PvElement **edit_draw_element,
+		GdkCursor **cursor)
 {
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assert(focus);
@@ -1393,8 +1401,6 @@ static bool func_edit_anchor_point_handle_mouse_action_(
 			et_bug("0x%x", mouse_action.action);
 			break;
 	}
-
-	et_doc_set_element_group_edit_draw_from_id(doc_id, NULL);
 
 	return true;
 }
@@ -1493,7 +1499,10 @@ static bool knife_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction m
 }
 
 static bool func_add_basic_shape_element_mouse_action_(
-		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
+		EtDocId doc_id,
+		EtMouseAction mouse_action,
+		PvElement **edit_draw_element,
+		GdkCursor **cursor)
 {
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
 	et_assertf(doc, "%d", doc_id);
@@ -1541,7 +1550,10 @@ static bool func_add_basic_shape_element_mouse_action_(
 }
 
 static bool func_knife_anchor_point_mouse_action_(
-		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
+		EtDocId doc_id,
+		EtMouseAction mouse_action,
+		PvElement **edit_draw_element,
+		GdkCursor **cursor)
 {
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
 	et_assertf(doc, "%d", doc_id);
@@ -1744,7 +1756,10 @@ static int insert_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction m
 }
 
 static bool func_insert_anchor_point_mouse_action_(
-		EtDocId doc_id, EtMouseAction mouse_action, GdkCursor **cursor)
+		EtDocId doc_id,
+		EtMouseAction mouse_action,
+		PvElement **edit_draw_element,
+		GdkCursor **cursor)
 {
 	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
 	et_assertf(doc, "%d", doc_id);
