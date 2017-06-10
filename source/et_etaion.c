@@ -235,13 +235,13 @@ bool slot_et_etaion_from_mouse_action(EtDocId doc_id, EtMouseAction mouse_action
 		et_bug("");
 		return false;
 	}
-	const EtToolInfo *info = et_tool_get_info_from_id(self->tool_id);
-	et_assert(info);
-	et_assert(info->func_mouse_action);
+	const EtToolInfo *tool_info = et_tool_get_info_from_id(self->tool_id);
+	et_assert(tool_info);
+	et_assert(tool_info->func_mouse_action);
 
 	PvElement *edit_draw_element = NULL;
 	GdkCursor *cursor = NULL;
-	if(!info->func_mouse_action(doc_id, mouse_action, &edit_draw_element, &cursor)){
+	if(!tool_info->func_mouse_action(doc_id, mouse_action, &edit_draw_element, &cursor)){
 		et_error("");
 		return false;
 	}
@@ -252,7 +252,7 @@ bool slot_et_etaion_from_mouse_action(EtDocId doc_id, EtMouseAction mouse_action
 	}
 
 	if(!cursor){
-		cursor = info->mouse_cursor;
+		cursor = tool_info->mouse_cursor;
 	}
 	et_assert(cursor);
 	et_assert(set_mouse_cursor_(cursor));
