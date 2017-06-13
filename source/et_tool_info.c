@@ -249,12 +249,9 @@ static PvElement *get_touch_element_(EtDocId doc_id, PvPoint g_point)
 
 /*! @return is move */
 static void translate_elements_(
-		EtDocId doc_id,
+		PvFocus *focus,
 		EtMouseAction mouse_action)
 {
-	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-	et_assertf(focus, "%d", doc_id);
-
 	PvPoint move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
 
 	size_t num = pv_general_get_parray_num((void **)focus->elements);
@@ -346,15 +343,13 @@ static void get_resize_in_rect_(
 	*resize_ = resize;
 }
 static EdgeKind resize_elements_(
-		EtDocId doc_id,
+		PvFocus *focus,
 		EtMouseAction mouse_action,
 		EdgeKind src_edge_kind_,
 		PvRect src_extent_rect)
 {
 	EdgeKind dst_edge_kind = src_edge_kind_;
 
-	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-	et_assertf(focus, "%d", doc_id);
 
 	PvPoint move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
 
@@ -428,7 +423,7 @@ static double get_degree_from_point(PvPoint point)
 }
 
 static EdgeKind rotate_elements_(
-		EtDocId doc_id,
+		PvFocus *focus,
 		EtMouseAction mouse_action,
 		EdgeKind src_edge_kind_,
 		PvRect src_extent_rect)
@@ -449,9 +444,6 @@ static EdgeKind rotate_elements_(
 	double dst_degree = get_degree_from_point(pv_point_sub(extent_center, dst_point));
 
 	double degree = dst_degree - src_degree;
-
-	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-	et_assertf(focus, "%d", doc_id);
 
 	PvElement **elements = focus->elements;
 	size_t num_ = pv_general_get_parray_num((void **)elements);
@@ -524,15 +516,11 @@ static bool recursive_inline_focusing_by_area_(PvElement *element, gpointer data
 }
 
 static PvRect focusing_by_area_(
-		EtDocId doc_id,
+		PvFocus *focus,
+		PvVg *vg,
 		EtMouseAction mouse_action)
 {
-	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
-	et_assertf(focus, "%d", doc_id);
 	pv_focus_clear_to_first_layer(focus);
-
-	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
-	et_assertf(vg, "%d", doc_id);
 
 	PvPoint diff = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
 	PvRect rect = {
@@ -779,22 +767,24 @@ static bool func_edit_element_mouse_action_(
 				switch(mode_){
 					case EtFocusElementMouseActionMode_Translate:
 						{
-							translate_elements_(doc_id, mouse_action);
+							translate_elements_(focus, mouse_action);
 						}
 						break;
 					case EtFocusElementMouseActionMode_Resize:
 						{
-							resize_elements_(doc_id, mouse_action, mode_edge_, src_extent_rect_);
+							resize_elements_(focus, mouse_action, mode_edge_, src_extent_rect_);
 						}
 						break;
 					case EtFocusElementMouseActionMode_Rotate:
 						{
-							rotate_elements_(doc_id, mouse_action, mode_edge_, src_extent_rect_);
+							rotate_elements_(focus, mouse_action, mode_edge_, src_extent_rect_);
 						}
 						break;
 					case EtFocusElementMouseActionMode_FocusingByArea:
 						{
-							focusing_mouse_rect = focusing_by_area_(doc_id, mouse_action);
+							PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
+							et_assertf(vg, "%d", doc_id);
+							focusing_mouse_rect = focusing_by_area_(focus, vg, mouse_action);
 						}
 						break;
 					default:
@@ -1306,7 +1296,9 @@ static bool func_edit_anchor_point_mouse_action_(
 						break;
 					case EtFocusElementMouseActionMode_FocusingByArea:
 						{
-							focusing_mouse_rect = focusing_by_area_(doc_id, mouse_action);
+							PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
+							et_assertf(vg, "%d", doc_id);
+							focusing_mouse_rect = focusing_by_area_(focus, vg, mouse_action);
 						}
 						break;
 					case EtFocusElementMouseActionMode_Handle:
@@ -1523,7 +1515,7 @@ static bool func_add_basic_shape_element_mouse_action_(
 			{
 				if(EtFocusElementMouseActionMode_Resize == mode_){
 					static EdgeKind mode_edge_ = EdgeKind_Resize_DownLeft;
-					resize_elements_(doc_id, mouse_action, mode_edge_, src_extent_rect_);
+					resize_elements_(focus, mouse_action, mode_edge_, src_extent_rect_);
 				}
 			}
 			break;
