@@ -681,7 +681,7 @@ static bool func_edit_element_mouse_action_(
 	static bool is_move_ = false;
 	static EtFocusElementMouseActionMode mode_ = EtFocusElementMouseActionMode_None;
 	static EdgeKind mode_edge_ = EdgeKind_None;
-	static PvRect src_extent_rect_;
+	static PvRect src_extent_rect_when_down_;
 
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
@@ -703,7 +703,7 @@ static bool func_edit_element_mouse_action_(
 				is_already_focus_ = false;
 				is_move_ = false;
 				mode_edge_ = edge;
-				src_extent_rect_ = src_extent_rect;
+				src_extent_rect_when_down_ = src_extent_rect;
 
 				switch(edge){
 					case EdgeKind_Resize_UpLeft:
@@ -772,12 +772,12 @@ static bool func_edit_element_mouse_action_(
 						break;
 					case EtFocusElementMouseActionMode_Resize:
 						{
-							resize_elements_(focus, mouse_action, mode_edge_, src_extent_rect_);
+							resize_elements_(focus, mouse_action, mode_edge_, src_extent_rect_when_down_);
 						}
 						break;
 					case EtFocusElementMouseActionMode_Rotate:
 						{
-							rotate_elements_(focus, mouse_action, mode_edge_, src_extent_rect_);
+							rotate_elements_(focus, mouse_action, mode_edge_, src_extent_rect_when_down_);
 						}
 						break;
 					case EtFocusElementMouseActionMode_FocusingByArea:
@@ -1185,7 +1185,7 @@ static bool func_edit_anchor_point_mouse_action_(
 	static EtFocusElementMouseActionMode mode_ = EtFocusElementMouseActionMode_None;
 	static EdgeKind mode_edge_ = EdgeKind_None;
 	static int handle = -1;
-	//	static PvRect src_extent_rect_;
+	//	static PvRect src_extent_rect_when_down_;
 
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assert(focus);
@@ -1210,7 +1210,7 @@ static bool func_edit_anchor_point_mouse_action_(
 				is_move_ = false;
 				mode_edge_ = edge;
 				handle = -1;
-				//				src_extent_rect_ = src_extent_rect;
+				//				src_extent_rect_when_down_ = src_extent_rect;
 
 				get_touch_anchor_point_(
 						&touch_element_,
@@ -1501,13 +1501,13 @@ static bool func_add_basic_shape_element_mouse_action_(
 	et_assertf(focus, "%d", doc_id);
 
 	static EtFocusElementMouseActionMode mode_ = EtFocusElementMouseActionMode_None;
-	static PvRect src_extent_rect_;
+	static PvRect src_extent_rect_when_down_;
 
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
 			{
 				add_basic_shape_element_down_(doc, focus, mouse_action);
-				src_extent_rect_ = get_rect_extent_from_elements_(focus->elements);
+				src_extent_rect_when_down_ = get_rect_extent_from_elements_(focus->elements);
 				mode_ = EtFocusElementMouseActionMode_Resize;
 			}
 			break;
@@ -1515,7 +1515,7 @@ static bool func_add_basic_shape_element_mouse_action_(
 			{
 				if(EtFocusElementMouseActionMode_Resize == mode_){
 					static EdgeKind mode_edge_ = EdgeKind_Resize_DownLeft;
-					resize_elements_(focus, mouse_action, mode_edge_, src_extent_rect_);
+					resize_elements_(focus, mouse_action, mode_edge_, src_extent_rect_when_down_);
 				}
 			}
 			break;
