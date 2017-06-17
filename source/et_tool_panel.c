@@ -171,7 +171,7 @@ EtToolPanel *et_tool_panel_init()
 
 	_et_tool_panel = self;
 
-	et_assert(et_mouse_cursor_info_init());
+	et_assert(et_mouse_cursor_info_init(et_etaion_get_application_base_dir()));
 
 	return _et_tool_panel;
 }

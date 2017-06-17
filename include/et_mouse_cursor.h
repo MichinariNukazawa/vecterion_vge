@@ -30,7 +30,7 @@ typedef struct{
 	int center_y;
 }EtMouseCursorInfo;
 
-bool et_mouse_cursor_info_init();
+bool et_mouse_cursor_info_init(const char *dirpath_application_base);
 const EtMouseCursorInfo *et_mouse_cursor_get_info_from_id(EtMouseCursorId);
 
 #ifdef include_ET_TEST

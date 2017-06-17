@@ -1,7 +1,6 @@
 #include "et_mouse_cursor.h"
 
 #include "et_error.h"
-#include "et_etaion.h"
 
 // http://stackoverflow.com/questions/7356523/linking-math-library-to-a-c90-code-using-gcc
 // http://www.sbin.org/doc/glibc/libc_19.html
@@ -120,7 +119,7 @@ static GdkPixbuf *_copy_new_pixbuf_rotate(const GdkPixbuf *pb_src, int rotate)
 	return pb;
 }
 
-bool et_mouse_cursor_info_init()
+bool et_mouse_cursor_info_init(const char *dirpath_application_base)
 {
 	et_assert(!_is_init_mouse_cursor_infos);
 
@@ -135,8 +134,7 @@ bool et_mouse_cursor_info_init()
 			case EtMouseCursorId_Rotate_UpRight:
 				{
 					et_assertf(info->filepath, "%d", info->id);
-					const char *a = et_etaion_get_application_base_dir();
-					char *path = g_strdup_printf("%s/%s", a, info->filepath);
+					char *path = g_strdup_printf("%s/%s", dirpath_application_base, info->filepath);
 					et_assertf(path, "'%s'", info->filepath);
 					GError *error = NULL;
 					info->pixbuf = gdk_pixbuf_new_from_file(path, &error);
