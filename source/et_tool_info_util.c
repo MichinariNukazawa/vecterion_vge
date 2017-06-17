@@ -613,13 +613,17 @@ bool et_tool_info_util_func_edit_element_mouse_action(
 			}
 			break;
 		case EtMouseAction_Move:
+		case EtMouseAction_Up:
 			{
-				if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
-					break;
-				}
+				if(EtMouseAction_Move == mouse_action.action){
+					if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
+						break;
+					}
 
-				if(0 != (mouse_action.state & GDK_SHIFT_MASK)){
-					break;
+					if(0 != (mouse_action.state & GDK_SHIFT_MASK)){
+						break;
+					}
+
 				}
 
 				if(!is_move_)
@@ -660,45 +664,44 @@ bool et_tool_info_util_func_edit_element_mouse_action(
 					default:
 						break;
 				}
-			}
-			break;
-		case EtMouseAction_Up:
-			{
-				switch(mode_){
-					case EtFocusElementMouseActionMode_Translate:
-						{
-							if(is_move_){
-								// NOP
-							}else{
-								if(0 == (mouse_action.state & GDK_SHIFT_MASK)){
-									pv_focus_clear_set_element(focus, touch_element_);
+
+				if(EtMouseAction_Up == mouse_action.action){
+					switch(mode_){
+						case EtFocusElementMouseActionMode_Translate:
+							{
+								if(is_move_){
+									// NOP
 								}else{
-									if(!is_already_focus_){
-										// NOP
+									if(0 == (mouse_action.state & GDK_SHIFT_MASK)){
+										pv_focus_clear_set_element(focus, touch_element_);
 									}else{
-										pv_focus_remove_element(focus, touch_element_);
+										if(!is_already_focus_){
+											// NOP
+										}else{
+											pv_focus_remove_element(focus, touch_element_);
+										}
 									}
 								}
 							}
-						}
-						break;
-					default:
-						break;
+							break;
+						default:
+							break;
+					}
+
+					// apply work appearances
+					size_t num_ = pv_general_get_parray_num((void **)focus->elements);
+					for(int i = 0; i < (int)num_; i++){
+						PvElement *element = focus->elements[i];
+						const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+						info->func_apply_appearances(element, element->etaion_work_appearances);
+						element->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
+					}
+
+					mode_edge_ = EdgeKind_None;
+					mode_ = EtFocusElementMouseActionMode_None;
+
+					*is_save = true;
 				}
-
-				// apply work appearances
-				size_t num_ = pv_general_get_parray_num((void **)focus->elements);
-				for(int i = 0; i < (int)num_; i++){
-					PvElement *element = focus->elements[i];
-					const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
-					info->func_apply_appearances(element, element->etaion_work_appearances);
-					element->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
-				}
-
-				mode_edge_ = EdgeKind_None;
-				mode_ = EtFocusElementMouseActionMode_None;
-
-				*is_save = true;
 			}
 			break;
 		default:

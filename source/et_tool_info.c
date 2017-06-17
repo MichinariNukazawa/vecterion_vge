@@ -51,7 +51,7 @@ static GdkPixbuf *conv_new_icon_focus_(GdkPixbuf *pb_src)
 	return pb;
 }
 
-bool et_tool_info_init(const char *dirpath_application_base)
+static bool et_tool_info_init_inline_(const char *dirpath_application_base, bool is_test)
 {
 	et_assert(!et_tool_info_is_init_);
 
@@ -72,12 +72,16 @@ bool et_tool_info_init(const char *dirpath_application_base)
 		info->icon_focus = conv_new_icon_focus_(info->icon);
 
 		// ** mouse cursor
-		assert(gdk_display_get_default());
-		info->mouse_cursor = gdk_cursor_new_from_pixbuf(
-				gdk_display_get_default(),
-				info->icon_cursor,
-				0, 0);
-		et_assertf(info->mouse_cursor, "%d", tool_id);
+		if(is_test){
+			info->mouse_cursor = (GdkCursor *)1;
+		}else{
+			assert(gdk_display_get_default());
+			info->mouse_cursor = gdk_cursor_new_from_pixbuf(
+					gdk_display_get_default(),
+					info->icon_cursor,
+					0, 0);
+			et_assertf(info->mouse_cursor, "%d", tool_id);
+		}
 	}
 
 	et_tool_info_is_init_ = true;
@@ -85,6 +89,16 @@ bool et_tool_info_init(const char *dirpath_application_base)
 	et_debug("initialized EtToolInfo num:%zu", num_tool);
 
 	return true;
+}
+
+bool et_tool_info_init(const char *dirpath_application_base)
+{
+	return et_tool_info_init_inline_(dirpath_application_base, false);
+}
+
+bool et_tool_info_init_for_unittest(const char *dirpath_application_base)
+{
+	return et_tool_info_init_inline_(dirpath_application_base, true);
 }
 
 PvPoint pv_resize_point_(PvPoint point, PvPoint resize, PvPoint center)

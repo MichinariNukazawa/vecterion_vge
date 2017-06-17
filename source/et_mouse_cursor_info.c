@@ -119,11 +119,11 @@ static GdkPixbuf *_copy_new_pixbuf_rotate(const GdkPixbuf *pb_src, int rotate)
 	return pb;
 }
 
-bool et_mouse_cursor_info_init(const char *dirpath_application_base)
+static bool et_mouse_cursor_info_init_inline_(
+		const char *dirpath_application_base,
+		bool is_test)
 {
 	et_assert(!_is_init_mouse_cursor_infos);
-
-	et_assertf(gdk_display_get_default(), "GdkDisplay not grub");
 
 	size_t num = _et_mouse_cursor_get_num();
 	for(int i = 0; i < (int)num; i++){
@@ -199,23 +199,38 @@ bool et_mouse_cursor_info_init(const char *dirpath_application_base)
 				}
 		}
 
+		if(is_test){
+			info->cursor = (GdkCursor *)(1);
+		}else{
+			et_assertf(gdk_display_get_default(), "GdkDisplay not grub");
 #ifndef TARGET_OS_WIN
-		info->cursor = gdk_cursor_new_from_pixbuf(
-				gdk_display_get_default(),
-				info->pixbuf,
-				info->center_x, info->center_y);
+			info->cursor = gdk_cursor_new_from_pixbuf(
+					gdk_display_get_default(),
+					info->pixbuf,
+					info->center_x, info->center_y);
 #else
-		info->cursor = gdk_cursor_new_from_pixbuf(
-				gdk_display_get_default(),
-				info->pixbuf,
-				0, 0);
+			info->cursor = gdk_cursor_new_from_pixbuf(
+					gdk_display_get_default(),
+					info->pixbuf,
+					0, 0);
 #endif
+		}
 		et_assert(info->cursor);
 	}
 
 	_is_init_mouse_cursor_infos = true;
 
 	return true;
+}
+
+bool et_mouse_cursor_info_init(const char *dirpath_application_base)
+{
+	return et_mouse_cursor_info_init_inline_(dirpath_application_base, false);
+}
+
+bool et_mouse_cursor_info_init_for_unittest(const char *dirpath_application_base)
+{
+	return et_mouse_cursor_info_init_inline_(dirpath_application_base, true);
 }
 
 const EtMouseCursorInfo *et_mouse_cursor_get_info_from_id(EtMouseCursorId id)

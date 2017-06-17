@@ -51,6 +51,7 @@ size_t et_tool_get_num();
 const EtToolInfo *et_tool_get_info_from_id(EtToolId tool_id);
 
 #ifdef include_ET_TEST
+bool et_tool_info_init_for_unittest(const char *dirpath_application_base);
 #endif // include_ET_TEST
 
 #endif // include_ET_TOOL_INFO_H
