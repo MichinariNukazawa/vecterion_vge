@@ -6,7 +6,7 @@
 #include "pv_element.h"
 #include "pv_element_info.h"
 #include "pv_rotate.h"
-#include "et_mouse_cursor.h"
+#include "et_mouse_cursor_info.h"
 
 
 static GdkCursor *get_cursor_from_edge_(EdgeKind edge)

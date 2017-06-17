@@ -5,7 +5,7 @@
 #include "pv_element_general.h"
 #include "et_etaion.h"
 #include "et_tool_info.h"
-#include "et_mouse_cursor.h"
+#include "et_mouse_cursor_info.h"
 
 static EtToolPanel *_et_tool_panel = NULL;
 

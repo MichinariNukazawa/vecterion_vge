@@ -1,4 +1,4 @@
-#include "et_mouse_cursor.h"
+#include "et_mouse_cursor_info.h"
 
 #include "et_error.h"
 

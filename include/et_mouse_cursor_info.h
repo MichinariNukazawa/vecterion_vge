@@ -3,8 +3,8 @@
  * or please contact to author.
  * author: michinari.nukazawa@gmail.com / project daisy bell
  */
-#ifndef include_ET_MOUSE_CURSOR_H
-#define include_ET_MOUSE_CURSOR_H
+#ifndef include_ET_MOUSE_CURSOR_INFO_H
+#define include_ET_MOUSE_CURSOR_INFO_H
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -36,5 +36,5 @@ const EtMouseCursorInfo *et_mouse_cursor_get_info_from_id(EtMouseCursorId);
 #ifdef include_ET_TEST
 #endif // include_ET_TEST
 
-#endif // include_ET_MOUSE_CURSOR_H
+#endif // include_ET_MOUSE_CURSOR_INFO_H
 
