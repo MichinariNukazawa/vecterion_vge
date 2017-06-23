@@ -969,6 +969,7 @@ PvElement **pv_element_copy_elements(PvElement **src)
 	size_t num = pv_general_get_parray_num((void **)src);
 	PvElement **dst = malloc((num + 1) * sizeof(PvElement *));
 	pv_assert(dst);
+	dst[0] = NULL;
 
 	for(int i = 0; i < (int)num; i++){
 		dst[i + 0] = src[i];
