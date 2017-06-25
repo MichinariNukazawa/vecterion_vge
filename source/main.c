@@ -47,6 +47,7 @@
 typedef struct{
 	GtkWindow *window;
 	GtkWidget *status_bar;
+	GtkBuilder *document_new_dialog_builder;
 }EtWindow;
 
 static EtWindow window_;
@@ -54,6 +55,7 @@ static EtWindow *self = &window_;
 
 static void et_app_set_style_();
 static bool init_menu_(GtkWidget *window, GtkWidget *box_root);
+static void init_gtk_builder_();
 // static bool _debug_init();
 static EtDocId open_doc_new_from_file_(const char* filepath, const PvImageFileReadOption *imageFileReadOption);
 static bool output_file_from_doc_id_(const char *filepath, EtDocId doc_id);
@@ -303,6 +305,7 @@ int main (int argc, char **argv){
 		return -1;
 	}
 
+	init_gtk_builder_();
 
 	// ** window and container(box)s application base.
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -649,33 +652,17 @@ static gboolean cb_menu_file_new_(gpointer data)
 	vg->rect.w = 1200;
 	vg->rect.h = 800;
 
-	GtkWidget *dialog;
-	GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
-	dialog = gtk_dialog_new_with_buttons ("New Document",
-			NULL,
-			flags,
-			"_OK",
-			GTK_RESPONSE_ACCEPT,
-			"_Cancel",
-			GTK_RESPONSE_REJECT,
-			NULL);
-
-	GtkWidget *hbox_w = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
-	GtkWidget *hbox_h = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
-	GtkWidget *spin_w = gtk_spin_button_new_with_range(0, PVVG_PX_SIZE_MAX, PVVG_PX_SIZE_MIN);
-	GtkWidget *spin_h = gtk_spin_button_new_with_range(0, PVVG_PX_SIZE_MAX, PVVG_PX_SIZE_MIN);
-	GtkWidget *label_w = gtk_label_new_with_mnemonic("width ");
-	GtkWidget *label_h = gtk_label_new_with_mnemonic("height");
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_w), vg->rect.w);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_h), vg->rect.h);
-	GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-	gtk_box_pack_start(GTK_BOX(hbox_w), label_w, true, true, 0);
-	gtk_box_pack_start(GTK_BOX(hbox_h), label_h, true, true, 1);
-	gtk_box_pack_end(GTK_BOX(hbox_w), spin_w, true, true, 0);
-	gtk_box_pack_end(GTK_BOX(hbox_h), spin_h, true, true, 1);
-	gtk_box_pack_start(GTK_BOX(content), hbox_w, true, true, 0);
-	gtk_box_pack_start(GTK_BOX(content), hbox_h, true, true, 1);
-	gtk_widget_show_all(dialog);
+	GtkWidget *spin_w = GTK_WIDGET(gtk_builder_get_object(
+			self->document_new_dialog_builder, "spinbutton_w"));
+	et_assert(spin_w);
+	gtk_spin_button_set_range(GTK_SPIN_BUTTON(spin_w), PVVG_PX_SIZE_MIN, PVVG_PX_SIZE_MAX);
+	GtkWidget *spin_h = GTK_WIDGET(gtk_builder_get_object(
+			self->document_new_dialog_builder, "spinbutton_h"));
+	et_assert(spin_h);
+	gtk_spin_button_set_range(GTK_SPIN_BUTTON(spin_h), PVVG_PX_SIZE_MIN, PVVG_PX_SIZE_MAX);
+	GtkWidget *dialog = GTK_WIDGET(gtk_builder_get_object(
+			self->document_new_dialog_builder, "document_new_dialog"));
+	et_assert(dialog);
 
 	gint result = gtk_dialog_run (GTK_DIALOG (dialog));
 	switch (result)
@@ -693,7 +680,7 @@ static gboolean cb_menu_file_new_(gpointer data)
 			et_debug("Cancel");
 			break;
 	}
-	gtk_widget_destroy (dialog);
+	gtk_widget_hide (dialog);
 
 	pv_vg_free(vg);
 
@@ -2666,6 +2653,28 @@ static bool init_menu_(GtkWidget *window, GtkWidget *box_root)
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	return true;
+}
+
+static void init_gtk_builder_()
+{
+	GtkBuilder *document_new_dialog_builder = gtk_builder_new();
+
+	gchar *path = g_strdup_printf(
+			"%s/resource/ui/document_new_dialog.glade",
+			et_etaion_get_application_base_dir());
+
+	GError* error = NULL;
+	if ( !gtk_builder_add_from_file(document_new_dialog_builder, path, &error)){
+		et_critical("Couldn't load document_new_dialog_builder file: %s", error->message);
+		g_error_free(error);
+		exit(1);
+	}
+	g_free(path);
+
+	gtk_builder_connect_signals( document_new_dialog_builder, NULL);
+
+	self->document_new_dialog_builder = document_new_dialog_builder;
+	et_assert(self->document_new_dialog_builder);
 }
 
 static bool slot_from_mouse_action_(EtDocId doc_id, EtMouseAction mouse_action)
