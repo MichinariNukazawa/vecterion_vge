@@ -212,7 +212,9 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(
 
 	// ** focus
 	if(NULL != focus){
-		PvRect rect_extent = PvRect_Default;
+		PvRect rect_extent_b = PvRect_Default;
+		PvRect rect_extent_a = PvRect_Default;
+		PvRect rb, ra;
 		size_t num = pv_general_get_parray_num((void **)focus->elements);
 		for(int i = 0; i < (int)num; i++){
 			const PvElement *focus_element = focus->elements[i];
@@ -231,17 +233,29 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(
 
 			const PvElementInfo *info = pv_element_get_info_from_kind(focus_element->kind);
 			pv_assertf(info, "%d", focus_element->kind);
+
+			rb = info->func_get_rect_by_anchor_points(focus_element);
+			{
+				PvElement *simplify = pv_element_copy_recursive(focus_element);
+				pv_assert(simplify);
+				info->func_apply_appearances(simplify, focus_element->etaion_work_appearances);
+				ra = info->func_get_rect_by_anchor_points(simplify);
+				pv_element_free(simplify);
+			}
 			if(0 == i){
-				rect_extent = info->func_get_rect_by_anchor_points(focus_element);
+				rect_extent_b = rb;
+				rect_extent_a = ra;
 			}else{
-				PvRect r = info->func_get_rect_by_anchor_points(focus_element);
-				rect_extent = pv_rect_expand(rect_extent, r);
+				rect_extent_b = pv_rect_expand(rect_extent_b, rb);
+				rect_extent_a = pv_rect_expand(rect_extent_a, ra);
 			}
 		}
 		if(0 != num){
-			rect_extent = pv_rect_mul_value(rect_extent, render_context.scale);
+			rect_extent_b = pv_rect_mul_value(rect_extent_b, render_context.scale);
+			rect_extent_a = pv_rect_mul_value(rect_extent_a, render_context.scale);
 			pv_cairo_set_source_rgba_workingcolor(cr);
-			cairo_rectangle (cr, rect_extent.x, rect_extent.y, rect_extent.w, rect_extent.h);
+			cairo_rectangle (cr, rect_extent_b.x, rect_extent_b.y, rect_extent_b.w, rect_extent_b.h);
+			cairo_rectangle (cr, rect_extent_a.x, rect_extent_a.y, rect_extent_a.w, rect_extent_a.h);
 			cairo_stroke(cr);
 		}
 	}
