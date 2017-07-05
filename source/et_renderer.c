@@ -5,6 +5,7 @@
 #include "pv_renderer.h"
 #include "et_doc_manager.h"
 #include "et_etaion.h"
+#include "pv_document_preference.h"
 
 struct EtRenderer{
 	int dummy;
@@ -47,7 +48,15 @@ static GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext 
 	PvElement *element_group_edit_draw
 		= et_doc_get_element_group_edit_draw_from_id(et_doc_get_id(doc));
 
-	GdkPixbuf *pb = pv_renderer_pixbuf_from_vg(vg, render_context, focus, element_group_edit_draw);
+	PvDocumentPreference document_preference
+		= et_doc_gpv_document_preference_from_id(et_doc_get_id(doc));
+
+	GdkPixbuf *pb = pv_renderer_pixbuf_from_vg(
+			vg,
+			render_context,
+			focus,
+			&document_preference,
+			element_group_edit_draw);
 	if(NULL == pb){
 		et_error("");
 		return NULL;

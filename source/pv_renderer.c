@@ -142,6 +142,7 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(
 		const PvVg *vg,
 		const PvRenderContext render_context,
 		const PvFocus *focus,
+		const PvDocumentPreference *document_preference,
 		const PvElement *element_overwrite)
 {
 	pv_assert(vg);
@@ -166,6 +167,7 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(
 	PvElementRenderContext element_render_context_ = PvElementRenderContext_Default;
 	PvElementRenderContext *element_render_context = &element_render_context_;
 
+	// ** document
 	PvRenderOption render_option = {
 		.render_context = render_context,
 		.focus = focus,
@@ -181,6 +183,34 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(
 		goto failed;
 	}
 
+	// ** document preference
+	if(NULL != document_preference){
+		if(document_preference->snap_context.is_snap_for_grid){
+			cairo_set_line_width (cr, 1.0);
+			pv_cairo_set_source_rgba_workingcolor_with_opacity(cr, 0.5);
+
+			//! @todo margin area
+			for(int x = 0; x < vg->rect.w; x += document_preference->snap_context.grid.x){
+				double y_head = -100; //! @todo
+				double y_foot = +100 + (vg->rect.w * render_context.scale); //! @todo
+				double x_pos = (x * render_context.scale);
+				cairo_move_to (cr, x_pos, y_head);
+				cairo_line_to (cr, x_pos, y_foot);
+			}
+
+			for(int y = 0; y < vg->rect.h; y += document_preference->snap_context.grid.y){
+				double x_head = -100; //! @todo
+				double x_foot = +100 + (vg->rect.h * render_context.scale); //! @todo
+				double y_pos = (y * render_context.scale);
+				cairo_move_to (cr, x_head, y_pos);
+				cairo_line_to (cr, x_foot, y_pos);
+			}
+
+			cairo_stroke(cr);
+		}
+	}
+
+	// ** focus
 	if(NULL != focus){
 		PvRect rect_extent = PvRect_Default;
 		size_t num = pv_general_get_parray_num((void **)focus->elements);
@@ -216,6 +246,7 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(
 		}
 	}
 
+	// ** tool
 	if(NULL != element_overwrite){
 		render_option.focus = NULL;
 		render_option.render_context.is_focus = false;

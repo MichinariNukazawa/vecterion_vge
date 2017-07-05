@@ -20,6 +20,7 @@ typedef struct EtDoc{
 	PvVg *latest_saved_vg;
 
 	PvElement *element_group_edit_draw;
+	PvDocumentPreference document_preference;
 
 	EtDocHistoryHive *history_hive;
 
@@ -64,6 +65,7 @@ EtDoc *et_doc_new_from_vg(const PvVg *vg)
 
 	self->filepath = NULL;
 	self->element_group_edit_draw = NULL;
+	self->document_preference = PvDocumentPreference_Default;
 
 	self->history_hive = et_doc_history_hive_new(vg);
 	if(NULL == self->history_hive){
@@ -305,6 +307,22 @@ PvFocus *et_doc_get_focus_ref_from_id(EtDocId id)
 	return hist_item->focus;
 error:
 	return NULL;
+}
+
+PvDocumentPreference et_doc_gpv_document_preference_from_id(EtDocId doc_id)
+{
+	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
+	et_assertf(self, "%d\n", doc_id);
+
+	return self->document_preference;
+}
+
+void et_doc_spv_document_preference_from_id(EtDocId doc_id, PvDocumentPreference document_preference)
+{
+	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
+	et_assertf(self, "%d\n", doc_id);
+
+	self->document_preference = document_preference;
 }
 
 void et_doc_set_element_group_edit_draw_from_id(EtDocId doc_id, const PvElement *element_group)

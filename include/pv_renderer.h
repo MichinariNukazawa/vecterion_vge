@@ -8,6 +8,7 @@
 #include "pv_vg.h"
 #include "pv_render_context.h"
 #include "pv_focus.h"
+#include "pv_document_preference.h"
 
 /*!
  * @param focus: NULL is disable focusing decorations(ex. frame line of select elements).
@@ -16,6 +17,7 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(
 		const PvVg *vg,
 		const PvRenderContext render_context,
 		const PvFocus *focus,
+		const PvDocumentPreference *document_preference,
 		const PvElement *element_overwrite);
 
 #ifdef include_ET_TEST

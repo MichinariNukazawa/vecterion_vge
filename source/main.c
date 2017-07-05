@@ -38,6 +38,7 @@
 #include "et_doc_relation.h"
 #include "et_clipboard_manager.h"
 #include "pv_image_file_read_option.h"
+#include "et_document_preference_dialog.h"
 #include "version.h"
 
 #define VECTERION_FULLNAME "Vecterion Vector Graphic Editor"
@@ -48,6 +49,7 @@ typedef struct{
 	GtkWindow *window;
 	GtkWidget *status_bar;
 	GtkBuilder *document_new_dialog_builder;
+	GtkBuilder *document_preference_dialog_builder;
 }EtWindow;
 
 static EtWindow window_;
@@ -653,15 +655,15 @@ static gboolean cb_menu_file_new_(gpointer data)
 	vg->rect.h = 800;
 
 	GtkWidget *spin_w = GTK_WIDGET(gtk_builder_get_object(
-			self->document_new_dialog_builder, "spinbutton_w"));
+				self->document_new_dialog_builder, "spinbutton_w"));
 	et_assert(spin_w);
 	gtk_spin_button_set_range(GTK_SPIN_BUTTON(spin_w), PVVG_PX_SIZE_MIN, PVVG_PX_SIZE_MAX);
 	GtkWidget *spin_h = GTK_WIDGET(gtk_builder_get_object(
-			self->document_new_dialog_builder, "spinbutton_h"));
+				self->document_new_dialog_builder, "spinbutton_h"));
 	et_assert(spin_h);
 	gtk_spin_button_set_range(GTK_SPIN_BUTTON(spin_h), PVVG_PX_SIZE_MIN, PVVG_PX_SIZE_MAX);
 	GtkWidget *dialog = GTK_WIDGET(gtk_builder_get_object(
-			self->document_new_dialog_builder, "document_new_dialog"));
+				self->document_new_dialog_builder, "document_new_dialog"));
 	et_assert(dialog);
 
 	gint result = gtk_dialog_run (GTK_DIALOG (dialog));
@@ -717,7 +719,12 @@ static bool output_file_from_doc_id_(const char *filepath, EtDocId doc_id)
 		}else{
 			render_context.background_kind = PvBackgroundKind_White;
 		}
-		GdkPixbuf *pixbuf = pv_renderer_pixbuf_from_vg(vg, render_context, NULL, NULL);
+		GdkPixbuf *pixbuf = pv_renderer_pixbuf_from_vg(
+				vg,
+				render_context,
+				NULL,
+				NULL,
+				NULL);
 		if(!pixbuf){
 			et_error("");
 			return false;
@@ -1170,6 +1177,23 @@ static gboolean cb_menu_edit_delete_(gpointer data)
 		et_error("");
 		return false;
 	}
+
+	et_doc_signal_update_from_id(doc_id);
+
+	return false;
+}
+
+static gboolean cb_menu_document_preference_(gpointer data)
+{
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		_show_error_dialog("DocumentPreferenceDialog:nothing document.");
+		//et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	pv_document_preference_dialog_run(
+			self->document_preference_dialog_builder);
 
 	et_doc_signal_update_from_id(doc_id);
 
@@ -1868,6 +1892,26 @@ static bool cb_menu_tool_change_(GtkMenuItem *menuitem, gpointer user_data)
 	return false;
 }
 
+static bool cb_menu_tool_snap_for_grid_(GtkCheckMenuItem *menuitem, gpointer user_data)
+{
+	et_debug("");
+
+	EtDocId doc_id = et_etaion_get_current_doc_id();
+	if(doc_id < 0){
+		_show_error_dialog("Resize:nothing document.");
+		et_bug("%d\n", doc_id);
+		return false;
+	}
+
+	PvDocumentPreference document_preference = et_doc_gpv_document_preference_from_id(doc_id);
+	document_preference.snap_context.is_snap_for_grid = gtk_check_menu_item_get_active(menuitem);
+	et_doc_spv_document_preference_from_id(doc_id, document_preference);
+
+	et_doc_signal_update_from_id(doc_id);
+
+	return false;
+}
+
 static bool pv_element_is_exist_from_elements_(const PvElement *element, PvElement **elements)
 {
 	size_t num = pv_general_get_parray_num((void **)elements);
@@ -2518,6 +2562,7 @@ static GtkWidget *pv_get_menuitem_new_tree_of_document_(GtkAccelGroup *accel_gro
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
 	GtkWidget *menu;
+	GtkWidget *separator;
 
 	menuitem_root = gtk_menu_item_new_with_mnemonic ("_Document");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
@@ -2530,6 +2575,17 @@ static GtkWidget *pv_get_menuitem_new_tree_of_document_(GtkAccelGroup *accel_gro
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
 	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_document_resize_), NULL);
+
+	separator = gtk_separator_menu_item_new();
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), separator);
+
+	// ** Accel to "/_Document/_Preferences"
+	menuitem = gtk_menu_item_new_with_label ("_Preferences");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "activate", G_CALLBACK(cb_menu_document_preference_), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_p, (GDK_CONTROL_MASK), GTK_ACCEL_VISIBLE);
 
 	return menuitem_root;
 }
@@ -2574,6 +2630,7 @@ static GtkWidget *pv_get_menuitem_new_tree_of_tool_(GtkAccelGroup *accel_group)
 	GtkWidget *menuitem_root;
 	GtkWidget *menuitem;
 	GtkWidget *menu;
+	GtkWidget *separator;
 
 	menuitem_root = gtk_menu_item_new_with_mnemonic ("_Tool");
 	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem_root), TRUE);
@@ -2584,6 +2641,19 @@ static GtkWidget *pv_get_menuitem_new_tree_of_tool_(GtkAccelGroup *accel_group)
 	// ** "/_Tool/_Tool/*"
 	menuitem = pv_get_menuitem_new_tree_of_tool_tool_(accel_group);
 	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+
+	separator = gtk_separator_menu_item_new();
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), separator);
+
+	// ** Accel to "/_Tool/Snap for grid(Ctrl+Shift+\)"
+	menuitem = gtk_check_menu_item_new_with_label ("Snap for grid");
+	gtk_menu_item_set_use_underline (GTK_MENU_ITEM (menuitem), TRUE);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menu), menuitem);
+	g_signal_connect(menuitem, "toggled", G_CALLBACK(cb_menu_tool_snap_for_grid_), NULL);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_backslash, (GDK_CONTROL_MASK | GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
+	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
+			GDK_KEY_bar, (GDK_CONTROL_MASK | GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 
 	return menuitem_root;
 }
@@ -2657,24 +2727,28 @@ static bool init_menu_(GtkWidget *window, GtkWidget *box_root)
 
 static void init_gtk_builder_()
 {
-	GtkBuilder *document_new_dialog_builder = gtk_builder_new();
+	{
+		self->document_new_dialog_builder = gtk_builder_new();
+		et_assert(self->document_new_dialog_builder);
 
-	gchar *path = g_strdup_printf(
-			"%s/resource/ui/document_new_dialog.glade",
-			et_etaion_get_application_base_dir());
+		gchar *path = g_strdup_printf(
+				"%s/resource/ui/document_new_dialog.glade",
+				et_etaion_get_application_base_dir());
 
-	GError* error = NULL;
-	if ( !gtk_builder_add_from_file(document_new_dialog_builder, path, &error)){
-		et_critical("Couldn't load document_new_dialog_builder file: %s", error->message);
-		g_error_free(error);
-		exit(1);
+		GError* error = NULL;
+		if ( !gtk_builder_add_from_file(self->document_new_dialog_builder, path, &error)){
+			et_critical("Couldn't load document_new_dialog_builder file: %s", error->message);
+			g_error_free(error);
+			exit(1);
+		}
+		g_free(path);
+
+		gtk_builder_connect_signals( self->document_new_dialog_builder, NULL);
 	}
-	g_free(path);
 
-	gtk_builder_connect_signals( document_new_dialog_builder, NULL);
-
-	self->document_new_dialog_builder = document_new_dialog_builder;
-	et_assert(self->document_new_dialog_builder);
+	self->document_preference_dialog_builder = pv_document_preference_dialog_init(
+			et_etaion_get_application_base_dir());
+	et_assert(self->document_preference_dialog_builder);
 }
 
 static bool slot_from_mouse_action_(EtDocId doc_id, EtMouseAction mouse_action)

@@ -12,6 +12,7 @@
 #include "et_doc_id.h"
 #include "pv_vg.h"
 #include "pv_focus.h"
+#include "pv_document_preference.h"
 
 struct EtDoc;
 typedef struct EtDoc EtDoc;
@@ -36,6 +37,8 @@ EtCallbackId et_doc_add_slot_change(EtDocId doc_id, EtDocSlotChange slot, gpoint
 PvFocus *et_doc_get_focus_ref_from_id(EtDocId id);
 // PvFocus et_doc_get_focus(EtDoc *self);
 // void et_doc_set_focus(EtDoc *self, PvFocus focus);
+PvDocumentPreference et_doc_gpv_document_preference_from_id(EtDocId);
+void et_doc_spv_document_preference_from_id(EtDocId, PvDocumentPreference);
 
 void et_doc_set_element_group_edit_draw_from_id(EtDocId, const PvElement *);
 PvElement *et_doc_get_element_group_edit_draw_from_id(EtDocId);

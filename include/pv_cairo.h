@@ -11,6 +11,7 @@
 #include <gdk/gdk.h>
 #include "pv_type.h"
 
+void pv_cairo_set_source_rgba_workingcolor_with_opacity(cairo_t *cr, double opacity);
 void pv_cairo_set_source_rgba_workingcolor(cairo_t *);
 void pv_cairo_set_source_rgba_subworkingcolor(cairo_t *);
 void pv_cairo_fill_checkboard(cairo_t *, PvRect);
