@@ -1903,9 +1903,9 @@ static bool cb_menu_tool_snap_for_grid_(GtkCheckMenuItem *menuitem, gpointer use
 		return false;
 	}
 
-	PvDocumentPreference document_preference = et_doc_gpv_document_preference_from_id(doc_id);
+	PvDocumentPreference document_preference = et_doc_get_document_preference_from_id(doc_id);
 	document_preference.snap_context.is_snap_for_grid = gtk_check_menu_item_get_active(menuitem);
-	et_doc_spv_document_preference_from_id(doc_id, document_preference);
+	et_doc_set_document_preference_from_id(doc_id, document_preference);
 
 	et_doc_signal_update_from_id(doc_id);
 

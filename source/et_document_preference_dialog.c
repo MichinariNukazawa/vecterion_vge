@@ -58,7 +58,7 @@ int pv_document_preference_dialog_run(GtkBuilder *builder)
 		return GTK_RESPONSE_REJECT;
 	}
 
-	PvDocumentPreference document_preference = et_doc_gpv_document_preference_from_id(doc_id);
+	PvDocumentPreference document_preference = et_doc_get_document_preference_from_id(doc_id);
 
 	GtkWidget *dialog = GTK_WIDGET(
 			gtk_builder_get_object(
@@ -85,7 +85,7 @@ int pv_document_preference_dialog_run(GtkBuilder *builder)
 						&document_preference);
 				et_assert(res);
 
-				et_doc_spv_document_preference_from_id(doc_id, document_preference);
+				et_doc_set_document_preference_from_id(doc_id, document_preference);
 			}
 			break;
 		default:

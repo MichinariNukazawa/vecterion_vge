@@ -309,7 +309,7 @@ error:
 	return NULL;
 }
 
-PvDocumentPreference et_doc_gpv_document_preference_from_id(EtDocId doc_id)
+PvDocumentPreference et_doc_get_document_preference_from_id(EtDocId doc_id)
 {
 	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
 	et_assertf(self, "%d\n", doc_id);
@@ -317,7 +317,7 @@ PvDocumentPreference et_doc_gpv_document_preference_from_id(EtDocId doc_id)
 	return self->document_preference;
 }
 
-void et_doc_spv_document_preference_from_id(EtDocId doc_id, PvDocumentPreference document_preference)
+void et_doc_set_document_preference_from_id(EtDocId doc_id, PvDocumentPreference document_preference)
 {
 	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
 	et_assertf(self, "%d\n", doc_id);

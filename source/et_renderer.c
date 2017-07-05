@@ -49,7 +49,7 @@ static GdkPixbuf *_et_renderer_rendering_pixbuf_new(EtDoc *doc, PvRenderContext 
 		= et_doc_get_element_group_edit_draw_from_id(et_doc_get_id(doc));
 
 	PvDocumentPreference document_preference
-		= et_doc_gpv_document_preference_from_id(et_doc_get_id(doc));
+		= et_doc_get_document_preference_from_id(et_doc_get_id(doc));
 
 	GdkPixbuf *pb = pv_renderer_pixbuf_from_vg(
 			vg,
