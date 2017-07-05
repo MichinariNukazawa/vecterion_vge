@@ -73,6 +73,31 @@ PvRect get_rect_extent_from_elements_(PvElement **elements)
 	return rect_extent;
 }
 
+PvRect get_rect_extent_from_elements_apply_appearances_(PvElement **elements)
+{
+	PvRect rect_extent = PvRect_Default;
+	size_t num = pv_general_get_parray_num((void **)elements);
+	for(int i = 0; i < (int)num; i++){
+		const PvElement *element = elements[i];
+		const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+		et_assertf(info, "%d", element->kind);
+
+		PvElement *simplify = pv_element_copy_recursive(element);
+		info->func_apply_appearances(simplify, element->etaion_work_appearances);
+		PvRect rect = info->func_get_rect_by_anchor_points(simplify);
+		pv_element_free(simplify);
+
+		if(0 == i){
+			rect_extent = rect;
+		}else{
+			rect_extent = pv_rect_expand(rect_extent, rect);
+		}
+	}
+
+
+	return rect_extent;
+}
+
 static EdgeKind get_outside_touch_edge_kind_from_rect_(PvRect rect, PvPoint point, double scale)
 {
 	const int PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH = 16;
@@ -494,14 +519,18 @@ static PvElement *element_new_from_circle_(PvPoint center, double size)
 	return pv_element_curve_new_from_rect(rect);
 }
 
-static PvElement *group_edit_(PvFocus *focus, EtFocusElementMouseActionMode mode_, PvRect focusing_mouse_rect, double scale)
+static PvElement *group_edit_(
+		PvFocus *focus,
+		EtFocusElementMouseActionMode mode_,
+		PvRect focusing_mouse_rect,
+		double scale)
 {
 	et_assert(focus);
 
 	PvElement *element_group_edit_draw = pv_element_new(PvElementKind_Group);
 	et_assert(element_group_edit_draw);
 
-	PvRect after_extent_rect_ = get_rect_extent_from_elements_(focus->elements);
+	PvRect after_extent_rect_ = get_rect_extent_from_elements_apply_appearances_(focus->elements);
 	if(pv_focus_is_focused(focus)){
 		int size = 5.0 / scale;
 		for(int i = 0; i < 4; i++){
