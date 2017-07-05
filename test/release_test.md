@@ -273,6 +273,18 @@ Layer順序の並び替えを行った際、Layer内のElementが並び替えら
 * CurveElementを2つFocusし、Ctrl+Gショートカットを押下する。
 	FocusされているElementsを含んだGroupが作成され、EvenOddマスクが設定される。
 
+### Snap
+#### SnapForGrid
+* Ctrl+Shift+\(backslask)ショートカットを押下する。
+	Canvas上にGridが表示される。  
+* 前のテストに続けて、ショートカットを押下する。
+	SnapForGridが非表示になる。  
+* Canvas上にGridが表示されている状態で、Menuの Document > Preference を押下し、
+ DocumentPreferenceダイアログにて、SnapForGridのwidth,heightの変更を実行する。
+	Canvas上のGridが変更される。  
+* (准正常系)DocumentPreferenceダイアログにて、Cancelする。
+	Canvas上のGridが変更されない。  
+
 ### Cut, Copy, Paste
 
 #### Cut and Paste
