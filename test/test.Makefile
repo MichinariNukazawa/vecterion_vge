@@ -31,6 +31,7 @@ TEST_TARGETS		:= $(TEST_BINS)
 
 TEST_O_OBJECTS		:= $(filter-out $(OBJECT_DIR)/main.o,$(OBJECTS))
 TEST_COMMAND := true $(foreach TEST_TARGET,$(TEST_TARGETS), && echo "$(TEST_TARGET)" && $(TEST_TARGET))
+TEST_COMMAND_GDB := true $(foreach TEST_TARGET,$(TEST_TARGETS), && echo "$(TEST_TARGET)" && gdb -ex=run -ex=quit --args $(TEST_TARGET))
 
 
 
@@ -54,6 +55,9 @@ $(TEST_BUILD_DIR)/test_%.exe : $(TEST_OBJECT_DIR)/test_%.o $(TEST_O_OBJECTS) $(G
 
 unittest_run : $(TEST_TARGETS)
 	$(TEST_COMMAND)
+
+unittest_run_gdb : $(TEST_TARGETS)
+	$(TEST_COMMAND_GDB)
 
 
 
