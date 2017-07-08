@@ -160,6 +160,15 @@ PvRect pv_rect_mul_value(PvRect r, double value)
 	return ret;
 }
 
+PvRect pv_rect_add_point(PvRect r, PvPoint p)
+{
+	PvRect ret = r;
+	ret.x += p.x;
+	ret.y += p.y;
+
+	return ret;
+}
+
 PvRect pv_rect_abs_size(PvRect r)
 {
 	if(r.w < 0){

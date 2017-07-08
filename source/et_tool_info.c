@@ -117,15 +117,16 @@ static bool func_edit_element_mouse_action_(
 
 	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
 	et_assertf(vg, "%d", doc_id);
-
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
+	PvDocumentPreference document_preference = et_doc_get_document_preference_from_id(doc_id);
 
 	bool is_save = false;
 
 	bool res = et_tool_info_util_func_edit_element_mouse_action(
 			vg,
 			focus,
+			&document_preference.snap_context,
 			&is_save,
 			mouse_action,
 			edit_draw_element,
@@ -295,15 +296,16 @@ static bool func_edit_anchor_point_mouse_action_(
 {
 	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
 	et_assertf(vg, "%d", doc_id);
-
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
+	PvDocumentPreference document_preference = et_doc_get_document_preference_from_id(doc_id);
 
 	bool is_save = false;
 
 	bool res = et_tool_info_util_func_edit_anchor_point_mouse_action(
 			vg,
 			focus,
+			&document_preference.snap_context,
 			&is_save,
 			mouse_action,
 			edit_draw_element,
@@ -324,15 +326,16 @@ static bool func_edit_anchor_point_handle_mouse_action_(
 {
 	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
 	et_assertf(vg, "%d", doc_id);
-
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
+	PvDocumentPreference document_preference = et_doc_get_document_preference_from_id(doc_id);
 
 	bool is_save = false;
 
 	bool res = et_tool_info_util_func_edit_anchor_point_handle_mouse_action(
 			vg,
 			focus,
+			&document_preference.snap_context,
 			&is_save,
 			mouse_action,
 			edit_draw_element,
@@ -448,6 +451,7 @@ static bool func_add_basic_shape_element_mouse_action_(
 	et_assertf(doc, "%d", doc_id);
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
+	PvDocumentPreference document_preference = et_doc_get_document_preference_from_id(doc_id);
 
 	static EtFocusElementMouseActionMode mode_ = EtFocusElementMouseActionMode_None;
 	static PvRect src_extent_rect_when_down_;
@@ -464,7 +468,12 @@ static bool func_add_basic_shape_element_mouse_action_(
 			{
 				if(EtFocusElementMouseActionMode_Resize == mode_){
 					static EdgeKind mode_edge_ = EdgeKind_Resize_DownLeft;
-					resize_elements_(focus, mouse_action, mode_edge_, src_extent_rect_when_down_);
+					resize_elements_(
+							focus,
+							&document_preference.snap_context,
+							mouse_action,
+							mode_edge_,
+							src_extent_rect_when_down_);
 				}
 			}
 			break;

@@ -202,12 +202,48 @@ static PvElement *get_touch_element_(PvVg *vg, PvPoint g_point)
 	return element;
 }
 
-/*! @return is move */
-static void translate_elements_(
-		PvFocus *focus,
-		EtMouseAction mouse_action)
+static PvRectEdgeKind get_rect_edge_kind_of_quadrant_(PvPoint point)
 {
-	PvPoint move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
+	if(point.x < 0){
+		if(point.y < 0){
+			return PvRectEdgeKind_UpLeft;
+		}else{
+			return PvRectEdgeKind_DownLeft;
+		}
+	}else{
+		if(point.y < 0){
+			return PvRectEdgeKind_UpRight;
+		}else{
+			return PvRectEdgeKind_DownRight;
+		}
+	}
+}
+
+static double round_(double v, double between)
+{
+	return round(v/between) * between;
+}
+
+static PvPoint get_snap_move_(
+		PvRectEdgeKind rect_edge_kind,
+		const PvSnapContext *snap_context,
+		PvRect rect)
+{
+	et_assert(snap_context);
+
+	PvPoint src_point = pv_rect_get_edge_point(rect, rect_edge_kind);
+	PvPoint dst_point = src_point;
+
+	dst_point.x = round_(dst_point.x, snap_context->grid.x);
+	dst_point.y = round_(dst_point.y, snap_context->grid.y);
+
+	PvPoint diff = pv_point_sub(dst_point, src_point);
+	return diff;
+}
+
+void translate_elements_inline_(PvFocus *focus, PvPoint move)
+{
+	et_assert(focus);
 
 	size_t num = pv_general_get_parray_num((void **)focus->elements);
 	for(int i = 0; i < (int)num; i++){
@@ -226,6 +262,30 @@ static void translate_elements_(
 		*(element->etaion_work_appearances[0]) = appearance0;
 		element->etaion_work_appearances[1]->kind = PvAppearanceKind_None;
 	}
+
+	return;
+}
+
+/*! @return is move */
+static void translate_elements_(
+		PvFocus *focus,
+		const PvSnapContext *snap_context,
+		EtMouseAction mouse_action)
+{
+	et_assert(focus);
+	et_assert(snap_context);
+
+	PvPoint move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
+
+	if(snap_context->is_snap_for_grid){
+		PvRectEdgeKind rect_edge_kind = get_rect_edge_kind_of_quadrant_(mouse_action.diff_down);
+		PvRect extent_rect = get_rect_extent_from_elements_(focus->elements);
+		extent_rect = pv_rect_add_point(extent_rect, move);
+		PvPoint snap_move_ = get_snap_move_(rect_edge_kind, snap_context, extent_rect);
+		move = pv_point_add(move, snap_move_);
+	}
+
+	translate_elements_inline_(focus, move);
 
 	return;
 }
@@ -293,6 +353,7 @@ static PvPoint pv_resize_diff_(PvPoint size, PvPoint resize)
 
 EdgeKind resize_elements_(
 		PvFocus *focus,
+		const PvSnapContext *snap_context,
 		EtMouseAction mouse_action,
 		EdgeKind src_edge_kind_,
 		PvRect src_extent_rect)
@@ -574,6 +635,7 @@ static PvElement *group_edit_(
 bool et_tool_info_util_func_edit_element_mouse_action(
 		PvVg *vg,
 		PvFocus *focus,
+		const PvSnapContext *snap_context,
 		bool *is_save,
 		EtMouseAction mouse_action,
 		PvElement **edit_draw_element,
@@ -672,12 +734,20 @@ bool et_tool_info_util_func_edit_element_mouse_action(
 				switch(mode_){
 					case EtFocusElementMouseActionMode_Translate:
 						{
-							translate_elements_(focus, mouse_action);
+							translate_elements_(
+									focus,
+									snap_context,
+									mouse_action);
 						}
 						break;
 					case EtFocusElementMouseActionMode_Resize:
 						{
-							resize_elements_(focus, mouse_action, mode_edge_, src_extent_rect_when_down_);
+							resize_elements_(
+									focus,
+									snap_context,
+									mouse_action,
+									mode_edge_,
+									src_extent_rect_when_down_);
 						}
 						break;
 					case EtFocusElementMouseActionMode_Rotate:
@@ -936,6 +1006,7 @@ static bool translate_anchor_points_(PvFocus *focus, EtMouseAction mouse_action)
 bool et_tool_info_util_func_edit_anchor_point_mouse_action(
 		PvVg *vg,
 		PvFocus *focus,
+		const PvSnapContext *snap_context,
 		bool *is_save,
 		EtMouseAction mouse_action,
 		PvElement **edit_draw_element,
@@ -1123,6 +1194,7 @@ bool et_tool_info_util_func_edit_anchor_point_mouse_action(
 bool et_tool_info_util_func_edit_anchor_point_handle_mouse_action(
 		PvVg *vg,
 		PvFocus *focus,
+		const PvSnapContext *snap_context,
 		bool *is_save,
 		EtMouseAction mouse_action,
 		PvElement **edit_draw_element,

@@ -13,6 +13,7 @@
 #include "pv_focus.h"
 #include "pv_element.h"
 #include "et_mouse_action.h"
+#include "pv_snap_context.h"
 
 #define PX_SENSITIVE_OF_TOUCH		(16)
 #define PX_SENSITIVE_OF_MOVE		(3)
@@ -41,6 +42,7 @@ typedef enum{
 bool et_tool_info_util_func_edit_element_mouse_action(
 		PvVg *vg,
 		PvFocus *focus,
+		const PvSnapContext *snap_context,
 		bool *is_save,
 		EtMouseAction mouse_action,
 		PvElement **edit_draw_element,
@@ -49,6 +51,7 @@ bool et_tool_info_util_func_edit_element_mouse_action(
 bool et_tool_info_util_func_edit_anchor_point_mouse_action(
 		PvVg *vg,
 		PvFocus *focus,
+		const PvSnapContext *snap_context,
 		bool *is_save,
 		EtMouseAction mouse_action,
 		PvElement **edit_draw_element,
@@ -57,6 +60,7 @@ bool et_tool_info_util_func_edit_anchor_point_mouse_action(
 bool et_tool_info_util_func_edit_anchor_point_handle_mouse_action(
 		PvVg *vg,
 		PvFocus *focus,
+		const PvSnapContext *snap_context,
 		bool *is_save,
 		EtMouseAction mouse_action,
 		PvElement **edit_draw_element,
@@ -68,6 +72,7 @@ bool is_bound_point_(int radius, PvPoint p1, PvPoint p2);
 PvRect get_rect_extent_from_elements_(PvElement **elements);
 EdgeKind resize_elements_(
 		PvFocus *focus,
+		const PvSnapContext *snap_context,
 		EtMouseAction mouse_action,
 		EdgeKind src_edge_kind_,
 		PvRect src_extent_rect);

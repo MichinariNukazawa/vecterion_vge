@@ -66,6 +66,7 @@ typedef struct PvRect{
 static const PvRect PvRect_Default = {0, 0, 0, 0,};
 
 PvRect pv_rect_mul_value(PvRect, double);
+PvRect pv_rect_add_point(PvRect, PvPoint);
 PvRect pv_rect_abs_size(PvRect);
 
 bool pv_rect_is_inside(PvRect, PvPoint);
