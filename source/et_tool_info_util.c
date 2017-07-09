@@ -351,6 +351,22 @@ static PvPoint pv_resize_diff_(PvPoint size, PvPoint resize)
 	return diff_;
 }
 
+PvRectEdgeKind get_rect_edge_kind_(EdgeKind edge_kind)
+{
+	switch(edge_kind){
+		case EdgeKind_Resize_UpRight:
+			return PvRectEdgeKind_UpRight;
+		case EdgeKind_Resize_UpLeft:
+			return PvRectEdgeKind_UpLeft;
+		case EdgeKind_Resize_DownRight:
+			return PvRectEdgeKind_DownRight;
+		case EdgeKind_Resize_DownLeft:
+			return PvRectEdgeKind_DownLeft;
+		default:
+			et_abortf("%d", edge_kind);
+	}
+}
+
 EdgeKind resize_elements_(
 		PvFocus *focus,
 		const PvSnapContext *snap_context,
@@ -362,6 +378,14 @@ EdgeKind resize_elements_(
 
 
 	PvPoint move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
+
+	if(snap_context->is_snap_for_grid){
+		PvRectEdgeKind rect_edge_kind = get_rect_edge_kind_(dst_edge_kind);
+		PvRect extent_rect = get_rect_extent_from_elements_(focus->elements);
+		extent_rect = pv_rect_add_point(extent_rect, move);
+		PvPoint snap_move_ = get_snap_move_(rect_edge_kind, snap_context, extent_rect);
+		move = pv_point_add(move, snap_move_);
+	}
 
 	PvPoint move_upleft;
 	PvPoint resize;

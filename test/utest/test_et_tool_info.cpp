@@ -15,6 +15,7 @@ extern "C"
 }
 
 #define NUM_CURVE		(7)
+#define PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH		(16)
 
 class Environment_EtToolInfo : public ::testing::Environment{
 public:
@@ -475,7 +476,6 @@ TEST_F(TestEtToolInfo, EtToolInfo_FocusingByArea){
 }
 
 TEST_F(TestEtToolInfo, EtToolInfo_Translate){
-	const int PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH = 16;
 
 	bool res;
 	bool is_save = false;
@@ -569,7 +569,6 @@ TEST_F(TestEtToolInfo, EtToolInfo_Translate){
 
 
 TEST_F(TestEtToolInfo, EtToolInfo_Translate_minus){
-	const int PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH = 16;
 
 	bool res;
 	bool is_save = false;
@@ -664,7 +663,6 @@ TEST_F(TestEtToolInfo, EtToolInfo_Translate_minus){
 
 
 TEST_F(TestEtToolInfo, EtToolInfo_Resize){
-	const int PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH = 16;
 
 	bool res;
 	bool is_save = false;
@@ -754,7 +752,6 @@ TEST_F(TestEtToolInfo, EtToolInfo_Resize){
 
 
 TEST_F(TestEtToolInfo, EtToolInfo_Rotate){
-	const int PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH = 16;
 
 	bool res;
 	bool is_save = false;
@@ -846,7 +843,6 @@ TEST_F(TestEtToolInfo, EtToolInfo_Rotate){
 }
 
 TEST_F(TestEtToolInfo, EtToolInfo_Translate_with_SnapForGrid_plus){
-	const int PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH = 16;
 
 	bool res;
 	bool is_save = false;
@@ -945,7 +941,6 @@ TEST_F(TestEtToolInfo, EtToolInfo_Translate_with_SnapForGrid_plus){
 }
 
 TEST_F(TestEtToolInfo, EtToolInfo_Translate_with_SnapForGrid_minus){
-	const int PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH = 16;
 	bool res;
 	bool is_save = false;
 	PvPoint event_point;
@@ -1039,5 +1034,99 @@ TEST_F(TestEtToolInfo, EtToolInfo_Translate_with_SnapForGrid_minus){
 	EXPECT_EQ(-350, position_rect.y);
 	EXPECT_EQ(0, position_rect.w);
 	EXPECT_EQ(100, position_rect.h);
+}
+
+
+TEST_F(TestEtToolInfo, EtToolInfo_Resize_with_SnapForGrid_minus){
+
+	bool res;
+	bool is_save = false;
+	PvPoint event_point;
+	EtMouseAction mouse_action;
+	PvElement *edit_draw_element = NULL;
+	GdkCursor *cursor = NULL;
+	const PvElementInfo *element_info = NULL;
+	PvRect position_rect;
+
+	PvSnapContext snap_context = {
+		.is_snap_for_grid = true,
+		.grid = {50, 50,},
+	};
+
+
+	// # setup focusing
+	assert(pv_focus_add_element(focus, element_curves[0]));
+	assert(pv_focus_add_element(focus, element_curves[1]));
+
+	// # down
+	event_point = (PvPoint){
+		100,
+		100,
+	};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
+
+	res = et_tool_info_util_func_edit_element_mouse_action(
+			vg,
+			focus,
+			&snap_context,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+
+	EXPECT_TRUE(res);
+	EXPECT_TRUE(false == is_save);
+	EXPECT_TRUE(NULL != edit_draw_element);
+	if(NULL != edit_draw_element){
+		EXPECT_EQ(4, pv_general_get_parray_num((void **)edit_draw_element->childs));
+	}
+	EXPECT_TRUE(NULL != cursor);
+
+	// document not change.
+	EXPECT_TRUE(false == pv_vg_is_diff(vg, vg_back));
+
+
+	// # up
+	event_point = pv_point_add(event_point, (PvPoint){-260, -340});
+	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
+
+	res = et_tool_info_util_func_edit_element_mouse_action(
+			vg,
+			focus,
+			&snap_context,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+
+	EXPECT_TRUE(res);
+	EXPECT_TRUE(is_save);
+	EXPECT_TRUE(NULL != edit_draw_element);
+	if(NULL != edit_draw_element){
+		EXPECT_EQ(4, pv_general_get_parray_num((void **)edit_draw_element->childs));
+	}
+	EXPECT_TRUE(NULL == cursor);
+
+	// focus
+	EXPECT_TRUE(pv_focus_is_focused(focus));
+	EXPECT_EQ(2, pv_general_get_parray_num((void **)focus->elements))
+		<< pv_general_get_parray_num((void **)focus->anchor_points);
+	EXPECT_TRUE(pv_focus_is_exist_element(focus, element_curves[0]));
+	EXPECT_TRUE(pv_focus_is_exist_element(focus, element_curves[1]));
+
+	// document
+	element_info = pv_element_get_info_from_kind(PvElementKind_Curve);
+	assert(element_info);
+	position_rect = element_info->func_get_rect_by_anchor_points(element_curves[0]);
+	EXPECT_EQ(0 * -1.5, position_rect.x);
+	EXPECT_EQ(-250, position_rect.y);
+	EXPECT_EQ(0 * 1.5, position_rect.w);
+	EXPECT_EQ(100 * 2.5, position_rect.h);
+	position_rect = element_info->func_get_rect_by_anchor_points(element_curves[1]);
+	EXPECT_EQ(100 * -1.5, position_rect.x);
+	EXPECT_EQ(-250, position_rect.y);
+	EXPECT_EQ(0 * 1.5, position_rect.w);
+	EXPECT_EQ(100 * 2.5, position_rect.h);
+
 }
 
