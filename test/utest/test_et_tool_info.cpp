@@ -36,25 +36,26 @@ public:
 
 #define SNAP_CONTEXT_POINTER (&(pv_document_preference.snap_context))
 
-class TestEtToolInfo : public ::testing::Test{
+class TestEtToolInfo_Base : public ::testing::Test{
 protected:
 	PvVg *vg;
 	PvVg *vg_back;
 	PvFocus *focus;
 	PvElement *element_layer_top;
-	PvElement *element_curves[NUM_CURVE];
 	PvDocumentPreference pv_document_preference;
 
 	PvPoint pointing_context_previous_mouse_point;
 	PvPoint pointing_context_down_mouse_point;
 
-	TestEtToolInfo()
+	TestEtToolInfo_Base()
 		:
 		pv_document_preference(PvDocumentPreference_Default)
 	{}
 
-	virtual ~TestEtToolInfo()
+	virtual ~TestEtToolInfo_Base()
 	{}
+
+	virtual void internalSetUp() = 0;
 
 	virtual void SetUp()
 	{
@@ -67,19 +68,7 @@ protected:
 		focus = pv_focus_new(vg);
 		assert(NULL != focus);
 
-		for(int i = 0; i < NUM_CURVE; i++){
-			element_curves[i] = pv_element_new(PvElementKind_Curve);
-			assert(NULL != element_curves[i]);
-			for(int t = 0; t < 2; t++){
-				PvPoint point = {
-					(double) i * 100,
-					(double) t * 100
-				};
-				PvAnchorPoint ap = pv_anchor_point_from_point(point);
-				assert(pv_element_curve_add_anchor_point(element_curves[i], ap));
-			}
-			assert(pv_element_append_child(element_layer_top, NULL, element_curves[i]));
-		}
+		internalSetUp();
 
 		vg_back = pv_vg_copy_new(vg);
 		assert(vg);
@@ -129,13 +118,62 @@ protected:
 		return mouse_action;
 	}
 };
+/*
+class TestEtToolInfo_Element : public TestEtToolInfo_Base{
+protected:
+	PvElement *element_curves[NUM_CURVE];
+
+	void internalSetUp()
+	{
+		for(int i = 0; i < NUM_CURVE; i++){
+			element_curves[i] = pv_element_new(PvElementKind_Curve);
+			assert(NULL != element_curves[i]);
+			for(int t = 0; t < 2; t++){
+				PvPoint point = {
+					(double) i * 100,
+					(double) t * 100
+				};
+				PvAnchorPoint ap = pv_anchor_point_from_point(point);
+				assert(pv_element_curve_add_anchor_point(element_curves[i], ap));
+			}
+			assert(pv_element_append_child(element_layer_top, NULL, element_curves[i]));
+		}
+	}
+};
+*/
+
+#define NUM_ANCHOR_POINT_PAR_CURVE (6)
+class TestEtToolInfo_Element : public TestEtToolInfo_Base{
+protected:
+	PvElement *element_curves[NUM_CURVE];
+	PvAnchorPoint *anchor_points[NUM_CURVE][NUM_ANCHOR_POINT_PAR_CURVE];
+
+	void internalSetUp()
+	{
+		for(int i = 0; i < NUM_CURVE; i++){
+			element_curves[i] = pv_element_new(PvElementKind_Curve);
+			assert(NULL != element_curves[i]);
+			for(int t = 0; t < NUM_ANCHOR_POINT_PAR_CURVE; t++){
+				PvPoint point = {
+					(double) i * 100,
+					(double) t * 20
+				};
+				PvAnchorPoint *ap = pv_anchor_point_new_from_point(point);
+				assert(ap);
+				pv_element_curve_append_anchor_point(element_curves[i], ap, -1);
+				anchor_points[i][t] = ap;
+			}
+			assert(pv_element_append_child(element_layer_top, NULL, element_curves[i]));
+		}
+	}
+};
 
 
-TEST_F(TestEtToolInfo, Test){
+TEST_F(TestEtToolInfo_Element, Test){
 	EXPECT_EQ(1,1);
 }
 
-TEST_F(TestEtToolInfo, EtToolInfo_FocusingTouchedSingleElement){
+TEST_F(TestEtToolInfo_Element, EtToolInfo_FocusingTouchedSingleElement){
 
 	bool res;
 	bool is_save = false;
@@ -297,7 +335,7 @@ TEST_F(TestEtToolInfo, EtToolInfo_FocusingTouchedSingleElement){
 
 }
 
-TEST_F(TestEtToolInfo, EtToolInfo_FocusingByArea){
+TEST_F(TestEtToolInfo_Element, EtToolInfo_FocusingByArea){
 
 	bool res;
 	bool is_save = false;
@@ -475,7 +513,7 @@ TEST_F(TestEtToolInfo, EtToolInfo_FocusingByArea){
 
 }
 
-TEST_F(TestEtToolInfo, EtToolInfo_Translate){
+TEST_F(TestEtToolInfo_Element, EtToolInfo_Translate){
 
 	bool res;
 	bool is_save = false;
@@ -568,7 +606,7 @@ TEST_F(TestEtToolInfo, EtToolInfo_Translate){
 }
 
 
-TEST_F(TestEtToolInfo, EtToolInfo_Translate_minus){
+TEST_F(TestEtToolInfo_Element, EtToolInfo_Translate_minus){
 
 	bool res;
 	bool is_save = false;
@@ -662,7 +700,7 @@ TEST_F(TestEtToolInfo, EtToolInfo_Translate_minus){
 }
 
 
-TEST_F(TestEtToolInfo, EtToolInfo_Resize){
+TEST_F(TestEtToolInfo_Element, EtToolInfo_Resize){
 
 	bool res;
 	bool is_save = false;
@@ -751,7 +789,7 @@ TEST_F(TestEtToolInfo, EtToolInfo_Resize){
 }
 
 
-TEST_F(TestEtToolInfo, EtToolInfo_Rotate){
+TEST_F(TestEtToolInfo_Element, EtToolInfo_Rotate){
 
 	bool res;
 	bool is_save = false;
@@ -842,7 +880,7 @@ TEST_F(TestEtToolInfo, EtToolInfo_Rotate){
 
 }
 
-TEST_F(TestEtToolInfo, EtToolInfo_Translate_with_SnapForGrid_plus){
+TEST_F(TestEtToolInfo_Element, EtToolInfo_Translate_with_SnapForGrid_plus){
 
 	bool res;
 	bool is_save = false;
@@ -940,7 +978,7 @@ TEST_F(TestEtToolInfo, EtToolInfo_Translate_with_SnapForGrid_plus){
 
 }
 
-TEST_F(TestEtToolInfo, EtToolInfo_Translate_with_SnapForGrid_minus){
+TEST_F(TestEtToolInfo_Element, EtToolInfo_Translate_with_SnapForGrid_minus){
 	bool res;
 	bool is_save = false;
 	PvPoint event_point;
@@ -1037,7 +1075,7 @@ TEST_F(TestEtToolInfo, EtToolInfo_Translate_with_SnapForGrid_minus){
 }
 
 
-TEST_F(TestEtToolInfo, EtToolInfo_Resize_with_SnapForGrid_minus){
+TEST_F(TestEtToolInfo_Element, EtToolInfo_Resize_with_SnapForGrid_minus){
 
 	bool res;
 	bool is_save = false;
@@ -1127,6 +1165,104 @@ TEST_F(TestEtToolInfo, EtToolInfo_Resize_with_SnapForGrid_minus){
 	EXPECT_EQ(-250, position_rect.y);
 	EXPECT_EQ(0 * 1.5, position_rect.w);
 	EXPECT_EQ(100 * 2.5, position_rect.h);
+
+}
+
+
+TEST_F(TestEtToolInfo_Element, EtToolInfo_TranslateAnchorPoint_with_SnapForGrid){
+
+	bool res;
+	bool is_save = false;
+	PvPoint event_point;
+	EtMouseAction mouse_action;
+	PvElement *edit_draw_element = NULL;
+	GdkCursor *cursor = NULL;
+	const PvElementInfo *element_info = NULL;
+	PvRect position_rect;
+
+	PvSnapContext snap_context = {
+		.is_snap_for_grid = true,
+		.grid = {50, 50,},
+	};
+
+
+	// # setup focusing
+	assert(pv_focus_add_anchor_point(focus, element_curves[0], anchor_points[0][0]));
+	for(int t = 0; t < NUM_ANCHOR_POINT_PAR_CURVE; t++){
+		assert(pv_focus_add_anchor_point(focus, element_curves[1], anchor_points[1][t]));
+	}
+	assert(pv_focus_add_anchor_point(focus, element_curves[2], anchor_points[2][0]));
+
+	// # down
+	event_point = (PvPoint){
+		100,
+		20,
+	};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
+
+	res = et_tool_info_util_func_edit_anchor_point_mouse_action(
+			vg,
+			focus,
+			&snap_context,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+
+	EXPECT_TRUE(res);
+	EXPECT_TRUE(false == is_save);
+	EXPECT_TRUE(NULL != edit_draw_element);
+	if(NULL != edit_draw_element){
+		EXPECT_EQ(4, pv_general_get_parray_num((void **)edit_draw_element->childs));
+	}
+	EXPECT_TRUE(NULL == cursor);
+
+	// document not change.
+	EXPECT_TRUE(false == pv_vg_is_diff(vg, vg_back));
+
+
+	// # up
+	event_point = pv_point_add(event_point, (PvPoint){-260, -350});
+	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
+
+	res = et_tool_info_util_func_edit_anchor_point_mouse_action(
+			vg,
+			focus,
+			&snap_context,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+
+	EXPECT_TRUE(res);
+	EXPECT_TRUE(is_save);
+	EXPECT_TRUE(NULL != edit_draw_element);
+	if(NULL != edit_draw_element){
+		EXPECT_EQ(4, pv_general_get_parray_num((void **)edit_draw_element->childs));
+	}
+	EXPECT_TRUE(NULL == cursor);
+
+	// focus
+	EXPECT_TRUE(pv_focus_is_focused(focus));
+	EXPECT_EQ(3, pv_general_get_parray_num((void **)focus->elements))
+		<< pv_general_get_parray_num((void **)focus->anchor_points);
+	EXPECT_TRUE(pv_focus_is_exist_element(focus, element_curves[0]));
+	EXPECT_TRUE(pv_focus_is_exist_element(focus, element_curves[1]));
+	EXPECT_TRUE(pv_focus_is_exist_element(focus, element_curves[2]));
+
+	// document
+	element_info = pv_element_get_info_from_kind(PvElementKind_Curve);
+	assert(element_info);
+	position_rect = element_info->func_get_rect_by_anchor_points(element_curves[0]);
+	EXPECT_EQ(0 -250, position_rect.x);
+	EXPECT_EQ(0 + (-350 -20), position_rect.y);
+	EXPECT_EQ(0 + 250, position_rect.w);
+	EXPECT_EQ(100 - (-350 -20), position_rect.h);
+	position_rect = element_info->func_get_rect_by_anchor_points(element_curves[1]);
+	EXPECT_EQ(100 -250, position_rect.x);
+	EXPECT_EQ(0 + (-350 - 20), position_rect.y);
+	EXPECT_EQ(0, position_rect.w);
+	EXPECT_EQ(100, position_rect.h);
 
 }
 

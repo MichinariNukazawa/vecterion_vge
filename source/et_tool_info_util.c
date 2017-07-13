@@ -224,7 +224,29 @@ static double round_(double v, double between)
 	return round(v/between) * between;
 }
 
-static PvPoint get_snap_move_(
+static PvPoint get_snap_point_(PvPoint src_point, const PvSnapContext *snap_context)
+{
+	et_assert(snap_context);
+
+	PvPoint dst_point;
+	dst_point.x = round_(src_point.x, snap_context->grid.x);
+	dst_point.y = round_(src_point.y, snap_context->grid.y);
+
+	return dst_point;
+}
+
+PvPoint get_snap_move_from_point_(
+		const PvSnapContext *snap_context,
+		PvPoint src_point)
+{
+	et_assert(snap_context);
+
+	PvPoint dst_point = get_snap_point_(src_point, snap_context);
+	PvPoint diff = pv_point_sub(dst_point, src_point);
+	return diff;
+}
+
+static PvPoint get_snap_move_from_rect_edge_(
 		PvRectEdgeKind rect_edge_kind,
 		const PvSnapContext *snap_context,
 		PvRect rect)
@@ -232,12 +254,7 @@ static PvPoint get_snap_move_(
 	et_assert(snap_context);
 
 	PvPoint src_point = pv_rect_get_edge_point(rect, rect_edge_kind);
-	PvPoint dst_point = src_point;
-
-	dst_point.x = round_(dst_point.x, snap_context->grid.x);
-	dst_point.y = round_(dst_point.y, snap_context->grid.y);
-
-	PvPoint diff = pv_point_sub(dst_point, src_point);
+	PvPoint diff = get_snap_move_from_point_(snap_context, src_point);
 	return diff;
 }
 
@@ -281,7 +298,7 @@ static void translate_elements_(
 		PvRectEdgeKind rect_edge_kind = get_rect_edge_kind_of_quadrant_(mouse_action.diff_down);
 		PvRect extent_rect = get_rect_extent_from_elements_(focus->elements);
 		extent_rect = pv_rect_add_point(extent_rect, move);
-		PvPoint snap_move_ = get_snap_move_(rect_edge_kind, snap_context, extent_rect);
+		PvPoint snap_move_ = get_snap_move_from_rect_edge_(rect_edge_kind, snap_context, extent_rect);
 		move = pv_point_add(move, snap_move_);
 	}
 
@@ -383,7 +400,7 @@ EdgeKind resize_elements_(
 		PvRectEdgeKind rect_edge_kind = get_rect_edge_kind_(dst_edge_kind);
 		PvRect extent_rect = get_rect_extent_from_elements_(focus->elements);
 		extent_rect = pv_rect_add_point(extent_rect, move);
-		PvPoint snap_move_ = get_snap_move_(rect_edge_kind, snap_context, extent_rect);
+		PvPoint snap_move_ = get_snap_move_from_rect_edge_(rect_edge_kind, snap_context, extent_rect);
 		move = pv_point_add(move, snap_move_);
 	}
 
@@ -1013,15 +1030,34 @@ static void edit_anchor_point_handle_move_(int handle, PvFocus *focus, EtMouseAc
 	}
 }
 
-static bool translate_anchor_points_(PvFocus *focus, EtMouseAction mouse_action)
+static bool translate_anchor_points_(
+		PvFocus *focus,
+		const PvSnapContext *snap_context,
+		PvPoint src_point,
+		EtMouseAction mouse_action)
 {
 	assert(focus);
+	et_assert(snap_context);
 
 	size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
+	if(0 == num){
+		return true;
+	}
+
+	PvPoint move = mouse_action.move;
+	if(snap_context->is_snap_for_grid){
+		PvPoint move_v = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
+		src_point = pv_point_add(src_point, move_v);
+		PvPoint dst_point = get_snap_point_(src_point, snap_context);
+
+		PvPoint current_ap_point = pv_anchor_point_get_point(focus->anchor_points[0]);
+		move = pv_point_sub(dst_point, current_ap_point);
+	}
+
 	for(int i = 0; i < (int)num; i++){
 		//! @todo use element_kind.func of AnchorPoint
 		// info->func_set_anchor_point_point(focus->anchor_points[i], ap, mouse_action.point);
-		pv_anchor_point_move_point(focus->anchor_points[i], mouse_action.move);
+		pv_anchor_point_move_point(focus->anchor_points[i], move);
 	}
 
 	return true;
@@ -1043,6 +1079,8 @@ bool et_tool_info_util_func_edit_anchor_point_mouse_action(
 	static EtFocusElementMouseActionMode mode_ = EtFocusElementMouseActionMode_None;
 	static EdgeKind mode_edge_ = EdgeKind_None;
 	static int handle = -1;
+	static PvPoint touched_ap_point;
+
 	//	static PvRect src_extent_rect_when_down_;
 
 	et_assert(focus);
@@ -1115,6 +1153,7 @@ bool et_tool_info_util_func_edit_anchor_point_mouse_action(
 			}
 			break;
 		case EtMouseAction_Move:
+		case EtMouseAction_Up:
 			{
 				if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
 					break;
@@ -1134,13 +1173,22 @@ bool et_tool_info_util_func_edit_anchor_point_mouse_action(
 									touch_element_,
 									touch_anchor_point_);
 						}
+
+						size_t num = pv_general_get_parray_num((void **)focus->anchor_points);
+						if(0 < num){
+							touched_ap_point = pv_anchor_point_get_point(focus->anchor_points[0]);
+						}
 					}
 				}
 
 				switch(mode_){
 					case EtFocusElementMouseActionMode_Translate:
 						{
-							translate_anchor_points_(focus, mouse_action);
+							translate_anchor_points_(
+									focus,
+									snap_context,
+									touched_ap_point,
+									mouse_action);
 						}
 						break;
 					case EtFocusElementMouseActionMode_Resize:
@@ -1164,36 +1212,34 @@ bool et_tool_info_util_func_edit_anchor_point_mouse_action(
 					default:
 						break;
 				}
-			}
-			break;
-		case EtMouseAction_Up:
-			{
-				switch(mode_){
-					case EtFocusElementMouseActionMode_Translate:
-						{
-							if(is_move_){
-								// NOP
-							}else{
-								if(0 == (mouse_action.state & GDK_SHIFT_MASK)){
-									et_assert(pv_focus_clear_set_anchor_point(focus, touch_element_, touch_anchor_point_));
+				if(EtMouseAction_Up == mouse_action.action){
+					switch(mode_){
+						case EtFocusElementMouseActionMode_Translate:
+							{
+								if(is_move_){
+									// NOP
 								}else{
-									if(!is_already_focus_){
-										// NOP
+									if(0 == (mouse_action.state & GDK_SHIFT_MASK)){
+										et_assert(pv_focus_clear_set_anchor_point(focus, touch_element_, touch_anchor_point_));
 									}else{
-										et_assert(pv_focus_remove_anchor_point(focus, touch_element_, touch_anchor_point_));
+										if(!is_already_focus_){
+											// NOP
+										}else{
+											et_assert(pv_focus_remove_anchor_point(focus, touch_element_, touch_anchor_point_));
+										}
 									}
 								}
 							}
-						}
-						break;
-					default:
-						break;
+							break;
+						default:
+							break;
+					}
+
+					mode_edge_ = EdgeKind_None;
+					mode_ = EtFocusElementMouseActionMode_None;
+
+					*is_save = true;
 				}
-
-				mode_edge_ = EdgeKind_None;
-				mode_ = EtFocusElementMouseActionMode_None;
-
-				*is_save = true;
 			}
 			break;
 		case EtMouseAction_Unknown:
