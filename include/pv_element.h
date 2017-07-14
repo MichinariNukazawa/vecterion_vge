@@ -126,6 +126,7 @@ PvElement *pv_element_curve_new_set_anchor_point(PvAnchorPoint *);
 void pv_element_curve_append_anchor_point(PvElement *, PvAnchorPoint *, int index);
 bool pv_element_curve_add_anchor_point(PvElement *, const PvAnchorPoint);
 int pv_element_curve_get_num_anchor_point(const PvElement *);
+bool pv_element_curve_get_close_anchor_point(const PvElement *);
 void pv_element_curve_set_close_anchor_point(PvElement *, bool);
 
 

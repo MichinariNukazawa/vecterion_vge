@@ -813,6 +813,12 @@ int pv_element_curve_get_num_anchor_point(const PvElement *self)
 	return pv_anchor_path_get_anchor_point_num(data->anchor_path);
 }
 
+bool pv_element_curve_get_close_anchor_point(const PvElement *self)
+{
+	PvElementCurveData *data = self->data;
+	return pv_anchor_path_get_is_close(data->anchor_path);
+}
+
 void pv_element_curve_set_close_anchor_point(PvElement *self, bool is_close)
 {
 	PvElementCurveData *data = self->data;

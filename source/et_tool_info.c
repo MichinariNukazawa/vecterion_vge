@@ -139,153 +139,39 @@ static bool func_edit_element_mouse_action_(
 	return res;
 }
 
-static void add_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action, bool *is_reverse)
-{
-	PvElement *element_ = pv_focus_get_first_element(focus);
-	et_assert(element_);
-	PvElementCurveData *data_ = (PvElementCurveData *) element_->data;
-	et_assert(data_);
-
-	PvAnchorPoint *anchor_point = pv_focus_get_first_anchor_point(focus);
-
-	int index = 0;
-	size_t num = 0;
-
-	if(PvElementKind_Curve == element_->kind){
-		index = pv_anchor_path_get_index_from_anchor_point(data_->anchor_path, anchor_point);
-		num = pv_anchor_path_get_anchor_point_num(data_->anchor_path);
-	}
-
-	if(PvElementKind_Curve != element_->kind
-			|| NULL == anchor_point
-			|| (!((0 == index) || index == ((int)num - 1)))
-			|| pv_anchor_path_get_is_close(data_->anchor_path)){
-		// add new ElementCurve.
-
-		anchor_point = pv_anchor_point_new_from_point(mouse_action.point);
-		et_assert(anchor_point);
-		PvElement *new_element = pv_element_curve_new_set_anchor_point(anchor_point);
-		et_assert(new_element);
-		pv_element_append_on_focusing(element_, new_element);
-
-		new_element->color_pair = et_color_panel_get_color_pair();
-		new_element->stroke = et_stroke_panel_get_stroke();
-
-		element_ = new_element;
-	}else{
-		// edit focused ElementCurve
-		int index_end = 0;
-		PvAnchorPoint *head_ap = NULL;
-		if(0 == index && 1 < num){
-			index_end = (num - 1);
-			*is_reverse = true;
-		}else if(index == ((int)num - 1)){
-			index_end = 0;
-			index = num;
-			*is_reverse = false;
-		}else{
-			et_abortf("%d %zu", index, num);
-		}
-		head_ap = pv_anchor_path_get_anchor_point_from_index(
-				data_->anchor_path,
-				index_end,
-				PvAnchorPathIndexTurn_Disable);
-		et_assertf(head_ap, "%d %d %zu", index_end, index, num);
-
-		if(is_bound_point_(
-					PX_SENSITIVE_OF_TOUCH,
-					head_ap->points[PvAnchorPointIndex_Point],
-					mouse_action.point)){
-			// ** do close anchor_point
-			pv_anchor_path_set_is_close(data_->anchor_path, true);
-			anchor_point = head_ap;
-		}else{
-			// add AnchorPoint for ElementCurve.
-			anchor_point = pv_anchor_point_new_from_point(mouse_action.point);
-			et_assert(anchor_point);
-
-			pv_element_curve_append_anchor_point(element_, anchor_point, index);
-		}
-	}
-
-	pv_focus_clear_set_anchor_point(focus, element_, anchor_point);
-}
-
-static bool focused_anchor_point_move_(EtDoc *doc, PvFocus *focus, EtMouseAction mouse_action, bool is_reverse)
-{
-	if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
-		return true;
-	}
-
-	PvAnchorPoint *ap = pv_focus_get_first_anchor_point(focus);
-	if(NULL == ap){
-		return true;
-	}
-
-	PvElement *element_ = pv_focus_get_first_element(focus);
-	et_assert(element_);
-	if(PvElementKind_Curve != element_->kind){
-		et_error("");
-		return false;
-	}
-
-	PvElementCurveData *data_ = (PvElementCurveData *) element_->data;
-	et_assert(data_);
-
-	PvPoint p_ap = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
-	PvPoint p_diff = pv_point_sub(p_ap, mouse_action.point);
-	if(fabs(p_diff.x) < PX_SENSITIVE_OF_TOUCH && fabs(p_diff.y) < PX_SENSITIVE_OF_TOUCH){
-		pv_anchor_point_set_handle_zero(ap, PvAnchorPointIndex_Point);
-	}else{
-		pv_anchor_point_set_handle(ap, PvAnchorPointIndex_Point, mouse_action.point);
-
-		if(is_reverse){
-			// AnchorPoint is head in AnchorPath
-			pv_anchor_point_reverse_handle(ap);
-		}
-	}
-
-	return true;
-}
-
 static bool func_add_anchor_point_mouse_action_(
 		EtDocId doc_id,
 		EtMouseAction mouse_action,
 		PvElement **edit_draw_element,
 		GdkCursor **cursor)
 {
-	EtDoc *doc = et_doc_manager_get_doc_from_id(doc_id);
-	et_assertf(doc, "%d", doc_id);
+	PvVg *vg = et_doc_get_vg_ref_from_id(doc_id);
+	et_assertf(vg, "%d", doc_id);
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
+	PvDocumentPreference document_preference = et_doc_get_document_preference_from_id(doc_id);
 
-	bool result = true;
+	bool is_save = false;
 
-	static bool is_reverse;
+	PvColorPair color_pair = et_color_panel_get_color_pair();
+	PvStroke stroke = et_stroke_panel_get_stroke();
 
-	switch(mouse_action.action){
-		case EtMouseAction_Down:
-			{
-				add_anchor_point_down_(doc, focus, mouse_action, &is_reverse);
-			}
-			break;
-		case EtMouseAction_Up:
-			{
-				et_doc_save_from_id(doc_id);
-			}
-			break;
-		case EtMouseAction_Move:
-			{
-				result = focused_anchor_point_move_(doc, focus, mouse_action, is_reverse);
-			}
-			break;
-		case EtMouseAction_Unknown:
-		default:
-			et_bug("0x%x", mouse_action.action);
-			break;
+	bool res = et_tool_info_util_func_add_anchor_point_handle_mouse_action(
+			vg,
+			focus,
+			&document_preference.snap_context,
+			&is_save,
+			mouse_action,
+			edit_draw_element,
+			cursor,
+			color_pair,
+			stroke);
+
+	if(is_save){
+		et_doc_save_from_id(doc_id);
 	}
 
-	return result;
+	return res;
 }
 
 static bool func_edit_anchor_point_mouse_action_(

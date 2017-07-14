@@ -66,6 +66,18 @@ bool et_tool_info_util_func_edit_anchor_point_handle_mouse_action(
 		PvElement **edit_draw_element,
 		GdkCursor **cursor);
 
+bool et_tool_info_util_func_add_anchor_point_handle_mouse_action(
+		PvVg *vg,
+		PvFocus *focus,
+		const PvSnapContext *snap_context,
+		bool *is_save,
+		EtMouseAction mouse_action,
+		PvElement **edit_draw_element,
+		GdkCursor **cursor,
+		PvColorPair color_pair,
+		PvStroke stroke
+		);
+
 //! @todo temporary function on header.
 
 bool is_bound_point_(int radius, PvPoint p1, PvPoint p2);
