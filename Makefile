@@ -56,6 +56,7 @@ DEPENDS		:= $(OBJECTS:.o=.d)
 
 
 .PHONY : all run gdb clean dist_clean
+.PHONY : run_vanilla
 
 all : $(APP_FILE)
 
@@ -76,13 +77,14 @@ $(APP_FILE) : $(OBJECTS)
 		$(INCLUDE) \
 		-o $(APP_FILE)
 
-run : $(APP_FILE)
+run : gdb
+run_vanilla : $(APP_FILE)
 	make install prefix=$(OBJECT_DIR)/install
 	./$(OBJECT_DIR)/install/bin/vecterion_vge -i ./library/23.svg
 
 gdb : $(APP_FILE)
 	make install prefix=$(OBJECT_DIR)/install
-	gdb ./$(OBJECT_DIR)/install/bin/vecterion_vge
+	gdb -ex=run -ex=quit --args ./$(OBJECT_DIR)/install/bin/vecterion_vge -i ./library/23.svg
 	#gdb ./$(APP_FILE)
 
 clean :
