@@ -1469,3 +1469,89 @@ bool et_tool_info_util_func_add_anchor_point_handle_mouse_action(
 	return result;
 }
 
+static PvElement *add_basic_shape_element_down_(PvFocus *focus, EtMouseAction mouse_action)
+{
+	PvElement *parent_layer = pv_focus_get_first_layer(focus);
+	et_assert(parent_layer);
+
+	PvElement *element = pv_element_basic_shape_new_from_kind(PvBasicShapeKind_Rect);
+	et_assert(element);
+
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	et_assert(info);
+
+	PvRect rect = {
+		mouse_action.point.x,
+		mouse_action.point.y,
+		1,
+		1,
+	};
+	info->func_set_rect_by_anchor_points(element, rect);
+
+	pv_element_append_child(parent_layer, NULL, element);
+
+	pv_focus_clear_set_element(focus, element);
+
+	return element;
+}
+
+bool et_tool_info_util_func_add_basic_shape_element_mouse_action(
+		PvVg *vg,
+		PvFocus *focus,
+		const PvSnapContext *snap_context,
+		bool *is_save,
+		EtMouseAction mouse_action,
+		PvElement **edit_draw_element,
+		GdkCursor **cursor,
+		PvColorPair color_pair,
+		PvStroke stroke
+		)
+{
+	static EtFocusElementMouseActionMode mode_ = EtFocusElementMouseActionMode_None;
+	static PvRect src_extent_rect_when_down_;
+
+	switch(mouse_action.action){
+		case EtMouseAction_Down:
+			{
+				PvElement *element = add_basic_shape_element_down_(focus, mouse_action);
+				element->color_pair = color_pair;
+				element->stroke = stroke;
+
+				src_extent_rect_when_down_ = get_rect_extent_from_elements_(focus->elements);
+				mode_ = EtFocusElementMouseActionMode_Resize;
+			}
+			break;
+		case EtMouseAction_Move:
+		case EtMouseAction_Up:
+			{
+				if(EtFocusElementMouseActionMode_Resize == mode_){
+					static EdgeKind mode_edge_ = EdgeKind_Resize_DownLeft;
+					resize_elements_(
+							focus,
+							snap_context,
+							mouse_action,
+							mode_edge_,
+							src_extent_rect_when_down_);
+				}
+
+				if(EtMouseAction_Up == mouse_action.action){
+					PvElement *element = pv_focus_get_first_element(focus);
+					et_assert(element);
+					const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+					et_assert(info);
+					info->func_apply_appearances(element, element->etaion_work_appearances);
+					element->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
+
+					mode_ = EtFocusElementMouseActionMode_None;
+
+					*is_save = true;
+				}
+			}
+			break;
+		default:
+			break;
+	}
+
+	return true;
+}
+
