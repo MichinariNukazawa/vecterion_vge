@@ -1585,3 +1585,100 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddAnchorPoint){
 
 }
 
+TEST_F(TestEtToolInfo_Element, EtToolInfo_AddAnchorPoint_SnapForGrid){
+
+	bool res;
+	bool is_save = false;
+	PvPoint event_point;
+	EtMouseAction mouse_action;
+	PvElement *edit_draw_element = NULL;
+	GdkCursor *cursor = NULL;
+	const PvElementInfo *element_info = NULL;
+	PvRect position_rect;
+
+	PvSnapContext snap_context = {
+		.is_snap_for_grid = true,
+		.grid = {50, 50,},
+	};
+
+	PvColorPair color_pair = PvColorPair_None;
+	PvStroke stroke = PvStroke_Default;
+
+	// # setup focusing
+	pv_focus_clear_to_first_layer(focus);
+
+
+
+	// ** new AnchorPath and AnchorPoint
+	// # down
+	event_point = (PvPoint){
+		-240,
+		-90,
+	};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
+
+	res = et_tool_info_util_func_add_anchor_point_handle_mouse_action(
+			vg,
+			focus,
+			&snap_context,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor,
+			color_pair,
+			stroke);
+
+	EXPECT_TRUE(res);
+	EXPECT_TRUE(false == is_save);
+	EXPECT_TRUE(NULL == edit_draw_element);
+	EXPECT_TRUE(NULL == cursor);
+
+	// document not change.
+	EXPECT_TRUE(pv_vg_is_diff(vg, vg_back));
+
+
+	// # up
+	event_point = pv_point_add(event_point, (PvPoint){-90, 90});
+	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
+
+	res = et_tool_info_util_func_add_anchor_point_handle_mouse_action(
+			vg,
+			focus,
+			&snap_context,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor,
+			color_pair,
+			stroke);
+
+	EXPECT_TRUE(res);
+	EXPECT_TRUE(is_save);
+	EXPECT_TRUE(NULL == edit_draw_element);
+	EXPECT_TRUE(NULL == cursor);
+
+	// focus
+	EXPECT_TRUE(pv_focus_is_focused(focus));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->anchor_points));
+
+	for(int i = 0; i < NUM_CURVE; i++){
+		EXPECT_NE(focus->elements[0], element_curves[i]);
+
+		for(int t = 0; t < NUM_ANCHOR_POINT_PAR_CURVE; t++){
+			EXPECT_NE(focus->anchor_points[0], anchor_points[i][t]);
+		}
+	}
+
+	// document
+	element_info = pv_element_get_info_from_kind(PvElementKind_Curve);
+	assert(element_info);
+	position_rect = element_info->func_get_rect_by_anchor_points(focus->elements[0]);
+	EXPECT_EQ(-250, position_rect.x);
+	EXPECT_EQ(-100, position_rect.y);
+	EXPECT_EQ(0, position_rect.w);
+	EXPECT_EQ(0, position_rect.h);
+	EXPECT_FALSE(pv_element_curve_get_close_anchor_point(focus->elements[0]));
+
+}
+

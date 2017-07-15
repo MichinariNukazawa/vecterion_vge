@@ -1299,6 +1299,7 @@ bool et_tool_info_util_func_edit_anchor_point_handle_mouse_action(
 
 static void add_anchor_point_down_(
 		PvFocus *focus,
+		const PvSnapContext *snap_context,
 		EtMouseAction mouse_action,
 		bool *is_reverse,
 		PvColorPair color_pair,
@@ -1320,13 +1321,18 @@ static void add_anchor_point_down_(
 		num = pv_anchor_path_get_anchor_point_num(data_->anchor_path);
 	}
 
+	PvPoint point = mouse_action.point;
+	if(snap_context->is_snap_for_grid){
+		point = get_snap_point_(point, snap_context);
+	}
+
 	if(PvElementKind_Curve != element_->kind
 			|| NULL == anchor_point
 			|| (!((0 == index) || index == ((int)num - 1)))
 			|| pv_anchor_path_get_is_close(data_->anchor_path)){
 		// add new ElementCurve.
 
-		anchor_point = pv_anchor_point_new_from_point(mouse_action.point);
+		anchor_point = pv_anchor_point_new_from_point(point);
 		et_assert(anchor_point);
 		PvElement *new_element = pv_element_curve_new_set_anchor_point(anchor_point);
 		et_assert(new_element);
@@ -1369,7 +1375,7 @@ static void add_anchor_point_down_(
 			anchor_point = head_ap;
 		}else{
 			// add AnchorPoint for ElementCurve.
-			anchor_point = pv_anchor_point_new_from_point(mouse_action.point);
+			anchor_point = pv_anchor_point_new_from_point(point);
 			et_assert(anchor_point);
 
 			pv_element_curve_append_anchor_point(element_, anchor_point, index);
@@ -1436,6 +1442,7 @@ bool et_tool_info_util_func_add_anchor_point_handle_mouse_action(
 			{
 				add_anchor_point_down_(
 						focus,
+						snap_context,
 						mouse_action,
 						&is_reverse,
 						color_pair,
