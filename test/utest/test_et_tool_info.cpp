@@ -36,21 +36,53 @@ public:
 
 #define SNAP_CONTEXT_POINTER (&(pv_document_preference.snap_context))
 
-class TestEtToolInfo_Base : public ::testing::Test{
+class TestEtToolInfo_Base_Base : public ::testing::Test{
 protected:
-	PvVg *vg;
-	PvVg *vg_back;
-	PvFocus *focus;
-	PvElement *element_layer_top;
 	PvDocumentPreference pv_document_preference;
 
 	PvPoint pointing_context_previous_mouse_point;
 	PvPoint pointing_context_down_mouse_point;
 
-	TestEtToolInfo_Base()
+	TestEtToolInfo_Base_Base()
 		:
 		pv_document_preference(PvDocumentPreference_Default)
 	{}
+
+	EtMouseAction mouse_action_(PvPoint event_point, EtMouseActionType mouse_action_kind)
+	{
+		int margin = 0;
+		double scale = 1.0;
+		EtMouseAction mouse_action = et_pointing_util_get_mouse_action(
+				&pointing_context_previous_mouse_point,
+				&pointing_context_down_mouse_point,
+				event_point,
+				(MOUSE_BUTTON_LEFT_MASK),
+				margin,
+				scale,
+				EtMouseButton_Right,
+				mouse_action_kind);
+
+		fprintf(stdout,
+				"%.1f, %.1f, "
+				"%.1f, %.1f, "
+				"%.1f, %.1f, \n",
+				mouse_action.diff_down.x,
+				mouse_action.diff_down.y,
+				pointing_context_previous_mouse_point.x,
+				pointing_context_previous_mouse_point.y,
+				pointing_context_down_mouse_point.x,
+				pointing_context_down_mouse_point.y
+				);
+		return mouse_action;
+	}
+};
+
+class TestEtToolInfo_Base : public TestEtToolInfo_Base_Base{
+protected:
+	PvVg *vg;
+	PvVg *vg_back;
+	PvFocus *focus;
+	PvElement *element_layer_top;
 
 	virtual ~TestEtToolInfo_Base()
 	{}
@@ -90,33 +122,6 @@ protected:
 		}
 	}
 
-	EtMouseAction mouse_action_(PvPoint event_point, EtMouseActionType mouse_action_kind)
-	{
-		int margin = 0;
-		double scale = 1.0;
-		EtMouseAction mouse_action = et_pointing_util_get_mouse_action(
-				&pointing_context_previous_mouse_point,
-				&pointing_context_down_mouse_point,
-				event_point,
-				(MOUSE_BUTTON_LEFT_MASK),
-				margin,
-				scale,
-				EtMouseButton_Right,
-				mouse_action_kind);
-
-		fprintf(stdout,
-				"%.1f, %.1f, "
-				"%.1f, %.1f, "
-				"%.1f, %.1f, \n",
-				mouse_action.diff_down.x,
-				mouse_action.diff_down.y,
-				pointing_context_previous_mouse_point.x,
-				pointing_context_previous_mouse_point.y,
-				pointing_context_down_mouse_point.x,
-				pointing_context_down_mouse_point.y
-				);
-		return mouse_action;
-	}
 };
 /*
 class TestEtToolInfo_Element : public TestEtToolInfo_Base{
@@ -1858,5 +1863,101 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddBasicShape_minus){
 	EXPECT_EQ(200, position_rect.h);
 	*/
 
+}
+
+TEST_F(TestEtToolInfo_Base_Base, ResizeElements_00){
+
+	PvPoint event_point;
+	EtMouseAction mouse_action;
+	const PvElementInfo *element_info = NULL;
+	PvRect position_rect;
+
+	PvElement **elements = (PvElement **)malloc(sizeof(PvElement *) * 2);
+	elements[0] = pv_element_new(PvElementKind_Curve);
+	elements[1] = NULL;
+	pv_element_curve_add_anchor_point(elements[0], pv_anchor_point_from_point((PvPoint){100, 100}));
+	pv_element_curve_add_anchor_point(elements[0], pv_anchor_point_from_point((PvPoint){200, 200}));
+
+	// # down
+	event_point = (PvPoint){
+		200,
+		200,
+	};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
+
+	// up
+	event_point = (PvPoint){
+		250,
+		250,
+	};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
+
+	EdgeKind edge_kind = resize_elements_(
+			elements,
+			SNAP_CONTEXT_POINTER,
+			mouse_action,
+			EdgeKind_Resize_DownRight,
+			(PvRect){100,100,100,100});
+
+
+	element_info = pv_element_get_info_from_kind(PvElementKind_Curve);
+	assert(element_info);
+
+	element_info->func_apply_appearances(elements[0], elements[0]->etaion_work_appearances);
+	elements[0]->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
+
+	position_rect = element_info->func_get_rect_by_anchor_points(elements[0]);
+	EXPECT_EQ(100, position_rect.x);
+	EXPECT_EQ(100, position_rect.y);
+	EXPECT_EQ(150, position_rect.w);
+	EXPECT_EQ(150, position_rect.h);
+}
+
+TEST_F(TestEtToolInfo_Base_Base, ResizeElements_01){
+
+	PvPoint event_point;
+	EtMouseAction mouse_action;
+	const PvElementInfo *element_info = NULL;
+	PvRect position_rect;
+
+	PvElement **elements = (PvElement **)malloc(sizeof(PvElement *) * 2);
+	elements[0] = pv_element_new(PvElementKind_Curve);
+	elements[1] = NULL;
+	pv_element_curve_add_anchor_point(elements[0], pv_anchor_point_from_point((PvPoint){100, 100}));
+	pv_element_curve_add_anchor_point(elements[0], pv_anchor_point_from_point((PvPoint){101, 101}));
+
+	// # down
+	event_point = (PvPoint){
+		101,
+		101,
+	};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
+
+	// up
+	event_point = (PvPoint){
+		250,
+		250,
+	};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
+
+	EdgeKind edge_kind = resize_elements_(
+			elements,
+			SNAP_CONTEXT_POINTER,
+			mouse_action,
+			EdgeKind_Resize_DownRight,
+			(PvRect){100,100,1,1});
+
+
+	element_info = pv_element_get_info_from_kind(PvElementKind_Curve);
+	assert(element_info);
+
+	element_info->func_apply_appearances(elements[0], elements[0]->etaion_work_appearances);
+	elements[0]->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
+
+	position_rect = element_info->func_get_rect_by_anchor_points(elements[0]);
+	EXPECT_EQ(100, position_rect.x);
+	EXPECT_EQ(100, position_rect.y);
+	EXPECT_EQ(150, position_rect.w);
+	EXPECT_EQ(150, position_rect.h);
 }
 
