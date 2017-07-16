@@ -385,7 +385,7 @@ PvRectEdgeKind get_rect_edge_kind_(EdgeKind edge_kind)
 }
 
 EdgeKind resize_elements_(
-		PvFocus *focus,
+		PvElement **elements,
 		const PvSnapContext *snap_context,
 		EtMouseAction mouse_action,
 		EdgeKind src_edge_kind_,
@@ -398,7 +398,7 @@ EdgeKind resize_elements_(
 
 	if(snap_context->is_snap_for_grid){
 		PvRectEdgeKind rect_edge_kind = get_rect_edge_kind_(dst_edge_kind);
-		PvRect extent_rect = get_rect_extent_from_elements_(focus->elements);
+		PvRect extent_rect = get_rect_extent_from_elements_(elements);
 		extent_rect = pv_rect_add_point(extent_rect, move);
 		PvPoint snap_move_ = get_snap_move_from_rect_edge_(rect_edge_kind, snap_context, extent_rect);
 		move = pv_point_add(move, snap_move_);
@@ -415,9 +415,9 @@ EdgeKind resize_elements_(
 	   resize.y = ((fabs(resize.y) > DELTA_OF_RESIZE) ? resize.y : DELTA_OF_RESIZE);
 	 */
 
-	size_t num = pv_general_get_parray_num((void **)focus->elements);
+	size_t num = pv_general_get_parray_num((void **)elements);
 	for(int i = 0; i < (int)num; i++){
-		PvElement *element = focus->elements[i];
+		PvElement *element = elements[i];
 		const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 
 		PvRect rect_ = info->func_get_rect_by_anchor_points(element);
@@ -784,7 +784,7 @@ bool et_tool_info_util_func_edit_element_mouse_action(
 					case EtFocusElementMouseActionMode_Resize:
 						{
 							resize_elements_(
-									focus,
+									focus->elements,
 									snap_context,
 									mouse_action,
 									mode_edge_,
@@ -1527,7 +1527,7 @@ bool et_tool_info_util_func_add_basic_shape_element_mouse_action(
 				if(EtFocusElementMouseActionMode_Resize == mode_){
 					static EdgeKind mode_edge_ = EdgeKind_Resize_DownLeft;
 					resize_elements_(
-							focus,
+							focus->elements,
 							snap_context,
 							mouse_action,
 							mode_edge_,

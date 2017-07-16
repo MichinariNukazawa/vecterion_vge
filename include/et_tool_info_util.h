@@ -95,7 +95,7 @@ bool et_tool_info_util_func_add_basic_shape_element_mouse_action(
 bool is_bound_point_(int radius, PvPoint p1, PvPoint p2);
 PvRect get_rect_extent_from_elements_(PvElement **elements);
 EdgeKind resize_elements_(
-		PvFocus *focus,
+		PvElement **elements,
 		const PvSnapContext *snap_context,
 		EtMouseAction mouse_action,
 		EdgeKind src_edge_kind_,
