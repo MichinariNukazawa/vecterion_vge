@@ -1003,7 +1003,11 @@ static void edit_anchor_point_handle_down_(int *handle, PvFocus *focus, EtMouseA
 	}
 }
 
-static void edit_anchor_point_handle_move_(int handle, PvFocus *focus, EtMouseAction mouse_action)
+static void edit_anchor_point_handle_move_(
+		int handle,
+		PvFocus *focus,
+		const PvSnapContext *snap_context,
+		EtMouseAction mouse_action)
 {
 	if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
 		return;
@@ -1023,10 +1027,15 @@ static void edit_anchor_point_handle_move_(int handle, PvFocus *focus, EtMouseAc
 				ap,
 				handle);
 	}else{
+		PvPoint point = mouse_action.point;
+		if(snap_context->is_snap_for_grid){
+			point = get_snap_point_(point, snap_context);
+		}
+
 		pv_anchor_point_set_handle(
 				ap,
 				handle,
-				mouse_action.point);
+				point);
 	}
 }
 
@@ -1206,7 +1215,11 @@ bool et_tool_info_util_func_edit_anchor_point_mouse_action(
 						break;
 					case EtFocusElementMouseActionMode_Handle:
 						{
-							edit_anchor_point_handle_move_(handle, focus, mouse_action);
+							edit_anchor_point_handle_move_(
+									handle,
+									focus,
+									snap_context,
+									mouse_action);
 						}
 						break;
 					default:
@@ -1281,7 +1294,11 @@ bool et_tool_info_util_func_edit_anchor_point_handle_mouse_action(
 		case EtMouseAction_Move:
 		case EtMouseAction_Up:
 			{
-				edit_anchor_point_handle_move_(handle, focus, mouse_action);
+				edit_anchor_point_handle_move_(
+						handle,
+						focus,
+						snap_context,
+						mouse_action);
 
 				if(EtMouseAction_Up == mouse_action.action){
 					*is_save = true;
