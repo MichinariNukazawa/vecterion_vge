@@ -1499,7 +1499,10 @@ bool et_tool_info_util_func_add_anchor_point_handle_mouse_action(
 	return result;
 }
 
-static PvElement *add_basic_shape_element_down_(PvFocus *focus, EtMouseAction mouse_action)
+static PvElement *add_basic_shape_element_down_(
+		PvFocus *focus,
+		const PvSnapContext *snap_context,
+		EtMouseAction mouse_action)
 {
 	PvElement *parent_layer = pv_focus_get_first_layer(focus);
 	et_assert(parent_layer);
@@ -1510,9 +1513,14 @@ static PvElement *add_basic_shape_element_down_(PvFocus *focus, EtMouseAction mo
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 	et_assert(info);
 
+	PvPoint point = mouse_action.point;
+	if(snap_context->is_snap_for_grid){
+		point = get_snap_point_(point, snap_context);
+	}
+
 	PvRect rect = {
-		mouse_action.point.x,
-		mouse_action.point.y,
+		point.x,
+		point.y,
 		1,
 		1,
 	};
@@ -1543,7 +1551,10 @@ bool et_tool_info_util_func_add_basic_shape_element_mouse_action(
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
 			{
-				PvElement *element = add_basic_shape_element_down_(focus, mouse_action);
+				PvElement *element = add_basic_shape_element_down_(
+						focus,
+						snap_context,
+						mouse_action);
 				element->color_pair = color_pair;
 				element->stroke = stroke;
 
@@ -1555,7 +1566,7 @@ bool et_tool_info_util_func_add_basic_shape_element_mouse_action(
 		case EtMouseAction_Up:
 			{
 				if(EtFocusElementMouseActionMode_Resize == mode_){
-					static EdgeKind mode_edge_ = EdgeKind_Resize_DownLeft;
+					static EdgeKind mode_edge_ = EdgeKind_Resize_DownRight;
 					resize_elements_(
 							focus->elements,
 							snap_context,

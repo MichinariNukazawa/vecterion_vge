@@ -1743,12 +1743,29 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddBasicShape){
 	EXPECT_TRUE(NULL == edit_draw_element);
 	EXPECT_TRUE(NULL == cursor);
 
-	// document not change.
+	// focus
+	EXPECT_TRUE(pv_focus_is_focused(focus));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
+	EXPECT_EQ(0, pv_general_get_parray_num((void **)focus->anchor_points));
+
+	for(int i = 0; i < NUM_CURVE; i++){
+		EXPECT_NE(focus->elements[0], element_curves[i]);
+	}
+
+	// document
 	EXPECT_TRUE(pv_vg_is_diff(vg, vg_back));
+	EXPECT_EQ(focus->elements[0]->kind, PvElementKind_BasicShape);
+	element_info = pv_element_get_info_from_kind(PvElementKind_BasicShape);
+	assert(element_info);
+	position_rect = element_info->func_get_rect_by_anchor_points(focus->elements[0]);
+	EXPECT_EQ(100, position_rect.x);
+	EXPECT_EQ(50, position_rect.y);
+	EXPECT_EQ(0 + 1, position_rect.w);
+	EXPECT_EQ(0 + 1, position_rect.h);
 
 
 	// # up
-	event_point = pv_point_add(event_point, (PvPoint){100, 200});
+	event_point = pv_point_add(event_point, (PvPoint){100 -1, 200 -1});
 	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
 
 	res = et_tool_info_util_func_add_basic_shape_element_mouse_action(
@@ -1776,17 +1793,21 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddBasicShape){
 		EXPECT_NE(focus->elements[0], element_curves[i]);
 	}
 
-	// document
-	EXPECT_EQ(focus->elements[0]->kind, PvElementKind_BasicShape);
 	element_info = pv_element_get_info_from_kind(PvElementKind_BasicShape);
 	assert(element_info);
+
+	element_info->func_apply_appearances(focus->elements[0], focus->elements[0]->etaion_work_appearances);
+	focus->elements[0]->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
+
+	// document
+	EXPECT_EQ(focus->elements[0]->kind, PvElementKind_BasicShape);
 	position_rect = element_info->func_get_rect_by_anchor_points(focus->elements[0]);
-	/*
+	fprintf(stderr, "%.1f %.1f %.1f %.1f ",
+			position_rect.x, position_rect.y, position_rect.w, position_rect.h);
 	EXPECT_EQ(100, position_rect.x);
 	EXPECT_EQ(50, position_rect.y);
 	EXPECT_EQ(100, position_rect.w);
 	EXPECT_EQ(200, position_rect.h);
-	*/
 
 }
 
@@ -1837,7 +1858,7 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddBasicShape_minus){
 
 
 	// # up
-	event_point = pv_point_add(event_point, (PvPoint){-100, -200});
+	event_point = pv_point_add(event_point, (PvPoint){-100 -1, -200 -1});
 	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
 
 	res = et_tool_info_util_func_add_basic_shape_element_mouse_action(
@@ -1865,17 +1886,19 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddBasicShape_minus){
 		EXPECT_NE(focus->elements[0], element_curves[i]);
 	}
 
-	// document
-	EXPECT_EQ(focus->elements[0]->kind, PvElementKind_BasicShape);
 	element_info = pv_element_get_info_from_kind(PvElementKind_BasicShape);
 	assert(element_info);
+
+	element_info->func_apply_appearances(focus->elements[0], focus->elements[0]->etaion_work_appearances);
+	focus->elements[0]->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
+
+	// document
+	EXPECT_EQ(focus->elements[0]->kind, PvElementKind_BasicShape);
 	position_rect = element_info->func_get_rect_by_anchor_points(focus->elements[0]);
-	/*
 	EXPECT_EQ(-100 -100, position_rect.x);
 	EXPECT_EQ(-50 -200, position_rect.y);
 	EXPECT_EQ(100, position_rect.w);
 	EXPECT_EQ(200, position_rect.h);
-	*/
 
 }
 
