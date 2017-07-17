@@ -1319,7 +1319,7 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddAnchorPoint){
 
 
 	// # up
-	event_point = pv_point_add(event_point, (PvPoint){-90, 90});
+	event_point = pv_point_add(event_point, (PvPoint){-160, 40});
 	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
 
 	res = et_tool_info_util_func_add_anchor_point_handle_mouse_action(
@@ -1394,7 +1394,7 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddAnchorPoint){
 
 
 	// # up
-	event_point = pv_point_add(event_point, (PvPoint){-90, 90});
+	event_point = pv_point_add(event_point, (PvPoint){-160, 40});
 	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
 
 	res = et_tool_info_util_func_add_anchor_point_handle_mouse_action(
@@ -1469,7 +1469,7 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddAnchorPoint){
 
 
 	// # up
-	event_point = pv_point_add(event_point, (PvPoint){-90, 90});
+	event_point = pv_point_add(event_point, (PvPoint){-160, 40});
 	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
 
 	res = et_tool_info_util_func_add_anchor_point_handle_mouse_action(
@@ -1545,7 +1545,7 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddAnchorPoint){
 
 
 	// # up
-	event_point = pv_point_add(event_point, (PvPoint){-90, 90});
+	event_point = pv_point_add(event_point, (PvPoint){-160, 40});
 	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
 
 	res = et_tool_info_util_func_add_anchor_point_handle_mouse_action(
@@ -1643,7 +1643,7 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddAnchorPoint_SnapForGrid){
 
 
 	// # up
-	event_point = pv_point_add(event_point, (PvPoint){-90, 90});
+	event_point = pv_point_add(event_point, (PvPoint){-140, 60});
 	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
 
 	res = et_tool_info_util_func_add_anchor_point_handle_mouse_action(
@@ -1684,6 +1684,20 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddAnchorPoint_SnapForGrid){
 	EXPECT_EQ(0, position_rect.w);
 	EXPECT_EQ(0, position_rect.h);
 	EXPECT_FALSE(pv_element_curve_get_close_anchor_point(focus->elements[0]));
+
+	PvPoint point_next = pv_anchor_point_get_handle(
+			focus->anchor_points[0],
+			PvAnchorPointIndex_HandleNext);
+	EXPECT_EQ(point_next.x, -400);
+	EXPECT_EQ(point_next.y, -50);
+	PvPoint point_next_relate = pv_anchor_point_get_handle_relate(
+			focus->anchor_points[0],
+			PvAnchorPointIndex_HandleNext);
+	PvPoint point_prev_relate = pv_anchor_point_get_handle_relate(
+			focus->anchor_points[0],
+			PvAnchorPointIndex_HandlePrev);
+	EXPECT_EQ(point_next_relate.x, -1 * point_prev_relate.x);
+	EXPECT_EQ(point_next_relate.y, -1 * point_prev_relate.y);
 
 }
 

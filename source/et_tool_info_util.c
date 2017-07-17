@@ -1385,7 +1385,11 @@ static void add_anchor_point_down_(
 	pv_focus_clear_set_anchor_point(focus, element_, anchor_point);
 }
 
-static bool focused_anchor_point_move_(PvFocus *focus, EtMouseAction mouse_action, bool is_reverse)
+static bool focused_anchor_point_move_(
+		PvFocus *focus,
+		const PvSnapContext *snap_context,
+		EtMouseAction mouse_action,
+		bool is_reverse)
 {
 	if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
 		return true;
@@ -1411,7 +1415,12 @@ static bool focused_anchor_point_move_(PvFocus *focus, EtMouseAction mouse_actio
 	if(fabs(p_diff.x) < PX_SENSITIVE_OF_TOUCH && fabs(p_diff.y) < PX_SENSITIVE_OF_TOUCH){
 		pv_anchor_point_set_handle_zero(ap, PvAnchorPointIndex_Point);
 	}else{
-		pv_anchor_point_set_handle(ap, PvAnchorPointIndex_Point, mouse_action.point);
+		PvPoint point = mouse_action.point;
+		if(snap_context->is_snap_for_grid){
+			point = get_snap_point_(point, snap_context);
+		}
+
+		pv_anchor_point_set_handle(ap, PvAnchorPointIndex_Point, point);
 
 		if(is_reverse){
 			// AnchorPoint is head in AnchorPath
@@ -1450,14 +1459,18 @@ bool et_tool_info_util_func_add_anchor_point_handle_mouse_action(
 						);
 			}
 			break;
+		case EtMouseAction_Move:
 		case EtMouseAction_Up:
 			{
-				*is_save = true;
-			}
-			break;
-		case EtMouseAction_Move:
-			{
-				result = focused_anchor_point_move_(focus, mouse_action, is_reverse);
+				result = focused_anchor_point_move_(
+						focus,
+						snap_context,
+						mouse_action,
+						is_reverse);
+
+				if(EtMouseAction_Up == mouse_action.action){
+					*is_save = true;
+				}
 			}
 			break;
 		case EtMouseAction_Unknown:
