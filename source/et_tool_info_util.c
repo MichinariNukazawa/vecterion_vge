@@ -936,10 +936,10 @@ int edit_anchor_point_handle_bound_handle_(const PvAnchorPoint *ap, EtMouseActio
 
 	if(is_bound_point_(
 				PX_SENSITIVE_OF_TOUCH,
-				p_prev,
+				p_point,
 				mouse_action.point))
 	{
-		return PvAnchorPointIndex_HandlePrev;
+		return PvAnchorPointIndex_Point;
 	}
 	if(is_bound_point_(
 				PX_SENSITIVE_OF_TOUCH,
@@ -950,10 +950,10 @@ int edit_anchor_point_handle_bound_handle_(const PvAnchorPoint *ap, EtMouseActio
 	}
 	if(is_bound_point_(
 				PX_SENSITIVE_OF_TOUCH,
-				p_point,
+				p_prev,
 				mouse_action.point))
 	{
-		return PvAnchorPointIndex_Point;
+		return PvAnchorPointIndex_HandlePrev;
 	}
 
 	return -1;
@@ -1279,13 +1279,13 @@ bool et_tool_info_util_func_edit_anchor_point_handle_mouse_action(
 			}
 			break;
 		case EtMouseAction_Move:
-			{
-				edit_anchor_point_handle_move_(handle, focus, mouse_action);
-			}
-			break;
 		case EtMouseAction_Up:
 			{
-				*is_save = true;
+				edit_anchor_point_handle_move_(handle, focus, mouse_action);
+
+				if(EtMouseAction_Up == mouse_action.action){
+					*is_save = true;
+				}
 			}
 			break;
 		case EtMouseAction_Unknown:
