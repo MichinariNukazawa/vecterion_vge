@@ -20,6 +20,9 @@ static const PvDocumentPreference PvDocumentPreference_Default = {
 	{
 		.is_snap_for_grid = false,
 		.grid = {50, 50},
+		.is_snap_for_degree = false,
+		.num_snap_for_degree = 3,
+		.degrees = {0,45,90},
 	},
 };
 

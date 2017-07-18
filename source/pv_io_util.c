@@ -111,10 +111,10 @@ error:
 	return false;
 }
 
-bool pv_read_args_from_str(double *args, size_t num_args, const char **str)
+int pv_read_args_from_str(double *args, size_t num_args, const char **str)
 {
 	const char *p = *str;
-	bool res = true;
+	int res = 0;
 
 	int i = 0;
 	while('\0' != *p){
@@ -125,11 +125,12 @@ bool pv_read_args_from_str(double *args, size_t num_args, const char **str)
 		char *next = NULL;
 		const char *str_error = NULL;
 		if(!pv_general_strtod(&args[i], p, &next, &str_error)){
-			res = false;
+			res = -1;
 			break;
 		}
 		p = next;
 		i++;
+		res = i;
 		if(!(i < (int)num_args)){
 			break;
 		}

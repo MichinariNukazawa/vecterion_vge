@@ -5,7 +5,7 @@
 
 
 
-static double _get_radian_from_degree(double degree)
+double get_radian_from_degree(double degree)
 {
 	return degree * (M_PI / 180.0);
 }
@@ -13,7 +13,7 @@ static double _get_radian_from_degree(double degree)
 PvPoint pv_rotate_point(PvPoint point, double degree, PvPoint center)
 {
 	PvPoint rel = pv_point_sub(point, center);
-	double radian = _get_radian_from_degree(degree);
+	double radian = get_radian_from_degree(degree);
 	PvPoint aft = {
 		.x = (rel.x * cos(radian)) - (rel.y * sin(radian)),
 		.y = (rel.x * sin(radian)) + (rel.y * cos(radian)),

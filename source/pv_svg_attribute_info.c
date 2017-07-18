@@ -298,7 +298,7 @@ static bool func_d_set_inline_(
 		switch(command){
 			case 'M':
 			case 'L':
-				if(!pv_read_args_from_str(args, 2, &p)){
+				if(2 != pv_read_args_from_str(args, 2, &p)){
 					goto failed;
 				}
 				pv_element_anchor_point_init(&ap);
@@ -309,7 +309,7 @@ static bool func_d_set_inline_(
 			case 'm':
 			case 'l':
 				{
-					if(!pv_read_args_from_str(args, 2, &p)){
+					if(2 != pv_read_args_from_str(args, 2, &p)){
 						goto failed;
 					}
 
@@ -338,7 +338,7 @@ static bool func_d_set_inline_(
 			case 'V':
 			case 'v':
 				{
-					if(!pv_read_args_from_str(args, 1, &p)){
+					if(1 != pv_read_args_from_str(args, 1, &p)){
 						goto failed;
 					}
 
@@ -376,7 +376,7 @@ static bool func_d_set_inline_(
 			case 'C':
 			case 'c':
 				{
-					if(!pv_read_args_from_str(args, 6, &p)){
+					if(6 != pv_read_args_from_str(args, 6, &p)){
 						goto failed;
 					}
 
@@ -422,7 +422,7 @@ static bool func_d_set_inline_(
 			case 'S':
 			case 's':
 				{
-					if(!pv_read_args_from_str(args, 4, &p)){
+					if(4 != pv_read_args_from_str(args, 4, &p)){
 						goto failed;
 					}
 					pv_element_anchor_point_init(&ap);
@@ -542,7 +542,7 @@ static bool func_points_set_inline_(
 
 	const char *p = value;
 	while('\0' != *p){
-		bool is_append = pv_read_args_from_str(args, 2, &p);
+		bool is_append = (2 == pv_read_args_from_str(args, 2, &p));
 		pv_element_anchor_point_init(&ap);
 		ap.points[PvAnchorPointIndex_Point].x = args[0];
 		ap.points[PvAnchorPointIndex_Point].y = args[1];
@@ -1083,7 +1083,7 @@ static bool func_transform_set_(
 		const char *p = transform_str_maps[i].value;
 
 		if(0 == strcmp("translate", transform_str_maps[i].key)){
-			if(!pv_read_args_from_str(args, 2, &p)){
+			if(2 != pv_read_args_from_str(args, 2, &p)){
 				pv_warning("'%s','%s'", transform_str_maps[i].key, transform_str_maps[i].value);
 				if(conf->imageFileReadOption->is_strict){
 					pv_error("strict");
@@ -1101,7 +1101,7 @@ static bool func_transform_set_(
 					transform_str_maps[i].key, args[0], args[1],
 					translate->move.x, translate->move.y);
 		}else if(0 == strcmp("matrix", transform_str_maps[i].key)){
-			if(!pv_read_args_from_str(args, 6, &p)){
+			if(6 != pv_read_args_from_str(args, 6, &p)){
 				pv_warning("'%s','%s'", transform_str_maps[i].key, transform_str_maps[i].value);
 				if(conf->imageFileReadOption->is_strict){
 					pv_error("strict");

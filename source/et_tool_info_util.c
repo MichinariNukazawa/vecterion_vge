@@ -224,7 +224,7 @@ static double round_(double v, double between)
 	return round(v/between) * between;
 }
 
-static PvPoint get_snap_point_(PvPoint src_point, const PvSnapContext *snap_context)
+static PvPoint get_snap_for_grid_point_(PvPoint src_point, const PvSnapContext *snap_context)
 {
 	et_assert(snap_context);
 
@@ -235,13 +235,40 @@ static PvPoint get_snap_point_(PvPoint src_point, const PvSnapContext *snap_cont
 	return dst_point;
 }
 
+static PvPoint get_snap_for_degree_point_(PvPoint src_point, const PvSnapContext *snap_context)
+{
+	et_assert(snap_context);
+
+	PvPoint dst_point;
+	PvPoint w = {
+		.x = ((0 > src_point.x)? -1 : 1),
+		.y = ((0 > src_point.y)? -1 : 1),
+	};
+	double hypotenuse = sqrt((src_point.x * src_point.x) + (src_point.y * src_point.y));
+	for(int i = 0; i < (int)snap_context->num_snap_for_degree; i++){
+		double radian = get_radian_from_degree(snap_context->degrees[i]);
+		PvPoint dst_point_;
+		dst_point_.x = sin(radian) * hypotenuse * w.x;
+		dst_point_.y = cos(radian) * hypotenuse * w.y;
+		if(0 == i){
+			dst_point = dst_point_;
+		}else{
+			if(pv_point_distance(src_point, dst_point_) < pv_point_distance(src_point, dst_point)){
+				dst_point = dst_point_;
+			}
+		}
+	}
+
+	return dst_point;
+}
+
 PvPoint get_snap_move_from_point_(
 		const PvSnapContext *snap_context,
 		PvPoint src_point)
 {
 	et_assert(snap_context);
 
-	PvPoint dst_point = get_snap_point_(src_point, snap_context);
+	PvPoint dst_point = get_snap_for_grid_point_(src_point, snap_context);
 	PvPoint diff = pv_point_sub(dst_point, src_point);
 	return diff;
 }
@@ -294,6 +321,9 @@ static void translate_elements_(
 
 	PvPoint move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
 
+	if(snap_context->is_snap_for_degree){
+		move = get_snap_for_degree_point_(move, snap_context);
+	}
 	if(snap_context->is_snap_for_grid){
 		PvRectEdgeKind rect_edge_kind = get_rect_edge_kind_of_quadrant_(mouse_action.diff_down);
 		PvRect extent_rect = get_rect_extent_from_elements_(focus->elements);
@@ -751,11 +781,6 @@ bool et_tool_info_util_func_edit_element_mouse_action(
 					if(0 == (mouse_action.state & MOUSE_BUTTON_LEFT_MASK)){
 						break;
 					}
-
-					if(0 != (mouse_action.state & GDK_SHIFT_MASK)){
-						break;
-					}
-
 				}
 
 				if(!is_move_)
@@ -1029,7 +1054,7 @@ static void edit_anchor_point_handle_move_(
 	}else{
 		PvPoint point = mouse_action.point;
 		if(snap_context->is_snap_for_grid){
-			point = get_snap_point_(point, snap_context);
+			point = get_snap_for_grid_point_(point, snap_context);
 		}
 
 		pv_anchor_point_set_handle(
@@ -1057,7 +1082,7 @@ static bool translate_anchor_points_(
 	if(snap_context->is_snap_for_grid){
 		PvPoint move_v = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
 		src_point = pv_point_add(src_point, move_v);
-		PvPoint dst_point = get_snap_point_(src_point, snap_context);
+		PvPoint dst_point = get_snap_for_grid_point_(src_point, snap_context);
 
 		PvPoint current_ap_point = pv_anchor_point_get_point(focus->anchor_points[0]);
 		move = pv_point_sub(dst_point, current_ap_point);
@@ -1340,7 +1365,7 @@ static void add_anchor_point_down_(
 
 	PvPoint point = mouse_action.point;
 	if(snap_context->is_snap_for_grid){
-		point = get_snap_point_(point, snap_context);
+		point = get_snap_for_grid_point_(point, snap_context);
 	}
 
 	if(PvElementKind_Curve != element_->kind
@@ -1434,7 +1459,7 @@ static bool focused_anchor_point_move_(
 	}else{
 		PvPoint point = mouse_action.point;
 		if(snap_context->is_snap_for_grid){
-			point = get_snap_point_(point, snap_context);
+			point = get_snap_for_grid_point_(point, snap_context);
 		}
 
 		pv_anchor_point_set_handle(ap, PvAnchorPointIndex_Point, point);
@@ -1515,7 +1540,7 @@ static PvElement *add_basic_shape_element_down_(
 
 	PvPoint point = mouse_action.point;
 	if(snap_context->is_snap_for_grid){
-		point = get_snap_point_(point, snap_context);
+		point = get_snap_for_grid_point_(point, snap_context);
 	}
 
 	PvRect rect = {

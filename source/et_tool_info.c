@@ -123,6 +123,10 @@ static bool func_edit_element_mouse_action_(
 
 	bool is_save = false;
 
+	if(0 != (mouse_action.state & GDK_SHIFT_MASK)){
+		document_preference.snap_context.is_snap_for_degree = true;
+	}
+
 	bool res = et_tool_info_util_func_edit_element_mouse_action(
 			vg,
 			focus,

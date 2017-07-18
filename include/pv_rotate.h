@@ -8,6 +8,7 @@
 #define include_PV_ROTATE_H
 #include "pv_type.h"
 
+double get_radian_from_degree(double degree);
 PvPoint pv_rotate_point(PvPoint src, double degree, PvPoint center);
 PvRect pv_rotate_rect(PvRect rect, double degree, PvPoint center);
 

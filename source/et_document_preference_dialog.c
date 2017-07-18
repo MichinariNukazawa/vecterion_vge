@@ -1,12 +1,17 @@
 #include "et_document_preference_dialog.h"
 
+#include <math.h>
+#include <string.h>
 #include "et_error.h"
 #include "et_etaion.h"
 #include "et_doc.h"
+#include "pv_io_util.h"
+#include "et_error_dialog.h"
 
 typedef struct{
 	GtkWidget *spinbutton_snap_for_grid_width;
 	GtkWidget *spinbutton_snap_for_grid_height;
+	GtkWidget *entry_snap_for_degree_degrees;
 }PvDocumentPreferenceDialog;
 
 static bool pv_document_preference_dialog_set_ui_from_value(GtkBuilder *, const PvDocumentPreference *);
@@ -21,6 +26,10 @@ static bool get_handle_(GtkBuilder *builder, PvDocumentPreferenceDialog *self)
 	self->spinbutton_snap_for_grid_height
 		= GTK_WIDGET(gtk_builder_get_object(builder, "spinbutton_snap_for_grid_height"));
 	et_assert(self->spinbutton_snap_for_grid_height);
+
+	self->entry_snap_for_degree_degrees
+		= GTK_WIDGET(gtk_builder_get_object(builder, "entry_snap_for_degree_degrees"));
+	et_assert(self->entry_snap_for_degree_degrees);
 
 	return true;
 }
@@ -83,9 +92,10 @@ int pv_document_preference_dialog_run(GtkBuilder *builder)
 				res = pv_document_preference_dialog_get_value_from_ui(
 						builder,
 						&document_preference);
-				et_assert(res);
 
-				et_doc_set_document_preference_from_id(doc_id, document_preference);
+				if(res){
+					et_doc_set_document_preference_from_id(doc_id, document_preference);
+				}
 			}
 			break;
 		default:
@@ -111,9 +121,24 @@ static bool pv_document_preference_dialog_set_ui_from_value(
 	gtk_spin_button_set_value(
 			GTK_SPIN_BUTTON(self->spinbutton_snap_for_grid_width),
 			document_preference->snap_context.grid.x);
+
 	gtk_spin_button_set_value(
 			GTK_SPIN_BUTTON(self->spinbutton_snap_for_grid_height),
 			document_preference->snap_context.grid.y);
+
+	char text[64 * PV_SNAP_CONTEXT_MAX_SNAP_FOR_DEGREES] = {};
+	for(int i = 0; i < (int)document_preference->snap_context.num_snap_for_degree; i++){
+		size_t end = strlen(text);
+		double degree = document_preference->snap_context.degrees[i];
+		if(360 < degree){
+			et_warning("[%d]%f", i, degree);
+			degree = 0;
+		}
+		sprintf(&text[end], "%.1f,", degree);
+	}
+	gtk_entry_set_text(
+			GTK_ENTRY(self->entry_snap_for_degree_degrees),
+			text);
 
 	return true;
 }
@@ -133,10 +158,42 @@ static bool pv_document_preference_dialog_get_value_from_ui(
 	document_preference->snap_context.grid.x
 		= gtk_spin_button_get_value(
 				GTK_SPIN_BUTTON(self->spinbutton_snap_for_grid_width));
+
 	document_preference->snap_context.grid.y
 		= gtk_spin_button_get_value(
 				GTK_SPIN_BUTTON(self->spinbutton_snap_for_grid_height));
 
+	GtkEntryBuffer *buffer = gtk_entry_get_buffer (
+			GTK_ENTRY(self->entry_snap_for_degree_degrees));
+	et_assert(buffer);
+	const char *text = (const char*)gtk_entry_buffer_get_text(buffer);
+	const char *text_ = text;
+	et_assert(text);
+	double args[PV_SNAP_CONTEXT_MAX_SNAP_FOR_DEGREES];
+	int num = pv_read_args_from_str(args, PV_SNAP_CONTEXT_MAX_SNAP_FOR_DEGREES, &text_);
+	for(int i = 0; i < PV_SNAP_CONTEXT_MAX_SNAP_FOR_DEGREES; i++){
+		if(360 <= fabs(args[i])){
+			goto failed_snap_for_degree;
+		}
+	}
+	if(0 >= num){
+		goto failed_snap_for_degree;
+	}else{
+		document_preference->snap_context.num_snap_for_degree = (size_t)num;
+		for(int i = 0; i < PV_SNAP_CONTEXT_MAX_SNAP_FOR_DEGREES; i++){
+			document_preference->snap_context.degrees[i] = args[i];
+		}
+	}
+
 	return true;
+
+failed_snap_for_degree:
+	{
+		const char *error_message = "SnapForDegree parse error.";
+		et_warning("%s:(%d)`%s`", error_message, num, text);
+		show_error_dialog(NULL, "%s", error_message);
+	}
+
+	return false;
 }
 
