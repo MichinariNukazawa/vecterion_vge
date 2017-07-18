@@ -239,9 +239,13 @@ bool slot_et_etaion_from_mouse_action(EtDocId doc_id, EtMouseAction mouse_action
 	et_assert(tool_info);
 	et_assert(tool_info->func_mouse_action);
 
+	PvDocumentPreference document_preference = et_doc_get_document_preference_from_id(doc_id);
+	if(0 != (mouse_action.state & GDK_SHIFT_MASK)){
+		document_preference.snap_context.is_snap_for_degree = true;
+	}
 	PvElement *edit_draw_element = NULL;
 	GdkCursor *cursor = NULL;
-	if(!tool_info->func_mouse_action(doc_id, mouse_action, &edit_draw_element, &cursor)){
+	if(!tool_info->func_mouse_action(doc_id, document_preference, mouse_action, &edit_draw_element, &cursor)){
 		et_error("");
 		return false;
 	}

@@ -110,6 +110,7 @@ PvPoint pv_resize_point_(PvPoint point, PvPoint resize, PvPoint center)
 
 static bool func_edit_element_mouse_action_(
 		EtDocId doc_id,
+		PvDocumentPreference document_preference,
 		EtMouseAction mouse_action,
 		PvElement **edit_draw_element,
 		GdkCursor **cursor)
@@ -119,13 +120,8 @@ static bool func_edit_element_mouse_action_(
 	et_assertf(vg, "%d", doc_id);
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
-	PvDocumentPreference document_preference = et_doc_get_document_preference_from_id(doc_id);
 
 	bool is_save = false;
-
-	if(0 != (mouse_action.state & GDK_SHIFT_MASK)){
-		document_preference.snap_context.is_snap_for_degree = true;
-	}
 
 	bool res = et_tool_info_util_func_edit_element_mouse_action(
 			vg,
@@ -145,6 +141,7 @@ static bool func_edit_element_mouse_action_(
 
 static bool func_add_anchor_point_mouse_action_(
 		EtDocId doc_id,
+		PvDocumentPreference document_preference,
 		EtMouseAction mouse_action,
 		PvElement **edit_draw_element,
 		GdkCursor **cursor)
@@ -153,7 +150,6 @@ static bool func_add_anchor_point_mouse_action_(
 	et_assertf(vg, "%d", doc_id);
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
-	PvDocumentPreference document_preference = et_doc_get_document_preference_from_id(doc_id);
 
 	bool is_save = false;
 
@@ -180,6 +176,7 @@ static bool func_add_anchor_point_mouse_action_(
 
 static bool func_edit_anchor_point_mouse_action_(
 		EtDocId doc_id,
+		PvDocumentPreference document_preference,
 		EtMouseAction mouse_action,
 		PvElement **edit_draw_element,
 		GdkCursor **cursor)
@@ -188,7 +185,6 @@ static bool func_edit_anchor_point_mouse_action_(
 	et_assertf(vg, "%d", doc_id);
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
-	PvDocumentPreference document_preference = et_doc_get_document_preference_from_id(doc_id);
 
 	bool is_save = false;
 
@@ -210,6 +206,7 @@ static bool func_edit_anchor_point_mouse_action_(
 
 static bool func_edit_anchor_point_handle_mouse_action_(
 		EtDocId doc_id,
+		PvDocumentPreference document_preference,
 		EtMouseAction mouse_action,
 		PvElement **edit_draw_element,
 		GdkCursor **cursor)
@@ -218,7 +215,6 @@ static bool func_edit_anchor_point_handle_mouse_action_(
 	et_assertf(vg, "%d", doc_id);
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
-	PvDocumentPreference document_preference = et_doc_get_document_preference_from_id(doc_id);
 
 	bool is_save = false;
 
@@ -307,6 +303,7 @@ static bool knife_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction m
 
 static bool func_add_basic_shape_element_mouse_action_(
 		EtDocId doc_id,
+		PvDocumentPreference document_preference,
 		EtMouseAction mouse_action,
 		PvElement **edit_draw_element,
 		GdkCursor **cursor)
@@ -315,7 +312,6 @@ static bool func_add_basic_shape_element_mouse_action_(
 	et_assertf(vg, "%d", doc_id);
 	PvFocus *focus = et_doc_get_focus_ref_from_id(doc_id);
 	et_assertf(focus, "%d", doc_id);
-	PvDocumentPreference document_preference = et_doc_get_document_preference_from_id(doc_id);
 
 	bool is_save = false;
 
@@ -342,6 +338,7 @@ static bool func_add_basic_shape_element_mouse_action_(
 
 static bool func_knife_anchor_point_mouse_action_(
 		EtDocId doc_id,
+		PvDocumentPreference document_preference,
 		EtMouseAction mouse_action,
 		PvElement **edit_draw_element,
 		GdkCursor **cursor)
@@ -548,6 +545,7 @@ static int insert_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction m
 
 static bool func_insert_anchor_point_mouse_action_(
 		EtDocId doc_id,
+		PvDocumentPreference document_preference,
 		EtMouseAction mouse_action,
 		PvElement **edit_draw_element,
 		GdkCursor **cursor)

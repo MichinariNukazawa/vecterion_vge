@@ -1079,6 +1079,14 @@ static bool translate_anchor_points_(
 	}
 
 	PvPoint move = mouse_action.move;
+	if(snap_context->is_snap_for_degree){
+		PvPoint move_v = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
+		move_v = get_snap_for_degree_point_(move_v, snap_context);
+		PvPoint dst_point = pv_point_add(src_point, move_v);
+
+		PvPoint current_ap_point = pv_anchor_point_get_point(focus->anchor_points[0]);
+		move = pv_point_sub(dst_point, current_ap_point);
+	}
 	if(snap_context->is_snap_for_grid){
 		PvPoint move_v = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
 		src_point = pv_point_add(src_point, move_v);
