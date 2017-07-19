@@ -1482,6 +1482,9 @@ static bool focused_anchor_point_move_(
 		pv_anchor_point_set_handle_zero(ap, PvAnchorPointIndex_Point);
 	}else{
 		PvPoint point = mouse_action.point;
+		if(snap_context->is_snap_for_degree){
+			point = get_snap_for_degree_point_by_center_(point, snap_context, p_ap);
+		}
 		if(snap_context->is_snap_for_grid){
 			point = get_snap_for_grid_point_(point, snap_context);
 		}
