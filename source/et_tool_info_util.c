@@ -235,7 +235,7 @@ static PvPoint get_snap_for_grid_point_(PvPoint src_point, const PvSnapContext *
 	return dst_point;
 }
 
-static PvPoint get_snap_for_degree_point_(PvPoint src_point, const PvSnapContext *snap_context)
+static PvPoint get_snap_for_degree_point_relate_(PvPoint src_point, const PvSnapContext *snap_context)
 {
 	et_assert(snap_context);
 
@@ -260,6 +260,19 @@ static PvPoint get_snap_for_degree_point_(PvPoint src_point, const PvSnapContext
 	}
 
 	return dst_point;
+}
+
+static PvPoint get_snap_for_degree_point_by_center_(
+		PvPoint src_point,
+		const PvSnapContext *snap_context,
+		PvPoint center)
+{
+	et_assert(snap_context);
+
+	PvPoint point = pv_point_sub(src_point, center);
+	point = get_snap_for_degree_point_relate_(point, snap_context);
+	point = pv_point_add(center, point);
+	return point;
 }
 
 PvPoint get_snap_move_from_point_(
@@ -322,7 +335,7 @@ static void translate_elements_(
 	PvPoint move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
 
 	if(snap_context->is_snap_for_degree){
-		move = get_snap_for_degree_point_(move, snap_context);
+		move = get_snap_for_degree_point_relate_(move, snap_context);
 	}
 	if(snap_context->is_snap_for_grid){
 		PvRectEdgeKind rect_edge_kind = get_rect_edge_kind_of_quadrant_(mouse_action.diff_down);
@@ -1053,6 +1066,9 @@ static void edit_anchor_point_handle_move_(
 				handle);
 	}else{
 		PvPoint point = mouse_action.point;
+		if(snap_context->is_snap_for_degree){
+			point = get_snap_for_degree_point_by_center_(point, snap_context, p_ap);
+		}
 		if(snap_context->is_snap_for_grid){
 			point = get_snap_for_grid_point_(point, snap_context);
 		}
@@ -1081,7 +1097,7 @@ static bool translate_anchor_points_(
 	PvPoint move = mouse_action.move;
 	if(snap_context->is_snap_for_degree){
 		PvPoint move_v = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
-		move_v = get_snap_for_degree_point_(move_v, snap_context);
+		move_v = get_snap_for_degree_point_relate_(move_v, snap_context);
 		PvPoint dst_point = pv_point_add(src_point, move_v);
 
 		PvPoint current_ap_point = pv_anchor_point_get_point(focus->anchor_points[0]);
