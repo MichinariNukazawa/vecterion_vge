@@ -262,6 +262,27 @@ static PvPoint get_snap_for_degree_point_relate_(PvPoint src_point, const PvSnap
 	return dst_point;
 }
 
+static double get_snap_for_degree_from_degree_(double src_degree, const PvSnapContext *snap_context)
+{
+	src_degree = fmod(src_degree + 360, 360);
+	double dst_degree = src_degree;
+	for(int i = 0; i < (int)snap_context->num_snap_for_degree; i++){
+		for(int t = 0; t < 4; t++){
+			if(0 == i && 0 == t){
+				dst_degree = snap_context->degrees[i];
+			}
+
+			double degree_ = snap_context->degrees[i] + (90 * t);
+			if(fabs(src_degree - dst_degree) > fabs(src_degree - degree_)){
+				dst_degree = degree_;
+			}
+			et_debug("%d %d: %.0f %.0f", i, t, src_degree, degree_);
+		}
+	}
+
+	return dst_degree;
+}
+
 static PvPoint get_snap_for_degree_point_by_center_(
 		PvPoint src_point,
 		const PvSnapContext *snap_context,
@@ -518,6 +539,7 @@ static double get_degree_from_point(PvPoint point)
 
 static EdgeKind rotate_elements_(
 		PvFocus *focus,
+		const PvSnapContext *snap_context,
 		EtMouseAction mouse_action,
 		EdgeKind src_edge_kind_,
 		PvRect src_extent_rect)
@@ -538,6 +560,10 @@ static EdgeKind rotate_elements_(
 	double dst_degree = get_degree_from_point(pv_point_sub(extent_center, dst_point));
 
 	double degree = dst_degree - src_degree;
+
+	if(snap_context->is_snap_for_degree){
+		degree = get_snap_for_degree_from_degree_(degree, snap_context);
+	}
 
 	PvElement **elements = focus->elements;
 	size_t num_ = pv_general_get_parray_num((void **)elements);
@@ -831,7 +857,12 @@ bool et_tool_info_util_func_edit_element_mouse_action(
 						break;
 					case EtFocusElementMouseActionMode_Rotate:
 						{
-							rotate_elements_(focus, mouse_action, mode_edge_, src_extent_rect_when_down_);
+							rotate_elements_(
+									focus,
+									snap_context,
+									mouse_action,
+									mode_edge_,
+									src_extent_rect_when_down_);
 						}
 						break;
 					case EtFocusElementMouseActionMode_FocusingByArea:
