@@ -276,16 +276,25 @@ Layer順序の並び替えを行った際、Layer内のElementが並び替えら
 	FocusされているElementsを含んだGroupが作成され、EvenOddマスクが設定される。
 
 ### Snap
-#### SnapForGrid
+* Menuの Document > Preference を押下する
+	DocumentPreferenceダイアログが表示される。  
+#### SnapForGrid in Dialog
 * Ctrl+Shift+\(backslask)ショートカットを押下する。
 	Canvas上にGridが表示される。  
 * 前のテストに続けて、ショートカットを押下する。
 	SnapForGridが非表示になる。  
-* Canvas上にGridが表示されている状態で、Menuの Document > Preference を押下し、
+* Canvas上にGridが表示されている状態で、
  DocumentPreferenceダイアログにて、SnapForGridのwidth,heightの変更を実行する。
 	Canvas上のGridが変更される。  
 * (准正常系)DocumentPreferenceダイアログにて、Cancelする。
 	Canvas上のGridが変更されない。  
+#### SnapForDegree in Dialog
+* DocumentPreferenceダイアログにて、SnapForDegreeのdegreesを"0,15,90"へ変更し、OKする。
+	再度DocumentPreferenceダイアログを開くと、設定が反映されている。(Shift+移動で確かめる)  
+* (准正常系)DocumentPreferenceダイアログにて、SnapForDegreeのdegreesを"0,15,90,xx"へ変更し、OKする。
+	エラーメッセージが表示される。
+	再度DocumentPreferenceダイアログを開くと、変更前の設定値が表示される。  
+
 
 ### Cut, Copy, Paste
 
