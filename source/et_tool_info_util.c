@@ -276,7 +276,6 @@ static double get_snap_for_degree_from_degree_(double src_degree, const PvSnapCo
 			if(fabs(src_degree - dst_degree) > fabs(src_degree - degree_)){
 				dst_degree = degree_;
 			}
-			et_debug("%d %d: %.0f %.0f", i, t, src_degree, degree_);
 		}
 	}
 
