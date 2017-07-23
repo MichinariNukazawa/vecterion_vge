@@ -268,11 +268,11 @@ static double get_snap_for_degree_from_degree_(double src_degree, const PvSnapCo
 	double dst_degree = src_degree;
 	for(int i = 0; i < (int)snap_context->num_snap_for_degree; i++){
 		for(int t = 0; t < 4; t++){
+			double degree_ = snap_context->degrees[i] + (90 * t);
 			if(0 == i && 0 == t){
-				dst_degree = snap_context->degrees[i];
+				dst_degree = degree_;
 			}
 
-			double degree_ = snap_context->degrees[i] + (90 * t);
 			if(fabs(src_degree - dst_degree) > fabs(src_degree - degree_)){
 				dst_degree = degree_;
 			}
@@ -280,6 +280,70 @@ static double get_snap_for_degree_from_degree_(double src_degree, const PvSnapCo
 	}
 
 	return dst_degree;
+}
+
+PvPoint get_ratio_from_degree_(double degree)
+{
+	double radian = get_radian_from_degree(degree);
+	PvPoint dst_point = {
+		.x = sin(radian) * 1.0,
+		.y = cos(radian) * 1.0,
+	};
+
+	return dst_point;
+}
+
+PvPoint get_snap_for_degree_from_ratio_(PvPoint src_ratio, const PvSnapContext *snap_context)
+{
+	PvPoint dst_ratio = src_ratio;
+	for(int i = 0; i < (int)snap_context->num_snap_for_degree; i++){
+		for(int t = 0; t < 4; t++){
+			double degree_ = snap_context->degrees[i] + (90 * t);
+			PvPoint ratio_ = get_ratio_from_degree_(degree_);
+			if(0 == i && 0 == t){
+				dst_ratio = ratio_;
+			}
+
+			if(pv_point_distance(dst_ratio, src_ratio) > pv_point_distance(ratio_, src_ratio)){
+				dst_ratio = ratio_;
+			}
+		}
+	}
+
+	return dst_ratio;
+}
+
+const double PV_DELTA_OF_DOUBLE = 0.00001;
+PvPoint get_ratio_from_point_(PvPoint point)
+{
+	PvPoint ratio = {0.5, 0.5};
+	double scale = fabs(point.x) + fabs(point.y);
+	if(PV_DELTA_OF_DOUBLE < scale){
+		ratio.x = point.x / scale;
+		ratio.y = point.y / scale;
+	}
+
+	return ratio;
+}
+
+PvPoint get_point_from_ratio_(PvPoint src_point, PvPoint ratio)
+{
+	PvPoint dst_point = {0.0, 0.0};
+	double scale = fabs(src_point.x) + fabs(src_point.y);
+	if(PV_DELTA_OF_DOUBLE < scale){
+		dst_point.x = ratio.x * scale;
+		dst_point.y = ratio.y * scale;
+	}
+
+	return dst_point;
+}
+
+PvPoint get_snap_for_degree_from_point_(PvPoint src_point, const PvSnapContext *snap_context)
+{
+	PvPoint src_ratio = get_ratio_from_point_(src_point);
+	PvPoint ratio = get_snap_for_degree_from_ratio_(src_ratio, snap_context);
+	PvPoint dst_point = get_point_from_ratio_(src_point, ratio);
+	return dst_point;
 }
 
 static PvPoint get_snap_for_degree_point_by_center_(
@@ -465,6 +529,12 @@ EdgeKind resize_elements_(
 		extent_rect = pv_rect_add_point(extent_rect, move);
 		PvPoint snap_move_ = get_snap_for_grid_move_from_rect_edge_(rect_edge_kind, snap_context, extent_rect);
 		move = pv_point_add(move, snap_move_);
+	}
+	if(snap_context->is_snap_for_degree){
+		move = get_snap_for_degree_from_point_(move, snap_context);
+		PvPoint rect_size = pv_rect_get_abs_size(src_extent_rect);
+		PvPoint ratio = get_ratio_from_point_(rect_size);
+		move = pv_point_mul(move, ratio);
 	}
 
 	PvPoint move_upleft;

@@ -239,3 +239,23 @@ PvPoint pv_rect_get_center(PvRect rect)
 	return center;
 }
 
+PvPoint pv_rect_get_size(PvRect rect)
+{
+	PvPoint size = {
+		rect.w,
+		rect.h,
+	};
+
+	return size;
+}
+
+PvPoint pv_rect_get_abs_size(PvRect rect)
+{
+	PvPoint size = {
+		fabs(rect.w),
+		fabs(rect.h),
+	};
+
+	return size;
+}
+

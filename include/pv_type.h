@@ -73,6 +73,8 @@ bool pv_rect_is_inside(PvRect, PvPoint);
 PvRect pv_rect_expand(PvRect rect0, PvRect rect1);
 PvPoint pv_rect_get_edge_point(PvRect, PvRectEdgeKind);
 PvPoint pv_rect_get_center(PvRect);
+PvPoint pv_rect_get_size(PvRect);
+PvPoint pv_rect_get_abs_size(PvRect);
 
 
 #ifdef include_ET_TEST
