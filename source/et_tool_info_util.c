@@ -295,7 +295,7 @@ static PvPoint get_snap_for_degree_point_by_center_(
 	return point;
 }
 
-PvPoint get_snap_move_from_point_(
+PvPoint get_snap_for_grid_move_from_point_(
 		const PvSnapContext *snap_context,
 		PvPoint src_point)
 {
@@ -306,7 +306,7 @@ PvPoint get_snap_move_from_point_(
 	return diff;
 }
 
-static PvPoint get_snap_move_from_rect_edge_(
+static PvPoint get_snap_for_grid_move_from_rect_edge_(
 		PvRectEdgeKind rect_edge_kind,
 		const PvSnapContext *snap_context,
 		PvRect rect)
@@ -314,7 +314,7 @@ static PvPoint get_snap_move_from_rect_edge_(
 	et_assert(snap_context);
 
 	PvPoint src_point = pv_rect_get_edge_point(rect, rect_edge_kind);
-	PvPoint diff = get_snap_move_from_point_(snap_context, src_point);
+	PvPoint diff = get_snap_for_grid_move_from_point_(snap_context, src_point);
 	return diff;
 }
 
@@ -361,7 +361,7 @@ static void translate_elements_(
 		PvRectEdgeKind rect_edge_kind = get_rect_edge_kind_of_quadrant_(mouse_action.diff_down);
 		PvRect extent_rect = get_rect_extent_from_elements_(focus->elements);
 		extent_rect = pv_rect_add_point(extent_rect, move);
-		PvPoint snap_move_ = get_snap_move_from_rect_edge_(rect_edge_kind, snap_context, extent_rect);
+		PvPoint snap_move_ = get_snap_for_grid_move_from_rect_edge_(rect_edge_kind, snap_context, extent_rect);
 		move = pv_point_add(move, snap_move_);
 	}
 
@@ -463,7 +463,7 @@ EdgeKind resize_elements_(
 		PvRectEdgeKind rect_edge_kind = get_rect_edge_kind_(dst_edge_kind);
 		PvRect extent_rect = get_rect_extent_from_elements_(elements);
 		extent_rect = pv_rect_add_point(extent_rect, move);
-		PvPoint snap_move_ = get_snap_move_from_rect_edge_(rect_edge_kind, snap_context, extent_rect);
+		PvPoint snap_move_ = get_snap_for_grid_move_from_rect_edge_(rect_edge_kind, snap_context, extent_rect);
 		move = pv_point_add(move, snap_move_);
 	}
 
