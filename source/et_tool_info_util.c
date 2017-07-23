@@ -942,48 +942,48 @@ bool et_tool_info_util_func_edit_element_mouse_action(
 					default:
 						break;
 				}
-
-				if(EtMouseAction_Up == mouse_action.action){
-					switch(mode_){
-						case EtFocusElementMouseActionMode_Translate:
-							{
-								if(is_move_){
-									// NOP
-								}else{
-									if(0 == (mouse_action.state & GDK_SHIFT_MASK)){
-										pv_focus_clear_set_element(focus, touch_element_);
-									}else{
-										if(!is_already_focus_){
-											// NOP
-										}else{
-											pv_focus_remove_element(focus, touch_element_);
-										}
-									}
-								}
-							}
-							break;
-						default:
-							break;
-					}
-
-					// apply work appearances
-					size_t num_ = pv_general_get_parray_num((void **)focus->elements);
-					for(int i = 0; i < (int)num_; i++){
-						PvElement *element = focus->elements[i];
-						const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
-						info->func_apply_appearances(element, element->etaion_work_appearances);
-						element->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
-					}
-
-					mode_edge_ = EdgeKind_None;
-					mode_ = EtFocusElementMouseActionMode_None;
-
-					*is_save = true;
-				}
 			}
 			break;
 		default:
 			break;
+	}
+
+	if(EtMouseAction_Up == mouse_action.action){
+		switch(mode_){
+			case EtFocusElementMouseActionMode_Translate:
+				{
+					if(is_move_){
+						// NOP
+					}else{
+						if(0 == (mouse_action.state & GDK_SHIFT_MASK)){
+							pv_focus_clear_set_element(focus, touch_element_);
+						}else{
+							if(!is_already_focus_){
+								// NOP
+							}else{
+								pv_focus_remove_element(focus, touch_element_);
+							}
+						}
+					}
+				}
+				break;
+			default:
+				break;
+		}
+
+		// apply work appearances
+		size_t num_ = pv_general_get_parray_num((void **)focus->elements);
+		for(int i = 0; i < (int)num_; i++){
+			PvElement *element = focus->elements[i];
+			const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+			info->func_apply_appearances(element, element->etaion_work_appearances);
+			element->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
+		}
+
+		mode_edge_ = EdgeKind_None;
+		mode_ = EtFocusElementMouseActionMode_None;
+
+		*is_save = true;
 	}
 
 	// ** mouse cursor
@@ -1374,40 +1374,41 @@ bool et_tool_info_util_func_edit_anchor_point_mouse_action(
 					default:
 						break;
 				}
-				if(EtMouseAction_Up == mouse_action.action){
-					switch(mode_){
-						case EtFocusElementMouseActionMode_Translate:
-							{
-								if(is_move_){
-									// NOP
-								}else{
-									if(0 == (mouse_action.state & GDK_SHIFT_MASK)){
-										et_assert(pv_focus_clear_set_anchor_point(focus, touch_element_, touch_anchor_point_));
-									}else{
-										if(!is_already_focus_){
-											// NOP
-										}else{
-											et_assert(pv_focus_remove_anchor_point(focus, touch_element_, touch_anchor_point_));
-										}
-									}
-								}
-							}
-							break;
-						default:
-							break;
-					}
-
-					mode_edge_ = EdgeKind_None;
-					mode_ = EtFocusElementMouseActionMode_None;
-
-					*is_save = true;
-				}
 			}
 			break;
 		case EtMouseAction_Unknown:
 		default:
 			et_bug("0x%x", mouse_action.action);
 			break;
+	}
+
+	if(EtMouseAction_Up == mouse_action.action){
+		switch(mode_){
+			case EtFocusElementMouseActionMode_Translate:
+				{
+					if(is_move_){
+						// NOP
+					}else{
+						if(0 == (mouse_action.state & GDK_SHIFT_MASK)){
+							et_assert(pv_focus_clear_set_anchor_point(focus, touch_element_, touch_anchor_point_));
+						}else{
+							if(!is_already_focus_){
+								// NOP
+							}else{
+								et_assert(pv_focus_remove_anchor_point(focus, touch_element_, touch_anchor_point_));
+							}
+						}
+					}
+				}
+				break;
+			default:
+				break;
+		}
+
+		mode_edge_ = EdgeKind_None;
+		mode_ = EtFocusElementMouseActionMode_None;
+
+		*is_save = true;
 	}
 
 	// ** mouse cursor
@@ -1448,16 +1449,16 @@ bool et_tool_info_util_func_edit_anchor_point_handle_mouse_action(
 						focus,
 						snap_context,
 						mouse_action);
-
-				if(EtMouseAction_Up == mouse_action.action){
-					*is_save = true;
-				}
 			}
 			break;
 		case EtMouseAction_Unknown:
 		default:
 			et_bug("0x%x", mouse_action.action);
 			break;
+	}
+
+	if(EtMouseAction_Up == mouse_action.action){
+		*is_save = true;
 	}
 
 	return true;
@@ -1636,16 +1637,16 @@ bool et_tool_info_util_func_add_anchor_point_handle_mouse_action(
 						snap_context,
 						mouse_action,
 						is_reverse);
-
-				if(EtMouseAction_Up == mouse_action.action){
-					*is_save = true;
-				}
 			}
 			break;
 		case EtMouseAction_Unknown:
 		default:
 			et_bug("0x%x", mouse_action.action);
 			break;
+	}
+
+	if(EtMouseAction_Up == mouse_action.action){
+		*is_save = true;
 	}
 
 	return result;
@@ -1726,23 +1727,23 @@ bool et_tool_info_util_func_add_basic_shape_element_mouse_action(
 							mode_edge_,
 							src_extent_rect_when_down_);
 				}
-
-				if(EtMouseAction_Up == mouse_action.action){
-					PvElement *element = pv_focus_get_first_element(focus);
-					et_assert(element);
-					const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
-					et_assert(info);
-					info->func_apply_appearances(element, element->etaion_work_appearances);
-					element->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
-
-					mode_ = EtFocusElementMouseActionMode_None;
-
-					*is_save = true;
-				}
 			}
 			break;
 		default:
 			break;
+	}
+
+	if(EtMouseAction_Up == mouse_action.action){
+		PvElement *element = pv_focus_get_first_element(focus);
+		et_assert(element);
+		const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+		et_assert(info);
+		info->func_apply_appearances(element, element->etaion_work_appearances);
+		element->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
+
+		mode_ = EtFocusElementMouseActionMode_None;
+
+		*is_save = true;
 	}
 
 	return true;
