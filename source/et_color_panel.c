@@ -89,6 +89,7 @@ EtColorPanel *et_color_panel_init()
 	for(int i = 0; i < NUM_COLOR_PARAMETER; i++){
 		const PvColorParameterProperty *color_parameter_property
 			= pv_color_get_parameter_property_from_ix(i);
+		et_assert(color_parameter_property);
 
 		self->slider_boxs[i] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 		et_assertf(self->slider_boxs[i], "%d", i);
@@ -124,6 +125,8 @@ EtColorPanel *et_color_panel_init()
 		// spin button [+/-] is event_box not catch button-release-event.
 		g_signal_connect(self->slider_spins[i], "button-release-event",
 				G_CALLBACK(cb_button_release_slider_spins_), NULL);
+		et_debug("color_parameter_property[%d]:%p %p",
+				i, self->slider_spins[i], color_parameter_property);
 	}
 
 	// ** pallet
@@ -280,10 +283,11 @@ static gboolean cb_change_value_color_slider_slider_(
 		value = color_parameter_property->max;
 	}
 
-	pv_color_set_parameter(
+	bool ret = pv_color_set_parameter(
 			&(self->color_pair.colors[self->color_pair_ground]),
 			color_parameter_property->ix,
 			value);
+	et_assertf(ret, "%p", color_parameter_property);
 
 	et_color_panel_update_focus_elements_();
 
@@ -306,10 +310,11 @@ static void cb_value_changed_color_slider_spin_(
 	const PvColorParameterProperty *color_parameter_property = user_data;
 	et_assert(color_parameter_property);
 
-	pv_color_set_parameter(
+	bool ret = pv_color_set_parameter(
 			&(self->color_pair.colors[self->color_pair_ground]),
 			color_parameter_property->ix,
 			value);
+	et_assertf(ret, "%p %p", spin_button, color_parameter_property);
 
 	et_color_panel_update_focus_elements_();
 

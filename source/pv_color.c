@@ -40,8 +40,7 @@ const PvColorParameterProperty *pv_color_get_parameter_property_from_ix(PvColorP
 {
 	if(ix < 0 || pv_color_parameter_property_get_num() <= (int)ix){
 		pv_bug("%d", ix);
-		exit(-1);
-		ix = 0;
+		return NULL;
 	}
 
 	return &(color_parameter_propertys[ix]);
@@ -86,7 +85,8 @@ bool pv_color_set_parameter(PvColor *color, PvColorParameterIx ix, double value)
 
 	const PvColorParameterProperty *color_parameter_property
 		= pv_color_get_parameter_property_from_ix(ix);
-	assert(color_parameter_property);
+	//assertf(color_parameter_property, "%d", ix);
+	if(!color_parameter_property) {return false;}
 
 	if(value < color_parameter_property->min){
 		pv_warning("%f", value);
