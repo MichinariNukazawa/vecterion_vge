@@ -25,14 +25,16 @@ GTK3LIBRARY_DIR=${OBJECT_DIR}/gtk3_win64
 LIBXML2_DIR=${OBJECT_DIR}/libxml2
 BUILD_DIR=build/${TARGET_OS}
 
+#ARCHIVE=gtk+-bundle_3.10.4-20131202_win64.zip
+ARCHIVE=gtk+-bundle_3.22.15-1-20170610_win64.zip
 
 # download gkt3 library binary
-if [ ! -e ${CACHE_DIR}/gtk+-bundle_3.10.4-20131202_win64.zip ] ; then
-	mkdir -p ${CACHE_DIR}
-	wget --tries=3 --wait=5 --continue \
-		http://win32builder.gnome.org/gtk+-bundle_3.10.4-20131202_win64.zip \
-		-P ${CACHE_DIR}
-fi
+#if [ ! -e ${CACHE_DIR}/${ARCHIVE} ] ; then
+#	mkdir -p ${CACHE_DIR}
+#	wget --tries=3 --wait=5 --continue \
+#		http://win32builder.gnome.org/gtk+-bundle_3.10.4-20131202_win64.zip \
+#		-P ${CACHE_DIR}
+#fi
 
 
 # decompress gtk3
@@ -41,10 +43,9 @@ if [ ! -e ${GTK3LIBRARY_DIR}/lib/pkgconfig/gtk+-3.0.pc ] ; then
 	mkdir -p ${GTK3LIBRARY_DIR}
 	pushd ${GTK3LIBRARY_DIR}
 
-	unzip ${CACHE_DIR}/gtk+-bundle_3.10.4-20131202_win64.zip > /dev/null
+	unzip ${CACHE_DIR}/${ARCHIVE} > /dev/null
 	find -name '*.pc' | while read pc; do sed -e "s@^prefix=.*@prefix=$PWD@" -i "$pc"; done
 	find -name '*.pc' | while read pc; do sed -e "s@/srv/win32builder/fixed_3104/build/win64@$PWD@g" -i "$pc"; done
-	sed -e "s@Z:/srv/win32builder/fixed_3104/build/win32/@@g" -i "lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
 
 	popd
 fi
@@ -86,7 +87,7 @@ cp ${GTK3LIBRARY_DIR}/bin/*.dll ${PACKAGE_DIR}/
 #cp ${GTK3LIBRARY_DIR}/lib/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-svg.dll ${PACKAGE_DIR}/
 mkdir -p ${PACKAGE_DIR}/lib/gdk-pixbuf-2.0/2.10.0/loaders/
 cp ${GTK3LIBRARY_DIR}/lib/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-svg.dll ${PACKAGE_DIR}/lib/gdk-pixbuf-2.0/2.10.0/loaders/
-cp ${GTK3LIBRARY_DIR}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache ${PACKAGE_DIR}/lib/gdk-pixbuf-2.0/2.10.0/
+cp ${ROOT_DIR}/deploy/win/loaders.cache ${PACKAGE_DIR}/lib/gdk-pixbuf-2.0/2.10.0/
 mkdir -p ${PACKAGE_DIR}/share/glib-2.0/
 cp -r ${GTK3LIBRARY_DIR}/share/glib-2.0/schemas ${PACKAGE_DIR}/share/glib-2.0/
 
