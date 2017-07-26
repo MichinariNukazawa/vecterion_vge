@@ -90,6 +90,7 @@ cp ${GTK3LIBRARY_DIR}/lib/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-svg.dll 
 cp ${ROOT_DIR}/deploy/win/loaders.cache ${PACKAGE_DIR}/lib/gdk-pixbuf-2.0/2.10.0/
 mkdir -p ${PACKAGE_DIR}/share/glib-2.0/
 cp -r ${GTK3LIBRARY_DIR}/share/glib-2.0/schemas ${PACKAGE_DIR}/share/glib-2.0/
+cp -r ${GTK3LIBRARY_DIR}/share/icons ${PACKAGE_DIR}/share/
 
 pushd ${PACKAGE_DIR}
 
