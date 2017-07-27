@@ -50,7 +50,6 @@ static gboolean cb_change_value_color_slider_slider_(
 		gdouble value, gpointer user_data);
 static void cb_value_changed_color_slider_spin_(
 		GtkSpinButton *spin_button,
-		GtkScrollType  scroll,
 		gpointer       user_data);
 
 static void et_color_panel_update_ui_();
@@ -298,7 +297,6 @@ static gboolean cb_change_value_color_slider_slider_(
 
 static void cb_value_changed_color_slider_spin_(
 		GtkSpinButton *spin_button,
-		GtkScrollType  scroll,
 		gpointer       user_data)
 {
 	double value = gtk_spin_button_get_value(spin_button);
