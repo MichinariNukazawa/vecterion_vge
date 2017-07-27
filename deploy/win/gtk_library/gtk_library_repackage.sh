@@ -22,7 +22,9 @@ REL_AR=gtk+-bundle_3.22.15-1-20170610-bin_win64.7z
 # output
 RET_AR=gtk+-bundle_3.22.15-1-20170610_win64.zip
 
+SCRIPT_DIR=$(cd $(dirname $0); pwd)
 
+pushd ${SCRIPT_DIR}
 
 rm -rf ${DEV_AR%.*}_0
 rm -rf ${REL_AR%.*}_0
@@ -42,6 +44,20 @@ mkdir ${REL_AR%.*}
 find "./${DEV_AR%.*}_0/" -name "*.7z" | xargs -P 1 -I % 7za x -y -o"${DEV_AR%.*}" %
 find "./${REL_AR%.*}_0/" -name "*.7z" | xargs -P 1 -I % 7za x -y -o"${REL_AR%.*}" %
 
+cp PackageInformation.md ${DEV_AR%.*}/
+cp PackageInformation.md ${REL_AR%.*}/
+
+pushd ${DEV_AR%.*}
+rm -rf ../${DEV_AR%.*}.zip
+zip -r9 ../${DEV_AR%.*}.zip *
+popd
+
+pushd ${REL_AR%.*}
+rm -rf ../${REL_AR%.*}.zip
+zip -r9 ../${REL_AR%.*}.zip *
+popd
+
+# all in one
 rm -rf ${RET_AR%.*}
 mkdir ${RET_AR%.*}
 
@@ -51,5 +67,7 @@ cp -r ${REL_AR%.*}/* ${RET_AR%.*}
 pushd ${RET_AR%.*}
 rm -rf ../${RET_AR}
 zip -r9 ../${RET_AR} *
+popd
+
 popd
 
