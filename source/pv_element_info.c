@@ -856,7 +856,7 @@ static PvElementDrawRecursive _func_curve_draw(
 	switch(element_render_context->element_group_kind){
 		case PvElementGroupKind_Normal:
 			{
-				storke_and_fill_(cr, element);
+				storke_and_fill_(cr, simplify);
 				cairo_new_path(cr);
 			}
 			break;
@@ -865,7 +865,7 @@ static PvElementDrawRecursive _func_curve_draw(
 				size_t num = pv_general_get_parray_num((void **)element->parent->childs);
 				pv_assert(0 < num);
 				if(element == element->parent->childs[(int)num - 1]){
-					storke_and_fill_(cr, element);
+					storke_and_fill_(cr, simplify);
 					cairo_new_path(cr);
 				}else{
 					// NOP
@@ -1512,6 +1512,7 @@ static PvElement *_basic_shape_simplify_new(const PvElement *element, PvRenderCo
 	simplify->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
 
 	// scale
+	simplify->stroke.width *= render_context.scale;
 	PvPoint *move = &(simplify_element_data->basic_shape_appearances
 			[PvElementBasicShapeAppearanceIndex_Translate]->translate.move);
 	*move = pv_point_mul_value(*move, render_context.scale);
