@@ -11,6 +11,7 @@
 #include <stdbool.h>
 
 #include "et_doc_id.h"
+#include "et_state.h"
 #include "pv_image_file_read_option.h"
 
 #define VECTERION_FULLNAME "Vecterion Vector Graphic Editor"
@@ -30,6 +31,8 @@ EtDocId open_doc_new_from_file_(
 		const PvImageFileReadOption *imageFileReadOption);
 
 bool init_menu(EtWindow *window, GtkWidget *box_root);
+
+void slot_et_menu_from_etaion_change_state(EtState state, gpointer data);
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

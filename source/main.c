@@ -293,7 +293,13 @@ int main (int argc, char **argv){
 		return -1;
 	}
 
+	// ** menu
 	if(! init_menu(self, box_root)){
+		et_bug("");
+		return -1;
+	}
+	if(0 > et_etaion_add_slot_change_state(
+				slot_et_menu_from_etaion_change_state, NULL)){
 		et_bug("");
 		return -1;
 	}

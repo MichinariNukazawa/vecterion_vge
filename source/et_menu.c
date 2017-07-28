@@ -28,6 +28,13 @@
 #include "et_document_preference_dialog.h"
 #include "version.h"
 
+typedef struct{
+	GtkWidget *menuitem_snap_for_grid;
+}EtMenu;
+
+EtMenu self_;
+EtMenu *self = &self_;
+
 static EtWindow *et_window_ = NULL;
 
 #define _show_error_dialog(fmt, ...) \
@@ -2137,6 +2144,7 @@ static GtkWidget *pv_get_menuitem_new_tree_of_tool_(GtkAccelGroup *accel_group)
 			GDK_KEY_backslash, (GDK_CONTROL_MASK | GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
 	gtk_widget_add_accelerator (menuitem, "activate", accel_group,
 			GDK_KEY_bar, (GDK_CONTROL_MASK | GDK_SHIFT_MASK), GTK_ACCEL_VISIBLE);
+	self->menuitem_snap_for_grid = menuitem;
 
 	return menuitem_root;
 }
@@ -2210,5 +2218,17 @@ bool init_menu(EtWindow *et_window, GtkWidget *box_root)
 	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), menuitem);
 
 	return true;
+}
+
+void slot_et_menu_from_etaion_change_state(EtState state, gpointer data)
+{
+	if(0 > state.doc_id){
+		return;
+	}
+
+	PvDocumentPreference document_preference = et_doc_get_document_preference_from_id(state.doc_id);
+	gtk_check_menu_item_set_active(
+			GTK_CHECK_MENU_ITEM(self->menuitem_snap_for_grid),
+			document_preference.snap_context.is_snap_for_grid);
 }
 
