@@ -71,7 +71,7 @@ Need for test.
 
 ## Already implement
 - edit bezier curve
-- layer
+- layer, gropu
 - rgba color
 - import svg file (status of alpha)
 - save to svg file (ignore raster image rotation)
@@ -83,19 +83,26 @@ benchmark is [File:Ghostscript Tiger.svg](https://commons.wikimedia.org/wiki/Fil
 
 ## Todo
 ### Short Todo
+
 benchmark is [railmaps](https://github.com/hashcc/railmaps).  
 
-- clipboard
-    - clipboard Ctrl+X,C,V on system.
-    - clipboard Bitmap
+- snap (for pixel, grid, degree, guide line, other element anchor point)
+    - SnapForGrid, SnapForDegree is already implement
+- BasicShape
+    - circle
+    - polygon
+    - star
+- Text element
+- group edit mode
+- complex Mask Grouping
+    - nested
+    - color, alpha
+- color gradation
+
+- clipboard for system (Ctrl+X,C,V svg, Bitmap to/from other apps)
 - confirm dialog when close unsaved document Ctrl+D
-- more tools
-- snaps (for pixel, grid, guide line, other element.)
-    - snap for pixel
-    - snap for radian (degree 45 ,90 ...)
 - layer naming
 - layer thumbnail
-- element group
 - auto save & crash recovery
 - appearance
 - documentation
