@@ -279,7 +279,7 @@ Layer順序の並び替えを行った際、Layer内のElementが並び替えら
 * Menuの Document > Preference を押下する
 	DocumentPreferenceダイアログが表示される。  
 #### SnapForGrid in Dialog
-* Ctrl+Shift+\(backslask)ショートカットを押下する。
+* Ctrl+Shift+backslash ショートカットを押下する。
 	Canvas上にGridが表示される。  
 * 前のテストに続けて、ショートカットを押下する。
 	SnapForGridが非表示になる。  
