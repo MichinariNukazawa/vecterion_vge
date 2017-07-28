@@ -14,8 +14,8 @@
 #define M_PI 3.14159265358979323846264338327
 #endif
 
-#define DELTA_OF_RESIZE (0.000001)
 #define PV_DELTA (0.000001)
+#define PV_DELTA_OF_RESIZE PV_DELTA
 
 
 // ******** ********

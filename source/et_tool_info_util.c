@@ -313,12 +313,11 @@ PvPoint get_snap_for_degree_from_ratio_(PvPoint src_ratio, const PvSnapContext *
 	return dst_ratio;
 }
 
-const double PV_DELTA_OF_DOUBLE = 0.00001;
 PvPoint get_ratio_from_point_(PvPoint point)
 {
 	PvPoint ratio = {0.5, 0.5};
 	double scale = fabs(point.x) + fabs(point.y);
-	if(PV_DELTA_OF_DOUBLE < scale){
+	if(PV_DELTA < scale){
 		ratio.x = point.x / scale;
 		ratio.y = point.y / scale;
 	}
@@ -330,7 +329,7 @@ PvPoint get_point_from_ratio_(PvPoint src_point, PvPoint ratio)
 {
 	PvPoint dst_point = {0.0, 0.0};
 	double scale = fabs(src_point.x) + fabs(src_point.y);
-	if(PV_DELTA_OF_DOUBLE < scale){
+	if(PV_DELTA < scale){
 		dst_point.x = ratio.x * scale;
 		dst_point.y = ratio.y * scale;
 	}
@@ -474,10 +473,10 @@ static void get_resize_in_rect_(
 		.y = size_after.y / src_extent_rect.h,
 	};
 
-	if(src_extent_rect.w < DELTA_OF_RESIZE){
+	if(src_extent_rect.w < PV_DELTA_OF_RESIZE){
 		resize.x = 1;
 	}
-	if(src_extent_rect.h < DELTA_OF_RESIZE){
+	if(src_extent_rect.h < PV_DELTA_OF_RESIZE){
 		resize.y = 1;
 	}
 
@@ -543,9 +542,8 @@ EdgeKind resize_elements_(
 
 	//! @todo delta needed?
 	/*
-	   const double DELTA_OF_RESIZE = 0.001;
-	   resize.x = ((fabs(resize.x) > DELTA_OF_RESIZE) ? resize.x : DELTA_OF_RESIZE);
-	   resize.y = ((fabs(resize.y) > DELTA_OF_RESIZE) ? resize.y : DELTA_OF_RESIZE);
+	   resize.x = ((fabs(resize.x) > PV_DELTA_OF_RESIZE) ? resize.x : PV_DELTA_OF_RESIZE);
+	   resize.y = ((fabs(resize.y) > PV_DELTA_OF_RESIZE) ? resize.y : PV_DELTA_OF_RESIZE);
 	 */
 
 	size_t num = pv_general_get_parray_num((void **)elements);

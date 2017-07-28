@@ -1298,11 +1298,11 @@ static bool _func_curve_set_rect_by_anchor_points(
 		.x = rect.w / rect_src.w,
 		.y = rect.h / rect_src.h,
 	};
-	if(rect_src.w < DELTA_OF_RESIZE){
+	if(rect_src.w < PV_DELTA_OF_RESIZE){
 		pv_warning("");
 		scale.x = 1;
 	}
-	if(rect_src.h < DELTA_OF_RESIZE){
+	if(rect_src.h < PV_DELTA_OF_RESIZE){
 		pv_warning("");
 		scale.y = 1;
 	}
