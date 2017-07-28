@@ -51,7 +51,7 @@ GtkBuilder *pv_document_preference_dialog_init(const char *application_base_dir)
 	}
 	g_free(path);
 
-	gtk_builder_connect_signals(builder, NULL);
+	// gtk_builder_connect_signals(builder, NULL);
 
 	return builder;
 }
