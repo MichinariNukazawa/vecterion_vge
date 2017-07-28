@@ -189,21 +189,25 @@ GdkPixbuf *pv_renderer_pixbuf_from_vg(
 			cairo_set_line_width (cr, 1.0);
 			pv_cairo_set_source_rgba_workingcolor_with_opacity(cr, 0.5);
 
+			//! @todo rendering area
+			PvRect area = {
+				-100,
+				-100,
+				+100 + (vg->rect.w * render_context.scale),
+				+100 + (vg->rect.h * render_context.scale),
+			};
+
 			//! @todo margin area
 			for(int x = 0; x < vg->rect.w; x += document_preference->snap_context.grid.x){
-				double y_head = -100; //! @todo
-				double y_foot = +100 + (vg->rect.w * render_context.scale); //! @todo
 				double x_pos = (x * render_context.scale);
-				cairo_move_to (cr, x_pos, y_head);
-				cairo_line_to (cr, x_pos, y_foot);
+				cairo_move_to (cr, x_pos, area.y);
+				cairo_line_to (cr, x_pos, area.h);
 			}
 
 			for(int y = 0; y < vg->rect.h; y += document_preference->snap_context.grid.y){
-				double x_head = -100; //! @todo
-				double x_foot = +100 + (vg->rect.h * render_context.scale); //! @todo
 				double y_pos = (y * render_context.scale);
-				cairo_move_to (cr, x_head, y_pos);
-				cairo_line_to (cr, x_foot, y_pos);
+				cairo_move_to (cr, area.x, y_pos);
+				cairo_line_to (cr, area.w, y_pos);
 			}
 
 			cairo_stroke(cr);
