@@ -1699,7 +1699,6 @@ static bool _func_basic_shape_is_diff_one(
 	pv_assertf(info, "%d", element0_data->kind);
 
 	if(info->func_is_diff_one(element0_data->data, element1_data->data)){
-		pv_debug("####2");
 		*is_diff = true;
 		return true;
 	}
@@ -1842,7 +1841,7 @@ static PvRect _func_basic_shape_get_rect_by_anchor_points(
 	for(int i = 0; i < 4; i++){
 		PvPoint p = pv_rect_get_edge_point(rect, i);
 		p = pv_rotate_point(
-				p, 
+				p,
 				element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Rotate]->rotate.degree,
 				center);
 		expand = pv_rect_expand_from_point_(expand, p, i == 0);
