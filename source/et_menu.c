@@ -357,7 +357,7 @@ static gboolean cb_menu_file_save_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		_show_error_dialog("Save:nothing document.");
-		et_bug("%d\n", doc_id);
+		et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -425,7 +425,7 @@ static gboolean cb_menu_file_save_as_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		_show_error_dialog("Save:nothing document.");
-		et_bug("%d\n", doc_id);
+		et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -492,7 +492,7 @@ static gboolean cb_menu_file_export_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		_show_error_dialog("Export:nothing document.");
-		et_bug("%d\n", doc_id);
+		et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -541,7 +541,7 @@ static gboolean cb_menu_file_close_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		//_show_error_dialog("Close:nothing document.");
-		//et_bug("%d\n", doc_id);
+		//et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -561,7 +561,7 @@ static gboolean cb_menu_edit_undo_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		//_show_error_dialog("Close:nothing document.");
-		//et_bug("%d\n", doc_id);
+		//et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -580,7 +580,7 @@ static gboolean cb_menu_edit_redo_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		//_show_error_dialog("Close:nothing document.");
-		//et_bug("%d\n", doc_id);
+		//et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -599,7 +599,7 @@ static gboolean cb_menu_edit_cut_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		//_show_error_dialog("Close:nothing document.");
-		//et_bug("%d\n", doc_id);
+		//et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -619,7 +619,7 @@ static gboolean cb_menu_edit_copy_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		//_show_error_dialog("Close:nothing document.");
-		//et_bug("%d\n", doc_id);
+		//et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -639,7 +639,7 @@ static gboolean cb_menu_edit_paste_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		//_show_error_dialog("Close:nothing document.");
-		//et_bug("%d\n", doc_id);
+		//et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -659,7 +659,7 @@ static gboolean cb_menu_edit_delete_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		//_show_error_dialog("Close:nothing document.");
-		//et_bug("%d\n", doc_id);
+		//et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -678,7 +678,7 @@ static gboolean cb_menu_document_preference_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		_show_error_dialog("DocumentPreferenceDialog:nothing document.");
-		//et_bug("%d\n", doc_id);
+		//et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -695,7 +695,7 @@ static gboolean cb_menu_layer_new_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		//_show_error_dialog("Close:nothing document.");
-		//et_bug("%d\n", doc_id);
+		//et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -709,7 +709,7 @@ static gboolean cb_menu_layer_copy_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		//_show_error_dialog("Close:nothing document.");
-		//et_bug("%d\n", doc_id);
+		//et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -723,7 +723,7 @@ static gboolean cb_menu_layer_new_child_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		//_show_error_dialog("Close:nothing document.");
-		//et_bug("%d\n", doc_id);
+		//et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -737,7 +737,7 @@ static gboolean cb_menu_layer_delete_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		//_show_error_dialog("Close:nothing document.");
-		//et_bug("%d\n", doc_id);
+		//et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -818,7 +818,7 @@ static gboolean cb_menu_layer_raise_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		// _show_error_dialog("Raise:nothing document.");
-		// et_bug("%d\n", doc_id);
+		// et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -832,7 +832,7 @@ static gboolean cb_menu_layer_lower_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		// _show_error_dialog("Raise:nothing document.");
-		// et_bug("%d\n", doc_id);
+		// et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -846,7 +846,7 @@ static gboolean cb_menu_layer_raise_to_top_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		// _show_error_dialog("Raise:nothing document.");
-		// et_bug("%d\n", doc_id);
+		// et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -860,7 +860,7 @@ static gboolean cb_menu_layer_lower_to_end_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		// _show_error_dialog("Raise:nothing document.");
-		// et_bug("%d\n", doc_id);
+		// et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -874,7 +874,7 @@ static gboolean cb_menu_element_raise_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		// _show_error_dialog("Raise:nothing document.");
-		// et_bug("%d\n", doc_id);
+		// et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -888,7 +888,7 @@ static gboolean cb_menu_element_lower_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		// _show_error_dialog("Raise:nothing document.");
-		// et_bug("%d\n", doc_id);
+		// et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -902,7 +902,7 @@ static gboolean cb_menu_element_raise_to_top_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		// _show_error_dialog("Raise:nothing document.");
-		// et_bug("%d\n", doc_id);
+		// et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -916,7 +916,7 @@ static gboolean cb_menu_element_lower_to_end_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		// _show_error_dialog("Raise:nothing document.");
-		// et_bug("%d\n", doc_id);
+		// et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -983,7 +983,7 @@ static gboolean cb_menu_element_grouping_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		// _show_error_dialog("Raise:nothing document.");
-		// et_bug("%d\n", doc_id);
+		// et_bug("%d", doc_id);
 		return FALSE;
 	}
 
@@ -1018,7 +1018,7 @@ static gboolean cb_menu_element_ungrouping_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		// _show_error_dialog("Raise:nothing document.");
-		// et_bug("%d\n", doc_id);
+		// et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -1072,7 +1072,7 @@ static gboolean cb_menu_element_mask_grouping_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		// _show_error_dialog("Raise:nothing document.");
-		// et_bug("%d\n", doc_id);
+		// et_bug("%d", doc_id);
 		return FALSE;
 	}
 
@@ -1197,7 +1197,7 @@ static gboolean cb_menu_file_import_(gpointer data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		_show_error_dialog("Import:nothing document.");
-		et_bug("%d\n", doc_id);
+		et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -1309,7 +1309,7 @@ static bool cb_menu_document_resize_ (GtkMenuItem *menuitem, gpointer user_data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		_show_error_dialog("Resize:nothing document.");
-		et_bug("%d\n", doc_id);
+		et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -1389,7 +1389,7 @@ static bool cb_menu_tool_snap_for_grid_(GtkCheckMenuItem *menuitem, gpointer use
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		_show_error_dialog("Resize:nothing document.");
-		et_bug("%d\n", doc_id);
+		et_bug("%d", doc_id);
 		return false;
 	}
 
@@ -1443,7 +1443,7 @@ static void cb_menu_select_all_ (GtkMenuItem *menuitem, gpointer user_data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		_show_error_dialog("Select All:nothing document.");
-		et_bug("%d\n", doc_id);
+		et_bug("%d", doc_id);
 		return;
 	}
 
@@ -1484,7 +1484,7 @@ static void cb_menu_select_none_ (GtkMenuItem *menuitem, gpointer user_data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		_show_error_dialog("Select:nothing document.");
-		et_bug("%d\n", doc_id);
+		et_bug("%d", doc_id);
 		return;
 	}
 
@@ -1509,7 +1509,7 @@ static void cb_menu_select_invert_ (GtkMenuItem *menuitem, gpointer user_data)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		_show_error_dialog("Select Invert:nothing document.");
-		et_bug("%d\n", doc_id);
+		et_bug("%d", doc_id);
 		return;
 	}
 

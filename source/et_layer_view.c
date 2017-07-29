@@ -232,12 +232,12 @@ static bool draw_element_tree_(EtLayerView *self, cairo_t *cr)
 		if(0 == i){
 			// skip root element.
 			if(PvElementKind_Root != data->element->kind){
-				et_bug("%d\n", data->element->kind);
+				et_bug("%d", data->element->kind);
 			}
 			continue;
 		}else{
 			if(PvElementKind_Root == data->element->kind){
-				et_bug("%d\n", i);
+				et_bug("%d", i);
 				continue;
 			}
 		}
@@ -452,7 +452,7 @@ static bool init_layer_ctrl_button_(EtLayerView *self, int index)
 		g_object_unref(t);
 	}
 	if(NULL == pixbuf){
-		et_error("%d, '%s'\n", index, tmp);
+		et_error("%d, '%s'", index, tmp);
 		return false;
 	}
 	GtkWidget *image = gtk_image_new_from_pixbuf(pixbuf);

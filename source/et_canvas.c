@@ -618,11 +618,11 @@ static gboolean _cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 bool et_canvas_draw_pixbuf(EtCanvas *self, GdkPixbuf *pixbuf)
 {
 	if(NULL == self){
-		et_bug("\n");
+		et_bug("");
 		return false;
 	}
 	if(NULL == pixbuf){
-		et_bug("\n");
+		et_bug("");
 		return false;
 	}
 

@@ -63,7 +63,7 @@ int pv_document_preference_dialog_run(GtkBuilder *builder)
 	EtDocId doc_id = et_etaion_get_current_doc_id();
 	if(doc_id < 0){
 		//_show_error_dialog("Close:nothing document.");
-		et_bug("%d\n", doc_id);
+		et_bug("%d", doc_id);
 		return GTK_RESPONSE_REJECT;
 	}
 

@@ -585,7 +585,7 @@ bool pv_element_remove_free_recursive(PvElement *self)
 	};
 	int level = 0;
 	if(!_pv_element_remove_free_recursive_inline(self, &level, &error)){
-		pv_error("%d\n", error.level);
+		pv_error("%d", error.level);
 		return false;
 	}
 
@@ -720,7 +720,7 @@ bool pv_element_is_diff_recursive(PvElement *element0, PvElement *element1)
 			&level,
 			&error);
 	if(error.is_error){
-		pv_error("%d\n", error.level);
+		pv_error("%d", error.level);
 		return false;
 	}
 
@@ -843,7 +843,7 @@ static bool pv_element_basic_shape_raster_read_file_(PvElement *self, const char
 	GError *error = NULL;
 	data->pixbuf = gdk_pixbuf_new_from_file(data->path, &error);
 	if(NULL == data->pixbuf){
-		pv_warning("'%s' '%s'\n", data->path, error->message);
+		pv_warning("'%s' '%s'", data->path, error->message);
 		g_error_free(error);
 		return false;
 	}

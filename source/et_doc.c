@@ -169,7 +169,7 @@ PvVg *et_doc_get_vg_ref_from_id(EtDocId doc_id)
 {
 	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
 	if(NULL == self){
-		et_error("%d\n", doc_id);
+		et_error("%d", doc_id);
 		return NULL;
 	}
 
@@ -294,7 +294,7 @@ PvFocus *et_doc_get_focus_ref_from_id(EtDocId id)
 {
 	EtDoc *self = et_doc_manager_get_doc_from_id(id);
 	if(NULL == self){
-		et_error("%d\n", id);
+		et_error("%d", id);
 		goto error;
 	}
 
@@ -312,7 +312,7 @@ error:
 PvDocumentPreference et_doc_get_document_preference_from_id(EtDocId doc_id)
 {
 	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
-	et_assertf(self, "%d\n", doc_id);
+	et_assertf(self, "%d", doc_id);
 
 	return self->document_preference;
 }
@@ -320,7 +320,7 @@ PvDocumentPreference et_doc_get_document_preference_from_id(EtDocId doc_id)
 void et_doc_set_document_preference_from_id(EtDocId doc_id, PvDocumentPreference document_preference)
 {
 	EtDoc *self = et_doc_manager_get_doc_from_id(doc_id);
-	et_assertf(self, "%d\n", doc_id);
+	et_assertf(self, "%d", doc_id);
 
 	self->document_preference = document_preference;
 }

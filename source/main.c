@@ -48,7 +48,7 @@ static gboolean in_worker_func(gpointer data)
 	static int count = 0;
 	count++;
 	// Gtk control.
-	printf("work:%d\n", count);
+	printf("work:%d", count);
 
 	return G_SOURCE_REMOVE;
 }

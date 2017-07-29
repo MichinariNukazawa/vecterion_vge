@@ -397,10 +397,12 @@ static PvElement *_et_doc_element_get_tree_from_indexes(PvElement *element_root,
 		return NULL;
 	}
 
-	for(int level = 0; 0 <= indexes[level]; level++){
-		printf("%d,", indexes[level]);
-	}
-	printf("\n");
+	/*
+	   for(int level = 0; 0 <= indexes[level]; level++){
+	   et_debug("%d,", indexes[level]);
+	   }
+	   et_debug("");
+	 */
 
 	PvElement *_element = element_root;
 	for(int level = 0; 0 <= indexes[level]; level++){
