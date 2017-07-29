@@ -23,6 +23,9 @@
 struct EtCanvas{
 	GtkWidget *widget; // Top widget pointer.
 	GtkWidget *box;
+	GtkWidget *grid;
+	GtkWidget *ruler_v;
+	GtkWidget *ruler_h;
 	GtkWidget *box_infobar;
 	GtkWidget *text_scale;
 	GtkWidget *scroll;
@@ -128,6 +131,46 @@ static gboolean _cb_size_allocate_scrolled(
 	return false;
 }
 
+void cb_v_adj_value_changed_(
+		GtkAdjustment *adjustment,
+		gpointer       user_data)
+{
+	EtCanvas *self = (EtCanvas *)user_data;
+
+	double value = gtk_adjustment_get_value(adjustment);
+	double size = gtk_adjustment_get_page_size(adjustment);
+
+	double margin = _et_canvas_get_margin_from_doc_id(self->doc_id);
+	value -= margin;
+
+	value /= self->render_context.scale;
+	size /= self->render_context.scale;
+
+	gchar *str = g_strdup_printf("%6.1f -- %6.1f", value, value + size);
+	gtk_label_set_text(GTK_LABEL(self->ruler_v), str);
+	g_free(str);
+}
+
+void cb_h_adj_value_changed_(
+		GtkAdjustment *adjustment,
+		gpointer       user_data)
+{
+	EtCanvas *self = (EtCanvas *)user_data;
+
+	double value = gtk_adjustment_get_value(adjustment);
+	double size = gtk_adjustment_get_page_size(adjustment);
+
+	double margin = _et_canvas_get_margin_from_doc_id(self->doc_id);
+	value -= margin;
+
+	value /= self->render_context.scale;
+	size /= self->render_context.scale;
+
+	gchar *str = g_strdup_printf("%6.1f -- %6.1f", value, value + size);
+	gtk_label_set_text(GTK_LABEL(self->ruler_h), str);
+	g_free(str);
+}
+
 EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 {
 	EtCanvas *self = (EtCanvas *)malloc(sizeof(EtCanvas));
@@ -138,10 +181,22 @@ EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 
 	self->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 3);
 
+	self->grid = gtk_grid_new();
+	gtk_container_add(GTK_CONTAINER(self->box), self->grid);
+
+	self->ruler_v = gtk_label_new_with_mnemonic("--");
+	gtk_grid_attach(GTK_GRID(self->grid), self->ruler_v, 0, 1, 1, 2);
+	gtk_label_set_angle(GTK_LABEL(self->ruler_v), 90);
+	gtk_style_context_add_class(gtk_widget_get_style_context(self->ruler_v), "ruler");
+
+	self->ruler_h = gtk_label_new_with_mnemonic("--");
+	gtk_grid_attach(GTK_GRID(self->grid), self->ruler_h, 1, 0, 2, 1);
+	gtk_style_context_add_class(gtk_widget_get_style_context(self->ruler_h), "ruler");
+
 	self->scroll = gtk_scrolled_window_new(NULL, NULL);
-	gtk_widget_set_hexpand(GTK_WIDGET(self->scroll), TRUE);  
+	gtk_widget_set_hexpand(GTK_WIDGET(self->scroll), TRUE);
 	gtk_widget_set_vexpand(GTK_WIDGET(self->scroll), TRUE);
-	gtk_container_add(GTK_CONTAINER(self->box), self->scroll);
+	gtk_grid_attach(GTK_GRID(self->grid), self->scroll, 1, 1, 2, 2);
 
 	self->box_infobar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3);
 	gtk_container_add(GTK_CONTAINER(self->box), self->box_infobar);
@@ -174,6 +229,16 @@ EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 
 	g_signal_connect(self->scroll, "size-allocate",
 			G_CALLBACK(_cb_size_allocate_scrolled), (gpointer)self);
+	GtkAdjustment *h_adj = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(self->scroll));
+	g_signal_connect(h_adj, "value-changed",
+			G_CALLBACK(cb_h_adj_value_changed_), (gpointer)self);
+	g_signal_connect(h_adj, "changed",
+			G_CALLBACK(cb_h_adj_value_changed_), (gpointer)self);
+	GtkAdjustment *v_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(self->scroll));
+	g_signal_connect(v_adj, "value-changed",
+			G_CALLBACK(cb_v_adj_value_changed_), (gpointer)self);
+	g_signal_connect(v_adj, "changed",
+			G_CALLBACK(cb_v_adj_value_changed_), (gpointer)self);
 
 	gtk_container_add(GTK_CONTAINER(self->scroll), self->event_box);
 
@@ -188,10 +253,16 @@ EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 	gtk_container_add(GTK_CONTAINER(self->event_box), self->cussion_h);
 	gtk_container_add(GTK_CONTAINER(self->cussion_h), self->cussion_v);
 	gtk_container_add(GTK_CONTAINER(self->cussion_v), self->canvas);
-	//gtk_container_add(GTK_CONTAINER(self->event_box), self->canvas);
 
 	g_signal_connect (G_OBJECT (self->canvas), "draw",
 			G_CALLBACK (_cb_expose_event), (gpointer)self);
+
+	gtk_style_context_add_class(gtk_widget_get_style_context(self->grid), "canvas_widget");
+	gtk_style_context_add_class(gtk_widget_get_style_context(self->scroll), "canvas_widget");
+	gtk_style_context_add_class(gtk_widget_get_style_context(self->canvas), "canvas_widget");
+	gtk_style_context_add_class(gtk_widget_get_style_context(self->event_box), "canvas_widget");
+	gtk_style_context_add_class(gtk_widget_get_style_context(self->cussion_h), "canvas_widget");
+	gtk_style_context_add_class(gtk_widget_get_style_context(self->cussion_v), "canvas_widget");
 
 	self->render_context = PvRenderContext_Default;
 	self->render_context.is_frame_line = true;
@@ -489,6 +560,12 @@ static void debug_print_adjustment_(EtCanvas *self)
 static gboolean _cb_expose_event (GtkWidget *widget, cairo_t *cr, gpointer data)
 {
 	EtCanvas *self = (EtCanvas *)data;
+
+	if(self->is_thumbnail){
+		//! not good timing...
+		gtk_widget_hide(self->ruler_v);
+		gtk_widget_hide(self->ruler_h);
+	}
 
 	// ** scale
 	char buf[128];
