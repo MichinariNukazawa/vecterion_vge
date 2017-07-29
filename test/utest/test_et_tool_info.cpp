@@ -1874,12 +1874,12 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddBasicShape){
 	position_rect = element_info->func_get_rect_by_anchor_points(focus->elements[0]);
 	EXPECT_EQ(100, position_rect.x);
 	EXPECT_EQ(50, position_rect.y);
-	EXPECT_EQ(0 + 1, position_rect.w);
-	EXPECT_EQ(0 + 1, position_rect.h);
+	EXPECT_EQ(0, position_rect.w);
+	EXPECT_EQ(0, position_rect.h);
 
 
 	// # up
-	event_point = pv_point_add(event_point, (PvPoint){100 -1, 200 -1});
+	event_point = pv_point_add(event_point, (PvPoint){100, 200});
 	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
 
 	res = et_tool_info_util_func_add_basic_shape_element_mouse_action(
@@ -1972,7 +1972,7 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddBasicShape_minus){
 
 
 	// # up
-	event_point = pv_point_add(event_point, (PvPoint){-100 -1, -200 -1});
+	event_point = pv_point_add(event_point, (PvPoint){-100, -200});
 	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
 
 	res = et_tool_info_util_func_add_basic_shape_element_mouse_action(
@@ -2303,5 +2303,54 @@ TEST_F(TestEtToolInfo_Base_Base, ResizeElements_01){
 	EXPECT_EQ(100, position_rect.y);
 	EXPECT_EQ(150, position_rect.w);
 	EXPECT_EQ(150, position_rect.h);
+}
+
+TEST_F(TestEtToolInfo_Base_Base, ResizeElements_BasicShape00){
+
+	PvPoint event_point;
+	EtMouseAction mouse_action;
+	const PvElementInfo *element_info = NULL;
+	PvRect position_rect;
+
+	element_info = pv_element_get_info_from_kind(PvElementKind_BasicShape);
+	assert(element_info);
+
+	PvElement **elements = (PvElement **)malloc(sizeof(PvElement *) * 2);
+	elements[0] = pv_element_basic_shape_new_from_kind(PvBasicShapeKind_Rect);
+	elements[1] = NULL;
+
+	position_rect = element_info->func_get_rect_by_anchor_points(elements[0]);
+	EXPECT_EQ(0, position_rect.x);
+	EXPECT_EQ(0, position_rect.y);
+	EXPECT_EQ(0, position_rect.w);
+	EXPECT_EQ(0, position_rect.h);
+
+	// # down
+	event_point = (PvPoint){
+		0,
+		0,
+	};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
+
+	// up
+	event_point = pv_point_add(event_point, (PvPoint){50, 250});
+	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
+
+	EdgeKind edge_kind = resize_elements_(
+			elements,
+			SNAP_CONTEXT_POINTER,
+			mouse_action,
+			EdgeKind_Resize_DownRight,
+			(PvRect){0,0,0,0});
+
+
+	element_info->func_apply_appearances(elements[0], elements[0]->etaion_work_appearances);
+	elements[0]->etaion_work_appearances[0]->kind = PvAppearanceKind_None;
+
+	position_rect = element_info->func_get_rect_by_anchor_points(elements[0]);
+	EXPECT_EQ(0, position_rect.x);
+	EXPECT_EQ(0, position_rect.y);
+	EXPECT_EQ(0, position_rect.w);
+	EXPECT_EQ(0, position_rect.h);
 }
 

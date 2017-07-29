@@ -1672,8 +1672,8 @@ static PvElement *add_basic_shape_element_down_(
 	PvRect rect = {
 		point.x,
 		point.y,
-		1,
-		1,
+		0,
+		0,
 	};
 	info->func_set_rect_by_anchor_points(element, rect);
 
@@ -1682,6 +1682,45 @@ static PvElement *add_basic_shape_element_down_(
 	pv_focus_clear_set_element(focus, element);
 
 	return element;
+}
+
+static void add_basic_shape_element_move_(
+		PvFocus *focus,
+		const PvSnapContext *snap_context,
+		EtMouseAction mouse_action,
+		PvRect src_extent_rect)
+{
+	EdgeKind dst_edge_kind = EdgeKind_Resize_DownRight;
+
+	const PvElementInfo *info
+		= pv_element_get_info_from_kind(PvElementKind_BasicShape);
+	assert(info);
+
+	PvPoint move = pv_point_div_value(mouse_action.diff_down, mouse_action.scale);
+
+	if(snap_context->is_snap_for_grid){
+		PvRectEdgeKind rect_edge_kind = get_rect_edge_kind_(dst_edge_kind);
+		PvRect extent_rect = src_extent_rect;
+		extent_rect = pv_rect_add_point(extent_rect, move);
+		PvPoint snap_move_ = get_snap_for_grid_move_from_rect_edge_(rect_edge_kind, snap_context, extent_rect);
+		move = pv_point_add(move, snap_move_);
+	}
+	if(snap_context->is_snap_for_degree){
+		move = get_snap_for_degree_from_point_(move, snap_context);
+		PvPoint rect_size = pv_rect_get_abs_size(src_extent_rect);
+		PvPoint ratio = get_ratio_from_point_(rect_size);
+		move = pv_point_mul(move, ratio);
+	}
+
+	PvRect rect = {
+		src_extent_rect.x,
+		src_extent_rect.y,
+		move.x,
+		move.y,
+	};
+	rect = pv_rect_abs_size(rect);
+
+	info->func_set_rect_by_anchor_points(focus->elements[0], rect);
 }
 
 bool et_tool_info_util_func_add_basic_shape_element_mouse_action(
@@ -1717,12 +1756,10 @@ bool et_tool_info_util_func_add_basic_shape_element_mouse_action(
 		case EtMouseAction_Up:
 			{
 				if(EtFocusElementMouseActionMode_Resize == mode_){
-					static EdgeKind mode_edge_ = EdgeKind_Resize_DownRight;
-					resize_elements_(
-							focus->elements,
+					add_basic_shape_element_move_(
+							focus,
 							snap_context,
 							mouse_action,
-							mode_edge_,
 							src_extent_rect_when_down_);
 				}
 			}

@@ -1408,7 +1408,7 @@ static gpointer _func_basic_shape_new_data()
 	pv_assert(element_data->basic_shape_appearances);
 	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->kind = PvAppearanceKind_Translate;
 	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Resize]->kind = PvAppearanceKind_Resize;
-	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize = (PvPoint){1,1};
+	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize = (PvPoint){0, 0};
 	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Rotate]->kind = PvAppearanceKind_Rotate;
 
 	element_data->anchor_path = pv_anchor_path_new();
@@ -1860,16 +1860,26 @@ static bool _func_basic_shape_set_rect_by_anchor_points(
 	PvElementBasicShapeData *element_data = element->data;
 	pv_assert(element_data);
 
-	PvRect src_rect = _func_basic_shape_get_rect_by_anchor_points(element);
+	PvPoint *move = &(element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->translate.move);
+	*move = (PvPoint){.x = rect.x, .y = rect.y};
 
-	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->translate.move
-		= (PvPoint){.x = rect.x, .y = rect.y};
-	PvPoint scale_ = {
-		.x = rect.w / src_rect.w,
-		.y = rect.h / src_rect.h,
-	};
-	PvPoint *resize = &(element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize);
-	*resize = pv_point_mul(*resize, scale_);
+	{
+		PvRect src_rect = _func_basic_shape_get_rect_by_anchor_points(element);
+
+		PvPoint *resize = &(element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize);
+		if(PV_DELTA < src_rect.w){
+			double scale = rect.w / src_rect.w;
+			(*resize).x *= scale;
+		}else{
+			(*resize).x = rect.w;
+		}
+		if(PV_DELTA < src_rect.h){
+			double scale = rect.h / src_rect.h;
+			(*resize).y *= scale;
+		}else{
+			(*resize).y = rect.h;
+		}
+	}
 
 	return true;
 }

@@ -863,7 +863,7 @@ static bool pv_element_basic_shape_raster_read_file_(PvElement *self, const char
 
 PvElement *pv_element_basic_shape_new_from_filepath(const char *filepath)
 {
-	PvElement *self = pv_element_new(PvElementKind_BasicShape);
+	PvElement *self = pv_element_basic_shape_new_from_kind(PvBasicShapeKind_Raster);
 	if(NULL == self){
 		pv_error("");
 		return NULL;
@@ -897,6 +897,17 @@ PvElement *pv_element_basic_shape_new_from_kind(PvBasicShapeKind kind)
 		pv_assert(self->data);
 
 		element_data->kind = kind;
+	}
+
+	switch(kind){
+		case PvBasicShapeKind_Raster:
+			{
+				element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize = (PvPoint){1, 1};
+			}
+			break;
+		default:
+			// NOP
+			break;
 	}
 
 	return self;
