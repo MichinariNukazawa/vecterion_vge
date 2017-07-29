@@ -179,6 +179,19 @@ EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 		return NULL;
 	}
 
+	self->doc_id = doc_id;
+	self->render_context = PvRenderContext_Default;
+	self->render_context.is_frame_line = true;
+	self->pixbuf_buffer = NULL;
+	self->slot_change = NULL;
+	self->slot_change_data = NULL;
+	self->slot_mouse_action = NULL;
+	self->slot_mouse_action_data = NULL;
+	self->is_thumbnail = false;
+	self->is_first_fitting = true;
+	self->is_fitting_scale = false;
+	self->centering_control = 0;
+
 	self->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 3);
 
 	self->grid = gtk_grid_new();
@@ -264,22 +277,7 @@ EtCanvas *et_canvas_new_from_doc_id(EtDocId doc_id)
 	gtk_style_context_add_class(gtk_widget_get_style_context(self->cussion_h), "canvas_widget");
 	gtk_style_context_add_class(gtk_widget_get_style_context(self->cussion_v), "canvas_widget");
 
-	self->render_context = PvRenderContext_Default;
-	self->render_context.is_frame_line = true;
-
 	self->widget = self->box;
-	self->pixbuf_buffer = NULL;
-	self->slot_change = NULL;
-	self->slot_change_data = NULL;
-	self->slot_mouse_action = NULL;
-	self->slot_mouse_action_data = NULL;
-	self->doc_id = doc_id;
-
-	self->is_thumbnail = false;
-
-	self->is_first_fitting = true;
-	self->is_fitting_scale = false;
-	self->centering_control = 0;
 
 	return self;
 }
