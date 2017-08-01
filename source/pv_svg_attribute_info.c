@@ -1307,6 +1307,22 @@ failed:
 	return true;
 }
 
+static bool func_insensitive_set_(
+		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
+		PvSvgReadConf *conf,
+		const char *value,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	if(0 == strcasecmp("true", (char*)value)){
+		element->is_locked = true;
+	}
+
+	return true;
+}
+
 
 const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
 	{
@@ -1432,6 +1448,11 @@ const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
 	{
 		.name = "label",
 		.pv_svg_attribute_func_set = func_nop_set_,
+		.is_able_style = false,
+	},
+	{
+		.name = "insensitive",
+		.pv_svg_attribute_func_set = func_insensitive_set_,
 		.is_able_style = false,
 	},
 };

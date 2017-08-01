@@ -46,6 +46,10 @@ static bool _pv_io_svg_from_element_in_recursive_before(
 		return false;
 	}
 
+	if(element->is_locked){
+		xmlNewProp(target->xml_new_node, BAD_CAST "sodipodi:insensitive", BAD_CAST "true");
+	}
+
 	return true;
 }
 
@@ -148,6 +152,8 @@ bool pv_io_write_file_svg_from_vg(PvVg *vg, const char *path)
 			BAD_CAST "http://www.inkscape.org/namespaces/inkscape");
 	xmlNewProp(root_node, BAD_CAST "xmlns:xlink",
 			BAD_CAST "http://www.w3.org/1999/xlink");
+	xmlNewProp(root_node, BAD_CAST "xmlns:sodipodi",
+			BAD_CAST "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd");
 	xmlDocSetRootElement(doc, root_node);
 
 	// ** width, height
@@ -665,6 +671,12 @@ PvVg *pv_io_new_from_file(const char *filepath, const PvImageFileReadOption *ima
 		pv_assert(pv_element_append_child(vg->element_root, NULL, layer));
 		pv_assert(pv_element_remove_free_recursive(vg->element_root->childs[0]));
 		assert(1 == pv_general_get_parray_num((void **)(vg->element_root->childs)));
+	}
+
+	//! if locked element_root to can not unlock and edir by user
+	if(vg->element_root->is_locked){
+		pv_debug("do unlock element_root");
+		vg->element_root->is_locked = false;
 	}
 
 	return vg;

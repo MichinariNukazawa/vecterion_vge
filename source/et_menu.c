@@ -1431,6 +1431,10 @@ static bool cb_menu_select_all_func_recurse_prev_(PvElement *element, gpointer d
 		return true;
 	}
 
+	if(pv_element_get_in_is_locked(element)){
+		return true;
+	}
+
 	if(!pv_focus_add_element(focus, element)){
 		return false;
 	}

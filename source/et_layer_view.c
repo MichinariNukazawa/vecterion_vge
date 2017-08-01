@@ -11,6 +11,8 @@
 
 const int ELEMENT_WIDTH = 300;
 const int ELEMENT_HEIGHT = 18;
+#define ELEMENT_ICON_PX			(18)
+#define ELEMENT_HEAD_OFFSET_X		(ELEMENT_ICON_PX * 2)
 const int FONT_SIZE = 14;
 
 typedef struct{
@@ -215,6 +217,32 @@ static gboolean cb_expose_event_layer_tree_canvas_(GtkWidget *widget, cairo_t *c
 	return FALSE;
 }
 
+static void draw_lock_icon_(cairo_t *cr, bool is_locked, int x, int y)
+{
+
+	if(is_locked){
+		cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
+	}else{
+		cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 0.2);
+	}
+	// ** keybox icon
+	cairo_move_to(cr, x + 6.5, y + 10.5);
+	cairo_rel_line_to(cr,  0, -5);
+	cairo_rel_line_to(cr,  6, 0);
+	cairo_rel_line_to(cr,  0, 5);
+	cairo_set_line_width(cr, 1);
+	cairo_stroke(cr);
+
+	cairo_rectangle(cr, x + 5, y + 10, 9, 5);
+	cairo_fill(cr);
+
+	// ** frame
+	cairo_rectangle(cr, x + 2.5, y + 2.5, ELEMENT_ICON_PX - 4, ELEMENT_ICON_PX - 4);
+	cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
+	cairo_set_line_width(cr, 1);
+	cairo_stroke(cr);
+}
+
 static bool draw_element_tree_(EtLayerView *self, cairo_t *cr)
 {
 	et_assert(self);
@@ -292,6 +320,10 @@ static bool draw_element_tree_(EtLayerView *self, cairo_t *cr)
 			kind_name = "";
 		}
 
+		// ** lock icon
+		draw_lock_icon_(cr, data->element->is_locked, ELEMENT_ICON_PX, (ELEMENT_HEIGHT * index));
+
+		// ** tree, name
 		char str_element[128];
 		snprintf(str_element, sizeof(str_element),
 				"%s%c:%s    :%08lx '%s'",
@@ -309,7 +341,7 @@ static bool draw_element_tree_(EtLayerView *self, cairo_t *cr)
 		  te.width, te.x_bearing, te.x_advance,
 		  te.height, te.y_bearing, te.y_advance);
 		  }*/
-		cairo_move_to(cr, 0, (ELEMENT_HEIGHT * index));
+		cairo_move_to(cr, ELEMENT_HEAD_OFFSET_X, (ELEMENT_HEIGHT * index));
 		cairo_rel_move_to (cr, 0, te.height);
 		cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
 		cairo_show_text(cr, str_element);
@@ -525,6 +557,15 @@ static gboolean cb_button_press_layer_view_content_(
 		}
 
 		pv_focus_clear_set_element(focus, self->elementDatas[index]->element);
+
+		if((ELEMENT_ICON_PX < event->x) && (event->x < (ELEMENT_ICON_PX * 2))){
+			self->elementDatas[index]->element->is_locked
+				= !self->elementDatas[index]->element->is_locked;
+		}
+
+		if(self->elementDatas[index]->element->is_locked){
+			pv_focus_clear_to_first_layer(focus);
+		}
 
 		if(!et_doc_signal_update_from_id(self->doc_id)){
 			et_error("");
