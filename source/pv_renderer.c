@@ -31,6 +31,10 @@ static bool pv_render_cairo_recursive_(
 	bool ret = true;
 	(*level)++;
 
+	if(element->is_invisible){
+		goto finally;
+	}
+
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 	pv_assertf(info, "%d", element->kind);
 	PvElementDrawRecursive recursive;
@@ -79,6 +83,7 @@ static bool pv_render_cairo_recursive_(
 			render_option,
 			element);
 
+finally:
 failed:
 	(*level)--;
 	return ret;

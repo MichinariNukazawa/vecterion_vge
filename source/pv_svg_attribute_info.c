@@ -1323,6 +1323,32 @@ static bool func_insensitive_set_(
 	return true;
 }
 
+static bool func_display_set_(
+		PvElement *element,
+		PvSvgAttributeCache *attribute_cache,
+		PvSvgReadConf *conf,
+		const char *value,
+		const xmlNodePtr xmlnode,
+		const xmlAttr *attribute
+		)
+{
+	if(attribute_cache->attributes[PvSvgAttributeKind_display].is_exist){
+		pv_warning("");
+		return false;
+	}
+
+	if(0 == strcasecmp("none", (char *)value)){
+		attribute_cache->attributes[PvSvgAttributeKind_display].is_exist = true;
+		// attribute_cache->attributes[PvSvgAttributeKind_display].value = 0;
+		element->is_invisible = true;
+	}else{
+		pv_warning("`%s`", (char *)value);
+		return false;
+	}
+
+	return true;
+}
+
 
 const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
 	{
@@ -1454,6 +1480,11 @@ const PvSvgAttributeInfo _pv_svg_attribute_infos[] = {
 		.name = "insensitive",
 		.pv_svg_attribute_func_set = func_insensitive_set_,
 		.is_able_style = false,
+	},
+	{
+		.name = "display",
+		.pv_svg_attribute_func_set = func_display_set_,
+		.is_able_style = true,
 	},
 };
 

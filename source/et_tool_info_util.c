@@ -681,6 +681,10 @@ static bool recursive_inline_focusing_by_area_(PvElement *element, gpointer data
 	PvRect rect = data_->rect;
 	int offset = data_->offset;
 
+	if(pv_element_get_in_is_invisible(element)){
+		goto finally;
+	}
+
 	if(pv_element_get_in_is_locked(element)){
 		goto finally;
 	}
@@ -875,6 +879,7 @@ bool et_tool_info_util_func_edit_element_mouse_action(
 							touch_element_ = get_touch_element_(vg, mouse_action.point);
 
 							if(NULL == touch_element_
+								|| pv_element_get_in_is_invisible(touch_element_)
 								|| pv_element_get_in_is_locked(touch_element_)){
 								et_assert(pv_focus_clear_to_first_layer(focus));
 								mode_ = EtFocusElementMouseActionMode_FocusingByArea;

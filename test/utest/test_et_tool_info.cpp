@@ -396,6 +396,54 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_FocusingTouchedSingleElement_InvalidIs
 
 }
 
+TEST_F(TestEtToolInfo_Element, EtToolInfo_FocusingTouchedSingleElement_InvalidIsInvisible){
+
+	bool res;
+	bool is_save = false;
+	PvPoint event_point;
+	EtMouseAction mouse_action;
+	PvElement *edit_draw_element = NULL;
+	GdkCursor *cursor = NULL;
+	const PvElementInfo *element_info = NULL;
+	PvRect position_rect;
+
+	element_curves[0]->is_invisible = true;
+
+	// # down
+	event_point = (PvPoint){0, 0};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
+
+	res = et_tool_info_util_func_edit_element_mouse_action(
+			vg,
+			focus,
+			SNAP_CONTEXT_POINTER,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+
+	EXPECT_FALSE(pv_focus_is_focused(focus));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
+	EXPECT_EQ(element_layer_top, focus->elements[0]);
+
+	// # up
+	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
+
+	res = et_tool_info_util_func_edit_element_mouse_action(
+			vg,
+			focus,
+			SNAP_CONTEXT_POINTER,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+
+	EXPECT_FALSE(pv_focus_is_focused(focus));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
+	EXPECT_EQ(element_layer_top, focus->elements[0]);
+
+}
+
 TEST_F(TestEtToolInfo_Element, EtToolInfo_FocusingTouchedSingleElement_InvalidIsLockedParent){
 
 	bool res;
@@ -450,6 +498,53 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_FocusingTouchedSingleElement_InvalidIs
 	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
 	EXPECT_EQ(element_layer_top, focus->elements[0]);
 
+}
+
+TEST_F(TestEtToolInfo_Element, EtToolInfo_FocusingTouchedSingleElement_InvalidIsInvisibleParent){
+
+	bool res;
+	bool is_save = false;
+	PvPoint event_point;
+	EtMouseAction mouse_action;
+	PvElement *edit_draw_element = NULL;
+	GdkCursor *cursor = NULL;
+	const PvElementInfo *element_info = NULL;
+	PvRect position_rect;
+
+	element_layer_top->is_invisible = true;
+
+	// # down
+	event_point = (PvPoint){0, 0};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
+
+	res = et_tool_info_util_func_edit_element_mouse_action(
+			vg,
+			focus,
+			SNAP_CONTEXT_POINTER,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+
+	EXPECT_FALSE(pv_focus_is_focused(focus));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
+	EXPECT_EQ(element_layer_top, focus->elements[0]);
+
+	// # up
+	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
+
+	res = et_tool_info_util_func_edit_element_mouse_action(
+			vg,
+			focus,
+			SNAP_CONTEXT_POINTER,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+
+	EXPECT_FALSE(pv_focus_is_focused(focus));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
+	EXPECT_EQ(element_layer_top, focus->elements[0]);
 }
 
 TEST_F(TestEtToolInfo_Element, EtToolInfo_FocusingByArea){
@@ -711,6 +806,67 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_FocusingByArea_Ignore_IsLocked){
 
 }
 
+TEST_F(TestEtToolInfo_Element, EtToolInfo_FocusingByArea_Ignore_IsInvisible){
+
+	bool res;
+	bool is_save = false;
+	PvPoint event_point;
+	EtMouseAction mouse_action;
+	PvElement *edit_draw_element = NULL;
+	GdkCursor *cursor = NULL;
+	const PvElementInfo *element_info = NULL;
+	PvRect position_rect;
+
+
+	element_curves[2]->is_invisible = true;
+	element_curves[5]->is_invisible = true;
+
+	// # down
+	event_point = (PvPoint){-1, -1};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
+
+	res = et_tool_info_util_func_edit_element_mouse_action(
+			vg,
+			focus,
+			SNAP_CONTEXT_POINTER,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+
+	// focus
+	EXPECT_TRUE(false == pv_focus_is_focused(focus));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
+	EXPECT_EQ(element_layer_top, focus->elements[0]);
+
+	// # up
+	event_point = (PvPoint){750, 150};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
+
+	res = et_tool_info_util_func_edit_element_mouse_action(
+			vg,
+			focus,
+			SNAP_CONTEXT_POINTER,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+
+	// focus
+	EXPECT_TRUE(pv_focus_is_focused(focus));
+	EXPECT_EQ(5, pv_general_get_parray_num((void **)focus->elements))
+		<< pv_general_get_parray_num((void **)focus->anchor_points);
+	EXPECT_TRUE(pv_focus_is_exist_element(focus, element_curves[0]));
+	EXPECT_TRUE(pv_focus_is_exist_element(focus, element_curves[1]));
+	EXPECT_TRUE(pv_focus_is_exist_element(focus, element_curves[3]));
+	EXPECT_TRUE(pv_focus_is_exist_element(focus, element_curves[4]));
+	EXPECT_TRUE(pv_focus_is_exist_element(focus, element_curves[6]));
+
+	// document not change.
+	EXPECT_TRUE(false == pv_vg_is_diff(vg, vg_back));
+
+}
+
 TEST_F(TestEtToolInfo_Element, EtToolInfo_FocusingByArea_Ignore_IsLockedParent){
 
 	bool res;
@@ -761,6 +917,59 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_FocusingByArea_Ignore_IsLockedParent){
 		EXPECT_EQ(0, pv_general_get_parray_num((void **)edit_draw_element->childs));
 	}
 	EXPECT_TRUE(NULL == cursor);
+
+	// focus
+	EXPECT_FALSE(pv_focus_is_focused(focus));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements))
+		<< pv_general_get_parray_num((void **)focus->anchor_points);
+	EXPECT_TRUE(pv_focus_is_exist_element(focus, element_layer_top));
+
+	// document not change.
+	EXPECT_TRUE(false == pv_vg_is_diff(vg, vg_back));
+}
+
+TEST_F(TestEtToolInfo_Element, EtToolInfo_FocusingByArea_Ignore_IsVisibleParent){
+
+	bool res;
+	bool is_save = false;
+	PvPoint event_point;
+	EtMouseAction mouse_action;
+	PvElement *edit_draw_element = NULL;
+	GdkCursor *cursor = NULL;
+	const PvElementInfo *element_info = NULL;
+	PvRect position_rect;
+
+
+	element_layer_top->is_invisible = true;
+
+	// # down
+	event_point = (PvPoint){-1, -1};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
+
+	res = et_tool_info_util_func_edit_element_mouse_action(
+			vg,
+			focus,
+			SNAP_CONTEXT_POINTER,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+
+	// document not change.
+	EXPECT_TRUE(false == pv_vg_is_diff(vg, vg_back));
+
+	// # up
+	event_point = (PvPoint){750, 150};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
+
+	res = et_tool_info_util_func_edit_element_mouse_action(
+			vg,
+			focus,
+			SNAP_CONTEXT_POINTER,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
 
 	// focus
 	EXPECT_FALSE(pv_focus_is_focused(focus));

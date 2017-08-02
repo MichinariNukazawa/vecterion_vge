@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" version="1.1" x="0.000000" y="0.000000" width="400.000000" height="300.000000" viewBox="0.000000 0.000000 400.000000 300.000000">
+  <g inkscape:groupmode="layer" inkscape:label="Layer">
+    <rect x="74" y="151" width="96" height="37" fill="rgba(14,204,255,1.000000)" stroke="rgba(0,216,0,1.000000)" stroke-width="6.000" stroke-linecap="butt" stroke-linejoin="miter"/>
+    <rect x="132" y="126" width="104" height="45" fill="rgba(14,26,255,1.000000)" stroke="rgba(0,216,0,1.000000)" stroke-width="6.000" stroke-linecap="butt" stroke-linejoin="miter" display="none"/>
+    <rect x="209" y="152" width="115" height="54" fill="rgba(243,255,11,1.000000)" stroke="rgba(0,216,0,1.000000)" stroke-width="6.000" stroke-linecap="butt" stroke-linejoin="miter"/>
+  </g>
+  <g inkscape:groupmode="layer" inkscape:label="Layer">
+    <rect x="234" y="55" width="45" height="24" fill="rgba(14,26,255,1.000000)" stroke="rgba(0,216,0,1.000000)" stroke-width="6.000" stroke-linecap="butt" stroke-linejoin="miter" style="display:none"/>
+    <rect x="255" y="69" width="88" height="39" fill="rgba(14,26,255,1.000000)" stroke="rgba(0,216,0,1.000000)" stroke-width="6.000" stroke-linecap="butt" stroke-linejoin="miter"/>
+  </g>
+  <g inkscape:groupmode="layer" inkscape:label="Layer" display="none">
+    <path d=" M 175.186096 66.965790 C 110.248413 55.833771 28.432068 77.749908 84.565369 103.260834" fill="rgba(14,255,255,1.000000)" stroke="rgba(0,216,0,1.000000)" stroke-width="6.000" stroke-linecap="butt" stroke-linejoin="miter" display="none"/>
+    <rect x="27" y="39" width="92" height="43" fill="rgba(14,255,255,1.000000)" stroke="rgba(0,0,0,1.000000)" stroke-width="1.000" stroke-linecap="butt" stroke-linejoin="miter"/>
+  </g>
+</svg>

@@ -40,6 +40,7 @@ typedef enum{
 	PvSvgAttributeKind_fill_opacity,
 	PvSvgAttributeKind_stroke_opacity,
 	PvSvgAttributeKind_fill_rule,
+	PvSvgAttributeKind_display,
 	PvSvgAttributeKind_NUM,
 }PvSvgAttributeKind;
 

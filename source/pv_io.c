@@ -46,6 +46,10 @@ static bool _pv_io_svg_from_element_in_recursive_before(
 		return false;
 	}
 
+	if(element->is_invisible){
+		xmlNewProp(target->xml_new_node, BAD_CAST "display", BAD_CAST "none");
+	}
+
 	if(element->is_locked){
 		xmlNewProp(target->xml_new_node, BAD_CAST "sodipodi:insensitive", BAD_CAST "true");
 	}

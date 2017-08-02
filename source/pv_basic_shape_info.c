@@ -119,6 +119,7 @@ static bool func_raster_write_svg_(
 	xmlNewProp(node, BAD_CAST "width", BAD_CAST w_str);
 	xmlNewProp(node, BAD_CAST "height", BAD_CAST h_str);
 	xmlAddChild(target->xml_parent_node, node);
+	target->xml_new_node = node;
 
 	g_free(x_str);
 	g_free(y_str);
@@ -252,6 +253,7 @@ static bool func_rect_write_svg_(
 	xmlNewProp(node, BAD_CAST "width", BAD_CAST w_str);
 	xmlNewProp(node, BAD_CAST "height", BAD_CAST h_str);
 	xmlAddChild(target->xml_parent_node, node);
+	target->xml_new_node = node;
 
 	g_free(x_str);
 	g_free(y_str);

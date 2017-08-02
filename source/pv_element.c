@@ -184,6 +184,7 @@ PvElement *pv_element_new(const PvElementKind kind)
 
 	self->color_pair = PvColorPair_Default;
 	self->stroke = PvStroke_Default;
+	self->is_invisible = false;
 	self->is_locked = false;
 
 	self->kind = kind;
@@ -979,6 +980,21 @@ bool pv_element_kind_is_object(PvElementKind kind)
 		default:
 			pv_bug("");
 			return false;
+	}
+}
+
+bool pv_element_get_in_is_invisible(const PvElement *element)
+{
+	pv_assert(element);
+
+	if(element->is_invisible){
+		return true;
+	}
+
+	if(NULL != element->parent){
+		return pv_element_get_in_is_invisible(element->parent);
+	}else{
+		return false;
 	}
 }
 

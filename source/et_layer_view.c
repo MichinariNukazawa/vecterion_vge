@@ -217,6 +217,38 @@ static gboolean cb_expose_event_layer_tree_canvas_(GtkWidget *widget, cairo_t *c
 	return FALSE;
 }
 
+static void draw_invisible_icon_(cairo_t *cr, bool is_invisible, int x, int y)
+{
+
+	if(is_invisible){
+		cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 0.2);
+	}else{
+		cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
+
+		cairo_move_to(cr, x + 3.5, y + 9.5);
+		cairo_rel_line_to(cr,  6, -3);
+		cairo_rel_line_to(cr,  6,  3);
+		cairo_set_line_width(cr, 1);
+		cairo_stroke(cr);
+
+		cairo_move_to(cr, x + 3.5 + 6, y + 9.5 - 3);
+		cairo_rel_line_to(cr,  0, 6);
+		cairo_stroke(cr);
+	}
+	// ** eye icon
+	cairo_move_to(cr, x + 3.5, y + 10.5);
+	cairo_rel_line_to(cr,  6,  3);
+	cairo_rel_line_to(cr,  6, -3);
+	cairo_set_line_width(cr, 1);
+	cairo_stroke(cr);
+
+	// ** frame
+	cairo_rectangle(cr, x + 2.5, y + 2.5, ELEMENT_ICON_PX - 4, ELEMENT_ICON_PX - 4);
+	cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
+	cairo_set_line_width(cr, 1);
+	cairo_stroke(cr);
+}
+
 static void draw_lock_icon_(cairo_t *cr, bool is_locked, int x, int y)
 {
 
@@ -319,6 +351,9 @@ static bool draw_element_tree_(EtLayerView *self, cairo_t *cr)
 		if(NULL == kind_name){
 			kind_name = "";
 		}
+
+		// ** invisible icon
+		draw_invisible_icon_(cr, data->element->is_invisible, 0, (ELEMENT_HEIGHT * index));
 
 		// ** lock icon
 		draw_lock_icon_(cr, data->element->is_locked, ELEMENT_ICON_PX, (ELEMENT_HEIGHT * index));
@@ -558,12 +593,18 @@ static gboolean cb_button_press_layer_view_content_(
 
 		pv_focus_clear_set_element(focus, self->elementDatas[index]->element);
 
+		if((0 < event->x) && (event->x < (ELEMENT_ICON_PX))){
+			self->elementDatas[index]->element->is_invisible
+				= !self->elementDatas[index]->element->is_invisible;
+		}
+
 		if((ELEMENT_ICON_PX < event->x) && (event->x < (ELEMENT_ICON_PX * 2))){
 			self->elementDatas[index]->element->is_locked
 				= !self->elementDatas[index]->element->is_locked;
 		}
 
-		if(self->elementDatas[index]->element->is_locked){
+		if(self->elementDatas[index]->element->is_locked
+				|| self->elementDatas[index]->element->is_invisible ){
 			pv_focus_clear_to_first_layer(focus);
 		}
 

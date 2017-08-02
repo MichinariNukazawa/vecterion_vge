@@ -31,6 +31,7 @@ struct PvElement{
 
 	PvColorPair color_pair;
 	PvStroke stroke;
+	bool is_invisible;
 	bool is_locked;			//!< Lock for Edit
 
 	PvElementKind kind;
@@ -105,6 +106,8 @@ const char *pv_element_get_group_name_from_element(const PvElement *element);
 bool pv_element_kind_is_viewable_object(PvElementKind kind);
 bool pv_element_kind_is_object(PvElementKind kind);
 
+//! target and parent elements check is_invisible
+bool pv_element_get_in_is_invisible(const PvElement *);
 //! target and parent elements check is_locked
 bool pv_element_get_in_is_locked(const PvElement *);
 
