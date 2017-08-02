@@ -1427,6 +1427,11 @@ static bool cb_menu_select_all_func_recurse_prev_(PvElement *element, gpointer d
 	if(PvElementKind_Layer == element->kind){
 		return true;
 	}
+
+	if(PvElementKind_Root == element->kind){
+		return true;
+	}
+
 	if(pv_element_is_exist_from_elements_(element, func_safr_data_pack->elements_ignore)){
 		return true;
 	}
