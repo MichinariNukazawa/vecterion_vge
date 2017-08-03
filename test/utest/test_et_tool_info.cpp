@@ -1389,8 +1389,8 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_Rotate){
 
 	// # down
 	event_point = (PvPoint){
-		100 + (PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH / 2) + 1,
-		100 + (PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH / 2) + 1
+		100 + (PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH ) - 2,
+		100 + (PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH ) - 2,
 	};
 	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
 
@@ -1680,8 +1680,8 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_Resize_with_SnapForGrid_minus){
 
 	// # down
 	event_point = (PvPoint){
-		100,
-		100,
+		100 + (PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH / 2) - 2,
+		100 + (PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH / 2) - 2,
 	};
 	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
 

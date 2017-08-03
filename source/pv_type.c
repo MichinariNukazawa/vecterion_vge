@@ -213,6 +213,16 @@ PvRect pv_rect_expand(PvRect rect0, PvRect rect1)
 	return ret;
 }
 
+PvRect pv_rect_add_corners(PvRect rect, double size)
+{
+	rect.x -= size;
+	rect.y -= size;
+	rect.w += size * 2;
+	rect.h += size * 2;
+
+	return rect;
+}
+
 PvPoint pv_rect_get_edge_point(PvRect rect, PvRectEdgeKind edgeKind)
 {
 	switch(edgeKind){

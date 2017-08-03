@@ -102,6 +102,13 @@ static EdgeKind get_outside_touch_edge_kind_from_rect_(PvRect rect, PvPoint poin
 {
 	const int PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH = 16;
 	const double SENSE = PX_SENSITIVE_RESIZE_EDGE_OF_TOUCH / scale;
+
+	// None
+	rect = pv_rect_add_corners(rect, (4 / scale));
+	if(pv_rect_is_inside(rect, point)){
+		return EdgeKind_None;
+	}
+
 	// resize
 	PvRect ul = {
 		(rect.x - (SENSE / 2.0)),

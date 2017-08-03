@@ -71,6 +71,7 @@ PvRect pv_rect_abs_size(PvRect);
 
 bool pv_rect_is_inside(PvRect, PvPoint);
 PvRect pv_rect_expand(PvRect rect0, PvRect rect1);
+PvRect pv_rect_add_corners(PvRect, double);
 PvPoint pv_rect_get_edge_point(PvRect, PvRectEdgeKind);
 PvPoint pv_rect_get_center(PvRect);
 PvPoint pv_rect_get_size(PvRect);
