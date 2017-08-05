@@ -1480,6 +1480,31 @@ bool et_tool_info_util_func_edit_anchor_point_handle_mouse_action(
 	return true;
 }
 
+static bool pv_element_append_on_focusing_(PvElement *focusing_element, PvElement *element)
+{
+	PvElement *parent = NULL;
+	PvElement *sister = NULL;
+	switch(focusing_element->kind){
+		case PvElementKind_Root:
+		case PvElementKind_Layer:
+		case PvElementKind_Group:
+			{
+				parent = focusing_element;
+				sister = NULL;
+			}
+			break;
+		default:
+			{
+				et_assert(focusing_element->parent);
+				parent = focusing_element->parent;
+				sister = focusing_element;
+			}
+			break;
+	}
+
+	return pv_element_append_child(parent, sister, element);
+}
+
 static void add_anchor_point_down_(
 		PvFocus *focus,
 		const PvSnapContext *snap_context,
@@ -1519,7 +1544,7 @@ static void add_anchor_point_down_(
 		et_assert(anchor_point);
 		PvElement *new_element = pv_element_curve_new_set_anchor_point(anchor_point);
 		et_assert(new_element);
-		pv_element_append_on_focusing(element_, new_element);
+		pv_element_append_on_focusing_(element_, new_element);
 
 		new_element->color_pair = color_pair;
 		new_element->stroke = stroke;

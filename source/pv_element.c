@@ -391,31 +391,6 @@ bool pv_element_append_nth(PvElement *parent, const int nth, PvElement *element)
 	return true;
 }
 
-bool pv_element_append_on_focusing(PvElement *focusing_element, PvElement *element)
-{
-	PvElement *parent = NULL;
-	PvElement *sister = NULL;
-	switch(focusing_element->kind){
-		case PvElementKind_Root:
-		case PvElementKind_Layer:
-		case PvElementKind_Group:
-			{
-				parent = focusing_element;
-				sister = NULL;
-			}
-			break;
-		default:
-			{
-				pv_assert(focusing_element->parent);
-				parent = focusing_element->parent;
-				sister = focusing_element;
-			}
-			break;
-	}
-
-	return pv_element_append_child(parent, sister, element);
-}
-
 static bool is_layer_root_null_from_element_(const PvElement *element)
 {
 	if(NULL == element){

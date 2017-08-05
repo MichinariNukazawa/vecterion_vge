@@ -72,7 +72,6 @@ void pv_element_copy_property(PvElement *dst, PvElement *src);
 
 bool pv_element_append_child(PvElement *parent, const PvElement *prev, PvElement *element);
 bool pv_element_append_nth(PvElement *parent, const int nth, PvElement *element);
-bool pv_element_append_on_focusing(PvElement *focusing_element, PvElement *element);
 
 PvElement *pv_element_get_first_parent_layer_or_root(PvElement *);
 
