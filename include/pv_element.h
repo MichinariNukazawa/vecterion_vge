@@ -99,7 +99,7 @@ bool pv_element_recursive_desc_before(
 
 bool pv_element_is_diff_recursive(PvElement *element0, PvElement *element1);
 
-const char *pv_element_get_name_from_kind(PvElementKind kind);
+const char *pv_element_get_kind_name(const PvElement *element);
 const char *pv_element_get_group_name_from_element(const PvElement *element);
 
 bool pv_element_kind_is_viewable_object(PvElementKind kind);

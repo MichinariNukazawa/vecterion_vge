@@ -14,6 +14,8 @@
 #include "pv_element.h"
 #include "pv_element_info.h"
 
+typedef const char *(*PvBasicShapeFuncGetKindName)(
+		const void *);
 typedef gpointer (*PvBasicShapeFuncNewData)();
 typedef void (*PvBasicShapeFuncFreeData)(
 		void *);
@@ -37,6 +39,7 @@ typedef bool (*PvBasicShapeFuncIsDiffOne)(
 typedef struct{
 	PvBasicShapeKind kind;
 	const char *name;
+	PvBasicShapeFuncGetKindName	func_get_kind_name;
 	PvBasicShapeFuncNewData		func_new_data;
 	PvBasicShapeFuncFreeData	func_free_data;
 	PvBasicShapeFuncCopyNewData	func_copy_new_data;

@@ -890,15 +890,15 @@ PvElement *pv_element_basic_shape_new_from_kind(PvBasicShapeKind kind)
 	return self;
 }
 
-const char *pv_element_get_name_from_kind(PvElementKind kind)
+const char *pv_element_get_kind_name(const PvElement *element)
 {
-	const PvElementInfo *info = pv_element_get_info_from_kind(kind);
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 	if(NULL == info){
 		pv_error("");
 		return NULL;
 	}
 
-	return info->name;
+	return info->func_get_kind_name(element);
 }
 
 const char *pv_element_get_group_name_from_element(const PvElement *element)

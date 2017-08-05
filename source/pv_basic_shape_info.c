@@ -6,6 +6,17 @@
 #include "pv_urischeme.h"
 
 
+static const char *func_default_get_kind_name_(
+		const void *data_)
+{
+	pv_assert(data_);
+	const PvElementBasicShapeData *data = data_;
+
+	const PvBasicShapeInfo *info = pv_basic_shape_info_get_from_kind(data->kind);
+	pv_assertf(info, "%d", data->kind);
+
+	return info->name;
+}
 
 // ******** ********
 // Raster
@@ -312,6 +323,7 @@ static bool func_figure_shape_is_diff_one_(
 
 const PvBasicShapeInfo pv_basic_shape_infos_[] = {
 	{PvBasicShapeKind_FigureShape, "FigureShape",
+		.func_get_kind_name		= func_default_get_kind_name_,
 		.func_new_data			= func_figure_shape_new_data_,
 		.func_free_data			= func_figure_shape_free_data_,
 		.func_copy_new_data		= func_figure_shape_copy_new_data_,
@@ -321,6 +333,7 @@ const PvBasicShapeInfo pv_basic_shape_infos_[] = {
 		.func_is_diff_one		= func_figure_shape_is_diff_one_,
 	},
 	{PvBasicShapeKind_Raster, "Raster",
+		.func_get_kind_name		= func_default_get_kind_name_,
 		.func_new_data			= func_raster_new_data_,
 		.func_free_data			= func_raster_free_data_,
 		.func_copy_new_data		= func_raster_copy_new_data_,

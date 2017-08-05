@@ -344,7 +344,7 @@ static bool draw_element_tree_(EtLayerView *self, cairo_t *cr)
 			}
 		}
 
-		const char *kind_name = pv_element_get_name_from_kind(data->kind);
+		const char *kind_name = pv_element_get_kind_name(data->element);
 		if(PvElementKind_Group == data->element->kind){
 			kind_name = pv_element_get_group_name_from_element(data->element);
 		}

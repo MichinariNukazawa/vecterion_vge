@@ -32,6 +32,15 @@ static PvRect _get_rect_extent_from_cr(cairo_t *cr)
 // ******** ********
 
 
+static const char *_func_default_get_kind_name(
+		const PvElement *element)
+{
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	pv_assertf(info, "%d", element->kind);
+
+	return info->name;
+}
+
 static bool _func_nop_write_svg_after(
 		InfoTargetSvg *target,
 		const PvElement *element,
@@ -1391,6 +1400,19 @@ static void _func_curve_apply_appearances(
  * BasicShape
  **************** */
 
+static const char *_func_basic_shape_get_kind_name(
+		const PvElement *element)
+{
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	pv_assertf(info, "%d", element->kind);
+	const PvElementBasicShapeData *data = element->data;
+	pv_assertf(data, "%d", element->kind);
+	const PvBasicShapeInfo *basic_shape_info = pv_basic_shape_info_get_from_kind(data->kind);
+	pv_assertf(info, "%d %d", element->kind, data->kind);
+
+	return basic_shape_info->func_get_kind_name(data);
+}
+
 static gpointer _func_basic_shape_new_data()
 {
 	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)malloc(sizeof(PvElementBasicShapeData));
@@ -1949,6 +1971,7 @@ static void _func_basic_shape_apply_appearances(
 
 const PvElementInfo _pv_element_infos[] = {
 	{PvElementKind_Root, "Root",
+		.func_get_kind_name			= _func_default_get_kind_name,
 		.func_new_data				= _func_group_new_data,
 		.func_free_data				= _func_group_free_data,
 		.func_copy_new_data			= _func_group_copy_new_data,
@@ -1974,6 +1997,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_apply_appearances			= _func_nop_apply_appearances,
 	},
 	{PvElementKind_Layer, "Layer",
+		.func_get_kind_name			= _func_default_get_kind_name,
 		.func_new_data				= _func_group_new_data,
 		.func_free_data				= _func_group_free_data,
 		.func_copy_new_data			= _func_group_copy_new_data,
@@ -1999,6 +2023,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_apply_appearances			= _func_nop_apply_appearances,
 	},
 	{PvElementKind_Group, "Group",
+		.func_get_kind_name			= _func_default_get_kind_name,
 		.func_new_data				= _func_group_new_data,
 		.func_free_data				= _func_group_free_data,
 		.func_copy_new_data			= _func_group_copy_new_data,
@@ -2024,6 +2049,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_apply_appearances			= _func_nop_apply_appearances,
 	},
 	{PvElementKind_Curve, "Curve",
+		.func_get_kind_name			= _func_default_get_kind_name,
 		.func_new_data				= _func_curve_new_data,
 		.func_free_data				= _func_curve_free_data,
 		.func_copy_new_data			= _func_curve_copy_new_data,
@@ -2049,6 +2075,7 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_apply_appearances			= _func_curve_apply_appearances,
 	},
 	{PvElementKind_BasicShape, "BasicShape",
+		.func_get_kind_name			= _func_basic_shape_get_kind_name,
 		.func_new_data				= _func_basic_shape_new_data,
 		.func_free_data				= _func_basic_shape_free_data,
 		.func_copy_new_data			= _func_basic_shape_copy_new_data,

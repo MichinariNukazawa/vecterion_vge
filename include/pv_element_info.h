@@ -32,6 +32,8 @@ typedef struct {
 	xmlNodePtr xml_new_node;
 }InfoTargetSvg;
 
+typedef const char *(*PvElementFuncGetKindName)(
+		const PvElement *element);
 typedef gpointer (*PvElementFuncNewData)(void);
 typedef bool (*PvElementFuncFreeData)(void *data);
 typedef gpointer (*PvElementFuncCopyNewData)(void *data);
@@ -104,6 +106,7 @@ typedef void (*PvElementFuncApplyAppearances)(
 typedef struct PvElementInfo{
 	PvElementKind kind;
 	const char *name;
+	PvElementFuncGetKindName		func_get_kind_name;
 	PvElementFuncNewData			func_new_data;
 	PvElementFuncFreeData			func_free_data;
 	PvElementFuncCopyNewData		func_copy_new_data;
