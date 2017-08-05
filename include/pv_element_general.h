@@ -52,7 +52,7 @@ typedef enum{
 #define Num_PvElementBasicShapeAppearance (3)
 
 typedef enum{
-	PvBasicShapeKind_Rect,
+	PvBasicShapeKind_FigureShape,
 	PvBasicShapeKind_Raster,
 }PvBasicShapeKind;
 
@@ -63,7 +63,7 @@ typedef struct{
 }PvBasicShapeRasterData;
 typedef struct{
 	int dummy;
-}PvBasicShapeRectData;
+}PvBasicShapeFigureShapeData;
 
 struct PvElementBasicShapeData;
 typedef struct PvElementBasicShapeData PvElementBasicShapeData;

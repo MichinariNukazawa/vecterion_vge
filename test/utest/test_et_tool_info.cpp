@@ -2779,7 +2779,7 @@ TEST_F(TestEtToolInfo_Base_Base, ResizeElements_BasicShape00){
 	assert(element_info);
 
 	PvElement **elements = (PvElement **)malloc(sizeof(PvElement *) * 2);
-	elements[0] = pv_element_basic_shape_new_from_kind(PvBasicShapeKind_Rect);
+	elements[0] = pv_element_basic_shape_new_from_kind(PvBasicShapeKind_FigureShape);
 	elements[1] = NULL;
 
 	position_rect = element_info->func_get_rect_by_anchor_points(elements[0]);

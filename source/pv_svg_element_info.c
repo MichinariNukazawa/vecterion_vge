@@ -165,7 +165,7 @@ static PvElement *_pv_svg_rect_new_element_from_svg(
 		PvSvgReadConf *conf
 		)
 {
-	PvElement *element_new = pv_element_basic_shape_new_from_kind(PvBasicShapeKind_Rect);
+	PvElement *element_new = pv_element_basic_shape_new_from_kind(PvBasicShapeKind_FigureShape);
 	pv_assert(element_new);
 
 	if(!pv_element_append_child(element_parent, NULL, element_new)){

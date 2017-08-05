@@ -190,33 +190,33 @@ static bool func_raster_is_diff_one_(
 
 
 // ******** ********
-// Rect
+// FigureShape
 // ******** ********
 
-static gpointer func_rect_new_data_()
+static gpointer func_figure_shape_new_data_()
 {
-	PvBasicShapeRectData *data = malloc(sizeof(PvBasicShapeRectData));
+	PvBasicShapeFigureShapeData *data = malloc(sizeof(PvBasicShapeFigureShapeData));
 	pv_assert(data);
 
 	return data;
 }
 
-static void func_rect_free_data_(
+static void func_figure_shape_free_data_(
 		void *data_)
 {
-	PvBasicShapeRectData *data = data_;
+	PvBasicShapeFigureShapeData *data = data_;
 	pv_assert(data);
 
 	free(data);
 }
 
-static gpointer func_rect_copy_new_data_(
+static gpointer func_figure_shape_copy_new_data_(
 		const void *data_)
 {
-	const PvBasicShapeRectData *data = data_;
+	const PvBasicShapeFigureShapeData *data = data_;
 	pv_assert(data);
 
-	PvBasicShapeRectData *new_data = func_rect_new_data_();
+	PvBasicShapeFigureShapeData *new_data = func_figure_shape_new_data_();
 	pv_assert(new_data);
 
 	*new_data = *data;
@@ -224,7 +224,7 @@ static gpointer func_rect_copy_new_data_(
 	return new_data;
 }
 
-static bool func_rect_write_svg_(
+static bool func_figure_shape_write_svg_(
 		xmlNodePtr *node_,
 		InfoTargetSvg *target,
 		const PvElement *element,
@@ -234,7 +234,7 @@ static bool func_rect_write_svg_(
 	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)element->data;
 	pv_assert(element_data);
 
-	PvBasicShapeRectData *data = element_data->data;
+	PvBasicShapeFigureShapeData *data = element_data->data;
 	pv_assert(data);
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
@@ -265,12 +265,12 @@ static bool func_rect_write_svg_(
 	return true;
 }
 
-static PvPoint func_rect_get_size_(const void *data_)
+static PvPoint func_figure_shape_get_size_(const void *data_)
 {
 	return (PvPoint){1, 1};
 }
 
-static void func_rect_draw_(
+static void func_figure_shape_draw_(
 		cairo_t *cr,
 		const PvElement *element,
 		PvPoint resize)
@@ -295,13 +295,13 @@ static void func_rect_draw_(
 	cairo_stroke(cr);
 }
 
-static bool func_rect_is_diff_one_(
+static bool func_figure_shape_is_diff_one_(
 		const void *data0_,
 		const void *data1_)
 {
-	const PvBasicShapeRectData *data0 = data0_;
+	const PvBasicShapeFigureShapeData *data0 = data0_;
 	pv_assert(data0);
-	const PvBasicShapeRectData *data1 = data1_;
+	const PvBasicShapeFigureShapeData *data1 = data1_;
 	pv_assert(data1);
 
 	return false;
@@ -311,14 +311,14 @@ static bool func_rect_is_diff_one_(
 
 
 const PvBasicShapeInfo pv_basic_shape_infos_[] = {
-	{PvBasicShapeKind_Rect, "Rect",
-		.func_new_data			= func_rect_new_data_,
-		.func_free_data			= func_rect_free_data_,
-		.func_copy_new_data		= func_rect_copy_new_data_,
-		.func_write_svg			= func_rect_write_svg_,
-		.func_draw			= func_rect_draw_,
-		.func_get_size			= func_rect_get_size_,
-		.func_is_diff_one		= func_rect_is_diff_one_,
+	{PvBasicShapeKind_FigureShape, "FigureShape",
+		.func_new_data			= func_figure_shape_new_data_,
+		.func_free_data			= func_figure_shape_free_data_,
+		.func_copy_new_data		= func_figure_shape_copy_new_data_,
+		.func_write_svg			= func_figure_shape_write_svg_,
+		.func_draw			= func_figure_shape_draw_,
+		.func_get_size			= func_figure_shape_get_size_,
+		.func_is_diff_one		= func_figure_shape_is_diff_one_,
 	},
 	{PvBasicShapeKind_Raster, "Raster",
 		.func_new_data			= func_raster_new_data_,

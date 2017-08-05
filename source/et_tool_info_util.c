@@ -1701,7 +1701,7 @@ static PvElement *add_basic_shape_element_down_(
 	PvElement *parent_layer = pv_focus_get_first_layer(focus);
 	et_assert(parent_layer);
 
-	PvElement *element = pv_element_basic_shape_new_from_kind(PvBasicShapeKind_Rect);
+	PvElement *element = pv_element_basic_shape_new_from_kind(PvBasicShapeKind_FigureShape);
 	et_assert(element);
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
