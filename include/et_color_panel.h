@@ -11,7 +11,6 @@
 #include <stdbool.h>
 #include "pv_color.h"
 #include "et_state.h"
-#include "et_doc_id.h"
 #include "et_doc.h"
 
 struct EtColorPanel;
