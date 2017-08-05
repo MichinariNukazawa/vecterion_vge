@@ -78,7 +78,7 @@ bool et_tool_info_util_func_add_anchor_point_handle_mouse_action(
 		PvStroke stroke
 		);
 
-bool et_tool_info_util_func_add_basic_shape_element_mouse_action(
+bool et_tool_info_util_func_add_figure_shape_element_mouse_action(
 		PvVg *vg,
 		PvFocus *focus,
 		const PvSnapContext *snap_context,

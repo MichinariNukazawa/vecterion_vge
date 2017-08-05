@@ -301,7 +301,7 @@ static bool knife_anchor_point_down_(EtDoc *doc, PvFocus *focus, EtMouseAction m
 	return true;
 }
 
-static bool func_add_basic_shape_element_mouse_action_(
+static bool func_add_figure_shape_element_mouse_action_(
 		EtDocId doc_id,
 		PvDocumentPreference document_preference,
 		EtMouseAction mouse_action,
@@ -318,7 +318,7 @@ static bool func_add_basic_shape_element_mouse_action_(
 	PvColorPair color_pair = et_color_panel_get_color_pair();
 	PvStroke stroke = et_stroke_panel_get_stroke();
 
-	bool res = et_tool_info_util_func_add_basic_shape_element_mouse_action(
+	bool res = et_tool_info_util_func_add_figure_shape_element_mouse_action(
 			vg,
 			focus,
 			&document_preference.snap_context,
@@ -642,17 +642,17 @@ EtToolInfo et_tool_infos_[] = {
 	},
 	{
 		.tool_id = EtToolId_AddBasicShapeElement,
-		.name = "Add Basic Shape Element",
+		.name = "Add Figure Shape Element",
 		.is_element_tool = true,
 		.icon = NULL,
 		.icon_focus = NULL,
 		.icon_cursor = NULL,
 		.filepath_icon = NULL,
-		.filepath_cursor = "resource/tool/tool_basic_shape_24x24.svg",
+		.filepath_cursor = "resource/tool/tool_figure_shape_24x24.svg",
 		.shortcuts = {
 			{0, (0),},
 		},
-		.func_mouse_action = func_add_basic_shape_element_mouse_action_,
+		.func_mouse_action = func_add_figure_shape_element_mouse_action_,
 		.mouse_cursor = NULL,
 	},
 	{

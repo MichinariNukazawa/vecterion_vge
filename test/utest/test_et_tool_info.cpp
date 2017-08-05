@@ -2304,7 +2304,7 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddBasicShape){
 	};
 	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
 
-	res = et_tool_info_util_func_add_basic_shape_element_mouse_action(
+	res = et_tool_info_util_func_add_figure_shape_element_mouse_action(
 			vg,
 			focus,
 			SNAP_CONTEXT_POINTER,
@@ -2345,7 +2345,7 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddBasicShape){
 	event_point = pv_point_add(event_point, (PvPoint){100, 200});
 	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
 
-	res = et_tool_info_util_func_add_basic_shape_element_mouse_action(
+	res = et_tool_info_util_func_add_figure_shape_element_mouse_action(
 			vg,
 			focus,
 			SNAP_CONTEXT_POINTER,
@@ -2414,7 +2414,7 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddBasicShape_minus){
 	};
 	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
 
-	res = et_tool_info_util_func_add_basic_shape_element_mouse_action(
+	res = et_tool_info_util_func_add_figure_shape_element_mouse_action(
 			vg,
 			focus,
 			SNAP_CONTEXT_POINTER,
@@ -2438,7 +2438,7 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_AddBasicShape_minus){
 	event_point = pv_point_add(event_point, (PvPoint){-100, -200});
 	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
 
-	res = et_tool_info_util_func_add_basic_shape_element_mouse_action(
+	res = et_tool_info_util_func_add_figure_shape_element_mouse_action(
 			vg,
 			focus,
 			SNAP_CONTEXT_POINTER,

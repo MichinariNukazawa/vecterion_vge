@@ -1693,7 +1693,7 @@ bool et_tool_info_util_func_add_anchor_point_handle_mouse_action(
 	return result;
 }
 
-static PvElement *add_basic_shape_element_down_(
+static PvElement *add_figure_shape_element_down_(
 		PvFocus *focus,
 		const PvSnapContext *snap_context,
 		EtMouseAction mouse_action)
@@ -1727,7 +1727,7 @@ static PvElement *add_basic_shape_element_down_(
 	return element;
 }
 
-static void add_basic_shape_element_move_(
+static void add_figure_shape_element_move_(
 		PvFocus *focus,
 		const PvSnapContext *snap_context,
 		EtMouseAction mouse_action,
@@ -1766,7 +1766,7 @@ static void add_basic_shape_element_move_(
 	info->func_set_rect_by_anchor_points(focus->elements[0], rect);
 }
 
-bool et_tool_info_util_func_add_basic_shape_element_mouse_action(
+bool et_tool_info_util_func_add_figure_shape_element_mouse_action(
 		PvVg *vg,
 		PvFocus *focus,
 		const PvSnapContext *snap_context,
@@ -1784,7 +1784,7 @@ bool et_tool_info_util_func_add_basic_shape_element_mouse_action(
 	switch(mouse_action.action){
 		case EtMouseAction_Down:
 			{
-				PvElement *element = add_basic_shape_element_down_(
+				PvElement *element = add_figure_shape_element_down_(
 						focus,
 						snap_context,
 						mouse_action);
@@ -1799,7 +1799,7 @@ bool et_tool_info_util_func_add_basic_shape_element_mouse_action(
 		case EtMouseAction_Up:
 			{
 				if(EtFocusElementMouseActionMode_Resize == mode_){
-					add_basic_shape_element_move_(
+					add_figure_shape_element_move_(
 							focus,
 							snap_context,
 							mouse_action,
