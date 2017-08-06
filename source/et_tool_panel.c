@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 #include "et_error.h"
-#include "pv_element_general.h"
+#include "pv_element_type.h"
 #include "et_etaion.h"
 #include "et_tool_info.h"
 #include "et_mouse_cursor_info.h"

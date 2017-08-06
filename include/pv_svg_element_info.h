@@ -10,7 +10,7 @@
 #include <gdk/gdk.h>
 #include <libxml/xmlwriter.h>
 #include <stdbool.h>
-#include "pv_element_general.h"
+#include "pv_element_type.h"
 #include "pv_element.h"
 #include "pv_appearance.h"
 #include "pv_svg_attribute_info.h"

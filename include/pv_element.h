@@ -12,7 +12,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <stdbool.h>
-#include "pv_element_general.h"
+#include "pv_element_type.h"
 #include "pv_color.h"
 #include "pv_stroke.h"
 #include "pv_appearance.h"

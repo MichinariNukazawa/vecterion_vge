@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include "pv_error.h"
-#include "pv_element_general.h"
+#include "pv_element_type.h"
 #include "pv_element_info.h"
 #include "pv_svg_element_info.h"
 #include "pv_io_util.h"
