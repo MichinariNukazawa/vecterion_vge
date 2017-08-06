@@ -25,7 +25,7 @@ TEST(Test, PvElement_BasicShape){
 	PvElement *element_basic_shape1 = pv_element_basic_shape_new_from_filepath(BASIC_SHAPE_FILEPATH_1);
 	ASSERT_TRUE(NULL != element_basic_shape1);
 	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)element_basic_shape1->data;
-	PvBasicShapeRasterData *data = (PvBasicShapeRasterData *)element_data->data;
+	PvRasterData *data = (PvRasterData *)element_data->data;
 	ASSERT_TRUE(NULL != data);
 	ASSERT_TRUE(NULL != data->path);
 	ASSERT_STREQ(data->path, BASIC_SHAPE_FILEPATH_1);

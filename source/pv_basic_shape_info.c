@@ -24,7 +24,7 @@ static const char *func_default_get_kind_name_(
 
 static gpointer func_raster_new_data_()
 {
-	PvBasicShapeRasterData *data = malloc(sizeof(PvBasicShapeRasterData));
+	PvRasterData *data = malloc(sizeof(PvRasterData));
 	pv_assert(data);
 
 	data->path = NULL;
@@ -37,7 +37,7 @@ static gpointer func_raster_new_data_()
 static void func_raster_free_data_(
 		void *data_)
 {
-	PvBasicShapeRasterData *data = data_;
+	PvRasterData *data = data_;
 	pv_assert(data);
 
 	if(NULL != data->path){
@@ -58,10 +58,10 @@ static void func_raster_free_data_(
 static gpointer func_raster_copy_new_data_(
 		const void *data_)
 {
-	const PvBasicShapeRasterData *data = data_;
+	const PvRasterData *data = data_;
 	pv_assert(data);
 
-	PvBasicShapeRasterData *new_data = func_raster_new_data_();
+	PvRasterData *new_data = func_raster_new_data_();
 	pv_assert(new_data);
 
 	*new_data = *data;
@@ -89,7 +89,7 @@ static bool func_raster_write_svg_(
 	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)element->data;
 	pv_assert(element_data);
 
-	PvBasicShapeRasterData *data = element_data->data;
+	PvRasterData *data = element_data->data;
 	pv_assert(data);
 
 	if(NULL == data->urischeme_byte_array){
@@ -155,7 +155,7 @@ static PvPoint get_pixbuf_size_(const GdkPixbuf *pb)
 
 static PvPoint func_raster_get_size_(const void *data_)
 {
-	const PvBasicShapeRasterData *data = data_;
+	const PvRasterData *data = data_;
 
 	return get_pixbuf_size_(data->pixbuf);
 }
@@ -168,7 +168,7 @@ static void func_raster_draw_(
 	pv_assert(element);
 	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)element->data;
 	pv_assert(element_data);
-	PvBasicShapeRasterData *data = element_data->data;
+	PvRasterData *data = element_data->data;
 	pv_assert(data);
 
 	pv_assert(data->pixbuf);
@@ -182,9 +182,9 @@ static bool func_raster_is_diff_one_(
 		const void *data0_,
 		const void *data1_)
 {
-	const PvBasicShapeRasterData *data0 = data0_;
+	const PvRasterData *data0 = data0_;
 	pv_assert(data0);
-	const PvBasicShapeRasterData *data1 = data1_;
+	const PvRasterData *data1 = data1_;
 	pv_assert(data1);
 
 	// ** dataX->path is not check.
@@ -206,7 +206,7 @@ static bool func_raster_is_diff_one_(
 
 static gpointer func_figure_shape_new_data_()
 {
-	PvBasicShapeFigureShapeData *data = malloc(sizeof(PvBasicShapeFigureShapeData));
+	PvFigureShapeData *data = malloc(sizeof(PvFigureShapeData));
 	pv_assert(data);
 
 	return data;
@@ -215,7 +215,7 @@ static gpointer func_figure_shape_new_data_()
 static void func_figure_shape_free_data_(
 		void *data_)
 {
-	PvBasicShapeFigureShapeData *data = data_;
+	PvFigureShapeData *data = data_;
 	pv_assert(data);
 
 	free(data);
@@ -224,10 +224,10 @@ static void func_figure_shape_free_data_(
 static gpointer func_figure_shape_copy_new_data_(
 		const void *data_)
 {
-	const PvBasicShapeFigureShapeData *data = data_;
+	const PvFigureShapeData *data = data_;
 	pv_assert(data);
 
-	PvBasicShapeFigureShapeData *new_data = func_figure_shape_new_data_();
+	PvFigureShapeData *new_data = func_figure_shape_new_data_();
 	pv_assert(new_data);
 
 	*new_data = *data;
@@ -245,7 +245,7 @@ static bool func_figure_shape_write_svg_(
 	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)element->data;
 	pv_assert(element_data);
 
-	PvBasicShapeFigureShapeData *data = element_data->data;
+	PvFigureShapeData *data = element_data->data;
 	pv_assert(data);
 
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
@@ -289,7 +289,7 @@ static void func_figure_shape_draw_(
 	pv_assert(element);
 	PvElementBasicShapeData *element_data = (PvElementBasicShapeData *)element->data;
 	pv_assert(element_data);
-	PvBasicShapeRasterData *data = element_data->data;
+	PvRasterData *data = element_data->data;
 	pv_assert(data);
 
 	PvRect rect = {0, 0, 1, 1};
@@ -310,9 +310,9 @@ static bool func_figure_shape_is_diff_one_(
 		const void *data0_,
 		const void *data1_)
 {
-	const PvBasicShapeFigureShapeData *data0 = data0_;
+	const PvFigureShapeData *data0 = data0_;
 	pv_assert(data0);
-	const PvBasicShapeFigureShapeData *data1 = data1_;
+	const PvFigureShapeData *data1 = data1_;
 	pv_assert(data1);
 
 	return false;

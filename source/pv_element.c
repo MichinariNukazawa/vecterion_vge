@@ -808,7 +808,7 @@ static bool pv_element_basic_shape_raster_read_file_(PvElement *self, const char
 	pv_assert(self->data);
 
 	PvElementBasicShapeData *element_data = self->data;
-	PvBasicShapeRasterData *data = element_data->data;
+	PvRasterData *data = element_data->data;
 
 	if(NULL != data->path){
 		pv_error("");

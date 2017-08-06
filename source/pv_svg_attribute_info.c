@@ -779,7 +779,7 @@ static bool func_xlink_href_set_(
 	bool res = false;
 
 	PvElementBasicShapeData *element_data = element->data;
-	PvBasicShapeRasterData *data = element_data->data;
+	PvRasterData *data = element_data->data;
 	if(NULL != data->pixbuf){
 		pv_warning("");
 		goto failed0;

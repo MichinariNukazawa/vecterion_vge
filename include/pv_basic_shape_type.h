@@ -26,13 +26,13 @@ typedef enum{
 
 typedef struct{
 	int dummy;
-}PvBasicShapeFigureShapeData;
+}PvFigureShapeData;
 
 typedef struct{
 	char		*path;
 	GdkPixbuf	*pixbuf;
 	GByteArray	*urischeme_byte_array;
-}PvBasicShapeRasterData;
+}PvRasterData;
 
 
 #ifdef include_ET_TEST

@@ -107,7 +107,7 @@ EtDocId open_doc_new_from_file_(const char* filepath, const PvImageFileReadOptio
 		}
 
 		PvElementBasicShapeData *element_data = element_basic_shape->data;
-		PvBasicShapeRasterData *data = element_data->data;
+		PvRasterData *data = element_data->data;
 		vg_src->rect.w = gdk_pixbuf_get_width(data->pixbuf);
 		vg_src->rect.h = gdk_pixbuf_get_height(data->pixbuf);
 	}
