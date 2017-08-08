@@ -13,6 +13,8 @@
 #include "pv_type.h"
 #include "pv_general.h"
 #include "pv_anchor_path.h"
+#include "pv_color.h"
+#include "pv_stroke.h"
 #include "pv_appearance.h"
 #include "pv_element_group_info.h"
 #include "pv_basic_shape_type.h"
@@ -57,6 +59,28 @@ typedef struct{
 	PvAppearance **basic_shape_appearances;
 }PvElementBasicShapeData;
 
+
+// ******** ********
+// PvElement
+// ******** ********
+#define NUM_WORK_APPEARANCE (3)
+struct PvElement;
+typedef struct PvElement PvElement;
+struct PvElement{
+	PvElement *parent;
+	PvElement **childs; // I know "children".
+
+	PvColorPair color_pair;
+	PvStroke stroke;
+	bool is_invisible;
+	bool is_locked;			//!< Lock for Edit
+
+	PvElementKind kind;
+	// kind固有の情報を格納した型のオブジェクト
+	gpointer data;
+
+	PvAppearance **etaion_work_appearances;
+};
 
 #ifdef include_ET_TEST
 #endif // include_ET_TEST

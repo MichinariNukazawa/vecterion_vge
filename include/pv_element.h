@@ -13,33 +13,12 @@
 #include <gdk/gdk.h>
 #include <stdbool.h>
 #include "pv_element_type.h"
-#include "pv_color.h"
-#include "pv_stroke.h"
-#include "pv_appearance.h"
 
 
 
 // ******** ********
 // PvElement
 // ******** ********
-#define NUM_WORK_APPEARANCE (3)
-struct PvElement;
-typedef struct PvElement PvElement;
-struct PvElement{
-	PvElement *parent;
-	PvElement **childs; // I know "children".
-
-	PvColorPair color_pair;
-	PvStroke stroke;
-	bool is_invisible;
-	bool is_locked;			//!< Lock for Edit
-
-	PvElementKind kind;
-	// kind固有の情報を格納した型のオブジェクト
-	gpointer data;
-
-	PvAppearance **etaion_work_appearances;
-};
 
 /*!
  * use pv_element_recursive_desc_before();
