@@ -72,12 +72,6 @@ static bool _func_nop_is_exist_anchor_point(
 	return false;
 }
 
-static PvAnchorPoint *_func_null_new_anchor_points(
-		const PvElement *element)
-{
-	return NULL;
-}
-
 static PvAnchorPoint *_func_notimpl_get_anchor_point(
 		const PvElement *element,
 		const int index)
@@ -1152,13 +1146,6 @@ static bool _func_curve_is_exist_anchor_point(
 	return false;
 }
 
-PvAnchorPoint *_func_curve_new_anchor_points(
-		const PvElement *element)
-{
-	pv_bug("");
-	return NULL;
-}
-
 static PvAnchorPoint *_func_curve_get_anchor_point(
 		const PvElement *element,
 		const int index)
@@ -1987,7 +1974,6 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_move_element			= _func_group_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
 		.func_is_exist_anchor_point		= _func_nop_is_exist_anchor_point,
-		.func_new_anchor_points			= _func_null_new_anchor_points,
 		.func_get_anchor_point			= _func_notimpl_get_anchor_point,
 		.func_set_anchor_point_point		= _func_notimpl_set_anchor_point_point,
 		.func_move_anchor_point_point		= _func_notimpl_move_anchor_point,
@@ -2013,7 +1999,6 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_move_element			= _func_group_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
 		.func_is_exist_anchor_point		= _func_nop_is_exist_anchor_point,
-		.func_new_anchor_points			= _func_null_new_anchor_points,
 		.func_get_anchor_point			= _func_notimpl_get_anchor_point,
 		.func_set_anchor_point_point		= _func_notimpl_set_anchor_point_point,
 		.func_move_anchor_point_point		= _func_notimpl_move_anchor_point,
@@ -2039,7 +2024,6 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_move_element			= _func_group_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
 		.func_is_exist_anchor_point		= _func_nop_is_exist_anchor_point,
-		.func_new_anchor_points			= _func_null_new_anchor_points,
 		.func_get_anchor_point			= _func_notimpl_get_anchor_point,
 		.func_set_anchor_point_point		= _func_notimpl_set_anchor_point_point,
 		.func_move_anchor_point_point		= _func_notimpl_move_anchor_point,
@@ -2065,7 +2049,6 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_move_element			= _func_curve_move_element,
 		.func_get_num_anchor_point		= _func_curve_get_num_anchor_point,
 		.func_is_exist_anchor_point		= _func_curve_is_exist_anchor_point,
-		.func_new_anchor_points			= _func_curve_new_anchor_points,
 		.func_get_anchor_point			= _func_curve_get_anchor_point,
 		.func_set_anchor_point_point		= _func_curve_set_anchor_point_point,
 		.func_move_anchor_point_point		= _func_curve_move_anchor_point,
@@ -2091,7 +2074,6 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_move_element			= _func_basic_shape_move_element,
 		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
 		.func_is_exist_anchor_point		= _func_nop_is_exist_anchor_point,
-		.func_new_anchor_points			= _func_null_new_anchor_points,
 		.func_get_anchor_point			= _func_basic_shape_get_anchor_point,
 		.func_set_anchor_point_point		= _func_basic_shape_set_anchor_point_point,
 		.func_move_anchor_point_point		= _func_basic_shape_move_anchor_point,

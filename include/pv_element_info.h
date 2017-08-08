@@ -78,8 +78,6 @@ typedef int (*PvElementFuncGetNumAnchorPoint)(
 typedef bool (*PvElementFuncIsExistAnchorPoint)(
 		const PvElement *element,
 		const PvAnchorPoint *ap);
-typedef PvAnchorPoint *(*PvElementFuncNewAnchorPoints)(
-		const PvElement *element);
 typedef PvAnchorPoint *(*PvElementFuncGetAnchorPoint)(
 		const PvElement *element,
 		const int index);
@@ -121,7 +119,6 @@ typedef struct PvElementInfo{
 	PvElementFuncMoveElement		func_move_element;
 	PvElementFuncGetNumAnchorPoint		func_get_num_anchor_point;
 	PvElementFuncIsExistAnchorPoint		func_is_exist_anchor_point;
-	PvElementFuncNewAnchorPoints		func_new_anchor_points;
 	PvElementFuncGetAnchorPoint		func_get_anchor_point;
 	PvElementFuncSetAnchorPointPoint	func_set_anchor_point_point;
 	PvElementFuncMoveAnchorPointPoint	func_move_anchor_point_point;
