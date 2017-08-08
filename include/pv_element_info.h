@@ -64,11 +64,6 @@ typedef bool (*PvElementFuncIsDiffOne)(
 		bool *is_diff,
 		const PvElement *element0,
 		const PvElement *element1);
-typedef bool (*PvElementFuncRemoveDeleteAnchorPoint)(
-		PvElement *element,
-		const PvAnchorPoint *anchor_point,
-		PvElement **p_foot_element,
-		bool *is_deleted_element);
 typedef bool (*PvElementFuncMoveElement)(
 		const PvElement *element,
 		double gx,
@@ -89,6 +84,11 @@ typedef bool (*PvElementFuncMoveAnchorPointPoint)(
 		PvElement *element,
 		PvAnchorPoint *ap,
 		const PvPoint move);
+typedef bool (*PvElementFuncRemoveDeleteAnchorPoint)(
+		PvElement *element,
+		const PvAnchorPoint *anchor_point,
+		PvElement **p_foot_element,
+		bool *is_deleted_element);
 typedef PvRect (*PvElementFuncGetRectByAnchorPoints)(
 		const PvElement *element);
 typedef bool (*PvElementFuncSetRectByAnchorPoints)(
@@ -115,13 +115,13 @@ typedef struct PvElementInfo{
 	PvElementFuncIsTouchElement		func_is_touch_element;
 	PvElementFuncIsOverlapRect		func_is_overlap_rect;
 	PvElementFuncIsDiffOne			func_is_diff_one;
-	PvElementFuncRemoveDeleteAnchorPoint	func_remove_delete_anchor_point;
 	PvElementFuncMoveElement		func_move_element;
 	PvElementFuncGetNumAnchorPoint		func_get_num_anchor_point;
 	PvElementFuncIsExistAnchorPoint		func_is_exist_anchor_point;
 	PvElementFuncGetAnchorPoint		func_get_anchor_point;
 	PvElementFuncSetAnchorPointPoint	func_set_anchor_point_point;
 	PvElementFuncMoveAnchorPointPoint	func_move_anchor_point_point;
+	PvElementFuncRemoveDeleteAnchorPoint	func_remove_delete_anchor_point;
 	PvElementFuncGetRectByAnchorPoints	func_get_rect_by_anchor_points;
 	PvElementFuncSetRectByAnchorPoints	func_set_rect_by_anchor_points;
 	PvElementFuncGetRectByDraw		func_get_rect_by_draw;
