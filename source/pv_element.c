@@ -182,6 +182,16 @@ PvElement *pv_element_new(const PvElementKind kind)
 	self->data = info->func_new_data();
 	pv_assertf(self->data, "%d", kind);
 
+	self->anchor_path = pv_anchor_path_new();
+	pv_assert(self->anchor_path);
+
+	if(PvElementKind_BasicShape == kind){
+		PvAnchorPoint ap = PvAnchorPoint_Default;
+		for(int i = 0; i < 4; i++){
+			pv_anchor_path_add_anchor_point(self->anchor_path, &ap);
+		}
+	}
+
 	self->color_pair = PvColorPair_Default;
 	self->stroke = PvStroke_Default;
 	self->is_invisible = false;
@@ -203,6 +213,8 @@ void pv_element_free(PvElement *element)
 	pv_assert(element->data);
 	info->func_free_data(element->data);
 
+	pv_anchor_path_free(element->anchor_path);
+
 	free(element);
 }
 
@@ -222,6 +234,8 @@ static PvElement *_pv_element_copy_single(const PvElement *self)
 
 	new_element->data = info->func_copy_new_data(self->data);
 	pv_assertf(new_element->data, "%d", self->kind);
+
+	new_element->anchor_path = pv_anchor_path_copy_new(self->anchor_path);
 
 	if(NULL == self->etaion_work_appearances){
 		new_element->etaion_work_appearances = NULL;
@@ -594,6 +608,11 @@ static bool _pv_element_is_diff_one(
 		return true;
 	}
 
+	if(pv_anchor_path_is_diff(element0->anchor_path, element1->anchor_path)){
+		data->is_diff = true;
+		return true;
+	}
+
 	if(!pv_color_pair_is_equal(element0->color_pair, element1->color_pair)){
 		data->is_diff = true;
 		return true;
@@ -733,19 +752,17 @@ PvElement *pv_element_curve_new_set_anchor_path(PvAnchorPath *anchor_path)
 	PvElement *element = pv_element_new(PvElementKind_Curve);
 	pv_assert(element);
 
-	PvElementCurveData *data = element->data;
-	pv_anchor_path_free(data->anchor_path);
-	data->anchor_path = anchor_path;
+	pv_anchor_path_free(element->anchor_path);
+	element->anchor_path = anchor_path;
 
 	return element;
 }
 
-PvAnchorPath *pv_element_curve_get_anchor_path(PvElement *element)
+PvAnchorPath *pv_element_curve_get_anchor_path(PvElement *self)
 {
-	pv_assert(element);
+	pv_assert(self);
 
-	PvElementCurveData *data = element->data;
-	return data->anchor_path;
+	return self->anchor_path;
 }
 
 PvElement *pv_element_curve_new_set_anchor_point(PvAnchorPoint *anchor_point)
@@ -758,10 +775,9 @@ PvElement *pv_element_curve_new_set_anchor_point(PvAnchorPoint *anchor_point)
 	return element;
 }
 
-void pv_element_curve_append_anchor_point(PvElement *element, PvAnchorPoint *anchor_point, int index)
+void pv_element_curve_append_anchor_point(PvElement *self, PvAnchorPoint *anchor_point, int index)
 {
-	PvElementCurveData *data = element->data;
-	pv_anchor_path_append_anchor_point(data->anchor_path, anchor_point, index);
+	pv_anchor_path_append_anchor_point(self->anchor_path, anchor_point, index);
 }
 
 bool pv_element_curve_add_anchor_point(PvElement *self, const PvAnchorPoint anchor_point)
@@ -774,8 +790,7 @@ bool pv_element_curve_add_anchor_point(PvElement *self, const PvAnchorPoint anch
 		return false;
 	}
 
-	PvElementCurveData *data = self->data;
-	pv_anchor_path_add_anchor_point(data->anchor_path, &anchor_point);
+	pv_anchor_path_add_anchor_point(self->anchor_path, &anchor_point);
 
 	return true;
 }
@@ -786,20 +801,17 @@ int pv_element_curve_get_num_anchor_point(const PvElement *self)
 	assert(self->data);
 	assert(PvElementKind_Curve == self->kind);
 
-	PvElementCurveData *data = self->data;
-	return pv_anchor_path_get_anchor_point_num(data->anchor_path);
+	return pv_anchor_path_get_anchor_point_num(self->anchor_path);
 }
 
 bool pv_element_curve_get_close_anchor_point(const PvElement *self)
 {
-	PvElementCurveData *data = self->data;
-	return pv_anchor_path_get_is_close(data->anchor_path);
+	return pv_anchor_path_get_is_close(self->anchor_path);
 }
 
 void pv_element_curve_set_close_anchor_point(PvElement *self, bool is_close)
 {
-	PvElementCurveData *data = self->data;
-	pv_anchor_path_set_is_close(data->anchor_path, is_close);
+	pv_anchor_path_set_is_close(self->anchor_path, is_close);
 }
 
 static bool pv_element_basic_shape_raster_read_file_(PvElement *self, const char *path)
@@ -922,6 +934,19 @@ const char *pv_element_get_group_name_from_element(const PvElement *element)
 	}
 }
 
+size_t pv_element_get_num_anchor_point(const PvElement *element)
+{
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	pv_assertf(info, "%d", element->kind);
+
+	return info->func_get_num_anchor_point(element);
+}
+
+PvAnchorPath *pv_element_get_anchor_path(PvElement *element)
+{
+	return element->anchor_path;
+}
+
 bool pv_element_kind_is_viewable_object(PvElementKind kind)
 {
 	switch(kind){
@@ -1021,6 +1046,6 @@ void pv_element_debug_print(const PvElement *element)
 		return;
 	}
 
-	pv_anchor_path_debug_print(data->anchor_path);
+	pv_anchor_path_debug_print(element->anchor_path);
 }
 

@@ -52,29 +52,29 @@ TEST(Test, curve_removeDeleteAnchorPoint){
 	foot_element = NULL;
 	data = (PvElementCurveData *)element->data;
 	anchor_point = pv_anchor_path_get_anchor_point_from_index(
-			data->anchor_path,
+			element->anchor_path,
 			1,
 			PvAnchorPathIndexTurn_Disable);
 	pv_assert(anchor_point);
 	is_delete = false;
 	ap2 = pv_anchor_path_get_anchor_point_from_index(
-			data->anchor_path,
+			element->anchor_path,
 			2,
 			PvAnchorPathIndexTurn_Disable);
 	pv_assert(ap2);
-	pv_assert(true == pv_anchor_path_get_is_close(data->anchor_path));
+	pv_assert(true == pv_anchor_path_get_is_close(element->anchor_path));
 	info->func_remove_delete_anchor_point(
 			element, anchor_point,
 			&foot_element, &is_delete);
-	EXPECT_TRUE(false == pv_anchor_path_get_is_close(data->anchor_path));
+	EXPECT_TRUE(false == pv_anchor_path_get_is_close(element->anchor_path));
 	EXPECT_EQ(1, pv_general_get_parray_num((void **)element_parent->childs));
 	EXPECT_TRUE(NULL == foot_element);
 	EXPECT_TRUE(false == is_delete);
 	num = pv_element_curve_get_num_anchor_point(element);
 	EXPECT_EQ(3, num);
-	EXPECT_TRUE(false == pv_anchor_path_get_is_close(data->anchor_path));
+	EXPECT_TRUE(false == pv_anchor_path_get_is_close(element->anchor_path));
 	ap_aft_h = pv_anchor_path_get_anchor_point_from_index(
-			data->anchor_path,
+			element->anchor_path,
 			0,
 			PvAnchorPathIndexTurn_Disable);
 	EXPECT_EQ(ap2, ap_aft_h);
@@ -91,36 +91,36 @@ TEST(Test, curve_removeDeleteAnchorPoint){
 	foot_element = NULL;
 	data = (PvElementCurveData *)element->data;
 	anchor_point = pv_anchor_path_get_anchor_point_from_index(
-			data->anchor_path,
+			element->anchor_path,
 			1,
 			PvAnchorPathIndexTurn_Disable);
 	pv_assert(anchor_point);
 	is_delete = false;
 	for(int i = 0; i < 4; i++){
 	aps[i] = pv_anchor_path_get_anchor_point_from_index(
-			data->anchor_path,
+			element->anchor_path,
 			i,
 			PvAnchorPathIndexTurn_Disable);
 	}
 	pv_assert(ap2);
-	pv_anchor_path_set_is_close(data->anchor_path, false);
+	pv_anchor_path_set_is_close(element->anchor_path, false);
 	//
 	info->func_remove_delete_anchor_point(
 			element, anchor_point,
 			&foot_element, &is_delete);
 	//
-	EXPECT_TRUE(false == pv_anchor_path_get_is_close(data->anchor_path));
+	EXPECT_TRUE(false == pv_anchor_path_get_is_close(element->anchor_path));
 	EXPECT_EQ(2, pv_general_get_parray_num((void **)element_parent->childs));
 	EXPECT_TRUE(NULL != foot_element);
 	EXPECT_TRUE(false == is_delete);
 	EXPECT_EQ(1, pv_element_curve_get_num_anchor_point(element));
 	EXPECT_EQ(2, pv_element_curve_get_num_anchor_point(foot_element));
 	foot_data = (PvElementCurveData *)foot_element->data;
-	EXPECT_TRUE(false == pv_anchor_path_get_is_close(data->anchor_path));
-	EXPECT_TRUE(false == pv_anchor_path_get_is_close(foot_data->anchor_path));
-	EXPECT_EQ(aps[0], anchor_path_get_ap_from_index(data->anchor_path, 0));
-	EXPECT_EQ(aps[2], anchor_path_get_ap_from_index(foot_data->anchor_path, 0));
-	EXPECT_EQ(aps[3], anchor_path_get_ap_from_index(foot_data->anchor_path, 1));
+	EXPECT_TRUE(false == pv_anchor_path_get_is_close(element->anchor_path));
+	EXPECT_TRUE(false == pv_anchor_path_get_is_close(foot_element->anchor_path));
+	EXPECT_EQ(aps[0], anchor_path_get_ap_from_index(element->anchor_path, 0));
+	EXPECT_EQ(aps[2], anchor_path_get_ap_from_index(foot_element->anchor_path, 0));
+	EXPECT_EQ(aps[3], anchor_path_get_ap_from_index(foot_element->anchor_path, 1));
 	pv_element_remove_free_recursive(element_parent);
 
 }

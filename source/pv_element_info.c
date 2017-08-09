@@ -435,11 +435,11 @@ static PvElement *_curve_simplify_new(
 
 	// scale
 	simplify->stroke.width *= render_context.scale;
-	size_t num = pv_anchor_path_get_anchor_point_num(simplify_data->anchor_path);
+	size_t num = pv_anchor_path_get_anchor_point_num(simplify->anchor_path);
 	for(int i = 0; i < (int)num; i++){
 		PvPoint point = {0, 0};
 		PvPoint scale = {render_context.scale, render_context.scale};
-		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(simplify_data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
+		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(simplify->anchor_path, i, PvAnchorPathIndexTurn_Disable);
 		pv_anchor_point_rescale(ap, scale, point);
 	}
 
@@ -483,16 +483,14 @@ static void _curve_command_path(
 		cairo_t *cr,
 		const PvElement *element)
 {
-	const PvElementCurveData *data = element->data;
-
-	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
 	if(0 == num){
 		return;
 	}
 
 	// ** path stroking
 	for(int i = 0; i < (int)num; i++){
-		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
+		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, i, PvAnchorPathIndexTurn_Disable);
 		PvPoint point = pv_anchor_point_get_point(ap);
 		if(0 == i){
 			if(1 == num){
@@ -502,7 +500,7 @@ static void _curve_command_path(
 				cairo_move_to(cr, point.x, point.y);
 			}
 		}else{
-			const PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, (i - 1), PvAnchorPathIndexTurn_Disable);
+			const PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, (i - 1), PvAnchorPathIndexTurn_Disable);
 
 			PvPoint first_point = pv_anchor_point_get_handle(ap_prev, PvAnchorPointIndex_HandleNext);
 			PvPoint second_point = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_HandlePrev);
@@ -515,13 +513,13 @@ static void _curve_command_path(
 		}
 
 	}
-	if(pv_anchor_path_get_is_close(data->anchor_path)){
-		PvPoint point = pv_anchor_point_get_point(pv_anchor_path_get_anchor_point_from_index(data->anchor_path, 0, PvAnchorPathIndexTurn_Disable));
+	if(pv_anchor_path_get_is_close(element->anchor_path)){
+		PvPoint point = pv_anchor_point_get_point(pv_anchor_path_get_anchor_point_from_index(element->anchor_path, 0, PvAnchorPathIndexTurn_Disable));
 
-		const PvAnchorPoint *ap_last = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, ((int)num - 1), PvAnchorPathIndexTurn_Disable);
+		const PvAnchorPoint *ap_last = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, ((int)num - 1), PvAnchorPathIndexTurn_Disable);
 		PvPoint first_point = pv_anchor_point_get_handle(ap_last, PvAnchorPointIndex_HandleNext);
 
-		const PvAnchorPoint *ap_first = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, 0, PvAnchorPathIndexTurn_Disable);
+		const PvAnchorPoint *ap_first = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, 0, PvAnchorPathIndexTurn_Disable);
 		PvPoint second_point = pv_anchor_point_get_handle(ap_first, PvAnchorPointIndex_HandlePrev);
 
 		cairo_curve_to(
@@ -674,9 +672,9 @@ static void _curve_rotate(PvElement *element, double degree, PvPoint center)
 	PvElementCurveData *data = element->data;
 	pv_assert(data);
 
-	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
 	for(int i = 0; i < (int)num; i++){
-		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
+		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, i, PvAnchorPathIndexTurn_Disable);
 		_anchor_point_rotate(ap, degree, center);
 	}
 }
@@ -689,8 +687,6 @@ static gpointer _func_curve_new_data()
 		exit(-1);
 	}
 
-	data->anchor_path = pv_anchor_path_new();
-
 	return (gpointer)data;
 }
 
@@ -702,8 +698,6 @@ static bool _func_curve_free_data(void *_data)
 	}
 
 	PvElementCurveData *data = (PvElementCurveData *)_data;
-
-	pv_anchor_path_free(data->anchor_path);
 
 	free(data);
 
@@ -724,8 +718,6 @@ static gpointer _func_curve_copy_new_data(void *_data)
 
 	*new_data = *data;
 
-	new_data->anchor_path = pv_anchor_path_copy_new(data->anchor_path);
-
 	return (gpointer)new_data;
 }
 
@@ -740,12 +732,10 @@ static bool _func_curve_write_svg(
 	pv_assert(element);
 	pv_assert(conf);
 
-	PvElementCurveData *data = (PvElementCurveData *)element->data;
-
 	char *str_current = NULL;
-	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
 	for(int i = 0; i < (int)num; i++){
-		const PvAnchorPoint *ap_ = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
+		const PvAnchorPoint *ap_ = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, i, PvAnchorPathIndexTurn_Disable);
 		const PvAnchorPoint ap = *ap_;
 
 		char *str_point = NULL;
@@ -758,7 +748,7 @@ static bool _func_curve_write_svg(
 					);
 		}else{
 			// other (not first)(true last)
-			const PvAnchorPoint *ap_prev_ = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, (i - 1), PvAnchorPathIndexTurn_Disable);
+			const PvAnchorPoint *ap_prev_ = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, (i - 1), PvAnchorPathIndexTurn_Disable);
 			pv_assert(ap_prev_);
 			const PvAnchorPoint ap_prev = *ap_prev_;
 			str_point = _curve_new_str_from_anchor(ap, ap_prev);
@@ -776,9 +766,9 @@ static bool _func_curve_write_svg(
 		g_free(str_prev);
 	}
 
-	if(pv_anchor_path_get_is_close(data->anchor_path) && 0 < num){
-		const PvAnchorPoint *ap_first = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, 0, PvAnchorPathIndexTurn_Disable);
-		const PvAnchorPoint *ap_last = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, (num - 1), PvAnchorPathIndexTurn_Disable);
+	if(pv_anchor_path_get_is_close(element->anchor_path) && 0 < num){
+		const PvAnchorPoint *ap_first = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, 0, PvAnchorPathIndexTurn_Disable);
+		const PvAnchorPoint *ap_last = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, (num - 1), PvAnchorPathIndexTurn_Disable);
 		char *str_end = _curve_new_str_from_anchor(*ap_first, *ap_last);
 		char *str_prev = str_current;
 		str_current = g_strjoin(" ", str_current, str_end, "Z", NULL);
@@ -901,7 +891,6 @@ static PvElementDrawRecursive _func_curve_draw_focusing(
 			render_option.render_context,
 			PvSimplifyOption_ResizeOnly);
 	pv_assert(simplify);
-	const PvElementCurveData *simplify_data = simplify->data;
 
 	// ** stroke line
 	_curve_command_path(cr, simplify);
@@ -912,15 +901,15 @@ static PvElementDrawRecursive _func_curve_draw_focusing(
 
 	// ** anchor points
 	int focus_index = pv_anchor_path_get_index_from_anchor_point(
-			data->anchor_path, pv_focus_get_first_anchor_point(focus));
+			element->anchor_path, pv_focus_get_first_anchor_point(focus));
 	size_t num = _func_curve_get_num_anchor_point(simplify);
 	for(int i = 0; i < (int)num; i++){
 		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(
-				data->anchor_path,
+				element->anchor_path,
 				i,
 				PvAnchorPathIndexTurn_Disable);
 		const PvAnchorPoint *ap_simplify = pv_anchor_path_get_anchor_point_from_index(
-				simplify_data->anchor_path,
+				simplify->anchor_path,
 				i,
 				PvAnchorPathIndexTurn_Disable);
 		if(-1 != focus_index){
@@ -929,7 +918,7 @@ static PvElementDrawRecursive _func_curve_draw_focusing(
 				// * anchor handle. draw to focus and +-1
 				_curve_draw_anchor_handle(cr, *ap_simplify, ofs_index);
 			}
-			if(0 == focus_index && i == ((int)num - 1) && pv_anchor_path_get_is_close(simplify_data->anchor_path)){
+			if(0 == focus_index && i == ((int)num - 1) && pv_anchor_path_get_is_close(simplify->anchor_path)){
 				// *anchor handle. to last AnchorPoint
 				_curve_draw_anchor_handle(cr, *ap_simplify, -1);
 			}
@@ -1005,9 +994,9 @@ static bool _func_curve_is_overlap_rect(
 		.h = rect.h + offset,
 	};
 
-	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
 	for(int i = 0; i < (int)num; i++){
-		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
+		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, i, PvAnchorPathIndexTurn_Disable);
 		PvPoint a_point = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
 		if(pv_rect_is_inside(rect_offseted, a_point)){
 			*is_overlap = true;
@@ -1032,22 +1021,22 @@ bool _func_curve_remove_delete_anchor_point(
 
 	pv_assert(element->parent);
 
-	if(pv_anchor_path_get_is_close(data->anchor_path)){
-		int index = pv_anchor_path_get_index_from_anchor_point(data->anchor_path, anchor_point);
+	if(pv_anchor_path_get_is_close(element->anchor_path)){
+		int index = pv_anchor_path_get_index_from_anchor_point(element->anchor_path, anchor_point);
 		pv_assert(0 <= index);
 
 		bool ret;
-		ret = pv_anchor_path_change_head_index(data->anchor_path, index);
+		ret = pv_anchor_path_change_head_index(element->anchor_path, index);
 		pv_assert(ret);
-		pv_anchor_path_set_is_close(data->anchor_path, false);
-		pv_anchor_path_remove_delete_anchor_point(data->anchor_path, anchor_point);
+		pv_anchor_path_set_is_close(element->anchor_path, false);
+		pv_anchor_path_remove_delete_anchor_point(element->anchor_path, anchor_point);
 		pv_assert(ret);
 	}else{
-		int index = pv_anchor_path_get_index_from_anchor_point(data->anchor_path, anchor_point);
+		int index = pv_anchor_path_get_index_from_anchor_point(element->anchor_path, anchor_point);
 		pv_assert(0 <= index);
 
 		PvAnchorPath *anchor_path = pv_anchor_path_split_new_from_index_remove_delete(
-				data->anchor_path,
+				element->anchor_path,
 				index);
 		if(NULL != anchor_path){
 			PvElement *element_2 = pv_element_curve_new_set_anchor_path(anchor_path);
@@ -1058,7 +1047,7 @@ bool _func_curve_remove_delete_anchor_point(
 		}
 	}
 
-	if(0 == pv_anchor_path_get_anchor_point_num(data->anchor_path)){
+	if(0 == pv_anchor_path_get_anchor_point_num(element->anchor_path)){
 		pv_element_remove_free_recursive(element);
 		*is_deleted_element = true;
 	}
@@ -1077,11 +1066,6 @@ static bool _func_curve_is_diff_one(
 		pv_bug("%p,%p", data0, data1);
 		*is_diff = true;
 		return false;
-	}
-
-	if(pv_anchor_path_is_diff(data0->anchor_path, data1->anchor_path)){
-		*is_diff = true;
-		return true;
 	}
 
 	*is_diff = false;
@@ -1103,9 +1087,9 @@ static bool _func_curve_move_element(
 		return false;
 	}
 
-	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
 	for(int i = 0; i < (int)num; i++){
-		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
+		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, i, PvAnchorPathIndexTurn_Disable);
 		ap->points[PvAnchorPointIndex_Point].x += gx;
 		ap->points[PvAnchorPointIndex_Point].y += gy;
 	}
@@ -1126,18 +1110,16 @@ int _func_curve_get_num_anchor_point(
 		return false;
 	}
 
-	return pv_anchor_path_get_anchor_point_num(data->anchor_path);
+	return pv_anchor_path_get_anchor_point_num(element->anchor_path);
 }
 
 static bool _func_curve_is_exist_anchor_point(
 		const PvElement *element,
 		const PvAnchorPoint *ap)
 {
-	PvElementCurveData *data = element->data;
-
-	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
 	for(int i = 0; i < (int)num; i++){
-		PvAnchorPoint *ap_ = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
+		PvAnchorPoint *ap_ = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, i, PvAnchorPathIndexTurn_Disable);
 		if(ap_ == ap){
 			return true;
 		}
@@ -1153,9 +1135,7 @@ static PvAnchorPoint *_func_curve_get_anchor_point(
 	pv_assert(element);
 	pv_assertf(PvElementKind_Curve == element->kind, "%d", element->kind);
 
-	PvElementCurveData *data = element->data;
-
-	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, index, PvAnchorPathIndexTurn_Disable);
+	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, index, PvAnchorPathIndexTurn_Disable);
 	return ap;
 }
 
@@ -1170,7 +1150,7 @@ static bool _func_curve_set_anchor_point_point(
 	PvElementCurveData *data = element->data;
 	pv_assert(data);
 
-	if(!pv_anchor_path_is_exist_anchor_point(data->anchor_path, ap)){
+	if(!pv_anchor_path_is_exist_anchor_point(element->anchor_path, ap)){
 		pv_bug("");
 		return false;
 	}
@@ -1191,7 +1171,7 @@ static bool _func_curve_move_anchor_point(
 	PvElementCurveData *data = element->data;
 	pv_assert(data);
 
-	if(!pv_anchor_path_is_exist_anchor_point(data->anchor_path, ap)){
+	if(!pv_anchor_path_is_exist_anchor_point(element->anchor_path, ap)){
 		pv_bug("");
 		return false;
 	}
@@ -1205,15 +1185,13 @@ static bool _func_curve_move_anchor_point(
 static PvRect _func_curve_get_rect_by_anchor_points(
 		const PvElement *element)
 {
-	const PvElementCurveData *data = (PvElementCurveData *)element->data;
-
-	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
 	pv_assert(0 < num);
 
 	PvPoint min = (PvPoint){0, 0};
 	PvPoint max = (PvPoint){0, 0};
 	for(int i = 0; i < (int)num; i++){
-		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
+		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, i, PvAnchorPathIndexTurn_Disable);
 		PvPoint point = ap->points[PvAnchorPointIndex_Point];
 		if(0 == i){
 			min = point;
@@ -1236,12 +1214,11 @@ static PvPoint _curve_get_point_by_anchor_points(
 {
 	pv_assert(element);
 	pv_assert(element->data);
-	const PvElementCurveData *data = element->data;
 
 	PvPoint point = PvPoint_Default;
-	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
 	for(int i = 0; i < (int)num; i++){
-		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
+		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, i, PvAnchorPathIndexTurn_Disable);
 		PvPoint a_point = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
 
 		if(0 == i){
@@ -1261,15 +1238,14 @@ static void _curve_set_point_by_anchor_points(
 {
 	pv_assert(element);
 	pv_assert(element->data);
-	PvElementCurveData *data = element->data;
 
 
 	PvPoint point_prev = _curve_get_point_by_anchor_points(element);
 	PvPoint move = pv_point_sub(point, point_prev);
 
-	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
 	for(int i = 0; i < (int)num; i++){
-		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
+		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, i, PvAnchorPathIndexTurn_Disable);
 
 		pv_anchor_point_move_point(ap, move);
 	}
@@ -1304,9 +1280,9 @@ static bool _func_curve_set_rect_by_anchor_points(
 	}
 
 
-	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
 	for(int i = 0; i < (int)num; i++){
-		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(data->anchor_path, i, PvAnchorPathIndexTurn_Disable);
+		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, i, PvAnchorPathIndexTurn_Disable);
 		pv_anchor_point_rescale(ap, scale, point);
 	}
 
@@ -1420,13 +1396,6 @@ static gpointer _func_basic_shape_new_data()
 	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize = (PvPoint){0, 0};
 	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Rotate]->kind = PvAppearanceKind_Rotate;
 
-	element_data->anchor_path = pv_anchor_path_new();
-	pv_assert(element_data->anchor_path);
-	PvAnchorPoint ap = PvAnchorPoint_Default;
-	for(int i = 0; i < 4; i++){
-		pv_anchor_path_add_anchor_point(element_data->anchor_path, &ap);
-	}
-
 	return (gpointer)element_data;
 }
 
@@ -1513,8 +1482,8 @@ static PvElement *_basic_shape_simplify_new(const PvElement *element, PvRenderCo
 
 	PvElement *simplify = pv_element_copy_recursive(element);
 	pv_assert(simplify);
-	PvElementBasicShapeData *simplify_element_data = simplify->data;
-	pv_assert(simplify_element_data);
+	PvElementBasicShapeData *simplify_data = simplify->data;
+	pv_assert(simplify_data);
 
 	// appearance
 	_func_basic_shape_apply_appearances(simplify, element->etaion_work_appearances);
@@ -1522,10 +1491,10 @@ static PvElement *_basic_shape_simplify_new(const PvElement *element, PvRenderCo
 
 	// scale
 	simplify->stroke.width *= render_context.scale;
-	PvPoint *move = &(simplify_element_data->basic_shape_appearances
+	PvPoint *move = &(simplify_data->basic_shape_appearances
 			[PvElementBasicShapeAppearanceIndex_Translate]->translate.move);
 	*move = pv_point_mul_value(*move, render_context.scale);
-	PvPoint *resize = &(simplify_element_data->basic_shape_appearances
+	PvPoint *resize = &(simplify_data->basic_shape_appearances
 			[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize);
 	*resize = pv_point_mul_value(*resize, render_context.scale);
 
@@ -1557,20 +1526,20 @@ static void _basic_shape_draw_inline(
 
 	PvElement *simplify = _basic_shape_simplify_new(element, render_context);
 	pv_assert(simplify);
-	PvElementBasicShapeData *simplify_element_data = simplify->data;
-	pv_assert(simplify_element_data);
+	PvElementBasicShapeData *simplify_data = simplify->data;
+	pv_assert(simplify_data);
 
-	PvPoint position = simplify_element_data->basic_shape_appearances
+	PvPoint position = simplify_data->basic_shape_appearances
 		[PvElementBasicShapeAppearanceIndex_Translate]->translate.move;
-	PvPoint resize = simplify_element_data->basic_shape_appearances
+	PvPoint resize = simplify_data->basic_shape_appearances
 		[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize;
-	double degree = simplify_element_data->basic_shape_appearances
+	double degree = simplify_data->basic_shape_appearances
 		[PvElementBasicShapeAppearanceIndex_Rotate]->rotate.degree;
 
-	const PvBasicShapeInfo *info = pv_basic_shape_info_get_from_kind(simplify_element_data->kind);
-	pv_assertf(info, "%d", simplify_element_data->kind);
+	const PvBasicShapeInfo *info = pv_basic_shape_info_get_from_kind(simplify_data->kind);
+	pv_assertf(info, "%d", simplify_data->kind);
 
-	PvPoint size = info->func_get_size(simplify_element_data->data);
+	PvPoint size = info->func_get_size(simplify_data->data);
 	size = pv_point_mul(size, resize);
 
 	// effectively invisible to not draw
@@ -1748,7 +1717,7 @@ static PvAnchorPoint *_func_basic_shape_get_anchor_point(
 	PvPoint position = element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->translate.move;
 
 	PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(
-			element_data->anchor_path,
+			element->anchor_path,
 			index,
 			PvAnchorPathIndexTurn_Disable);
 	pv_assert(ap);

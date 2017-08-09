@@ -234,8 +234,7 @@ const PvAnchorPath *_element_get_anchor_path(const PvElement *element)
 	if(PvElementKind_Curve != element->kind){
 		return NULL;
 	}else{
-		PvElementCurveData *data = element->data;
-		return data->anchor_path;
+		return element->anchor_path;
 	}
 }
 
@@ -319,9 +318,8 @@ bool pv_focus_clear_set_element_index(PvFocus *focus, PvElement *element, int in
 {
 	PvAnchorPoint *anchor_point = NULL;
 	if(0 <= index){
-		PvElementCurveData *data = element->data;
 		anchor_point = pv_anchor_path_get_anchor_point_from_index(
-				data->anchor_path,
+				element->anchor_path,
 				index,
 				PvAnchorPathIndexTurn_Disable);
 		pv_assertf(anchor_point, "%d", index);

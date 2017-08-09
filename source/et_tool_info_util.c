@@ -1524,8 +1524,8 @@ static void add_anchor_point_down_(
 	size_t num = 0;
 
 	if(PvElementKind_Curve == element_->kind){
-		index = pv_anchor_path_get_index_from_anchor_point(data_->anchor_path, anchor_point);
-		num = pv_anchor_path_get_anchor_point_num(data_->anchor_path);
+		index = pv_anchor_path_get_index_from_anchor_point(element_->anchor_path, anchor_point);
+		num = pv_anchor_path_get_anchor_point_num(element_->anchor_path);
 	}
 
 	PvPoint point = mouse_action.point;
@@ -1536,7 +1536,7 @@ static void add_anchor_point_down_(
 	if(PvElementKind_Curve != element_->kind
 			|| NULL == anchor_point
 			|| (!((0 == index) || index == ((int)num - 1)))
-			|| pv_anchor_path_get_is_close(data_->anchor_path)){
+			|| pv_anchor_path_get_is_close(element_->anchor_path)){
 		// add new ElementCurve.
 
 		anchor_point = pv_anchor_point_new_from_point(point);
@@ -1568,7 +1568,7 @@ static void add_anchor_point_down_(
 			et_abortf("%d %zu", index, num);
 		}
 		head_ap = pv_anchor_path_get_anchor_point_from_index(
-				data_->anchor_path,
+				element_->anchor_path,
 				index_end,
 				PvAnchorPathIndexTurn_Disable);
 		et_assertf(head_ap, "%d %d %zu", index_end, index, num);
@@ -1578,7 +1578,7 @@ static void add_anchor_point_down_(
 					head_ap->points[PvAnchorPointIndex_Point],
 					mouse_action.point)){
 			// ** do close anchor_point
-			pv_anchor_path_set_is_close(data_->anchor_path, true);
+			pv_anchor_path_set_is_close(element_->anchor_path, true);
 			anchor_point = head_ap;
 		}else{
 			// add AnchorPoint for ElementCurve.

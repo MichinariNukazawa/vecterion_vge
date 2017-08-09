@@ -46,14 +46,12 @@ typedef struct{
 }PvElementGroupData;
 
 typedef struct{
-	PvAnchorPath *anchor_path;
+	int dummy;
 }PvElementCurveData;
 
 typedef struct{
 	PvBasicShapeKind kind;
 	void *data;
-
-	PvAnchorPath *anchor_path;
 
 	// default payload appearances (void **) type is easy access
 	PvAppearance **basic_shape_appearances;
@@ -74,6 +72,9 @@ struct PvElement{
 	PvStroke stroke;
 	bool is_invisible;
 	bool is_locked;			//!< Lock for Edit
+
+	//! can't direct access, use to PvElementInfo functions
+	PvAnchorPath *anchor_path;
 
 	PvElementKind kind;
 	// kind固有の情報を格納した型のオブジェクト

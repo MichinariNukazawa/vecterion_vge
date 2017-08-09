@@ -238,20 +238,19 @@ static void curve_element_split_from_index_(PvElement *element, PvElement **p_el
 {
 	et_assertf(PvElementKind_Curve == element->kind, "%d", element->kind);
 
-	PvElementCurveData *data = element->data;
-	if(pv_anchor_path_get_is_close(data->anchor_path)){
-		bool ret = pv_anchor_path_reorder_duplicate_open_from_index(data->anchor_path, index);
+	if(pv_anchor_path_get_is_close(element->anchor_path)){
+		bool ret = pv_anchor_path_reorder_duplicate_open_from_index(element->anchor_path, index);
 		et_assert(ret);
 
 		*p_element_post = NULL;
 	}else{
-		PvAnchorPath *anchor_path_post = pv_anchor_path_split_new_from_index(data->anchor_path, index);
+		PvAnchorPath *anchor_path_post = pv_anchor_path_split_new_from_index(element->anchor_path, index);
 		et_assert(anchor_path_post);
 		*p_element_post = pv_element_curve_new_set_anchor_path(anchor_path_post);
 		et_assert(*p_element_post);
 		pv_element_copy_property(*p_element_post, element);
 
-		bool ret = pv_anchor_path_remove_delete_range(data->anchor_path, index + 1, -1);
+		bool ret = pv_anchor_path_remove_delete_range(element->anchor_path, index + 1, -1);
 		et_assert(ret);
 	}
 }
@@ -421,7 +420,7 @@ static void element_curve_get_nearest_index_percent_(
 			PvElementCurveData *data = (PvElementCurveData *)element->data;
 			et_assert(data);
 
-			PvPoint point = pv_anchor_path_get_subdivide_point_from_percent(data->anchor_path, ix, per);
+			PvPoint point = pv_anchor_path_get_subdivide_point_from_percent(element->anchor_path, ix, per);
 			double diff = pv_point_distance(point, mouse_action.point);
 			if(diff < near_diff){
 				near_diff = diff;
@@ -476,30 +475,30 @@ static int element_curve_insert_anchor_point_from_index_percent_(
 	et_assert(data);
 
 	PvAnchorPoint dst_aps[3];
-	pv_anchor_path_get_subdivide_anchor_points_form_percent(dst_aps, data->anchor_path, index, percent);
-	PvAnchorPoint *ap = pv_anchor_path_insert_anchor_point(data->anchor_path, &dst_aps[1], index + 1);
+	pv_anchor_path_get_subdivide_anchor_points_form_percent(dst_aps, element->anchor_path, index, percent);
+	PvAnchorPoint *ap = pv_anchor_path_insert_anchor_point(element->anchor_path, &dst_aps[1], index + 1);
 	et_assert(ap);
 	int new_index = index + 1;
 
 	// last anchor_point -> first anchor_point
 	int prev_index = new_index - 1;
 	int next_index = new_index + 1;
-	size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
 	if(next_index == (int)num){
 		next_index = 0;
 	}
 
 	bool ret;
-	ret = pv_anchor_path_set_anchor_point_from_index(data->anchor_path, prev_index, &dst_aps[0]);
+	ret = pv_anchor_path_set_anchor_point_from_index(element->anchor_path, prev_index, &dst_aps[0]);
 	et_assert(ret);
-	ret = pv_anchor_path_set_anchor_point_from_index(data->anchor_path, next_index, &dst_aps[2]);
+	ret = pv_anchor_path_set_anchor_point_from_index(element->anchor_path, next_index, &dst_aps[2]);
 	et_assert(ret);
 
 	/*
-	   PvPoint point = pv_anchor_path_get_subdivide_point_from_percent(data->anchor_path, index, percent);
+	   PvPoint point = pv_anchor_path_get_subdivide_point_from_percent(element->anchor_path, index, percent);
 	   PvAnchorPoint ap = PvAnchorPoint_Default;
 	   pv_anchor_point_set_point(&ap, point);
-	   int new_index = pv_anchor_path_insert_anchor_point(data->anchor_path, ap, index - 1);
+	   int new_index = pv_anchor_path_insert_anchor_point(element->anchor_path, ap, index - 1);
 	 */
 	// @todo handle.
 

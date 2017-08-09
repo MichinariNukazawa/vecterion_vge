@@ -293,8 +293,6 @@ static bool func_d_set_inline_(
 
 		command_prev = command;
 
-		PvElementCurveData *data = element->data;
-
 		switch(command){
 			case 'M':
 			case 'L':
@@ -314,12 +312,12 @@ static bool func_d_set_inline_(
 					}
 
 					PvPoint point = PvPoint_Default;
-					size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+					size_t num = pv_element_get_num_anchor_point(element);
 					if(0 == num){
 						point = prev_point;
 					}else{
 						const PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
-								data->anchor_path,
+								pv_element_get_anchor_path(element),
 								(num - 1),
 								PvAnchorPathIndexTurn_Disable);
 						point = pv_anchor_point_get_point(ap_prev);
@@ -342,12 +340,12 @@ static bool func_d_set_inline_(
 						goto failed;
 					}
 
-					size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+					size_t num = pv_element_get_num_anchor_point(element);
 					if(0 == num){
 						goto failed;
 					}
 					const PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
-							data->anchor_path,
+							pv_element_get_anchor_path(element),
 							(num - 1),
 							PvAnchorPathIndexTurn_Disable);
 					PvPoint point = pv_anchor_point_get_point(ap_prev);
@@ -380,13 +378,13 @@ static bool func_d_set_inline_(
 						goto failed;
 					}
 
-					size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+					size_t num = pv_element_get_num_anchor_point(element);
 					if(0 == num){
 						pv_warning("'C' command on top?");
 						goto failed;
 					}
 					PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
-							data->anchor_path,
+							pv_element_get_anchor_path(element),
 							(num - 1),
 							PvAnchorPathIndexTurn_Disable);
 
@@ -434,13 +432,13 @@ static bool func_d_set_inline_(
 					ap.points[PvAnchorPointIndex_HandleNext].y = 0;
 
 					PvPoint point = PvPoint_Default;
-					size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+					size_t num = pv_element_get_num_anchor_point(element);
 					if(0 == num){
 						pv_warning("command on top?");
 						goto failed;
 					}else{
 						PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
-								data->anchor_path,
+								pv_element_get_anchor_path(element),
 								(num - 1),
 								PvAnchorPathIndexTurn_Disable);
 						PvPoint handle = pv_anchor_point_get_handle_relate(
@@ -466,14 +464,16 @@ static bool func_d_set_inline_(
 				break;
 			case 'Z':
 			case 'z':
-				pv_anchor_path_set_is_close(data->anchor_path, true);
-				size_t num = pv_anchor_path_get_anchor_point_num(data->anchor_path);
+				pv_anchor_path_set_is_close(
+						pv_element_get_anchor_path(element),
+						true);
+				size_t num = pv_element_get_num_anchor_point(element);
 				if(0 == num){
 					pv_warning("'%c' %td '%s'", command, (p - value), value);
 					return false;
 				}else{
 					const PvAnchorPoint *ap_prev = pv_anchor_path_get_anchor_point_from_index(
-							data->anchor_path,
+							pv_element_get_anchor_path(element),
 							0,
 							PvAnchorPathIndexTurn_Disable);
 					prev_point = pv_anchor_point_get_point(ap_prev);

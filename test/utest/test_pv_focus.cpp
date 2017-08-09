@@ -228,7 +228,7 @@ TEST(Test, FocusAnchorPoint){
 
 	PvElementCurveData *data = (PvElementCurveData *)curve_0->data;
 	PvAnchorPoint *anchor_point = pv_anchor_path_get_anchor_point_from_index(
-			data->anchor_path,
+			curve_0->anchor_path,
 			1,
 			PvAnchorPathIndexTurn_Disable);
 

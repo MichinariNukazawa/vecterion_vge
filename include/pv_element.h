@@ -80,6 +80,8 @@ bool pv_element_is_diff_recursive(PvElement *element0, PvElement *element1);
 
 const char *pv_element_get_kind_name(const PvElement *element);
 const char *pv_element_get_group_name_from_element(const PvElement *element);
+size_t pv_element_get_num_anchor_point(const PvElement *);
+PvAnchorPath *pv_element_get_anchor_path(PvElement *);
 
 bool pv_element_kind_is_viewable_object(PvElementKind kind);
 bool pv_element_kind_is_object(PvElementKind kind);
