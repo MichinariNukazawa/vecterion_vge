@@ -5,6 +5,7 @@
 # target:	Win64
 #
 # depend: sudo apt-get install mingw-w64 -y
+# usage:	this [package postfix]
 #
 # Author: michinari.nukazawa@gmail.com
 #
@@ -17,6 +18,11 @@ trap 'echo "error:$0($LINENO) \"$BASH_COMMAND\" \"$@\""' ERR
 
 SCRIPT_DIR=$(cd $(dirname $0); pwd)
 ROOT_DIR=${SCRIPT_DIR}/..
+
+PACKAGE_POSTFIX=
+if [ 1 -eq $# ] ; then
+	PACKAGE_POSTFIX="-$1"
+fi
 
 TARGET_OS=win
 OBJECT_DIR=object/${TARGET_OS}
@@ -93,7 +99,7 @@ EX=""
 if [ -n "${GIT_STATUS_SHORT}" ] ; then
 EX="develop"
 fi
-PACKAGE_NAME=vecterion_vge-win64-${SHOW_VERSION}${EX}-${GIT_HASH}
+PACKAGE_NAME=vecterion_vge-win64-${SHOW_VERSION}${EX}-${GIT_HASH}${PACKAGE_POSTFIX}
 PACKAGE_DIR=${BUILD_DIR}/${PACKAGE_NAME}
 
 rm -rf ${PACKAGE_DIR}
