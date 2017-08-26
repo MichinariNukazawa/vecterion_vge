@@ -56,6 +56,7 @@ static void show_error_dialog_impl_(const char *message)
 			GTK_BUTTONS_CLOSE,
 			"%s",
 			message);
+	et_assert(dialog);
 	gtk_dialog_run (GTK_DIALOG (dialog));
 	gtk_widget_destroy (dialog);
 
@@ -313,6 +314,7 @@ static char *get_dirpath_from_filepath_(const char *filepath)
 static char *save_dialog_run_(const char *dialog_title, const char *accept_button_title, const char *default_filepath)
 {
 	et_assert(default_filepath);
+	et_debug("'%s'", default_filepath);
 
 	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
 	GtkWidget *dialog = gtk_file_chooser_dialog_new (dialog_title,
@@ -323,7 +325,9 @@ static char *save_dialog_run_(const char *dialog_title, const char *accept_butto
 			accept_button_title,
 			GTK_RESPONSE_ACCEPT,
 			NULL);
+	et_assert(dialog);
 	GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
+	et_assert(chooser);
 
 	gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
 
@@ -331,8 +335,10 @@ static char *save_dialog_run_(const char *dialog_title, const char *accept_butto
 	if(NULL == filename){
 		gtk_file_chooser_set_current_name (chooser, default_filepath);
 	}else{
+		et_debug("'%s'", filename);
 		char *dirpath = get_dirpath_from_filepath_(default_filepath);
 		if(NULL != dirpath){
+			et_debug("'%s'", dirpath);
 			gtk_file_chooser_set_current_folder (chooser, dirpath);
 			g_free(dirpath);
 		}
@@ -1129,6 +1135,7 @@ static gboolean cb_menu_file_open_(gpointer data)
 			_("_Open"),
 			GTK_RESPONSE_ACCEPT,
 			NULL);
+	et_assert(dialog);
 
 	gint res = gtk_dialog_run (GTK_DIALOG (dialog));
 	if (res == GTK_RESPONSE_ACCEPT)
@@ -1210,6 +1217,7 @@ static gboolean cb_menu_file_import_(gpointer data)
 			_("_Import"),
 			GTK_RESPONSE_ACCEPT,
 			NULL);
+	et_assert(dialog);
 
 	char *filename = NULL;
 	gint res = gtk_dialog_run (GTK_DIALOG (dialog));
@@ -1320,9 +1328,8 @@ static bool cb_menu_document_resize_ (GtkMenuItem *menuitem, gpointer user_data)
 		return false;
 	}
 
-	GtkWidget *dialog;
 	GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
-	dialog = gtk_dialog_new_with_buttons ("Resize Document",
+	GtkWidget *dialog = gtk_dialog_new_with_buttons ("Resize Document",
 			NULL,
 			flags,
 			"_OK",
@@ -1330,6 +1337,7 @@ static bool cb_menu_document_resize_ (GtkMenuItem *menuitem, gpointer user_data)
 			"_Cancel",
 			GTK_RESPONSE_REJECT,
 			NULL);
+	et_assert(dialog);
 
 	GtkWidget *hbox_w = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 	GtkWidget *hbox_h = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
@@ -1604,6 +1612,8 @@ static void cb_menu_help_about_ (GtkMenuItem *menuitem, gpointer user_data)
 			"`%s`\n%s",
 			VECTERION_FULLNAME,
 			et_window_->vecterion_build);
+	et_assert(dialog);
+
 	GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
 	et_assert(content_area);
 	GtkWidget *frame_ = gtk_frame_new (NULL);
