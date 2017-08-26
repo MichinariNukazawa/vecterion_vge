@@ -87,7 +87,9 @@ protected:
 	virtual ~TestEtToolInfo_Base()
 	{}
 
-	virtual void internalSetUp() = 0;
+	virtual void internalSetUp()
+	{
+	}
 
 	virtual void SetUp()
 	{
@@ -105,7 +107,6 @@ protected:
 		vg_back = pv_vg_copy_new(vg);
 		assert(vg);
 
-		assert(NUM_CURVE == pv_general_get_parray_num((void **)element_layer_top->childs));
 		assert(element_layer_top == focus->elements[0]);
 	}
 
@@ -170,6 +171,8 @@ protected:
 			}
 			assert(pv_element_append_child(element_layer_top, NULL, element_curves[i]));
 		}
+
+		assert(NUM_CURVE == pv_general_get_parray_num((void **)element_layer_top->childs));
 	}
 };
 
@@ -2815,5 +2818,107 @@ TEST_F(TestEtToolInfo_Base_Base, ResizeElements_BasicShape00){
 	EXPECT_EQ(0, position_rect.y);
 	EXPECT_EQ(0, position_rect.w);
 	EXPECT_EQ(0, position_rect.h);
+}
+
+TEST_F(TestEtToolInfo_Base, EditAnchorPoint_BasicShape_Rect_to_Curve){
+
+	bool res;
+	bool is_save = false;
+	PvPoint event_point;
+	EtMouseAction mouse_action;
+	PvElement *edit_draw_element = NULL;
+	GdkCursor *cursor = NULL;
+	const PvElementInfo *element_info = NULL;
+	PvRect position_rect;
+
+	PvElement **elements = (PvElement **)malloc(sizeof(PvElement *) * 2);
+	elements[0] = pv_element_basic_shape_new_from_kind(PvBasicShapeKind_FigureShape);
+	elements[1] = NULL;
+
+	assert(pv_element_append_child(element_layer_top, NULL, elements[0]));
+	assert(pv_focus_clear_set_element(focus, elements[0]));
+
+	element_info = pv_element_get_info_from_kind(elements[0]->kind);
+	assert(element_info);
+
+	position_rect = (PvRect){-100, -100, 100, 100};
+	element_info->func_set_rect_by_anchor_points(elements[0], position_rect);
+
+	position_rect = element_info->func_get_rect_by_anchor_points(elements[0]);
+	EXPECT_EQ(-100, position_rect.x);
+	EXPECT_EQ(-100, position_rect.y);
+	EXPECT_EQ(100, position_rect.w);
+	EXPECT_EQ(100, position_rect.h);
+
+/*
+	PvAnchorPoint *ap = NULL;
+	ap = element_info->func_set_rect_by_anchor_points(elements[0], 2);
+	assert(ap);
+	pv_focus_add_anchor_point(focus, elements[0], ap);
+	ap = element_info->func_set_rect_by_anchor_points(elements[0], 3);
+	assert(ap);
+	pv_focus_add_anchor_point(focus, elements[0], ap);
+*/
+
+	// # down
+	event_point = (PvPoint){
+		0,
+		0,
+	};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
+
+	res = et_tool_info_util_func_edit_anchor_point_mouse_action(
+			vg,
+			focus,
+			SNAP_CONTEXT_POINTER,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+	EXPECT_TRUE(res);
+	EXPECT_FALSE(is_save);
+	EXPECT_EQ(PvElementKind_BasicShape, elements[0]->kind);
+
+	// focus
+	EXPECT_TRUE(pv_focus_is_focused(focus));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->anchor_points));
+	EXPECT_EQ(focus->elements[0], elements[0]);
+
+	// up
+	event_point = pv_point_add(event_point, (PvPoint){-50, -200});
+	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
+
+	res = et_tool_info_util_func_edit_anchor_point_mouse_action(
+			vg,
+			focus,
+			SNAP_CONTEXT_POINTER,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+	EXPECT_TRUE(res);
+	EXPECT_TRUE(is_save);
+	EXPECT_EQ(PvElementKind_Curve, elements[0]->kind);
+
+	// focus
+	EXPECT_TRUE(pv_focus_is_focused(focus));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->anchor_points));
+	EXPECT_EQ(focus->elements[0], elements[0]);
+
+	element_info = pv_element_get_info_from_kind(elements[0]->kind);
+	assert(element_info);
+
+	position_rect = element_info->func_get_rect_by_anchor_points(elements[0]);
+	EXPECT_EQ(-100, position_rect.x);
+	EXPECT_EQ(-200, position_rect.y);
+	EXPECT_EQ(100, position_rect.w);
+	EXPECT_EQ(200, position_rect.h);
+
+	PvAnchorPoint *ap = element_info->func_get_anchor_point(elements[0], 2);
+	PvPoint point = pv_anchor_point_get_point(ap);
+	EXPECT_EQ(-50, point.x);
+	EXPECT_EQ(-200, point.y);
 }
 

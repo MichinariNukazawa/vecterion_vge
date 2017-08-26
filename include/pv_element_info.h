@@ -65,7 +65,7 @@ typedef bool (*PvElementFuncIsDiffOne)(
 		const PvElement *element0,
 		const PvElement *element1);
 typedef bool (*PvElementFuncMoveElement)(
-		const PvElement *element,
+		PvElement *element,
 		double gx,
 		double gy);
 typedef int (*PvElementFuncGetNumAnchorPoint)(

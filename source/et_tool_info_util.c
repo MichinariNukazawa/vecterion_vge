@@ -1228,9 +1228,15 @@ static bool translate_anchor_points_(
 	}
 
 	for(int i = 0; i < (int)num; i++){
-		//! @todo use element_kind.func of AnchorPoint
-		// info->func_set_anchor_point_point(focus->anchor_points[i], ap, mouse_action.point);
-		pv_anchor_point_move_point(focus->anchor_points[i], move);
+		PvElement *element = pv_focus_get_element_from_anchor_point(
+				focus,
+				focus->anchor_points[i]);
+		et_assertf(element, "%d/%zu", i, num);
+
+		const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+		et_assert(info);
+
+		info->func_move_anchor_point_point(element, focus->anchor_points[i], move);
 	}
 
 	return true;

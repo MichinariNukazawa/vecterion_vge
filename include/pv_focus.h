@@ -28,6 +28,7 @@ bool pv_focus_remove_anchor_point(PvFocus *, PvElement *, PvAnchorPoint *);
 PvElement *pv_focus_get_first_element(const PvFocus *);
 PvAnchorPoint *pv_focus_get_first_anchor_point(const PvFocus *);
 PvElement *pv_focus_get_first_layer(const PvFocus *);
+PvElement *pv_focus_get_element_from_anchor_point(PvFocus *, const PvAnchorPoint *);
 bool pv_focus_clear_set_element(PvFocus *, PvElement *);
 bool pv_focus_clear_set_element_index(PvFocus *, PvElement *, int index);
 bool pv_focus_clear_set_anchor_point(PvFocus *, PvElement *, PvAnchorPoint *);

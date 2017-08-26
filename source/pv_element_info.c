@@ -377,7 +377,7 @@ static bool _func_group_is_diff_one(
 }
 
 static bool _func_group_move_element(
-		const PvElement *element,
+		PvElement *element,
 		double gx,
 		double gy)
 {
@@ -403,7 +403,7 @@ typedef enum{
 int _func_curve_get_num_anchor_point(const PvElement *element);
 
 static bool _func_curve_move_element(
-		const PvElement *element,
+		PvElement *element,
 		double gx,
 		double gy);
 
@@ -974,7 +974,7 @@ static bool _func_curve_is_touch_element(
 	return true;
 }
 
-static bool _func_curve_is_overlap_rect(
+static bool _func_general_is_overlap_rect(
 		bool *is_overlap,
 		const PvElement *element,
 		int offset,
@@ -982,22 +982,18 @@ static bool _func_curve_is_overlap_rect(
 {
 	*is_overlap = false;
 
-	const PvElementCurveData *data = element->data;
-	pv_assert(data);
-
 	rect = pv_rect_abs_size(rect);
 
-	PvRect rect_offseted = {
-		.x = rect.x - offset,
-		.y = rect.y - offset,
-		.w = rect.w + offset,
-		.h = rect.h + offset,
-	};
+	PvRect rect_offseted = pv_rect_add_corners(rect, offset);
 
-	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
+	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
+	pv_assertf(info, "%d", element->kind);
+
+	size_t num = info->func_get_num_anchor_point(element);
 	for(int i = 0; i < (int)num; i++){
-		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(element->anchor_path, i, PvAnchorPathIndexTurn_Disable);
-		PvPoint a_point = pv_anchor_point_get_handle(ap, PvAnchorPointIndex_Point);
+		const PvAnchorPoint *anchor_point = info->func_get_anchor_point(element, i);
+		pv_assertf(anchor_point, "%d", i);
+		PvPoint a_point = pv_anchor_point_get_handle(anchor_point, PvAnchorPointIndex_Point);
 		if(pv_rect_is_inside(rect_offseted, a_point)){
 			*is_overlap = true;
 			return true;
@@ -1005,6 +1001,20 @@ static bool _func_curve_is_overlap_rect(
 	}
 
 	return true;
+}
+
+static bool _func_curve_is_overlap_rect(
+		bool *is_overlap,
+		const PvElement *element,
+		int offset,
+		PvRect rect)
+{
+	return _func_general_is_overlap_rect(
+			is_overlap,
+			element,
+			offset,
+			rect
+			);
 }
 
 bool _func_curve_remove_delete_anchor_point(
@@ -1073,7 +1083,7 @@ static bool _func_curve_is_diff_one(
 }
 
 static bool _func_curve_move_element(
-		const PvElement *element,
+		PvElement *element,
 		double gx,
 		double gy)
 {
@@ -1564,7 +1574,6 @@ static void _basic_shape_draw_inline(
 		case BasicShapeDrawKind_Draw:
 			{
 				cairo_translate(cr, position.x, position.y);
-
 				info->func_draw(cr, simplify, resize);
 			}
 			break;
@@ -1651,11 +1660,99 @@ static bool _func_basic_shape_is_overlap_rect(
 		int offset,
 		PvRect rect)
 {
-	*is_overlap = false;
+	return _func_general_is_overlap_rect(
+			is_overlap,
+			element,
+			offset,
+			rect
+			);
+}
 
-	rect = pv_rect_abs_size(rect);
+static void basic_shape_apply_anchor_path_(PvElement *element)
+{
+	pv_assert(element);
+	pv_assertf(PvElementKind_BasicShape == element->kind, "%d", element->kind);
+
+	PvElementBasicShapeData *element_data = element->data;
+	pv_assert(element_data);
+
+	PvPoint position = element_data->basic_shape_appearances
+		[PvElementBasicShapeAppearanceIndex_Translate]->translate.move;
+	PvPoint resize = element_data->basic_shape_appearances
+		[PvElementBasicShapeAppearanceIndex_Resize]->resize.resize;
+	double degree = element_data->basic_shape_appearances
+		[PvElementBasicShapeAppearanceIndex_Rotate]->rotate.degree;
+
+	const PvBasicShapeInfo *info = pv_basic_shape_info_get_from_kind(element_data->kind);
+	pv_assertf(info, "%d", element_data->kind);
+
+	PvPoint size = info->func_get_size(element_data->data);
+	size = pv_point_mul(size, resize);
+
+	PvRect rect = (PvRect){
+		.x = position.x,
+		.y = position.y,
+		.w = size.x,
+		.h = size.y,
+	};
+
+	pv_anchor_path_set_is_close(element->anchor_path, true);
+
+	PvPoint center = pv_rect_get_center(rect);
+	for(int i = 0; i < 4; i++){
+		PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(
+				element->anchor_path, i, PvAnchorPathIndexTurn_Disable);
+		pv_assertf(ap, "%d", i);
+
+		PvPoint point = pv_rect_get_edge_point(rect, i);
+		point = pv_rotate_point(point, degree, center);
+
+		pv_anchor_point_set_handle_zero(ap, PvAnchorPointIndex_Point);
+		pv_anchor_point_set_point(ap, point);
+	}
+}
+
+static bool convert_basic_shape_to_curve_(PvElement *element)
+{
+	pv_assert(element);
+	pv_assertf(PvElementKind_BasicShape == element->kind, "%d", element->kind);
+
+	basic_shape_apply_anchor_path_(element);
+
+	_func_basic_shape_free_data(element->data);
+	element->data = _func_curve_new_data();
+	pv_assert(element->data);
+
+	element->kind = PvElementKind_Curve;
 
 	return true;
+}
+
+bool _func_basic_shape_remove_delete_anchor_point(
+		PvElement *element,
+		const PvAnchorPoint *anchor_point,
+		PvElement **p_foot_element,
+		bool *is_deleted_element)
+{
+	*p_foot_element = NULL;
+	*is_deleted_element = false;
+
+	basic_shape_apply_anchor_path_(element);
+
+	if(PvBasicShapeKind_Raster == pv_element_get_basic_shape_kind(element)){
+		//! @todo
+		return true;
+	}
+
+	if(!convert_basic_shape_to_curve_(element)){
+		return false;
+	}
+
+	return _func_curve_remove_delete_anchor_point(
+			element,
+			anchor_point,
+			p_foot_element,
+			is_deleted_element);
 }
 
 static bool _func_basic_shape_is_diff_one(
@@ -1686,7 +1783,7 @@ static bool _func_basic_shape_is_diff_one(
 }
 
 static bool _func_basic_shape_move_element(
-		const PvElement *element,
+		PvElement *element,
 		double gx,
 		double gy)
 {
@@ -1701,7 +1798,38 @@ static bool _func_basic_shape_move_element(
 	position.y += gy;
 	element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->translate.move = position;
 
+	basic_shape_apply_anchor_path_(element);
+
 	return true;
+}
+
+int _func_basic_shape_get_num_anchor_point(
+		const PvElement *element)
+{
+	if(NULL == element || PvElementKind_BasicShape != element->kind){
+		pv_error("%p", element);
+		return -1;
+	}
+
+	return pv_anchor_path_get_anchor_point_num(element->anchor_path);
+}
+
+static bool _func_basic_shape_is_exist_anchor_point(
+		const PvElement *element,
+		const PvAnchorPoint *ap)
+{
+	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
+	for(int i = 0; i < (int)num; i++){
+		PvAnchorPoint *ap_ = pv_anchor_path_get_anchor_point_from_index(
+				element->anchor_path,
+				i,
+				PvAnchorPathIndexTurn_Disable);
+		if(ap_ == ap){
+			return true;
+		}
+	}
+
+	return false;
 }
 
 static PvAnchorPoint *_func_basic_shape_get_anchor_point(
@@ -1742,9 +1870,27 @@ static bool _func_basic_shape_set_anchor_point_point(
 	PvElementBasicShapeData *element_data = element->data;
 	pv_assert(element_data);
 
-	element_data->basic_shape_appearances [PvElementBasicShapeAppearanceIndex_Translate]->translate.move = point;
+	basic_shape_apply_anchor_path_(element);
 
-	return true;
+	PvPoint prev = pv_anchor_point_get_point(ap);
+	if(PV_DELTA > pv_point_distance(prev, point)){
+		pv_debug("not change.");
+		return true;
+	}
+
+	if(PvBasicShapeKind_Raster == pv_element_get_basic_shape_kind(element)){
+		//! @todo
+		return true;
+	}
+
+	if(!convert_basic_shape_to_curve_(element)){
+		return false;
+	}
+
+	return _func_curve_set_anchor_point_point(
+			element,
+			ap,
+			point);
 }
 
 static bool _func_basic_shape_move_anchor_point(
@@ -1758,15 +1904,21 @@ static bool _func_basic_shape_move_anchor_point(
 	PvElementBasicShapeData *element_data = element->data;
 	pv_assert(element_data);
 
-	//! @todo not implement, already implement is only upleft anchor_point.
-	{
-		PvPoint position = element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->translate.move;
-		position.x += move.x;
-		position.y += move.y;
-		element_data->basic_shape_appearances[PvElementBasicShapeAppearanceIndex_Translate]->translate.move = position;
+	basic_shape_apply_anchor_path_(element);
+
+	if(PvBasicShapeKind_Raster == pv_element_get_basic_shape_kind(element)){
+		//! @todo
+		return true;
 	}
 
-	return true;
+	if(!convert_basic_shape_to_curve_(element)){
+		return false;
+	}
+
+	return _func_curve_move_anchor_point(
+			element,
+			ap,
+			move);
 }
 
 static PvRect pv_rect_expand_from_point_(PvRect rect, PvPoint point, bool is_init)
@@ -1828,6 +1980,14 @@ static PvRect _func_basic_shape_get_rect_by_anchor_points(
 	return expand;
 }
 
+/*
+static PvRect _func_basic_shape_get_rect_by_anchor_points(
+		const PvElement *element)
+{
+	return _func_curve_get_rect_by_anchor_points(element);
+}
+*/
+
 static bool _func_basic_shape_set_rect_by_anchor_points(
 		PvElement *element,
 		PvRect rect)
@@ -1859,7 +2019,36 @@ static bool _func_basic_shape_set_rect_by_anchor_points(
 		}
 	}
 
+	basic_shape_apply_anchor_path_(element);
+
 	return true;
+}
+
+static PvRect _func_basic_shape_get_rect_by_draw(
+		const PvElement *element)
+{
+	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1,1);
+	pv_assert(surface);
+	cairo_t *cr = cairo_create (surface);
+	pv_assert(cr);
+
+	_curve_command_path(cr, element);
+	storke_and_fill_(cr, element);
+
+	PvElementRenderContext erc = PvElementRenderContext_Default;
+	_func_basic_shape_draw(
+			cr,
+			&erc,
+			PvRenderOption_Default(),
+			element
+			);
+
+	PvRect rect = _get_rect_extent_from_cr(cr);
+
+	cairo_surface_destroy (surface);
+	cairo_destroy (cr);
+
+	return rect;
 }
 
 static void _func_basic_shape_apply_appearances(
@@ -2040,15 +2229,15 @@ const PvElementInfo _pv_element_infos[] = {
 		.func_is_overlap_rect			= _func_basic_shape_is_overlap_rect,
 		.func_is_diff_one			= _func_basic_shape_is_diff_one,
 		.func_move_element			= _func_basic_shape_move_element,
-		.func_get_num_anchor_point		= _func_zero_get_num_anchor_point,
-		.func_is_exist_anchor_point		= _func_nop_is_exist_anchor_point,
+		.func_get_num_anchor_point		= _func_basic_shape_get_num_anchor_point,
+		.func_is_exist_anchor_point		= _func_basic_shape_is_exist_anchor_point,
 		.func_get_anchor_point			= _func_basic_shape_get_anchor_point,
 		.func_set_anchor_point_point		= _func_basic_shape_set_anchor_point_point,
 		.func_move_anchor_point_point		= _func_basic_shape_move_anchor_point,
-		.func_remove_delete_anchor_point	= _func_nop_remove_delete_anchor_point,
+		.func_remove_delete_anchor_point	= _func_basic_shape_remove_delete_anchor_point,
 		.func_get_rect_by_anchor_points		= _func_basic_shape_get_rect_by_anchor_points,
 		.func_set_rect_by_anchor_points		= _func_basic_shape_set_rect_by_anchor_points,
-		.func_get_rect_by_draw			= _func_notimpl_get_rect_by_draw,
+		.func_get_rect_by_draw			= _func_basic_shape_get_rect_by_draw,
 		.func_apply_appearances			= _func_basic_shape_apply_appearances,
 	},
 };

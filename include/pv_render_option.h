@@ -13,6 +13,15 @@ typedef struct PvRenderOption{
 	const PvFocus *focus;
 }PvRenderOption;
 
+static inline PvRenderOption PvRenderOption_Default()
+{
+	PvRenderOption render_option;
+	render_option.render_context = PvRenderContext_Default;
+	render_option.focus = NULL;
+
+	return render_option;
+}
+
 #ifdef include_ET_TEST
 #endif // include_ET_TEST
 

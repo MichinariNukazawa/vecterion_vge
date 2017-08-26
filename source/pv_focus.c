@@ -224,26 +224,12 @@ bool _remove_anchor_point(PvFocus *focus, PvElement *element, PvAnchorPoint *anc
 	return false;
 }
 
-const PvAnchorPath *_element_get_anchor_path(const PvElement *element)
-{
-/*
-	const PvElementInfo *info = pv_element_info_get_from_kind(element->kind);
-	PvAnchorPoint **anchor_points = info->get_anchor_points(element);
-*/
-
-	if(PvElementKind_Curve != element->kind){
-		return NULL;
-	}else{
-		return element->anchor_path;
-	}
-}
-
 bool _pv_element_is_exist_anchor_point(const PvElement *element, const PvAnchorPoint *anchor_point)
 {
-	const PvAnchorPath *anchor_path = _element_get_anchor_path(element);
-	size_t num = pv_anchor_path_get_anchor_point_num(anchor_path);
+	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
 	for(int i = 0; i < (int)num; i++){
-		if(anchor_point == pv_anchor_path_get_anchor_point_from_index_const(anchor_path, i)){
+		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index_const(element->anchor_path, i);
+		if(anchor_point == ap){
 			return true;
 		}
 	}
@@ -312,6 +298,18 @@ PvElement *pv_focus_get_first_layer(const PvFocus *focus)
 	}
 
 	return pv_element_get_first_parent_layer_or_root(element);
+}
+
+PvElement *pv_focus_get_element_from_anchor_point(PvFocus *focus, const PvAnchorPoint *anchor_point)
+{
+	size_t num = pv_general_get_parray_num((void **)focus->elements);
+	for(int i = 0; i < (int)num; i++){
+		if(pv_anchor_path_is_exist_anchor_point(focus->elements[i]->anchor_path, anchor_point)){
+			return focus->elements[i];
+		}
+	}
+
+	return NULL;
 }
 
 bool pv_focus_clear_set_element_index(PvFocus *focus, PvElement *element, int index)

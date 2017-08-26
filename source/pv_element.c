@@ -190,6 +190,7 @@ PvElement *pv_element_new(const PvElementKind kind)
 		for(int i = 0; i < 4; i++){
 			pv_anchor_path_add_anchor_point(self->anchor_path, &ap);
 		}
+		pv_anchor_path_set_is_close(self->anchor_path, true);
 	}
 
 	self->color_pair = PvColorPair_Default;
@@ -236,6 +237,7 @@ static PvElement *_pv_element_copy_single(const PvElement *self)
 	pv_assertf(new_element->data, "%d", self->kind);
 
 	new_element->anchor_path = pv_anchor_path_copy_new(self->anchor_path);
+	pv_assert(new_element->anchor_path);
 
 	if(NULL == self->etaion_work_appearances){
 		new_element->etaion_work_appearances = NULL;
@@ -742,7 +744,7 @@ PvElement *pv_element_curve_new_from_rect(PvRect rect)
 		bool ret = pv_element_curve_add_anchor_point(self, ap);
 		pv_assert(ret);
 	}
-	pv_element_curve_set_close_anchor_point(self, true);
+	pv_anchor_path_set_is_close(self->anchor_path, true);
 
 	return self;
 }
@@ -888,6 +890,8 @@ PvElement *pv_element_basic_shape_new_from_kind(PvBasicShapeKind kind)
 		element_data->kind = kind;
 	}
 
+	pv_anchor_path_set_is_close(self->anchor_path, true);
+
 	switch(kind){
 		case PvBasicShapeKind_Raster:
 			{
@@ -900,6 +904,14 @@ PvElement *pv_element_basic_shape_new_from_kind(PvBasicShapeKind kind)
 	}
 
 	return self;
+}
+
+PvBasicShapeKind pv_element_get_basic_shape_kind(const PvElement *element)
+{
+	pv_assert(PvElementKind_BasicShape == element->kind);
+	PvElementBasicShapeData *data = element->data;
+
+	return data->kind;
 }
 
 const char *pv_element_get_kind_name(const PvElement *element)
