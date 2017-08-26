@@ -1273,6 +1273,22 @@ bool et_tool_info_util_func_edit_anchor_point_mouse_action(
 				src_extent_rect, mouse_action.point, mouse_action.scale);
 	}
 
+	switch(edge){
+		case EdgeKind_Resize_UpLeft:
+		case EdgeKind_Resize_UpRight:
+		case EdgeKind_Resize_DownLeft:
+		case EdgeKind_Resize_DownRight:
+		case EdgeKind_Rotate_UpLeft:
+		case EdgeKind_Rotate_UpRight:
+		case EdgeKind_Rotate_DownLeft:
+		case EdgeKind_Rotate_DownRight:
+			edge = EdgeKind_None;
+			break;
+		default:
+			//NOP
+			break;
+	}
+
 	PvRect focusing_mouse_rect = {mouse_action.point.x, mouse_action.point.y, 0, 0};
 
 	switch(mouse_action.action){
