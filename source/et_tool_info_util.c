@@ -163,6 +163,13 @@ static bool func_recursive_get_touch_element_(PvElement *element, gpointer data,
 	RecursiveDataGetFocus *data_ = data;
 	et_assert(data_);
 
+	if(pv_element_get_in_is_invisible(element)){
+		return true;
+	}
+	if(pv_element_get_in_is_locked(element)){
+		return true;
+	}
+
 	const PvElementInfo *info = pv_element_get_info_from_kind(element->kind);
 	et_assertf(info, "%d", element->kind);
 
@@ -882,11 +889,11 @@ bool et_tool_info_util_func_edit_element_mouse_action(
 						{
 							mode_ = EtFocusElementMouseActionMode_Translate;
 
-							touch_element_ = get_touch_element_(vg, mouse_action.point);
+							touch_element_ = get_touch_element_(
+									vg,
+									mouse_action.point);
 
-							if(NULL == touch_element_
-								|| pv_element_get_in_is_invisible(touch_element_)
-								|| pv_element_get_in_is_locked(touch_element_)){
+							if(NULL == touch_element_){
 								et_assert(pv_focus_clear_to_first_layer(focus));
 								mode_ = EtFocusElementMouseActionMode_FocusingByArea;
 							}else{
