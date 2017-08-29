@@ -24,6 +24,9 @@ struct EtColorPanel{
 	GtkWidget *event_box_pallet;
 	GtkWidget *pallet;
 
+	gulong slider_sliders_signal_handler_id[NUM_COLOR_PARAMETER];
+	gulong slider_spins_signal_handler_id[NUM_COLOR_PARAMETER];
+
 	//! edit in pallet color.
 	PvColorPairGround color_pair_ground;
 	//! color with focus elements is not compared.
@@ -108,9 +111,10 @@ EtColorPanel *et_color_panel_init()
 		gtk_scale_set_draw_value(GTK_SCALE(self->slider_sliders[i]), false);
 		gtk_scale_set_value_pos(GTK_SCALE(self->slider_sliders[i]), GTK_POS_RIGHT);
 		gtk_box_pack_start(GTK_BOX(self->slider_boxs[i]), self->slider_sliders[i], true, true, 1);
-		g_signal_connect(G_OBJECT(self->slider_sliders[i]), "change-value",
-				G_CALLBACK(cb_change_value_color_slider_slider_),
-				(gpointer)color_parameter_property);
+		self->slider_sliders_signal_handler_id[i] =
+			g_signal_connect(G_OBJECT(self->slider_sliders[i]), "change-value",
+					G_CALLBACK(cb_change_value_color_slider_slider_),
+					(gpointer)color_parameter_property);
 
 		self->slider_spins[i] = gtk_spin_button_new_with_range(
 				color_parameter_property->min,
@@ -118,9 +122,10 @@ EtColorPanel *et_color_panel_init()
 				1);
 		et_assertf(self->slider_spins[i], "%d", i);
 		gtk_box_pack_start(GTK_BOX(self->slider_boxs[i]), self->slider_spins[i], false, false, 1);
-		g_signal_connect(G_OBJECT(self->slider_spins[i]), "value-changed",
-				G_CALLBACK(cb_value_changed_color_slider_spin_),
-				(gpointer)color_parameter_property);
+		self->slider_spins_signal_handler_id[i] =
+			g_signal_connect(G_OBJECT(self->slider_spins[i]), "value-changed",
+					G_CALLBACK(cb_value_changed_color_slider_spin_),
+					(gpointer)color_parameter_property);
 		// spin button [+/-] is event_box not catch button-release-event.
 		g_signal_connect(self->slider_spins[i], "button-release-event",
 				G_CALLBACK(cb_button_release_slider_spins_), NULL);
@@ -401,10 +406,28 @@ static void et_color_panel_update_ui_()
 	EtColorPanel *self = color_panel_;
 	et_assert(self);
 
+	for(int i = 0; i < (int)NUM_COLOR_PARAMETER; i++){
+		g_signal_handler_block(
+				self->slider_sliders[i],
+				self->slider_sliders_signal_handler_id[i]);
+		g_signal_handler_block(
+				self->slider_spins[i],
+				self->slider_spins_signal_handler_id[i]);
+	}
+
 	et_color_panel_set_slider_sliders_from_color_(
 			self->color_pair.colors[self->color_pair_ground]);
 	_et_color_panel_set_slider_spins_from_color(
 			self->color_pair.colors[self->color_pair_ground]);
+
+	for(int i = 0; i < (int)NUM_COLOR_PARAMETER; i++){
+		g_signal_handler_unblock(
+				self->slider_sliders[i],
+				self->slider_sliders_signal_handler_id[i]);
+		g_signal_handler_unblock(
+				self->slider_spins[i],
+				self->slider_spins_signal_handler_id[i]);
+	}
 
 	gtk_widget_queue_draw(self->pallet);
 }
