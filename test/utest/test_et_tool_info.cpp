@@ -1076,6 +1076,91 @@ TEST_F(TestEtToolInfo_Element, EtToolInfo_Translate){
 
 }
 
+TEST_F(TestEtToolInfo_Base, EtToolInfo_Translate_ElementHaveSingleAnchorPoint){
+
+	bool res;
+	bool is_save = false;
+	PvPoint event_point;
+	EtMouseAction mouse_action;
+	PvElement *edit_draw_element = NULL;
+	GdkCursor *cursor = NULL;
+	const PvElementInfo *element_info = NULL;
+	PvRect position_rect;
+
+	PvElement **elements = (PvElement **)malloc(sizeof(PvElement *) * 2);
+	elements[0] = pv_element_new(PvElementKind_Curve);
+	elements[1] = NULL;
+
+	PvAnchorPoint ap = pv_anchor_point_from_point((PvPoint){-100, -100});
+	pv_element_curve_add_anchor_point(elements[0], ap);
+	assert(pv_element_append_child(element_layer_top, NULL, elements[0]));
+	assert(pv_focus_clear_set_element(focus, elements[0]));
+
+	// # down
+	event_point = (PvPoint){-100 + 3, -100 + 3};
+	mouse_action = mouse_action_(event_point, EtMouseAction_Down);
+
+	res = et_tool_info_util_func_edit_element_mouse_action(
+			vg,
+			focus,
+			SNAP_CONTEXT_POINTER,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+
+	EXPECT_TRUE(res);
+	EXPECT_TRUE(false == is_save);
+	EXPECT_TRUE(NULL != edit_draw_element);
+	if(NULL != edit_draw_element){
+		EXPECT_EQ(4, pv_general_get_parray_num((void **)edit_draw_element->childs));
+	}
+	EXPECT_TRUE(NULL == cursor);
+
+	// focus
+	EXPECT_TRUE(pv_focus_is_focused(focus));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements))
+		<< pv_general_get_parray_num((void **)focus->anchor_points);
+
+
+	// # up
+	event_point = pv_point_add(event_point, (PvPoint){-100, -200});
+	mouse_action = mouse_action_(event_point, EtMouseAction_Up);
+
+	res = et_tool_info_util_func_edit_element_mouse_action(
+			vg,
+			focus,
+			SNAP_CONTEXT_POINTER,
+			&is_save,
+			mouse_action,
+			&edit_draw_element,
+			&cursor);
+
+	EXPECT_TRUE(res);
+	EXPECT_TRUE(is_save);
+	EXPECT_TRUE(NULL != edit_draw_element);
+	if(NULL != edit_draw_element){
+		EXPECT_EQ(4, pv_general_get_parray_num((void **)edit_draw_element->childs));
+	}
+	EXPECT_TRUE(NULL == cursor);
+
+	// focus
+	EXPECT_TRUE(pv_focus_is_focused(focus));
+	EXPECT_EQ(1, pv_general_get_parray_num((void **)focus->elements))
+		<< pv_general_get_parray_num((void **)focus->anchor_points);
+	EXPECT_TRUE(pv_focus_is_exist_element(focus, elements[0]));
+
+	// document
+	element_info = pv_element_get_info_from_kind(PvElementKind_Curve);
+	assert(element_info);
+	position_rect = element_info->func_get_rect_by_anchor_points(elements[0]);
+	EXPECT_EQ(-200, position_rect.x);
+	EXPECT_EQ(-300, position_rect.y);
+	EXPECT_EQ(0, position_rect.w);
+	EXPECT_EQ(0, position_rect.h);
+
+}
+
 
 TEST_F(TestEtToolInfo_Element, EtToolInfo_Translate_minus){
 

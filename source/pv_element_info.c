@@ -494,8 +494,8 @@ static void _curve_command_path(
 		PvPoint point = pv_anchor_point_get_point(ap);
 		if(0 == i){
 			if(1 == num){
-				cairo_rectangle (cr, point.x, point.y, 2, 2);
-				cairo_fill (cr);
+				//! single AnchorPoint is not draw.
+				return;
 			}else{
 				cairo_move_to(cr, point.x, point.y);
 			}
@@ -953,6 +953,21 @@ static bool _func_curve_is_touch_element(
 		double gy)
 {
 	*is_touch = false;
+
+	size_t num = pv_anchor_path_get_anchor_point_num(element->anchor_path);
+	if(1 == num){
+		//! stroke command is not drawing to one point AnchorPath
+		const PvAnchorPoint *ap = pv_anchor_path_get_anchor_point_from_index(
+				element->anchor_path, 0, PvAnchorPathIndexTurn_Disable);
+		pv_assert(ap);
+		PvPoint point = pv_anchor_point_get_point(ap);
+		PvPoint g = (PvPoint){gx, gy};
+		if((element->stroke.width / 2.0) + offset > pv_point_distance(point, g)){
+			*is_touch = true;
+		}
+
+		return true;
+	}
 
 	cairo_surface_t *surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1,1);
 	pv_assert(surface);
