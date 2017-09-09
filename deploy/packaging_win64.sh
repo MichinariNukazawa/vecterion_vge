@@ -119,6 +119,11 @@ cp ${ROOT_DIR}/deploy/win/loaders.cache ${PACKAGE_DIR}/lib/gdk-pixbuf-2.0/2.10.0
 cp -r ${GTK3LIBRARY_RELEASE_DIR}/share/ ${PACKAGE_DIR}/
 rm -rf ${PACKAGE_DIR}/share/doc
 rm -rf ${PACKAGE_DIR}/share/locale
+# fix gtk_file_chooser_dialog crush issue
+#  gschemas.compiled generate:
+#  `bin\glib-compile-schemas.exe share\glib-2.0\schemas` in windows
+mkdir -p ${PACKAGE_DIR}/share/glib-2.0/schemas/
+cp -r ${ROOT_DIR}/deploy/win/gschemas.compiled ${PACKAGE_DIR}/share/glib-2.0/schemas/
 
 pushd ${PACKAGE_DIR}
 
