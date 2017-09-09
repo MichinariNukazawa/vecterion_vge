@@ -203,9 +203,9 @@ EtCanvas *et_canvas_collection_new_canvas(EtDocId doc_id)
 			G_CALLBACK(_cb_close_canvas_clicked_button), canvas_frame);
 
 	int id0 = et_doc_add_slot_change(doc_id, _slot_et_canvas_collection_from_doc_change, NULL);
-	et_assertf(0 <= id0, "%d %d", doc_id, id0)
+	et_assertf(0 <= id0, "%d %d", doc_id, id0);
 
-		return canvas;
+	return canvas;
 }
 
 EtCanvas *_get_canvas_from_canvas_frame(const GtkWidget *canvas_frame)
