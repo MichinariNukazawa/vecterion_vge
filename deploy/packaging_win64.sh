@@ -33,22 +33,22 @@ LIBXML2_DIR=${OBJECT_DIR}/libxml2
 BUILD_DIR=build/${TARGET_OS}
 
 #ARCHIVE_DEV=gtk+-bundle_3.10.4-20131202_win64.zip
-ARCHIVE_DEV=gtk+-bundle-dev_3.22.15-1-20170610_win64.zip
-ARCHIVE_RELEASE=gtk+-bundle_3.22.15-1-20170610-bin_win64.zip
+ARCHIVE_DEV=gtk+-bundle-dev_3.22.20-1-20170908_win64.zip
+ARCHIVE_RELEASE=gtk+-bundle_3.22.20-1-20170908-bin_win64.zip
 
 
 # download gkt3 library package
-if [ ! -e ${CACHE_DIR}/${ARCHIVE_DEV} ] ; then
+if [ ! -e ${CACHE_DIR}/${ARCHIVE_DEV} -o ! -s ${CACHE_DIR}/${ARCHIVE_DEV} ] ; then
 	mkdir -p ${CACHE_DIR}
 	wget --tries=3 --wait=5 --continue \
-		https://osdn.net/downloads/users/13/13628/gtk%2B-bundle-dev_3.22.15-1-20170610_win64.zip \
+		https://osdn.net/downloads/users/14/14970/gtk%2B-bundle-dev_3.22.20-1-20170908_win64.zip \
 		-O ${CACHE_DIR}/${ARCHIVE_DEV}
 fi
 
-if [ ! -e ${CACHE_DIR}/${ARCHIVE_RELEASE} ] ; then
+if [ ! -e ${CACHE_DIR}/${ARCHIVE_RELEASE} -o ! -s ${CACHE_DIR}/${ARCHIVE_RELEASE} ] ; then
 	mkdir -p ${CACHE_DIR}
 	wget --tries=3 --wait=5 --continue \
-		https://osdn.net/downloads/users/13/13627/gtk%2B-bundle_3.22.15-1-20170610-bin_win64.zip \
+		https://osdn.net/downloads/users/14/14971/gtk%2B-bundle_3.22.20-1-20170908-bin_win64.zip \
 		-O ${CACHE_DIR}/${ARCHIVE_RELEASE}
 fi
 

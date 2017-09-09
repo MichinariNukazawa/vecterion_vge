@@ -15,12 +15,12 @@ trap 'echo "error:$0($LINENO) \"$BASH_COMMAND\" \"$@\""' ERR
 # https://box.yahoo.co.jp/guest/viewer?sid=box-l-m4xqci277itzhqw6phs2dmo7pi-1001&uniqid=891184c1-d3f2-451d-9d01-a42fa522643c#du%3D891184c1-d3f2-451d-9d01-a42fa522643c%26ds%3Dbox-l-m4xqci277itzhqw6phs2dmo7pi-1001%26tu%3Db4b424b3-bd5a-4fb3-9c0a-2ceeb0068b4d%26ts%3Dbox-l-m4xqci277itzhqw6phs2dmo7pi-1001%26vt%3Dpublic%26lf%3Dlist%26ls%3D1%26lm%3D20%26id%3D1
 
 # need manual download
-DEV_AR=gtk+-bundle-dev_3.22.15-1-20170610_win64.7z
+DEV_AR=gtk+-bundle-dev_3.22.20-1-20170908_win64.7z
 # need manual download
-REL_AR=gtk+-bundle_3.22.15-1-20170610-bin_win64.7z
+REL_AR=gtk+-bundle_3.22.20-1-20170908-bin_win64.7z
 
 # output
-RET_AR=gtk+-bundle_3.22.15-1-20170610_win64.zip
+RET_AR=gtk+-bundle_3.22.20-1-20170908_win64.zip
 
 SCRIPT_DIR=$(cd $(dirname $0); pwd)
 
