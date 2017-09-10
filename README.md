@@ -48,24 +48,31 @@ External dependency in library/ directory.
 
 ### gtk3
 https://www.gtk.org/  
-`sudo apt-get install libgtk-3-dev -y`  
+`sudo apt install libgtk-3-dev -y`  
 
 ### libxml2
 http://www.xmlsoft.org/  
-`git clone git://git.gnome.org/libxml2`  
+`sudo apt install libxml2-dev -y`  
 
 ### googletest
 https://github.com/google/googletest  
-`git clone --depth=1 https://github.com/google/googletest.git`  
-`cd googletest/googletst/`  
-`cmake . && make`  
-
-Make up libgtest.a libgtest_main.a in googletest directory.  
 Need for test.  
+Make up `libgtest.a libgtest_main.a` in googletest directory.  
+```
+cd library/
+git clone --depth=1 https://github.com/google/googletest.git
+cd googletest/googletst/
+sudo apt install cmake -y
+cmake . && make
+```
 
 ### rsvg
-`sudo apt-get install rsvg -y`  
 Need for test.  
+`sudo apt install rsvg -y`  
+
+### glade
+Need for edit custom dialog.  
+`sudo apt install glade -y`  
 
 # Specification
 
