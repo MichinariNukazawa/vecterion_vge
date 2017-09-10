@@ -95,7 +95,7 @@ char *pv_file_format_change_new_extension_from_filepath(const char *prev_filepat
 	char *tmp_filepath = g_strdup(prev_filepath);
 	pv_assert(tmp_filepath);
 
-	char *filename = strrchr(tmp_filepath, '/');
+	char *filename = strrchr(tmp_filepath, G_DIR_SEPARATOR);
 	if(NULL == filename){
 		filename = tmp_filepath;
 	}

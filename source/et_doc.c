@@ -121,7 +121,7 @@ char *et_doc_get_new_filename_from_id(EtDocId doc_id)
 		return NULL;
 	}
 
-	char *sep = strrchr(self->filepath, '/');
+	char *sep = strrchr(self->filepath, G_DIR_SEPARATOR);
 	if(NULL == sep){
 		return NULL;
 	}

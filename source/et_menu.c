@@ -299,7 +299,7 @@ static char *get_dirpath_from_filepath_(const char *filepath)
 	char *dirpath = g_strdup(filepath);
 	et_assert(dirpath);
 
-	char *sep = strrchr(dirpath, '/');
+	char *sep = strrchr(dirpath, G_DIR_SEPARATOR);
 	if(NULL == sep){
 		g_free(dirpath);
 		return NULL;
@@ -331,7 +331,7 @@ static char *save_dialog_run_(const char *dialog_title, const char *accept_butto
 
 	gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
 
-	char *filename = strrchr(default_filepath, '/');
+	char *filename = strrchr(default_filepath, G_DIR_SEPARATOR);
 	if(NULL == filename){
 		gtk_file_chooser_set_current_name (chooser, default_filepath);
 	}else{
