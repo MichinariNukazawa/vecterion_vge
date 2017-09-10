@@ -11,7 +11,7 @@ Vecterionは、Linuxに本物のベクタ・グラフィックス・エディタ
 Vecterion is not Adobe Illustrator.  
 
 # Screenshot/Image
-![vecterion](document/image/vecterion_vge_17.03.png)  
+![vecterion](document/image/vecterion_vge_17.09.png)  
 
 # Project goal
 - I makes money for happy life and enjoy develop!
