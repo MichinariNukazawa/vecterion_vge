@@ -1,7 +1,5 @@
 #!/bin/bash
 #
-# depend: sudo apt-get install rsvg -y
-#
 # Author: michinari.nukazawa@gmail.com
 #
 
@@ -11,7 +9,7 @@ set -o pipefail
 
 trap 'echo "error:$0($LINENO) \"$BASH_COMMAND\" \"$@\""' ERR
 
-#SCRIPT_DIR=$(cd $(dirname $0); pwd)
+SCRIPT_DIR=$(cd $(dirname $0); pwd)
 
 [ 3 -eq $# ]
 VECTERION=$1
@@ -25,7 +23,7 @@ NAME="${FILENAME%.*}"
 
 mkdir -p ${LOG_DIR}
 
-rsvg ${SOURCE_SVG_FILE} ${LOG_DIR}/${NAME}_rsvg.png
+bash ${SCRIPT_DIR}/rsvg.sh ${SOURCE_SVG_FILE} ${LOG_DIR}/${NAME}_rsvg.png
 
 # raster output(png)
 ${VECTERION} -s -i ${SOURCE_SVG_FILE} -o ${LOG_DIR}/${NAME}_vecterion.png >> ${LOG_DIR}/log_.log
@@ -33,7 +31,7 @@ compare -verbose -metric AE ${LOG_DIR}/${NAME}_rsvg.png ${LOG_DIR}/${NAME}_vecte
 
 # vector output(svg)
 ${VECTERION} -s -i ${SOURCE_SVG_FILE} -o ${LOG_DIR}/${NAME}_vecterion.svg >> ${LOG_DIR}/log_.log
-rsvg ${LOG_DIR}/${NAME}_vecterion.svg ${LOG_DIR}/${NAME}_vecterion_rsvg.png
+bash ${SCRIPT_DIR}/rsvg.sh ${LOG_DIR}/${NAME}_vecterion.svg ${LOG_DIR}/${NAME}_vecterion_rsvg.png
 compare -verbose -metric AE ${LOG_DIR}/${NAME}_rsvg.png ${LOG_DIR}/${NAME}_vecterion_rsvg.png ${LOG_DIR}/${NAME}_diff_AE_svg.png
 
 # vector re input(svg)

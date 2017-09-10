@@ -33,7 +33,7 @@ DATA_DIR=${SCRIPT_DIR}
 LOG_DIR=log/svg_read_test/${VERSION}
 mkdir -p ${LOG_DIR}
 
-rsvg --version > ${LOG_DIR}/log.log
+bash ${SCRIPT_DIR}/rsvg.sh --version > ${LOG_DIR}/log.log
 
 function svg_read_test(){
 	# echo -e "file:${1}"
