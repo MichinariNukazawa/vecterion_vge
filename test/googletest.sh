@@ -17,10 +17,10 @@ CACHE_DIR=${LIBRARY_DIR}/download_cache
 
 
 # # download
-if [ ! -e ${CACHE_DIR}/release-1.8.0.tar.gz ] ; then
+if [ ! -e ${CACHE_DIR}/googletest.tar.gz ] ; then
 	mkdir -p ${CACHE_DIR}
 	wget --tries=3 --wait=5 --continue \
-		https://github.com/google/googletest/archive/master.zip \
+		https://github.com/google/googletest/archive/release-1.8.0.tar.gz \
 		-P ${CACHE_DIR}
 	[ -e ${CACHE_DIR}/release-1.8.0.tar.gz ]
 	mv ${CACHE_DIR}/release-1.8.0.tar.gz ${CACHE_DIR}/googletest.tar.gz
@@ -30,15 +30,16 @@ fi
 mkdir -p ${LIBRARY_DIR}
 pushd ${LIBRARY_DIR}
 
-[ ! -d googletest/ ] # skip if directory already exist
-
-tar zxvf ${CACHE_DIR}/googletest.tar.gz > /dev/null
-mv googletest-release-1.8.0 googletest
+if [ ! -d googletest/ ] ; then # skip if directory already exist
+	tar zxvf ${CACHE_DIR}/googletest.tar.gz > /dev/null
+	mv googletest-release-1.8.0 googletest
+fi
 
 # build
 pushd googletest/googletest
 
-cmake CMakeLists.txt
+#cmake CMakeLists.txt
+cmake .
 make
 
 popd
