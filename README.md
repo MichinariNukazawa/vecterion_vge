@@ -29,50 +29,21 @@ Download ubuntu package(.deb) @todo
 Online store [project daisy bell][pixiv_booth_project_daisy_bell] and [RuneAMN fonts Pro][gumroad_runeamn_fonts_pro] is product by daisy bell.  
 And please contact.  
 
-# Running
-In Linux. (Ubuntu 16.04LTS+)  
-
-In Windows is [README_win.md](README_win.md).  
-
 ## Build
+### Linux
+`bash setup/library_for_ubuntu.sh`  
 `make`  
 `make run`  
 
+### Windows(x64)
+`bash setup/library_for_ubuntu.sh`  
+`bash deploy/packaging_win64.sh`  
+
 ## Develop
-`bash setup/setup.sh`  
-read to [test/release_test.md](test/release_test.md).  
-
-## Depend
-External dependency in library/ directory.  
-`cd library/`  
-
-### gtk3
-https://www.gtk.org/  
-`sudo apt install libgtk-3-dev -y`  
-
-### libxml2
-http://www.xmlsoft.org/  
-`sudo apt install libxml2-dev -y`  
-
-### googletest
-https://github.com/google/googletest  
-Need for test.  
-Make up `libgtest.a libgtest_main.a` in googletest directory.  
-```
-cd library/
-git clone --depth=1 https://github.com/google/googletest.git
-cd googletest/googletst/
-sudo apt install cmake -y
-cmake . && make
-```
-
-### rsvg
-Need for test.  
-`sudo apt install librsvg2-bin -y`  
-
-### glade
-Need for edit custom dialog.  
-`sudo apt install glade -y`  
+Please read to  
+[DEVELOP.md](DEVELOP.md)  
+and  
+[test/release_test.md](test/release_test.md)  
 
 # Specification
 
