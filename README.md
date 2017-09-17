@@ -68,8 +68,6 @@ cmake . && make
 
 ### rsvg
 Need for test.  
-`sudo apt install rsvg -y`  
-or ubuntu 17.10 later is  
 `sudo apt install librsvg2-bin -y`  
 
 ### glade
