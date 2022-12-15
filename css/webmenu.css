@@ -1,0 +1,75 @@
+@charset "utf-8";
+
+#webmenu-btn-check:checked ~ .webmenu-btn {
+    transform: rotate(0deg);
+}
+#webmenu-btn-check:checked ~ .webmenu-content {
+    right: 0%;
+}
+
+.webmenu-btn{
+    position: absolute;
+    right: 0%;
+    z-index: 100;
+
+    width: 24px;
+    height: 24px;
+    display: block;
+    transform: rotate(180deg);
+    background-color: rgb(200, 200, 200);
+    border-radius: 3px;
+    transition: all 0.5s;/*アニメーション設定*/
+}
+#webmenu-btn-check {
+    display: none;
+}
+
+.webmenu-content {
+    width: 100%;
+    max-width: 320px;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    right: -100%;
+    z-index: 80;
+    background-color:rgb(57, 57, 57);
+    transition: all 0.5s;/*アニメーション設定*/
+}
+.webmenu-content ul {
+    padding: 70px 10px 0;
+}
+.webmenu-content ul li {
+    border-bottom: solid 1px #ffffff;
+    list-style: none;
+}
+.webmenu-parent {
+    font-weight: bold;
+    background-color: rgb(30, 30, 30);
+}
+.webmenu-item {
+    padding-left: 18px;
+}
+.webmenu-item:hover {
+    background-color: rgba(0, 204, 255, 0.1);
+}
+.webmenu-parent,.webmenu-item a {
+    display: block;
+    width: 100%;
+    font-size: 15px;
+    box-sizing: border-box;
+    color:#ffffff;
+    text-decoration: none;
+    padding: 9px 15px 10px 0;
+    position: relative;
+}
+.webmenu-content ul li a::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-top: solid 2px #ffffff;
+    border-right: solid 2px #ffffff;
+    transform: rotate(45deg);
+    position: absolute;
+    right: 11px;
+    top: 16px;
+}

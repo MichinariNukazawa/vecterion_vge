@@ -1,0 +1,137 @@
+{
+	"application": {
+		"name": "vecterion_vge",
+		"subkind": "webapp",
+		"version": "2022.12.1-alpha"
+	},
+	"size": {
+		"w": 1200,
+		"h": 800
+	},
+	"items": [
+		{
+			"kind": "Bezier",
+			"name": "Kairu",
+			"isVisible": true,
+			"isLock": false,
+			"colorPair": {
+				"fillColor": "#ffffffff",
+				"strokeColor": "#000000ff"
+			},
+			"border": {
+				"width": 8,
+				"linecap": "butt",
+				"linejoin": "miter"
+			},
+			"aps": [
+				{
+					"point": {
+						"x": 495.8236658932715,
+						"y": 298.14385150812063
+					},
+					"handle": {
+						"kind": "none",
+						"frontVector": {
+							"x": 0,
+							"y": 0
+						},
+						"backVector": {
+							"x": 0,
+							"y": 0
+						}
+					}
+				},
+				{
+					"point": {
+						"x": 651.3018819283321,
+						"y": 317.6463005929363
+					},
+					"handle": {
+						"kind": "symmetry",
+						"backVector": {
+							"x": 0,
+							"y": 0
+						},
+						"frontVector": {
+							"x": 43.97267336942514,
+							"y": 31.77623098736791
+						}
+					}
+				},
+				{
+					"point": {
+						"x": 695.8236658932715,
+						"y": 400.9280743424652
+					},
+					"handle": {
+						"kind": "free",
+						"backVector": {
+							"x": 1.1368683772161603e-13,
+							"y": -15.083784480536167
+						},
+						"frontVector": {
+							"x": 0,
+							"y": 0
+						}
+					}
+				},
+				{
+					"point": {
+						"x": 695.8236658932715,
+						"y": 498.14385150812063
+					},
+					"handle": {
+						"kind": "free",
+						"backVector": {
+							"x": 0,
+							"y": 0
+						},
+						"frontVector": {
+							"x": 0,
+							"y": 0
+						}
+					}
+				},
+				{
+					"point": {
+						"x": 495.8236658932715,
+						"y": 498.14385150812063
+					},
+					"handle": {
+						"kind": "none",
+						"frontVector": {
+							"x": 0,
+							"y": 0
+						},
+						"backVector": {
+							"x": 0,
+							"y": 0
+						}
+					}
+				}
+			],
+			"isCloseAp": true
+		}
+	],
+	"canvas": {
+		"padding": {
+			"w": 200,
+			"h": 100
+		},
+		"grids": [
+			{
+				"interval": 200,
+				"color": "#3070ffff",
+				"strokew": 0.3
+			}
+		],
+		"background": {
+			"color": "#ffffff00",
+			"checkerWidth": 12
+		}
+	},
+	"focus": {
+		"focusItemIndexes": [],
+		"focusAPCplxes": []
+	}
+}

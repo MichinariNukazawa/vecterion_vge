@@ -1,0 +1,23 @@
+{
+  "name": "vecterion_vge",
+  "version": "2022.12.1-alpha",
+  "description": "vecterion (wish) true vector graphics editor",
+  "scripts": {
+    "watch": "watchify src/index.js -o js/bundle.js -v",
+    "test": "mocha --require intelli-espower-loader"
+  },
+  "directories": {
+    "test": "test/"
+  },
+  "devDependencies": {
+    "intelli-espower-loader": "^1.1.0",
+    "mocha": "^10.1.0",
+    "power-assert": "^1.6.1",
+    "watchify": "^4.0.0"
+  },
+  "dependencies": {
+    "deep-diff": "^1.0.2",
+    "js-base64": "^3.7.3",
+    "lodash": "^4.17.21"
+  }
+}

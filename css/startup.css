@@ -1,0 +1,12 @@
+@charset "utf-8";
+
+#startup-dialog{
+	animation: fadeout-anim 0.5s linear forwards;
+	animation-delay: 1.5s;
+}
+
+@keyframes fadeout-anim {
+	100% {
+		opacity: 0;
+	}
+}

@@ -1,0 +1,511 @@
+<head>
+	<title>vecterion - (wish) true vecter graphics editor</title>
+
+	<link rel="icon" href="./resource/icon.png" />
+	<LINK href="css/style.css" rel="stylesheet" type="text/css"/>
+	<LINK href="css/contextmenu.css" rel="stylesheet" type="text/css"/>
+	<LINK href="css/webmenu.css" rel="stylesheet" type="text/css"/>
+
+	<script type="text/javascript" src="./js/bundle.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
+
+	<meta name=description content="vecterion is (wish) true vecter graphics editor.">
+	<meta name=keywords content="vector graphics,editor,webapp">
+	<meta property=og:title content="Vecterion">
+	<meta property=og:type content=website>
+	<meta property=og:image content="./resource/icon.png">
+	<!--<meta property=og:url content=https://michinari.nukazawa/>-->
+	<meta property=og:description content="(wish) true vecter graphics editor.">
+	<meta property=og:site_name content="Vecterion">
+	<meta property=og:locale content=ja>
+	<meta name=twitter:card content=summary_large_image>
+	<meta name=twitter:site content=@>
+	<meta name=twitter:title content="Vecterion">
+	<meta name=twitter:description content="(wish) true vecter graphics editor.">
+	<meta name=twitter:image content="./resource/icon.png">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Y92RLLSNXR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Y92RLLSNXR');
+</script>
+
+<!-- amazon ads -->
+<script type="text/javascript">
+	amzn_assoc_ad_type = "link_enhancement_widget";
+	amzn_assoc_tracking_id = "michinarinuka-22";
+	amzn_assoc_linkid = "7df6ecedc8a2f237d174a92f4ef4bd82";
+	amzn_assoc_placement = "";
+	amzn_assoc_marketplace = "amazon";
+	amzn_assoc_region = "JP";
+</script>
+<script src="//ws-fe.amazon-adsystem.com/widgets/q?ServiceVersion=20070822&Operation=GetScript&ID=OneJS&WS=1&MarketPlace=JP"></script>
+
+</head>
+<body>
+	<div class="webmenu">
+		<input type="checkbox" id="webmenu-btn-check">
+		<label for="webmenu-btn-check" class="webmenu-btn">
+				<object class="tool-object" data="resource/openclose.svg" type="image/svg+xml"></object>
+		</label>
+		<!--ここからメニュー-->
+		<div class="webmenu-content">
+			<ul>
+				<li class="webmenu-parent"><span># Usage</span></li>
+				<li class="webmenu-item"><a href="https://docs.google.com/spreadsheets/d/1cWbGdO0Q5aSZlCufskcl2CdRrksGcS6Tx3MrsGSy-MI/edit?usp=sharing"
+					target="_blank" rel="noopener noreferrer">shortcut list</a></li>
+
+				<li class="webmenu-parent"><span># Access(bug/request/help)</span></li>
+				<li class="webmenu-item"><a href="mailto:michinari.nukazawa+vecterion@gmail.com">Access(mail)</a></li>
+				<li class="webmenu-item"><a href="https://github.com/MichinariNukazawa/vecterion_vge/issues/new"
+					target="_blank" rel="noopener noreferrer">Access(github issue)</a></li>
+
+				<li class="webmenu-parent"><span># Project page</span></li>
+				<li class="webmenu-item"><a href="https://github.com/MichinariNukazawa/vecterion_vge"
+					target="_blank" rel="noopener noreferrer">vecterion vge(GitHub)</a></li>
+	
+				<li class="webmenu-parent"><span># Donate</span></li>
+				<li class="webmenu-item"><a href="https://www.amazon.co.jp/registry/wishlist/27VUIZGIHC8W9/"
+					target="_blank" rel="noopener noreferrer">Amazon wishlist</a></li>
+				<li class="webmenu-item"><a href="https://daisy-bell.booth.pm/items/451968"
+					target="_blank" rel="noopener noreferrer">vecterion vge(Pixiv/BOOTH)</a></li>
+
+				<li class="webmenu-parent"><span># About</span></li>
+				<li class="webmenu-item"><a href="https://github.com/MichinariNukazawa/vecterion_vge"
+					target="_blank" rel="noopener noreferrer">README</a></li>
+				<li class="webmenu-item"><a id="about-dialog-button">About Dialog</a></li>
+			</ul>
+		</div>
+		<!--ここまでメニュー-->
+	</div>
+	<div id="header">
+			<div id='edit-control' class='frame'>
+			<span id='axis-x' class="axis-input">x:
+				<input type='text' class="calc-input"/><input type='number' class='input-spin-parts'/>px</span>
+			<span id='axis-y' class="axis-input">y:
+				<input type='text' class="calc-input"/><input type='number' class='input-spin-parts'/>px</span>
+			<span id='axis-w' class="axis-input">w:
+				<input type='text' class="calc-input"/><input type='number' class='input-spin-parts'/>px</span>
+			<span id='axis-h' class="axis-input">h:
+				<input type='text' class="calc-input"/><input type='number' class='input-spin-parts'/>px</span>
+			<input id='document-setting-dialog-button' type="button" value="Document Setting">
+		</div>
+	</div>
+	<div id="container-wrapper">
+		<div id="container-right">
+			<div id="tool">
+				<button id="tool__element-arrow">
+					<object class="tool-object" data="resource/tool/tool_element_allow_24x24.svg" type="image/svg+xml"></object>
+				</button>
+				<p class="hover_message">アイテムの選択・編集(V)</p>
+				<br>
+				<button id="tool__simple-element-arrow">
+					<object class="tool-object" data="resource/tool/tool_anchor_point_edit_allow_24x24.svg" type="image/svg+xml"></object>
+				</button>
+				<p class="hover_message">アンカーポイントの選択・編集(A)</p>
+				<br>
+				<button id="tool__simple-element-arrow">
+					<object class="tool-object" data="resource/tool/tool_anchor_point_handle_allow_24x24.svg" type="image/svg+xml"></object>
+				</button>
+				<p class="hover_message">アンカーハンドルの操作(Shift+C)</p>
+				<br>
+
+				<button id="tool__simple-element-arrow">
+					<object class="tool-object" data="resource/tool/tool_anchor_point_put_allow_24x24.svg" type="image/svg+xml"></object>
+				</button>
+				<p class="hover_message">アンカーポイントの追加(P)</p>
+				<br>
+				<button id="tool__simple-element-arrow">
+					<object class="tool-object" data="resource/tool/tool_anchor_point_put_allow_plus_24x24.svg" type="image/svg+xml"></object>
+				</button>
+				<p class="hover_message">アンカーポイントの挿入(Shift++)</p>
+				<br>
+				<button id="tool__simple-element-arrow">
+					<object class="tool-object" data="resource/tool/tool_anchor_point_knife_24x24.svg" type="image/svg+xml"></object>
+				</button>
+				<p class="hover_message">パス・アンカーポイントの切断(K)</p>
+				<br>
+				<button id="tool__simple-element-arrow">
+					<object class="tool-object" data="resource/tool/tool_figure_shape_24x24.svg" type="image/svg+xml"></object>
+				</button>
+				<p class="hover_message">形状の追加</p>
+				<br>
+			</div>
+		</div>
+		<div id="container-center">
+			<div id="edit-field-frame">
+				<div id="edit-field">
+				</div>	
+			</div>
+			<div id="footer">
+				<span id="canvas-scale-span">
+				<input id="canvas-scale" type="text" class="calc-input" value="100" autocomplete="off">
+				<select id="canvas-scale-select">
+					<option value="300%" >300%</option>
+					<option value="200%" >200%</option>
+					<option value="150%" >150%</option>
+					<option value="100%" >100%</option>
+					<option value="50%"  >50%</option>
+					<option value="33.3%">33.3%</option>
+					<option value="20%"  >20%</option>
+				</select>
+				</span>
+				%
+				<span id="history">(-/-)</span>
+				<span id="mouse-position">(-,-)</span>
+				<span id="message"></span>
+			</div>
+		</div>
+		<div id="container-left">
+			<div id="palette" class="item">
+				<div id="palette-rect">
+					<div class="col">
+						<button id="palette-pair">
+							<!-- 正直ここのSVG構造はブラウザの機能不足により必要に応じて汚い処理をあちこち入れている -->
+							<!--<object data="resource/palette/palette-pair.svg" type="image/svg+xml"></object>-->
+							<svg id="pallette-pair-parent" version="1.1" id="&#x30EC;&#x30A4;&#x30E4;&#x30FC;_1"
+								xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="140px" height="120px"
+								viewBox="0 0 140 120" style="enable-background:new 0 0 140 120;" xml:space="preserve">
+								<pattern id="pattern-checkers-border" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+									<rect class="checker" x="0" width="8" height="8" y="0" fill="#000"></rect>
+									<rect class="checker" x="8" width="8" height="8" y="8" fill="#000"></rect>
+								</pattern>
+								<pattern id="pattern-checkers-fill" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+									<rect class="checker" x="0" width="10" height="10" y="0" fill="#555"></rect>
+									<rect class="checker" x="10" width="10" height="10" y="10" fill="#555"></rect>
+								</pattern>
+								<g id="palette-pair-fill-group">
+									<rect x="0.5" y="0.5" fill="#fff" width="92" height="92"/>
+									<rect x="0.5" y="0.5" fill="url(#pattern-checkers-fill)" width="92" height="92"/>
+									<rect id="palette-pair-fill" x="0.5" y="0.5" style="fill:#CECECE;stroke:#000000;stroke-miterlimit:10;" width="92" height="92"/>
+								</g>
+								<g id="palette-pair-border-group">
+									<path fill="#fff" d="M42.5,22.5v97h97v-97H42.5z M123.5,104.5h-65v-65h65V104.5z"/>
+									<path fill="url(#pattern-checkers-border)" d="M42.5,22.5v97h97v-97H42.5z M123.5,104.5h-65v-65h65V104.5z"/>
+									<path id="palette-pair-border" style="fill:#CECECE;stroke:#000000;stroke-miterlimit:10;" d="M42.5,22.5v97h97v-97H42.5z M123.5,104.5h-65v-65h65V104.5z"/>
+								</g>
+							</svg>
+						</button>
+						<!--
+						<button id="palette-rect-fill"><object data="resource/palette/palette-fill.svg" type="image/svg+xml"></object></button>
+						<button id="palette-rect-border"><object data="resource/palette/palette-border.svg" type="image/svg+xml"></object></button>
+						-->
+					</div>
+					<div id="palette-sub" class="col">
+						<button id="palette-casring"><object data="resource/palette/palette-casring.svg" type="image/svg+xml"></object></button>
+						<button id="palette-invisible"><object data="resource/palette/palette-invisible.svg" type="image/svg+xml"></object></button>
+						<button id="palette-reset"><object data="resource/palette/palette-reset.svg" type="image/svg+xml"></object></button>
+					</div>
+				</div>
+				<div id="palette-slider">
+					<div id="r-slider" class="color-slider">R:<input type="range" min="0" max="255"><input type="number" min="0" max="255" value="255"></div>
+					<div id="g-slider" class="color-slider">G:<input type="range" min="0" max="255"><input type="number" min="0" max="255" value="255"></div>
+					<div id="b-slider" class="color-slider">B:<input type="range" min="0" max="255"><input type="number" min="0" max="255" value="0"></div>
+					<div id="a-slider" class="color-slider">A:<input type="range" min="0" max="100"><input type="number" min="0" max="100" value="100"></div>
+					<div><input id="color-picker" type="color"/> <span id="color-hex">#--------</span></div>
+				</div>
+			</div>
+			<div id="cotainer-left-scrollable">
+				<div class="item">
+					<div class="setting-line">
+						<span>border-width:</span>
+						<input id='border-width-input' type='number' min="0" value="8" />
+						<select id="border-width-select">
+							<option value="0.25">0.25</option>
+							<option value="0.5">0.5</option>
+							<option value="0.75">0.75</option>
+							<option value="1">1</option>
+							<option value="8">8</option>
+							<option value="10">10</option>
+							<option value="30">30</option>
+							<option value="50">50</option>
+							<option value="70">70</option>
+						</select>
+						<span class="unit">px</span>
+					</div>
+					<div class="setting-line">
+						<span>linecap:</span>
+						<select id="stroke-linecap">
+							<option value="butt">butt</option>
+							<option value="round">round</option>
+							<option value="square">square</option>
+						</select>
+						<span class="unit"></span>
+					</div>
+					<div class="setting-line">
+						<span>linejoin:</span>
+						<select id="stroke-linejoin">
+							<option value="miter">miter</option>
+							<option value="round">round</option>
+							<option value="bevel">bevel</option>
+						</select>
+						<span class="unit"></span>
+					</div>
+				</div>
+				<div class="item" id="figure-setting">
+					Figure
+					<div class="setting-line">
+						<span>figure kind:</span>
+						<select id="figure-kind">
+							<option value="Polygon">Polygon</option>
+							<option value="Circle">Circle</option>
+						</select>
+						<span class="unit"></span>
+					</div>
+					<span id="figure-polygon-setting">
+						<div class="setting-line">
+							<span>corner:</span>
+							<input id="figure-corner-num" type="number" step="1" min="3" value="4"/><br>
+							<span class="unit"></span>
+						</div>
+						<div class="setting-line">
+							<span>starry step corner:</span>
+							<input id="figure-starry-corner-step-num" type="number" step="1" min="1" value="0"/>
+							<span class="unit"></span>
+						</div>
+						<div class="setting-line">
+							<span>starry pit:</span>
+							<span class="simple-input-number-complex">
+								<input id="figure-starry-corner-pit-r-parcent" type="number" step="0.1" min="0" min="0" max="100" value="100"/>
+								<input id="figure-starry-corner-pit-r-parcent-step" type="number" step="5" min="0" min="0" max="100" value="100"/>
+							</span>
+							<span class="unit">%</span>
+						</div>
+					</span>
+					<div class="setting-line">
+						<span>convert:</span><input id="figure-to-bezier" type="button" value="to Bezier"> 
+					</div>
+				</div>
+			</div>
+			<div id="layer" class="item">
+				Document Structure
+								<!--
+				<button id="layer-new">
+					<object class="tool-object" data="resource/layer/layer_new_64x64.svg" type="image/svg+xml"></object>
+				</button>
+				<button id="layer-new-child">
+					<object class="tool-object" data="resource/layer/layer_new_child_64x64.svg" type="image/svg+xml"></object>
+				</button>
+				<button id="layer-del">
+					<object class="tool-object" data="resource/layer/layer_del_64x64.svg" type="image/svg+xml"></object>
+				</button>
+
+				<button id="layer-clone">
+					<object class="tool-object" data="resource/layer/layer_clone_64x64.svg" type="image/svg+xml"></object>
+				</button>
+				<br>
+								-->
+				<div id="layer-tree">
+					<div id='layer-item-src' class="layer-item">
+						<button class="layer_is-visible">
+							<object data="resource/layer/is-visible-open.svg" type="image/svg+xml"></object>
+							<object data="resource/layer/is-visible-close.svg" type="image/svg+xml" style="display:none"></object>
+						</button>
+						<button class="layer_is-lock">
+							<object data="resource/layer/is-lock-unlock.svg" type="image/svg+xml"></object>
+							<object data="resource/layer/is-lock-lock.svg" type="image/svg+xml" style="display:none"></object>
+						</button>
+						<span style="display: inline-block;width: 8px;"></span>
+						<span class="layer_level-spacer" style="display: inline-block;width: 0px;"></span>
+						<button class="layer_is-childs-open">
+							<object data="resource/layer/is-childs-open.svg" type="image/svg+xml"></object>
+							<object data="resource/layer/is-childs-close.svg" type="image/svg+xml" style="display:none"></object>
+						</button>
+						<span class="layer_name">Layer-Item-Templete</span>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="container-ad">
+			<iframe src="https://rcm-fe.amazon-adsystem.com/e/cm?o=9&p=21&l=ur1&category=couponfesta&banner=1WA56CG7P0ND96MDPCG2&f=ifr&linkID=81b16b651f88040047268597068c6cbb&t=michinarinuka-22&tracking_id=michinarinuka-22" width="125" height="125" scrolling="no" border="0" marginwidth="0" style="border:none;" frameborder="0" sandbox="allow-scripts allow-same-origin allow-popups allow-top-navigation-by-user-activation"></iframe>
+			<iframe src="https://rcm-fe.amazon-adsystem.com/e/cm?o=9&p=11&l=ur1&category=couponfesta&banner=0EHD5GVQP3P7NM5SAGG2&f=ifr&linkID=4460624ed693eefb24fab540cd369127&t=michinarinuka-22&tracking_id=michinarinuka-22" width="120" height="600" scrolling="no" border="0" marginwidth="0" style="border:none;" frameborder="0" sandbox="allow-scripts allow-same-origin allow-popups allow-top-navigation-by-user-activation"></iframe>
+			<iframe src="https://rcm-fe.amazon-adsystem.com/e/cm?o=9&p=21&l=ur1&category=couponfesta&banner=1WA56CG7P0ND96MDPCG2&f=ifr&linkID=81b16b651f88040047268597068c6cbb&t=michinarinuka-22&tracking_id=michinarinuka-22" width="125" height="125" scrolling="no" border="0" marginwidth="0" style="border:none;" frameborder="0" sandbox="allow-scripts allow-same-origin allow-popups allow-top-navigation-by-user-activation"></iframe>
+		</div>
+	</div>
+
+	<dialog id='document-setting-dialog' draggable="true">
+		<form method="dialog">
+			<h1>Document</h1>
+			<span id='document-w' class="document-input">w:
+				<input type='text' class="calc-input"/><input type='number' class='input-spin-parts'/>px</span>
+			<span id='document-h' class="document-input">h:
+				<input type='text' class="calc-input"/><input type='number' class='input-spin-parts'/>px</span>
+
+			<h1>Canvas</h1>
+			<h2>background:</h2>
+			<label for='editor-background_is-transparent'>
+				<input id='editor-background_is-transparent' type="checkbox"/>
+				<span>transparent checkerboard</span>
+			</label>
+			<br>
+			<h2>grid:</h2>
+			<label for='editor-background_is-showgrids'>
+				<input id='editor-background_is-showgrids' type="checkbox"/>
+				<span>show</span>
+			</label>
+			<br>
+			grid-interval:
+			<input id='editor-background_grid-interval' min="1" value="100" type="number"/>px
+			<br>
+
+			<h2>padding:</h2>
+			<span style="font-size:small">(document canvas out of frame)</span><br>
+			w: <input id='editor-background_padding-w' min="1" value="100" type="number"/>px
+			h: <input id='editor-background_padding-h' min="1" value="100" type="number"/>px
+			<br>
+
+		  <menu>
+			<button value="cancel">Cancel</button>
+			<button value="OK">OK</button>
+		  </menu>
+		</form>
+	  </dialog>
+	  <dialog id='layer-setting-dialog' draggable="true">
+		<form method="dialog">
+		  <h1>Name</h1>
+		  <input id='layer-name-input' type='text' class="default-focus-in-dialog"/>
+		  <menu>
+			<button value="cancel">Cancel</button>
+			<button value="OK">OK</button>
+		  </menu>
+		</form>
+	  </dialog>
+	  <dialog id='doc-save-dialog' draggable="true">
+		<form method="dialog">
+		  <h1>Save?</h1>
+		  document name:<br>
+		  <input id='doc-name-input' type='text' maxlength="64" class="default-focus-in-dialog"/>
+		  <menu>
+			<button value="cancel">Cancel</button>
+			<button value="Save">Save</button>
+		  </menu>
+		</form>
+	  </dialog>
+	  <dialog id='doc-select-dialog' draggable="true">
+		<form method="dialog">
+		  <h1>Documents</h1>
+		  <div id="doc-list">
+			<div id='doc-item-src' class="doc-item">
+				<img class="doc-item-thumb" src="resource/image-not-found.png">
+				<div class="doc-item-tag">
+					<div class="doc-name">Document-Item-Templete</div>
+					<div class="doc-subinfo">
+						latest update: <span class="doc-latest-update-time" >xxxx.xx.xx xx:xx</span>
+						(<span class="doc-bytesize" >----</span>kb)
+					</div>
+				</div>
+				<button class="doc-item-edit"><object data="resource/doc/doc-edit.svg" type="image/svg+xml"></object></button>
+				<button class="doc-item-delete"><object data="resource/dustbox.svg" type="image/svg+xml"></object></button>
+			</div>
+		  </div>
+		  <menu>
+			<button value="cancel" class="default-focus-in-dialog">Cancel</button>
+			<button value="NewDocument">New document</button>
+		  </menu>
+		</form>
+	  </dialog>
+	  <dialog id='confirm-dialog' draggable="true">
+		<form method="dialog">
+		  <h1 id="confirm-title">＞Ready?</h1>
+		  <menu>
+			<button value="cancel" class="default-focus-in-dialog">Cancel</button>
+			<button value="OK">OK</button>
+		  </menu>
+		</form>
+	  </dialog>
+	  <dialog id='rotate-dialog' draggable="true">
+		<form method="dialog">
+		  <h1>Rotate</h1>
+		  degree: <input id='rotate-input' type='number' step="0.1" exspinstep="10" min="0" max="360" value ="0" class="default-focus-in-dialog"/>
+		  <menu>
+			<button value="cancel">Cancel</button>
+			<button value="OK">OK</button>
+		  </menu>
+		</form>
+	  </dialog>
+	  <dialog id='input2d-dialog' draggable="true">
+		<form method="dialog">
+		  <h1 id="input2d-dialog-title">Input2D</h1>
+		  x: <input id='input2d-dialog-x-input' type='number' step="0.1" exspinstep="100" value ="0" class="default-focus-in-dialog"/>
+		  <span class="unit">px</span>
+		  <br>
+		  y: <input id='input2d-dialog-y-input' type='number' step="0.1" exspinstep="100" value ="0"/>
+		  <span class="unit">px</span>
+		  <br>
+		  <label for='input2d-dialog-is-keep-aspect-ratio'>
+			<input id='input2d-dialog-is-keep-aspect-ratio' type="checkbox" checked />
+			<span>Keep aspect ratio</span>
+		</label>
+		  <menu>
+			<button value="cancel">Cancel</button>
+			<button value="OK">OK</button>
+		  </menu>
+		</form>
+	  </dialog>
+	  <dialog id='startup-dialog' open draggable="true">
+		<form method="dialog">
+		  <h1>VECTERION / UNIT-1</h1>
+		  <div>(wish) the true vector graphics editor.</div>
+		  <image src='resource/icon.png' height='100px'/>
+		  <div>project daisy bell 2015</div>
+		  <div id="startup-version">version:<span id="startup-version-number">xxxx.xx.xx</span></div>
+		  <div id="startup-caution">do not critical use, because this alpha.</div>
+		  <menu id='startup-dialog-close-elem'>
+			<button value="Close">Close</button>
+		  </menu>
+		</form>
+	  </dialog>
+
+	  <!-- contextmenu -->
+
+	<menu class="contextmenu">
+		<li class="contextmenu-item">
+			<button type="button" class="contextmenu-btn" id="contextmenu-move-button"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Move</span> </button>
+		  </li>
+		  <li class="contextmenu-item">
+			<button type="button" class="contextmenu-btn" id="contextmenu-resize-button"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Resize</span> </button>
+		  </li>
+		  <li class="contextmenu-item">
+			<button type="button" class="contextmenu-btn" id="contextmenu-rotate-button"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Rotate</span> </button>
+		  </li>
+		  <li class="contextmenu-separator"></li>
+		  <li class="contextmenu-item sub-contextmenu">
+		  <button type="button" class="contextmenu-btn"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Align</span> </button>
+		  <menu class="contextmenu">
+			<li class="contextmenu-item">
+			  <button type="button" class="contextmenu-btn" id="align-left"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Align Left</span> </button>
+			</li>
+			<li class="contextmenu-item">
+				<button type="button" class="contextmenu-btn" id="align-x-center"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Align X Center</span> </button>
+			</li>
+			<li class="contextmenu-item">
+				<button type="button" class="contextmenu-btn" id="align-right"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Align Right</span> </button>
+			</li>
+			<li class="contextmenu-item">
+				<button type="button" class="contextmenu-btn" id="align-top"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Align Top</span> </button>
+			  </li>
+			  <li class="contextmenu-item">
+				  <button type="button" class="contextmenu-btn" id="align-y-center"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Align Y Center</span> </button>
+			  </li>
+			  <li class="contextmenu-item">
+				  <button type="button" class="contextmenu-btn" id="align-bottom"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Align Bottom</span> </button>
+			  </li>
+		</menu>
+	</li>
+	<li class="contextmenu-item sub-contextmenu">
+		<button type="button" class="contextmenu-btn"> <i class="fa fa-users"></i> <span class="contextmenu-text">Interval</span> </button>
+		<menu class="contextmenu">
+			<li class="contextmenu-item"><button type="button" class="contextmenu-btn" id="interval-x-left"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Interval X Left</span> </button></li>
+			<li class="contextmenu-item"><button type="button" class="contextmenu-btn" id="interval-x-center"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Interval X Center</span> </button></li>
+			<li class="contextmenu-item"><button type="button" class="contextmenu-btn" id="interval-x-right"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Interval X Right</span> </button></li>
+			<li class="contextmenu-item"><button type="button" class="contextmenu-btn" id="interval-y-top"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Interval Y Top</span> </button></li>
+			<li class="contextmenu-item"><button type="button" class="contextmenu-btn" id="interval-y-center"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Interval Y Center</span> </button></li>
+			<li class="contextmenu-item"><button type="button" class="contextmenu-btn" id="interval-y-bottom"> <i class="fa fa-comment"></i> <span class="contextmenu-text">Interval Y Bottom</span> </button></li>
+	  </menu>
+  </li>
+	  </menu>
+</body>
