@@ -2,7 +2,7 @@ vecterion_vge - vector graphics editor -
 ====
 
 # Get started
-[Vecterion WebApp][gh-pages]
+[Vecterion WebApp][gh-pages]  
 
 
 # About
@@ -40,6 +40,7 @@ twitter: [@MNukazawa][twitter]
 
 Develop by Michinari.Nukazawa, in project "daisy bell".  
 
+[gh-pages]: https://michinarinukazawa.github.io/vecterion_vge/
 [pixiv_booth_project_daisy_bell]: https://daisy-bell.booth.pm/
 [vecterion_pixiv_booth]: https://daisy-bell.booth.pm/items/451968
 [amazon_wishlist]: https://www.amazon.co.jp/registry/wishlist/27VUIZGIHC8W9/
