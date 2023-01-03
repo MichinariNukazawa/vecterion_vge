@@ -130,6 +130,22 @@
 			"checkerWidth": 12
 		}
 	},
+	"editor": {
+		"resize": {
+			"isResizeStrokeWidth": false
+		},
+		"guide": {
+			"isVisibleGuide": true,
+			"isLockGuide": false
+		},
+		"snap": {
+			"snapForAxisWidth": 8,
+			"isSnapForGrid": false,
+			"isSnapForPixel": false,
+			"isSnapForItem": false,
+			"isSnapForGuide": false
+		}
+	},
 	"focus": {
 		"focusItemIndexes": [],
 		"focusAPCplxes": []

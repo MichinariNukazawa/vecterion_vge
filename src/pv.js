@@ -151,11 +151,20 @@ module.exports = class PV{
 		if(! item){
 			return undefined;
 		}
-		const ap = item.aps.at(cplx[1]);
-		if(! ap){
+		switch(item.kind){
+		case 'Bezier':{
+			const ap = item.aps.at(cplx[1]);
+			if(! ap){
+				return undefined;
+			}
+			return ap;
+		}
+		case 'Guide':{
+			return PV.AP_newFromPoint(item.point);
+		}
+		default:
 			return undefined;
 		}
-		return ap;
 	}
 	static apsFromItems(items, cplxes){
 		let aps = [];
@@ -204,27 +213,71 @@ module.exports = class PV{
 			return [item];
 		case 'Figure':
 			return PV.Item_beziersFromFigure(item);
+		case 'Guide':
+			return PV.Item_beziersFromGuide(item);
 		default:
 			console.error('BUG', item);
 			return undefined;
 		}
 	}
-	static BezierItem(){
+	static FigureItemDefault(){
+		return {
+			'kind': 'Figure', // 輪郭
+			'name': 'Figure',
+			'isVisible': true,
+			'isLock': false,
+			'colorPair': undefined, // TODO 初期値
+			'border': undefined, // TODO 初期値
+			//
+			'rotate': 0,
+			'point': {'x': 0, 'y': 0},
+			'figureKind': 'Polygon', // 多角形
+			'rsize': {'x': 100, 'y': 100},
+			'cornerNum': 4,
+			'starryCornerStepNum': 1,
+			'starryCornerPitRPercent': 100,
+		};
+	}
+	static GuideItemDefault(){
+		return {
+			'kind': 'Guide',
+			'name': 'Guide',
+			'isVisible': true,
+			'isLock': false,
+			//
+			'point': {'x': 0, 'y': 0},
+			'axis': 'Vertical',
+		};
+	}
+	static BezierItemDefault(){
 		return {
 			'kind': 'Bezier',
 			'name': '',
 			'isVisible': true,
 			'isLock': false,
-			'colorPair': '#ffffffff',
-			'border': '#000000ff',
+			'colorPair': undefined, // TODO 初期値
+			'border': undefined, // TODO 初期値
 			//
 			'aps': [],
 			'isCloseAp': false,
 		};
 	}
+	static Item_beziersFromGuide(item){
+		const copyBezierFromGuide = (item) => {
+			let bezier = PV.BezierItemDefault();
+			bezier.name = item.name;
+			bezier.isVisible = item.isVisible;
+			bezier.isLock = item.isLock;
+			return bezier;
+		};
+
+		let bezier = copyBezierFromGuide(item);
+		bezier.aps.push(PV.AP_newFromPoint(item.point));
+		return [bezier];
+	}
 	static Item_beziersFromFigure(fig){
 		const copyBezierFromFigure = (fig) => {
-			let bezier = PV.BezierItem();
+			let bezier = PV.BezierItemDefault();
 			bezier.name = fig.name;
 			bezier.isVisible = fig.isVisible;
 			bezier.isLock = fig.isLock;
@@ -552,7 +605,7 @@ module.exports = class PV{
 			for(let i = 0; i < 5; i++){
 				const t = (((endt - startt)/4) * i) + startt;
 				const bezierPoint = this.Bezier_calcPoint(t, bezierps[0], bezierps[1], bezierps[2], bezierps[3]);
-				const dl = this.diagonalLengthFromPoint(PV.pointSub(point, bezierPoint));
+				const dl = PV.diagonalLengthFromPoint(PV.pointSub(point, bezierPoint));
 				ts.push(t);
 				dls.push(dl);
 				if(i === 0){

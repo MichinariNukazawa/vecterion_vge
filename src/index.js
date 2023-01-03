@@ -2,14 +2,16 @@
 
 const StrCalc = require('../src/strcalc')
 const PV = require("../src/pv.js"); // assertモジュールのinclude
-let _ = require('lodash');
+let lodash = require('lodash');
 var  diff  = require('deep-diff') 
 const clonedeep = require('lodash/cloneDeep');
 const {Base64} = require('js-base64');
+const xmlFormatter = require('xml-formatter');
+
 const PACKAGE = require('./../package.json')
 const DOC_DEFAULT = require('./doc_default.json');
 const { Runner } = require('mocha');
-const { apFromItems } = require('../src/pv.js');
+const { apFromItems, mathRadianFromFieldDegree } = require('../src/pv.js');
 
 // documentの最大サイズ（値は適当）
 const DOCUMENT_MAX_SIZE_AXIS_PX = 40000;
@@ -37,6 +39,13 @@ const EDITOR_MOUSE_OF_MOUSEUP_DEFAULT = {
 	// 時間のかかる処理をmousemove中に行わずmouseupするまでサボるフラグ
 	// MEMO 現状、これを使うような処理は高速・軽量化しなければならないものではないかと思っている。
 	'isLatedFocusChangeInMousemoveCallbacked_': false,
+	// **
+	'snapAxisXKind': undefined,
+	'snapAxisYKind': undefined,
+	'snapAxisXTargetPoint': undefined,
+	'snapAxisYTargetPoint': undefined,
+	'snapItemApCplxX': undefined,
+	'snapItemApCplxY': undefined,
 };
 
 const EDITOR_HOVER_DEFAULT = {
@@ -90,33 +99,6 @@ let field = {
 		'pointR': 10,
 		'cornerWidth': 25,
 	},
-};
-
-const CANVAS_DEFAULT = {
-	'padding': {
-		'w': 200,
-		'h': 100,
-	},
-	'grids': [
-		{
-			'interval': 200,
-			'color': '#3070ffff',
-			'strokew': 0.3,
-		},
-	],
-	'background': {
-		'color': '#ffffff00',
-		'checkerWidth': 12,
-	},
-//	'lock': {
-//		'isLockForGuide': false,
-//	},
-//	'snap': {
-//		//'isSnapForGuide': false,
-//		'isSnapForGrid': false,
-//		'isSnapForPixel': false,
-//		//'isSnapForItem': false,
-//	},
 };
 
 class Strage{
@@ -444,6 +426,8 @@ class History {
 		const doc = (!! doc_) ? doc_ : DOC_DEFAULT;
 		this.currentDoc = deepcopy(doc);
 
+		this.currentDoc = History.conversionDoc_(this.currentDoc);
+
 		this.hist = [{ 'cause': (!! doc_) ? 'load doc':'new doc', 'doc': History.removeCache(deepcopy(this.currentDoc)), },];
 		this.histIndex = 0;
 		History.updatePrevItemCache(this.currentDoc);
@@ -461,6 +445,13 @@ class History {
 	}
 	stackNum(){
 		return this.histIndex;
+	}
+
+	static conversionDoc_(doc){
+		// 現行Document構造に新規追加されたキーを、docに付与する。
+		let def = deepcopy(DOC_DEFAULT);
+		delete def.items;
+		return lodash.merge({}, def, doc);
 	}
 
 	static updatePrevItemCache(doc){
@@ -627,6 +618,7 @@ const TOOLS = {
 	'APInsertTool': 	{ 'Id': 4, 'isItem':  true, 'name': 'APInsertTool' },
 	'APKnifeTool':		{ 'Id': 5, 'isItem':  true, 'name': 'APKnifeTool' },
 	'FigureAddTool':	{ 'Id': 6, 'isItem':  true, 'name': 'FigureAddTool' },
+	'GuideAddTool':		{ 'Id': 7, 'isItem':  true, 'name': 'GuideAddTool' },
 };
 function Tool_getToolFromIndex(index) {
 	for (const [key, tool] of Object.entries(TOOLS)) {
@@ -912,7 +904,7 @@ function loadAfterRun(){
 						// AP自体は未Focusでも含めることとした。
 						const isAccepted = !PV.exforReverse(hist.now().focus.focusItemIndexes, (ix, itemIndex) => {
 							const itemt = hist.now().items[itemIndex];
-							if((! itemt.isVisible) || itemt.isLock){
+							if((! isMetaVisible(itemt)) || isMetaLock(itemt)){
 								return true;
 							}
 							const firstAP = itemt.aps.at(0);
@@ -1050,7 +1042,30 @@ function loadAfterRun(){
 				setMessage('new Item(Figure).');
 				renderingAll();
 				}
-				break;	
+				break;
+			case TOOLS.GuideAddTool.Id:{
+				// アイテムを掴んだらそれをmove...したいので実装簡略化のためにToolを切り替えてしまう。
+				const [touchedItemIndex, touchedApIndex] = getTouchedAp(hist.now().items, point);
+				if(-1 !== touchedApIndex){
+					const item = hist.now().items.at(touchedItemIndex);
+					if('Guide' === item.kind){
+						setToolIndex(TOOLS.ItemEditTool.Id);
+						Focus_setCurrentAP(touchedItemIndex, touchedApIndex);
+						editor.mouse.mode = 'move';
+						renderingAll();
+						break;
+					}
+				}
+
+				const axis = document.getElementById('guide-axis').value;
+				const guide = newGuideItem(point, axis);
+				hist.now().items.push(guide);
+				Focus_clear();
+				Focus_addItemIndex(hist.now().items.length - 1);
+				setMessage('new Item(Guide).');
+				renderingAll();
+				}
+				break;			
 			default:
 				console.log('tool not implement', editor.toolIndex);
 			}
@@ -1315,7 +1330,8 @@ function loadAfterRun(){
 
 				switch (editor.mouse.mode) {
 					case 'move':{
-						const [degree, move] = angleSnapAndMousemoveVectorInCanvas(event);
+						const [degree, move] = snapMousemoveVectorInCanvas(event.shiftKey);
+						//const [degree, move] = angleSnapAndMousemoveVectorInCanvas(event);
 						hist.now().focus.focusItemIndexes.forEach(itemIndex => {
 							Item_moveWithIndex(itemIndex, move);
 						});
@@ -1326,7 +1342,7 @@ function loadAfterRun(){
 						const mouseRect = getMousemoveRectInCanvas();
 						let touchedIndexes = [];
 						hist.now().items.forEach((item, index) => {
-							if((! item.isVisible) || item.isLock){
+							if((! isMetaVisible(item)) || isMetaLock(item)){
 								return;
 							}
 							const itemRect = PV.rectFromRange2d(PV.Item_range2d(item));
@@ -1366,7 +1382,7 @@ function loadAfterRun(){
 						renderingEditorUserInterface();
 						break;
 					case 'rotate':{
-							const [degree, move] = angleSnapAndMousemoveVectorInCanvas(event);
+							const [degree, move] = angleSnapAndMousemoveVectorInCanvas(event.shiftKey);
 							hist.now().focus.focusItemIndexes.forEach(itemIndex => {
 								Item_rotateWithIndex(itemIndex, degree, editor.mouse.editCenter);
 							});
@@ -1396,7 +1412,7 @@ function loadAfterRun(){
 	
 					switch (editor.mouse.mode) {
 					case 'move':{
-						const [degree, move] = angleSnapAndMousemoveVectorInCanvas(event);
+						const [degree, move] = angleSnapAndMousemoveVectorInCanvas(event.shiftKey);
 						switch(editor.mouse.touchedAPAHKind){
 						case 'ap':{
 							hist.now().focus.focusAPCplxes.forEach(([itemIndex, apIndex]) => {
@@ -1428,17 +1444,25 @@ function loadAfterRun(){
 						const mouseRect = getMousemoveRectInCanvas();
 						let touchedCplxes = [];
 						hist.now().items.forEach((item, itemIndex) => {
-							if((! item.isVisible) || item.isLock){
+							if((! isMetaVisible(item)) || isMetaLock(item)){
 								return;
 							}
-							if('Bezier' !== item.kind){
-								return;
-							}
-							item.aps.forEach((ap, apIndex) => {
-								if(PV.isTouchPointInRect(mouseRect, ap.point)){
-									touchedCplxes.push([itemIndex, apIndex]);
+							switch(item.kind){
+							case 'Bezier':
+								item.aps.forEach((ap, apIndex) => {
+									if(PV.isTouchPointInRect(mouseRect, ap.point)){
+										touchedCplxes.push([itemIndex, apIndex]);
+									}
+								});
+								break;
+							case 'Guide':
+								if(PV.isTouchPointInRect(mouseRect, item.point)){
+									touchedCplxes.push([itemIndex, 0]);
 								}
-							});
+								break;
+							default: // NOP
+								break;
+							}
 						});
 						// 新たにItemが矩形選択範囲に入った場合、それを追加する
 						touchedCplxes.forEach(cplx => {
@@ -1464,7 +1488,7 @@ function loadAfterRun(){
 						if(! editor.isAddAnchorPoindByAAPTool){
 							const isTouched = !PV.exfor(hist.now().focus.focusItemIndexes, (ix, itemIndex) => {
 								const itemt = hist.now().items[itemIndex];
-								if((! itemt.isVisible) || itemt.isLock){
+								if((! isMetaVisible(itemt)) || isMetaLock(itemt)){
 									return true;
 								}
 								if(itemt.isCloseAp){
@@ -1546,7 +1570,7 @@ function loadAfterRun(){
 
 					// 先頭APを指していた場合、APは逆(ここでは一旦指す方向を逆にしている)
 					editor.mouse.editCenter = nowAp.point;
-					const [degree, move] = angleSnapAndMousemoveVectorInCanvas(event);
+					const [degree, move] = angleSnapAndMousemoveVectorInCanvas(event.shiftKey);
 					let vec = move;
 					vec.x *= (editor.apAddTool.isGrowthTailAp) ? 1 : -1;
 					vec.y *= (editor.apAddTool.isGrowthTailAp) ? 1 : -1;
@@ -2026,7 +2050,7 @@ function loadAfterRun(){
 			renderingDocOnCanvas(draw.group(), doc);
 			
 			// to download file.
-			const ssvg = draw.svg().replace('>', `><!-- generated by ${PACKAGE.name} ${PACKAGE.version} -->`);
+			const ssvg = xmlFormatter(draw.svg().replace('>', `><!-- generated by ${PACKAGE.name} ${PACKAGE.version} -->`));
 			const svgBase64 = "data:image/svg+xml;charset=utf-8;base64," + Base64.encode(ssvg);
 			const currentdocinfo = strage.loadOrNewCurrentDocInfo();
 			const name = (!! currentdocinfo.name) ? currentdocinfo.name : 'untitled';
@@ -2181,6 +2205,79 @@ function loadAfterRun(){
 		});
 		// 初期化
 		setToolIndex(TOOLS.APAddTool.Id);
+	}
+	/* editor setting */
+	{
+		let dialog = document.getElementById('editor-setting-dialog');
+		document.getElementById('editor-setting-dialog-button').addEventListener('click', (event) => {
+			console.log('clicked', event.currentTarget.id);
+			document.getElementById('editor_resize_is-resize-stroke-width').checked = hist.now().editor.resize.isResizeStrokeWidth;
+			document.getElementById('editor_guide_is-lock').checked = hist.now().editor.guide.isLockGuide;
+			document.getElementById('editor_guide_is-visible').checked = hist.now().editor.guide.isVisibleGuide;
+			document.getElementById('editor_snap_is-snap-for-grid').checked = hist.now().editor.snap.isSnapForGrid;
+			document.getElementById('editor_snap_is-snap-for-pixel').checked = hist.now().editor.snap.isSnapForPixel;
+			document.getElementById('editor_snap_is-snap-for-item').checked = hist.now().editor.snap.isSnapForItem;
+			document.getElementById('editor_snap_is-snap-for-guide').checked = hist.now().editor.snap.isSnapForGuide;
+
+			showModalWrapper(dialog);
+		});
+		dialog.addEventListener('close', (event) => {
+			console.log('closed dialog', event.currentTarget.id, dialog.returnValue);
+			renderingAll();
+			checkpointStacking('editor setting');
+		});
+
+		document.getElementById('editor_resize_is-resize-stroke-width').addEventListener('change', (event)=> {
+			console.log('changed', event.currentTarget.id);
+			hist.now().editor.resize.isResizeStrokeWidth = event.currentTarget.checked;
+		});
+
+		document.getElementById('editor_guide_is-lock').addEventListener('change', (event)=> {
+			console.log('changed', event.currentTarget.id);
+			hist.now().editor.guide.isLockGuide = event.currentTarget.checked;
+			if(hist.now().editor.guide.isLockGuide){
+				PV.exforReverse(hist.now().focus.focusItemIndexes, (ix, itemIndex) => {
+					const item = hist.now().items.at(itemIndex);
+					if('Guide' === item.kind){
+						Focus_removeItemIndex(itemIndex);
+					}
+				});	
+			}
+			updateLayerView();
+			renderingEditorUserInterface();
+		});
+		document.getElementById('editor_guide_is-visible').addEventListener('change', (event)=> {
+			console.log('changed', event.currentTarget.id);
+			hist.now().editor.guide.isVisibleGuide = event.currentTarget.checked;
+			if(! hist.now().editor.guide.isVisibleGuide){
+				PV.exforReverse(hist.now().focus.focusItemIndexes, (ix, itemIndex) => {
+					const item = hist.now().items.at(itemIndex);
+					if('Guide' === item.kind){
+						Focus_removeItemIndex(itemIndex);
+					}
+				});	
+			}
+			updateLayerView();
+			renderingEditorUserInterface();
+		});
+	
+		document.getElementById('editor_snap_is-snap-for-grid').addEventListener('change', (event)=> {
+			console.log('changed', event.currentTarget.id);
+			hist.now().editor.snap.isSnapForGrid = document.getElementById('editor_snap_is-snap-for-grid').checked;
+		});
+		document.getElementById('editor_snap_is-snap-for-pixel').addEventListener('change', (event)=> {
+			console.log('changed', event.currentTarget.id);
+			hist.now().editor.snap.isSnapForPixel = document.getElementById('editor_snap_is-snap-for-pixel').checked;
+		});
+		document.getElementById('editor_snap_is-snap-for-item').addEventListener('change', (event)=> {
+			console.log('changed', event.currentTarget.id);
+			hist.now().editor.snap.isSnapForItem = document.getElementById('editor_snap_is-snap-for-item').checked;
+		});
+		document.getElementById('editor_snap_is-snap-for-guide').addEventListener('change', (event)=> {
+			console.log('changed', event.currentTarget.id);
+			hist.now().editor.snap.isSnapForGuide = document.getElementById('editor_snap_is-snap-for-guide').checked;
+		});
+
 	}
 	/* document setting */
 	{
@@ -2548,6 +2645,21 @@ function loadAfterRun(){
 		});
 		document.getElementById('figure-setting').style.display = 'none';
 	}
+	// ** guide
+	{
+		document.getElementById('guide-axis').addEventListener('change', (e) => {
+			console.log(e.target.id, e.target.value);
+			let item = Focus_currerntItem();
+			if((! item) || ('Guide' !== item.kind)){
+				console.error('BUG', item);
+				return;
+			}
+			item.axis = e.target.value;
+			renderingAll();
+			checkpointStacking('figure-kind');
+		});
+		document.getElementById('guide-setting').style.display = 'none';
+	}
 
 	/* layer */
 	{
@@ -2690,6 +2802,15 @@ function loadAfterRun(){
 			});
 			let inputs = dialog.getElementsByTagName('input');
 			inputs.forEach(input => {
+				// dialogをdraggableにすると、inputで範囲選択しようとした際に範囲選択でなくdialogが動いてしまう。
+				input.draggable = true; // 一旦 draggable="true" を付与しないとそもそもコールバックされない。
+				input.addEventListener('dragstart', (event) => {
+					console.log('DRAG');
+					event.preventDefault();
+					event.stopPropagation();
+				});
+			});
+			inputs.forEach(input => {
 				// MEMO 入力確定してからのEnterキーではOK(Save等含む)で閉じる処理。
 				// MEMO（ですぐ閉じるのはちょっと不安なのでOK Buttonにフォーカスする処理でお茶を濁している）
 
@@ -2724,7 +2845,8 @@ function loadAfterRun(){
 				input.addEventListener("compositionend", () => {
 					isCompositionFinished = true;
 				});
-			})
+			});
+			// TODO ダイアログの外側をクリックしたら閉じる
 		});
 	}
 	// ** dialogをドラッグ可能にする
@@ -2752,7 +2874,7 @@ function loadAfterRun(){
 					pos.x = parseInt(dialog.style.left.slice(0, -2), 10);	
 				}
 				evt.dataTransfer.setDragImage(document.createElement('div'), 0, 0);
-				console.log('dragstart', evt.pageX, evt.pageY, mouse, pos, dialog.style.top);
+				console.log('dragstart', evt.pageX, evt.pageY, mouse, pos, dialog.style.top, evt.currentTarget.id);
 			});
 			dialog.addEventListener('drag', evt => {
 				if (evt.x === 0 && evt.y === 0) return;
@@ -3369,28 +3491,20 @@ function newName(src){
 	return name;
 }
 function newFigureItem(point){
-	let figure = {
-		'kind': 'Figure', // 輪郭
-		'name': 'Figure',
-		'isVisible': true,
-		'isLock': false,
-		'colorPair': undefined, // TODO 初期値
-		'border': undefined, // TODO 初期値
-		//
-		'rotate': 0,
-		'point': {'x': 0, 'y': 0},
-		'figureKind': 'Polygon', // 多角形
-		'rsize': {'x': 100, 'y': 100},
-		'cornerNum': 4,
-		'starryCornerStepNum': 1,
-		'starryCornerPitRPercent': 100,
-	};
+	let figure = PV.FigureItemDefault();
 	figure.name = newName(figure.name);
 	figure.colorPair = deepcopy(palette.colorPair);
 	figure.border = deepcopy(border);
 	figure.point = deepcopy(point);
 	figure.rsize = {'x': toCanvas(100), 'y': toCanvas(100)};
 	return figure;
+}
+function newGuideItem(point, axis){
+	let guide = PV.GuideItemDefault();
+	guide.name = newName(guide.name);
+	guide.point = deepcopy(point);
+	guide.axis = axis;
+	return guide;
 }
 function newBezierItem(point){
 	const overwrite = {
@@ -3404,7 +3518,7 @@ function newBezierItem(point){
 		'aps': [PV.AP_newFromPoint(point)],
 		'isCloseAp': false,
 	};
-	return _.merge(PV.BezierItem(), overwrite)
+	return lodash.merge(PV.BezierItemDefault(), overwrite)
 }
 
 function cutOrCopyToClipboard(kind){
@@ -3505,6 +3619,7 @@ function pasteByClipboard(vec_){
 			});
 			break;
 		case 'Figure':
+		case 'Guide':
 			item.point = PV.pointAdd(item.point, PV.toPoint(vec));
 			break;
 		default:
@@ -3740,7 +3855,7 @@ function updateLayerView(){
 
 			let [item, itemIndex] = getItemAndIndexFromName(nameFromId(event.currentTarget.parentElement.id));
 			item.isVisible = (! item.isVisible);
-			if((! item.isVisible)){
+			if((! isMetaVisible(item))){
 				Focus_removeItemIndex(itemIndex);
 			}
 
@@ -3753,7 +3868,7 @@ function updateLayerView(){
 
 			let [item, itemIndex] = getItemAndIndexFromName(nameFromId(event.currentTarget.parentElement.id));
 			item.isLock = (! item.isLock);
-			if(item.isLock){
+			if(isMetaLock(item)){
 				Focus_removeItemIndex(itemIndex);
 			}
 
@@ -3814,10 +3929,26 @@ function updateLayerView(){
 		let isLevelSpacerElem = layerItemElem.getElementsByClassName('layer_level-spacer')[0];
 		let layerNameElem = layerItemElem.getElementsByClassName('layer_name')[0];
 
-		isVisibleElem.children[0].style.display = layerItem.isVisible ? 'block' : 'none';
+		isVisibleElem.children[0].style.display = (layerItem.isVisible) ? 'block' : 'none';
 		isVisibleElem.children[1].style.display = (! layerItem.isVisible) ? 'block' : 'none';
 		isLockElem.children[0].style.display = (! layerItem.isLock) ? 'block' : 'none';
-		isLockElem.children[1].style.display = layerItem.isLock ? 'block' : 'none';
+		isLockElem.children[1].style.display = (layerItem.isLock) ? 'block' : 'none';
+
+		if(isMetaVisible(layerItem)){
+			isVisibleElem.children[0].classList.remove('layer_is-meta-disable');
+			isVisibleElem.children[1].classList.remove('layer_is-meta-disable');
+		}else{
+			isVisibleElem.children[0].classList.add('layer_is-meta-disable');
+			isVisibleElem.children[1].classList.add('layer_is-meta-disable');
+		}
+		if(isMetaLock(layerItem)){
+			isLockElem.children[0].classList.add('layer_is-meta-disable');;
+			isLockElem.children[1].classList.add('layer_is-meta-disable');;
+		}else{
+			isLockElem.children[0].classList.remove('layer_is-meta-disable');
+			isLockElem.children[1].classList.remove('layer_is-meta-disable');
+		}
+
 		isLevelSpacerElem.style.width = 18 * level;
 		isChildsOpenElem.children[0].style.display = layerItem.isChildView ? 'block' : 'none';
 		isChildsOpenElem.children[1].style.display = (! layerItem.isChildView) ? 'block' : 'none';
@@ -3876,7 +4007,7 @@ function checkpointStacking(cause, isDup) {
 	}
 	// mouse,tool操作については、差分があれば更新という仕組みで手抜きする。
 	const now = History.removeCache(deepcopy(hist.now()));
-	if (!_.isEqual(now, hist.prev())) {
+	if (!lodash.isEqual(now, hist.prev())) {
 		console.log('document changed.')
 		//console.log(hist.now());
 		//console.log(diff(hist.prev(), now));
@@ -3897,7 +4028,7 @@ function nearPointPosi(items, itemIndexes, point){
 			console.error('BUG', itemIndex, items);
 			return;
 		}
-		if((! item.isVisible) || item.isLock){
+		if((! isMetaVisible(item)) || isMetaLock(item)){
 			return;
 		}
 		if('Bezier' !== item.kind){
@@ -4077,7 +4208,7 @@ function joinItem(itemIndex0, apIndex0, itemIndex1, apIndex1){
 function getTouchedItem(items, point){
 	let touchedItemIndex = -1;
 	PV.exforReverse(items, (index, item) => {
-		if((! item.isVisible) || item.isLock){
+		if((! isMetaVisible(item)) || isMetaLock(item)){
 			return true;
 		}
 
@@ -4098,18 +4229,30 @@ function getTouchedItem(items, point){
 	return touchedItemIndex;
 }
 
-function getTouchedAp(items, point){
+function getTouchedAp(items, mousePoint){
 	let res = [-1, -1];
 	const isTouched = !PV.exforReverse(items, (itemIndex, item) => {
-		if((! item.isVisible) || item.isLock){
+		if((! isMetaVisible(item)) || isMetaLock(item)){
 			return true;
 		}
-		if('Bezier' !== item.kind){
+
+		switch(item.kind){
+		case 'Bezier':
+			break;
+		case 'Guide':{
+			if(PV.isTouchPointAndPoint(mousePoint, item.point, toCanvas(field.touch.pointR))){
+				res[0] = itemIndex;
+				res[1] = 0;
+				return false;
+			}
+		}
+			return true;
+		default:
 			return true;
 		}
 
 		let isTouchedAP = !PV.exforReverse(item.aps, (apIndex, ap) => {
-			if(PV.isTouchPointAndPoint(point, ap.point, toCanvas(field.touch.pointR))){
+			if(PV.isTouchPointAndPoint(mousePoint, ap.point, toCanvas(field.touch.pointR))){
 				console.log('touched AP', itemIndex, apIndex);
 				res[0] = itemIndex;
 				res[1] = apIndex;
@@ -4129,19 +4272,32 @@ function getTouchedAp(items, point){
 function getTouchedApAh(items, enableItemIndexes, mousePoint){
 	let res = [-1, -1, undefined];
 	PV.exforReverse(items, (itemIndex, item) => {
-		if((! item.isVisible) || item.isLock){
+		if((! isMetaVisible(item)) || isMetaLock(item)){
 			return true;
 		}
-		if('Bezier' !== item.kind){
-			return true;
-		}
+
 		// MEMO itemIndexを得るために、focusedItemから探す場合もdocのitemsの配列を使う必要がある。
 		if(undefined !== enableItemIndexes){
 			if(!enableItemIndexes.includes(itemIndex)){
 				return true;
 			}
 		}
-
+		
+		switch(item.kind){
+		case 'Bezier':
+			break;
+		case 'Guide':{
+			if(PV.isTouchPointAndPoint(mousePoint, item.point, toCanvas(field.touch.pointR))){
+				res[0] = itemIndex;
+				res[1] = 0;
+				res[2] = 'ap';
+				return false;
+			}
+		}
+			return true;
+		default:
+			return true;
+		}
 
 		let isTouchedAP = !PV.exforReverse(item.aps, (apIndex, ap) => {
 			const frontAHPoint = PV.AP_frontAHPoint(ap);
@@ -4349,7 +4505,12 @@ function resizeFocusItems(targetKind, scale2d, editCenter){
 			if(! item){
 				console.error('BUG', itemIndex);
 			}
-			
+
+			if(hist.now().editor.resize.isResizeStrokeWidth){
+				const scale1d = (Math.abs(scale2d.x) + Math.abs(scale2d.y)) / 2; // SPEC: リサイズの縦横比が異なる場合に中間値を取る
+				item.border.width = item.cache.prevItems[0].border.width * scale1d;
+			}
+
 			switch(item.kind){
 			case 'Bezier':{
 				for(let apIndex = 0; apIndex < item.aps.length; apIndex++){
@@ -4363,6 +4524,11 @@ function resizeFocusItems(targetKind, scale2d, editCenter){
 				item.rsize = PV.pointMul(prevItem.rsize, scale2d);
 			}
 				break;
+			case 'Guide':{
+				const prevItem = item.cache.prevItems[0];
+				item.point = convPoint(prevItem.point, editCenter, scale2d);
+			}
+				break;	
 			default:
 				console.error('BUG', item);
 			}
@@ -4434,20 +4600,18 @@ function getFocusingRectByPrev(){
 		getNowFocusItems().forEach(item => {cacheItems.push(...item.cache.prevItems)});
 		return PV.rectFromItems(cacheItems);
 	}
-	let aps = [];
-	hist.now().focus.focusAPCplxes.forEach(cplx => {
-		aps.push(hist.now().items.at(cplx[0]).cache.prevItems[0].aps.at(cplx[1]));
-	});
+
+	let cacheItems = [];
+	hist.now().items.forEach(item => {cacheItems.push(item.cache.prevItems[0])});
+	const aps = PV.apsFromItems(cacheItems, hist.now().focus.focusAPCplxes);
 	return PV.rectFromAps(aps);
 }
 function getFocusingRectByNow(){
 	if(Tool_getToolFromIndex(editor.toolIndex).isItem){
 		return PV.rectFromItems(itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes));
 	}
-	let aps = [];
-	hist.now().focus.focusAPCplxes.forEach(cplx => {
-		aps.push(hist.now().items.at(cplx[0]).aps.at(cplx[1]));
-	});
+
+	const aps = PV.apsFromItems(hist.now().items, hist.now().focus.focusAPCplxes);
 	return PV.rectFromAps(aps);
 }
 
@@ -4463,6 +4627,7 @@ function checkFocusCurrentTopItemChangedCallback() {
 	}
 
 	document.getElementById('figure-setting').style.display = 'none';
+	document.getElementById('guide-setting').style.display = 'none';
 
 	const isFocusItemEmpty = (0 === hist.now().focus.focusItemIndexes.length);
 	if (isFocusItemEmpty) {
@@ -4471,25 +4636,43 @@ function checkFocusCurrentTopItemChangedCallback() {
 
 	const index = hist.now().focus.focusItemIndexes.at(-1)
 	const item = hist.now().items[index];
-	palette.colorPair = deepcopy(item.colorPair);
-	setPaletteUIForMem();
-	border = deepcopy(item.border);
-	setBorderUIFromMem();
-	if((1 === hist.now().focus.focusItemIndexes.length) && ('Figure' === item.kind)){
-		document.getElementById('figure-setting').style.display = 'block';
-		document.getElementById('figure-kind').value = item.figureKind;
-		document.getElementById('figure-corner-num').value = item.cornerNum;
-		document.getElementById('figure-starry-corner-step-num').value = item.starryCornerStepNum;
-		document.getElementById('figure-starry-corner-pit-r-parcent').value = item.starryCornerPitRPercent;
-		switch(item.figureKind){
-		case 'Polygon':{
-			document.getElementById('figure-polygon-setting').style.display = 'block';
+	if(!! item.colorPair){
+		palette.colorPair = deepcopy(item.colorPair);
+		setPaletteUIForMem();	
+	}
+	if(!! item.border){
+		border = deepcopy(item.border);
+		setBorderUIFromMem();	
+	}
+	switch(item.kind){
+	case 'Figure':{
+		if((1 === hist.now().focus.focusItemIndexes.length)){
+			document.getElementById('figure-setting').style.display = 'block';
+			document.getElementById('figure-kind').value = item.figureKind;
+			document.getElementById('figure-corner-num').value = item.cornerNum;
+			document.getElementById('figure-starry-corner-step-num').value = item.starryCornerStepNum;
+			document.getElementById('figure-starry-corner-pit-r-parcent').value = item.starryCornerPitRPercent;
+			switch(item.figureKind){
+			case 'Polygon':{
+				document.getElementById('figure-polygon-setting').style.display = 'block';
+			}
+				break;
+			default:{
+				document.getElementById('figure-polygon-setting').style.display = 'none';
+			}
+			}
+		}	
+	}
+		break;
+	case 'Guide':{
+		if((1 === hist.now().focus.focusItemIndexes.length)){
+			document.getElementById('guide-setting').style.display = 'block';
+			document.getElementById('guide-axis').value = item.axis;
 		}
-			break;
-		default:{
-			document.getElementById('figure-polygon-setting').style.display = 'none';
-		}
-		}
+	}
+		break;
+	default: // NOP
+		break;
 	}
 }
 
@@ -4549,7 +4732,7 @@ function Item_moveWithIndex(itemIndex, move){
 		return;
 	}
 	switch(item.kind){
-		case 'Bezier':{
+	case 'Bezier':{
 		if(item.aps.length !== prevItem.aps.length){
 			console.error('BUG', itemIndex, item, prevItem);
 			return;
@@ -4561,7 +4744,8 @@ function Item_moveWithIndex(itemIndex, move){
 		});
 	}
 		break;
-	case 'Figure':{
+	case 'Figure':
+	case 'Guide':{
 		item.point = PV.pointAdd(prevItem.point, move);
 	}
 		break;
@@ -4585,7 +4769,8 @@ function Item_moveNow(item, move){
 		});
 	}
 		break;
-	case 'Figure':{
+	case 'Figure':
+	case 'Guide':{
 		item.point = PV.pointAdd(item.point, move);
 	}
 		break;
@@ -4621,6 +4806,10 @@ function Item_rotateWithIndex(itemIndex, degree, center){
 		item.rotate = prevItem.rotate + degree;
 	}
 		break;
+	case 'Guide':{
+		// NOP
+	}
+	break;
 	default:
 		console.error('BUG', item);
 	}
@@ -4633,13 +4822,21 @@ function AP_moveWithIndex(itemIndex, apIndex, move){
 		console.error('BUG', itemIndex, item, prevItem);
 		return;
 	}
-	let ap = item.aps.at(apIndex);
-	const pap = prevItem.aps.at(apIndex);
-	if(undefined === ap || undefined === pap){
-		console.error('BUG', itemIndex, apIndex, item, prevItem);
-		return;
+	switch(item.kind){
+	case 'Guide':
+		item.point = PV.pointAdd(prevItem.point, move);
+		break;
+	default:{
+		let ap = item.aps.at(apIndex);
+		const pap = prevItem.aps.at(apIndex);
+		if(undefined === ap || undefined === pap){
+			console.error('BUG', itemIndex, apIndex, item, prevItem);
+			return;
+		}
+		ap.point = PV.pointAdd(pap.point, move);
 	}
-	ap.point = PV.pointAdd(pap.point, move);
+		break;
+	}
 }
 function AP_moveNowWithIndex(itemIndex, apIndex, move){
 	let item = hist.now().items.at(itemIndex);
@@ -4737,7 +4934,7 @@ function Focus_addItemIndex(itemIndex) {
 		// 新規追加かつAPがすべて未Focusの場合、すべてのAPをFocusする。
 		// 順番は末尾APがcurrentAPになるよう正順。
 		const item = hist.now().items[itemIndex];
-		if((! item.isVisible) || item.isLock){
+		if((! isMetaVisible(item)) || isMetaLock(item)){
 			console.log('BUG', itemIndex, item);
 		}
 		if('Bezier' === item.kind){
@@ -4975,7 +5172,33 @@ function Focus_nowCurrerntAP() {
 	if (undefined === cplx) {
 		return undefined;
 	}
-	return hist.now().items[cplx[0]].aps[cplx[1]];
+	return PV.apFromItems(hist.now().items, cplx);
+}
+function Focus_prevCurrerntAP() {
+	const cplx = hist.now().focus.focusAPCplxes.at(-1);
+	if (undefined === cplx) {
+		return undefined;
+	}
+	const item = hist.now().items.at(cplx[0]);
+	const beziers = PV.Item_beziersFromItem(item.cache.prevItems[0]);
+	return beziers[0].aps.at(cplx[1]);
+}
+
+function isMetaLock(item){
+	if('Guide' === item.kind){
+		if(hist.now().editor.guide.isLockGuide){
+			return true;
+		}
+	}
+	return item.isLock;
+}
+function isMetaVisible(item){
+	if('Guide' === item.kind){
+		if(! hist.now().editor.guide.isVisibleGuide){
+			return false;
+		}
+	}
+	return item.isVisible;
 }
 
 function setPaletteUIForMem() {
@@ -5049,7 +5272,7 @@ function validCanvasScale(scale) {
 		setMessage(`scale is min:${(1 / 100.0)}`) // TODO ちゃんとした値の表示に直す
 		return false;
 	}
-	if ((500 / 100.0) < scale) {
+	if ((4000 / 100.0) < scale) {
 		setMessage(`scale is max:${(500 / 100.0)}`) // TODO ちゃんとした値の表示に直す
 		return false;
 	}
@@ -5156,6 +5379,20 @@ function getMouseModeByMousePoint(mousePoint){
 	if(inRect){
 		return 'move';
 	}
+	// Guideのみの場合はresize, rotateしない。
+	let isGuideOnly = true;
+	PV.exfor(hist.now().focus.focusItemIndexes, (index, itemIndex) => {
+		const item = hist.now().items.at(itemIndex);
+		if('Guide' !== item.kind){
+			isGuideOnly = false;
+			return false;
+		}
+		return true;
+	});
+	if(isGuideOnly){
+		return 'move';
+	}
+
 	// Rectがタッチ範囲より小さいと、判定領域が隣や逆側などにはみ出して当たってしまうが
 	// ...Rectが小さすぎるせいなので拡大してくれということで良しとする。
 	const corners = PV.cornerPointsFromRect(focusRect);
@@ -5217,11 +5454,198 @@ function getMousemoveVectorInCanvas() {
 	};
 }
 
+function snapMousemoveVectorInCanvas(isSnapForAngle){
+	let move = getMousemoveVectorInCanvas();
+
+	editor.mouse.snapAxisXKind = undefined;
+	editor.mouse.snapAxisYKind = undefined;
+	editor.mouse.snapItemApCplxX = undefined;
+	editor.mouse.snapItemApCplxY = undefined;
+	editor.mouse.snapAxisXTargetPoint = undefined;
+	editor.mouse.snapAxisYTargetPoint = undefined;
+	let snapAxisXItemPoint, snapAxisYItemPoint;
+	let dbgTi, dbgIi, dbgTapi, dbgIapi;
+
+	const SNAPW = hist.now().editor.snap.snapForAxisWidth;
+	let betweenX = toCanvas(SNAPW);
+	let betweenY = toCanvas(SNAPW);
+
+	if(hist.now().editor.snap.isSnapForGrid){
+		hist.now().focus.focusItemIndexes.forEach(itemIndex => {
+			const prevItem = hist.now().items.at(itemIndex).cache.prevItems[0];
+			const bezierItems = PV.Item_beziersFromItem(prevItem);
+			bezierItems.forEach(bezierItem => {
+				bezierItem.aps.forEach((ap, apIndex) => {
+					const p = PV.pointAdd(ap.point, move);
+					hist.now().canvas.grids.forEach(grid => {
+						{
+							const txmin = p.x - (p.x % grid.interval);
+							const txmax = (txmin + ((0 > txmin ? -1:1) * grid.interval));
+							//console.log('snap for grid', txmin, txmax, p.x);
+							[txmin, txmax].forEach(tx => {
+								const bw = Math.abs(p.x - tx);
+								if(bw < betweenX){
+									editor.mouse.snapItemApCplxX = [itemIndex, apIndex];
+									snapAxisXItemPoint = ap.point;
+									editor.mouse.snapAxisXTargetPoint = {'x': tx, 'y': 0};
+									betweenX = bw;
+									editor.mouse.snapAxisXKind = 'Grid';
+								}
+							});
+						}
+						{
+							const tymin = p.x - (p.x % grid.interval);
+							const tymax = (tymin + ((0 > tymin ? -1:1) * grid.interval));
+							//console.log('snap for grid y', tymin, tymax, p.y);
+							[tymin, tymax].forEach(ty => {
+								const bw = Math.abs(p.y - ty);
+								if(bw < betweenY){
+									editor.mouse.snapItemApCplxY = [itemIndex, apIndex];
+									snapAxisYItemPoint = ap.point;
+									editor.mouse.snapAxisYTargetPoint = {'x': 0, 'y': ty};
+									betweenY = bw;
+									editor.mouse.snapAxisYKind = 'Grid';
+								}
+							});
+						}
+					});
+				});
+			});
+		});
+	}
+
+	if(hist.now().editor.snap.isSnapForGuide || hist.now().editor.snap.isSnapForItem){
+		hist.now().items.forEach((targetItem, targetItemIndex) =>{
+			if(! isMetaVisible(targetItem)){
+				return;
+			}
+
+			const targetBezierItems = PV.Item_beziersFromItem(targetItem.cache.prevItems[0]);
+			targetBezierItems.forEach(targetBezierItem => {
+				targetBezierItem.aps.forEach((targetAp, targetApIndex) => {
+					hist.now().focus.focusItemIndexes.forEach(itemIndex => {
+						if(targetItemIndex === itemIndex){
+							return;
+						}
+						const prevItem = hist.now().items.at(itemIndex).cache.prevItems[0];
+						const bezierItems = PV.Item_beziersFromItem(prevItem);
+						bezierItems.forEach(bezierItem => {
+							bezierItem.aps.forEach((ap, apIndex) => {
+								const p = PV.pointAdd(ap.point, move);
+								const dlx = Math.abs(targetAp.point.x - p.x);
+								const dly = Math.abs(targetAp.point.y - p.y);
+
+								switch(targetItem.kind){
+								case 'Guide':
+									if(hist.now().editor.snap.isSnapForGuide){
+										if('Vertical' === targetItem.axis){
+											if(dlx < betweenX){
+												editor.mouse.snapItemApCplxX = [itemIndex, apIndex];
+												snapAxisXItemPoint = ap.point;
+												editor.mouse.snapAxisXTargetPoint = targetAp.point;
+												betweenX = dlx;
+												editor.mouse.snapAxisXKind = 'Guide';
+											}
+										}else{ // Horizontal
+											if(dly < betweenY){
+												editor.mouse.snapItemApCplxY = [itemIndex, apIndex];
+												snapAxisYItemPoint = ap.point;
+												editor.mouse.snapAxisYTargetPoint = targetAp.point;
+												betweenY = dly;
+												editor.mouse.snapAxisYKind = 'Guide';
+											}	
+										}
+									}
+									break;
+								default:
+									if(hist.now().editor.snap.isSnapForItem){
+										//console.log('aa:', dlx, dly);
+										if(dlx < betweenX){
+											editor.mouse.snapItemApCplxX = [itemIndex, apIndex];
+											snapAxisXItemPoint = ap.point;
+											editor.mouse.snapAxisXTargetPoint = targetAp.point;
+											betweenX = dlx;
+											editor.mouse.snapAxisXKind = 'Item';
+											//
+											dbgTi = targetItemIndex;
+											dbgTapi = targetApIndex;
+											dbgIi = itemIndex;
+											dbgIapi = apIndex;
+											console.log(targetAp.point.x, ap.point.x);
+										}
+										if(dly < betweenY){
+											editor.mouse.snapItemApCplxY = [itemIndex, apIndex];
+											snapAxisYItemPoint = ap.point;
+											editor.mouse.snapAxisYTargetPoint = targetAp.point;
+											betweenY = dly;
+											editor.mouse.snapAxisYKind = 'Item';
+										}
+									}
+									break;
+								}
+							});
+						});
+					});
+				});
+			});
+		});
+	}
+
+	if(!! editor.mouse.snapAxisXKind){
+		if(! snapAxisXItemPoint){
+			console.error('BUG');
+		}
+		const diffx = (editor.mouse.snapAxisXTargetPoint.x - snapAxisXItemPoint.x);
+		//console.log('snap x', move.x.toFixed(2), diffx.toFixed(2), dbgTi, dbgIi, dbgTapi, dbgIapi);
+		move.x = diffx;
+	}
+	if(!! editor.mouse.snapAxisYKind){
+		const diffy = (editor.mouse.snapAxisYTargetPoint.y - snapAxisYItemPoint.y);
+		move.y = diffy;
+	}
+
+	if(hist.now().editor.snap.isSnapForPixel){
+		const ap = Focus_prevCurrerntAP();
+		if((! editor.mouse.snapAxisXKind) && (!! ap)){			
+			const p = PV.pointAdd(ap.point, move);
+			const diffx = (Math.round(p.x) - p.x);
+			console.log('snapForPixel', p.x, diffx, move.x);
+			move.x += diffx;
+			//editor.mouse.snapAxisXKind = 'Point';
+		}
+		if((! editor.mouse.snapAxisYKind) && (!! ap)){
+			const p = PV.pointAdd(ap.point, move);
+			move.y += (Math.round(p.y) - p.y);
+		}
+	}
+
+	// 
+	if(! isSnapForAngle){
+		editor.mouse.isRegulationalPositionByCenter = false;
+		const vec = PV.pointSub(mousemoveInCanvas, editor.mouse.editCenter);
+		const degree = PV.fieldDegreeFromVector(vec);
+		return [degree, move];
+	}
+	const isSnapForAxis = ((!! editor.mouse.snapAxisXKind) || (!! editor.mouse.snapAxisYKind))
+	if(! isSnapForAxis){
+		return angleSnapAndMousemoveVectorInCanvas(isSnapForAngle);
+	}
+
+	// TODO AngleとAxisの並立
+	// ---- 一時的なコード（Axisが効いているとき単にAngleを無視する）
+	editor.mouse.isRegulationalPositionByCenter = false;
+	const vec = PV.pointSub(mousemoveInCanvas, editor.mouse.editCenter);
+	const degree = PV.fieldDegreeFromVector(vec);
+	return [degree, move];
+	// ----
+
+}
+
 // mousemove中の「角度にsnap」に必要な計算とglobal変数のセット
-function angleSnapAndMousemoveVectorInCanvas(event){
+function angleSnapAndMousemoveVectorInCanvas(isSnapForAngle){
 	let move = getMousemoveVectorInCanvas();
 	let degree;
-	if(event.shiftKey){
+	if(isSnapForAngle){
 		// SPEC ShiftKey押下しながらmousemoveの場合、角度にsnap
 		[degree, move] = regulationalPositionByCenter(move);
 		//if(! editor.mouse.isRegulationalPositionByCenter){
@@ -5286,10 +5710,10 @@ function renderingEditorUserInterface() {
 	hist.now().canvas.grids.forEach((grid) => {
 		const wrange = {
 			'min': hist.now().canvas.padding.w,
-			'max': hist.now().canvas.padding.w + (hist.now().size.w * field.canvas.scale),
+			'max': hist.now().canvas.padding.w + toField(hist.now().size.w),
 		};
 		for (let i = 0; true; i++) {
-			const x = ((grid.interval * i * field.canvas.scale) + wrange.min);
+			const x = (toField(grid.interval * i) + wrange.min);
 			if (wrange.max < x) { break; }
 			// 上下に少し足りなくしているのはデバッグのため
 			let line = forgroundInG.line(x, 5, x, fieldSquare.h - 5);
@@ -5297,10 +5721,10 @@ function renderingEditorUserInterface() {
 		}
 		const hrange = {
 			'min': hist.now().canvas.padding.h,
-			'max': hist.now().canvas.padding.h + (hist.now().size.h * field.canvas.scale),
+			'max': hist.now().canvas.padding.h + toField(hist.now().size.h),
 		};
 		for (let i = 0; true; i++) {
-			const y = ((grid.interval * i * field.canvas.scale) + hrange.min);
+			const y = (toField(grid.interval * i) + hrange.min);
 			if (hrange.max < y) { break; }
 			// 上下に少し足りなくしているのはデバッグのため
 			let line = forgroundInG.line(5, y, fieldSquare.w - 5, y);
@@ -5308,7 +5732,8 @@ function renderingEditorUserInterface() {
 		}
 	});
 
-	const dash = `${12 / field.canvas.scale} ${6 / field.canvas.scale}`;
+	const DASH = `${toCanvas(12)} ${toCanvas(6)}`;
+	const GUIDE_DASH = `${(8)} ${(4)}`;
 
 	{
 		// 選択item領域の四角形を描画
@@ -5321,13 +5746,17 @@ function renderingEditorUserInterface() {
 					'stroke': '#3070ffff',
 					'stroke-width': (1 / field.canvas.scale),
 					'fill': 'none',
-					'stroke-dasharray': dash
+					'stroke-dasharray': DASH
 				});
 			}
 		}
 
 		const isRotetableTool = (editor.toolIndex === TOOLS.ItemEditTool.Id);
-		if(focusRect && isRotetableTool){
+		const isRotatableFocusItems = ! PV.exfor(hist.now().focus.focusItemIndexes, (ix, itemIndex) => {
+			const item = hist.now().items.at(itemIndex);
+			return ('Guide' === item.kind);
+		});
+		if(focusRect && isRotetableTool && isRotatableFocusItems){
 			// rotateハンドルを描画
 			const rhPoint = getRotateHandlePoint(focusRect);
 			const r = toCanvas(5);
@@ -5383,6 +5812,74 @@ function renderingEditorUserInterface() {
 		}
 	}
 
+	// ** Axisにスナップ
+	if(!! editor.mouse.snapAxisXKind){
+		const stp = editor.mouse.snapAxisXTargetPoint;
+		const ip = PV.apFromItems(hist.now().items, editor.mouse.snapItemApCplxX).point;
+		let se = forgroundCanG.line(stp.x, stp.y, ip.x, ip.y);
+		se.attr({
+			'stroke': '#a0f0a0ff',
+			'stroke-width': toCanvas(1.2),
+		});
+	}
+	if(!! editor.mouse.snapAxisYKind){
+		const stp = editor.mouse.snapAxisYTargetPoint;
+		const ip = PV.apFromItems(hist.now().items, editor.mouse.snapItemApCplxY).point;
+		let se = forgroundCanG.line(stp.x, stp.y, ip.x, ip.y);
+		se.attr({
+			'stroke': '#a0f0a0ff',
+			'stroke-width': toCanvas(1.2),
+		});
+	}	
+
+	const renderingGuideLine = (item) => {
+		let line;
+		if('Vertical' === item.axis){
+//			const vrange = {
+//				'min': - toCanvas(hist.now().canvas.padding.h),
+//				'max': toCanvas(hist.now().canvas.padding.h * 2) + (hist.now().size.h) + hist.now().size.h,
+//				// 足りないよりははみ出てくれたほうが都合が良いので適当に延伸
+//			};
+//			line = forgroundCanG.line(item.point.x, vrange.min, item.point.x, vrange.max);
+//
+			const x = hist.now().canvas.padding.w + toField(item.point.x);
+			line = forgroundInG.line(x, 5, x, fieldSquare.h - 5);
+		}else{
+//			const hrange = {
+//				'min': - toCanvas(hist.now().canvas.padding.w),
+//				'max': toCanvas(hist.now().canvas.padding.w * 2) + (hist.now().size.w) + hist.now().size.w,
+//				// 足りないよりははみ出てくれたほうが都合が良いので適当に延伸
+//			};
+//			line = forgroundCanG.line(hrange.min, item.point.y, hrange.max, item.point.y);
+			const y = hist.now().canvas.padding.h + toField(item.point.y);
+			line = forgroundInG.line(5, y, fieldSquare.w - 5, y);
+		}
+		return line;
+	};
+
+	// Guideを描画
+	hist.now().items.forEach((item) => {
+		if(! isMetaVisible(item)){
+			return;
+		}
+		switch(item.kind){
+		case 'Guide':{
+			let line = renderingGuideLine(item);
+			line.attr({
+				'stroke': '#000',
+				'stroke-width': (0.8),
+				'fill': 'none',
+				'stroke-dasharray': GUIDE_DASH
+			});
+			const r = toCanvas(6);
+			forgroundCanG.circle(r).move(item.point.x - (r / 2), item.point.y - (r / 2)).attr({ fill: '#000' });
+		}
+			break;
+		default:
+			return;
+		}
+	});
+
 	// FocusItemsを描画
 	let range2ds = [];
 	hist.now().focus.focusItemIndexes.forEach((itemIndex, ix, arr) => {
@@ -5399,14 +5896,14 @@ function renderingEditorUserInterface() {
 					'stroke': '#3070ffff',
 					'stroke-width': (2 / field.canvas.scale),
 					'fill': 'none',
-					'stroke-dasharray': dash
+					'stroke-dasharray': DASH
 				});
 			}else{
 				guide.attr({
 					'stroke': '#5090ffff',
 					'stroke-width': (1.2 / field.canvas.scale),
 					'fill': 'none',
-					'stroke-dasharray': dash
+					'stroke-dasharray': DASH
 				});
 			}
 		};
@@ -5488,6 +5985,18 @@ function renderingEditorUserInterface() {
 			});
 		}
 			break;
+		case 'Guide':{
+			let line = renderingGuideLine(item);
+			line.attr({
+				'stroke': '#5090ffff',
+				'stroke-width': (1.2),
+				'fill': 'none',
+				'stroke-dasharray': GUIDE_DASH
+			});
+			const r = toCanvas(6);
+			forgroundCanG.circle(r).move(item.point.x - (r / 2), item.point.y - (r / 2)).attr({ fill: '#33f' });
+		}
+			break;
 		default:
 			console.error('BUG', item);
 			return;
@@ -5521,7 +6030,7 @@ function renderingEditorUserInterface() {
 		let focusRect = PV.rectFromItems([item]);
 		if ((fuzzyZero(focusRect.w)) || (fuzzyZero(focusRect.h))) {
 			// ユーザ補助のための表示なので正確さは不要のため、潰れていたら適当に拡張する
-			focusRect = PV.expandRect(focusRect, toField(2));
+			focusRect = PV.expandRect(focusRect, toCanvas(6));
 		}
 		let se = forgroundCanG.rect(focusRect.w, focusRect.h);
 		se.move(focusRect.x, focusRect.y);
@@ -5529,7 +6038,7 @@ function renderingEditorUserInterface() {
 			'stroke': HOVER_COLOR,
 			'stroke-width': (1 / field.canvas.scale),
 			'fill': '#6030ff10',
-			'stroke-dasharray': dash
+			'stroke-dasharray': DASH
 		});
 		{
 			const beziers = PV.Item_beziersFromItem(item);
@@ -5541,7 +6050,7 @@ function renderingEditorUserInterface() {
 					'stroke': HOVER_COLOR,
 					'stroke-width': (0.8 / field.canvas.scale),
 					'fill': 'none',
-					'stroke-dasharray': dash
+					'stroke-dasharray': DASH
 				});
 			});
 		}
@@ -5669,7 +6178,7 @@ function renderingAll() {
 function renderingDocOnCanvas(canvasG, doc){
 	// reindering document items
 	doc.items.forEach((item) => {
-		if(! item.isVisible){
+		if(! isMetaVisible(item)){
 			return;
 		}
 
@@ -5703,6 +6212,10 @@ function renderingDocOnCanvas(canvasG, doc){
 					'fill': bezier.colorPair.fillColor
 				});
 			});
+		}
+			break;
+		case 'Guide':{
+			// NOP
 		}
 			break;
 		default:

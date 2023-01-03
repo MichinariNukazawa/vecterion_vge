@@ -92,6 +92,7 @@
 				<input type='text' class="calc-input"/><input type='number' class='input-spin-parts'/>px</span>
 			<span id='axis-h' class="axis-input">h:
 				<input type='text' class="calc-input"/><input type='number' class='input-spin-parts'/>px</span>
+			<input id='editor-setting-dialog-button' type="button" value="Editor Setting">
 			<input id='document-setting-dialog-button' type="button" value="Document Setting">
 		</div>
 	</div>
@@ -133,6 +134,11 @@
 					<object class="tool-object" data="resource/tool/tool_figure_shape_24x24.svg" type="image/svg+xml"></object>
 				</button>
 				<p class="hover_message">形状の追加</p>
+				<br>
+				<button id="tool__simple-element-arrow">
+					<object class="tool-object" data="resource/tool/tool_guide.svg" type="image/svg+xml"></object>
+				</button>
+				<p class="hover_message">ガイドの追加</p>
 				<br>
 			</div>
 		</div>
@@ -280,6 +286,17 @@
 						<span>convert:</span><input id="figure-to-bezier" type="button" value="to Bezier"> 
 					</div>
 				</div>
+				<div class="item" id="guide-setting">
+					Guide
+					<div class="setting-line">
+						<span>Axis:</span>
+						<select id="guide-axis">
+							<option value="Vertical">Vertical</option>
+							<option value="Horizontal">Horizontal</option>
+						</select>
+						<span class="unit"></span>
+					</div>
+				</div>
 			</div>
 			<div id="layer" class="item">
 				Document Structure
@@ -327,6 +344,53 @@
 		</div>
 	</div>
 
+	
+
+	<dialog id='editor-setting-dialog' draggable="true">
+		<form method="dialog">
+			<h1>Editor</h1>
+			<h2>Resize</h2>
+			<label for='editor_resize_is-resize-stroke-width'>
+				<input id='editor_resize_is-resize-stroke-width' type="checkbox"/>
+				<span>resize stroke-width</span>
+			</label>
+			<br>
+			<h2>Guide</h2>
+			<label for='editor_guide_is-lock'>
+				<input id='editor_guide_is-lock' type="checkbox"/>
+				<span>lock for guide</span>
+			</label>
+			<br>
+			<label for='editor_guide_is-visible'>
+				<input id='editor_guide_is-visible' type="checkbox"/>
+				<span>visible for guide</span>
+			</label>
+			<br>
+			<h2>Snap</h2>
+			<label for='editor_snap_is-snap-for-grid'>
+				<input id='editor_snap_is-snap-for-grid' type="checkbox"/>
+				<span>snap for grid</span>
+			</label>
+			<br>
+			<label for='editor_snap_is-snap-for-pixel'>
+				<input id='editor_snap_is-snap-for-pixel' type="checkbox"/>
+				<span>snap for pixel</span>
+			</label>
+			<br>
+			<label for='editor_snap_is-snap-for-item'>
+				<input id='editor_snap_is-snap-for-item' type="checkbox"/>
+				<span>snap for item</span>
+			</label>
+			<br>
+			<label for='editor_snap_is-snap-for-guide'>
+				<input id='editor_snap_is-snap-for-guide' type="checkbox"/>
+				<span>snap for guide</span>
+			</label>
+			<menu>
+				<button value="close">Close</button>
+			</menu>	
+		</form>
+	</dialog>
 	<dialog id='document-setting-dialog' draggable="true">
 		<form method="dialog">
 			<h1>Document</h1>

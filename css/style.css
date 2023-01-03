@@ -361,6 +361,9 @@ dialog menu button{
 #layer-name-input{
 	width: 240px;
 }
+.layer_is-meta-disable{
+	opacity: 0.1;
+}
 
 /* document select dialog */
 #doc-list{
