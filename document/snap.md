@@ -31,7 +31,7 @@ SnapForItemは、おおむねAIの「ポイントにスナップ」。
 
 ※Angleを実装しないのは回転してSnapするための式を探すのが面倒だっただけ。いずれは実装してよい。
 
-![SnapRotate](snap_rotate.jpg)
+![SnapRotate](image/snap_rotate.jpg)
 
 ### SnapForAngleとその他Snapの優先順処理
 
@@ -44,9 +44,9 @@ VECではSnapの優先度を次の通りとする。
 `SnapForAngle > SnapForGrid,Item,Guide > SnapForPixel`
 SnapForPixelは他と競合した場合は無視する。
 
-![SnapForAngleAndOther](snap_angle_and_grid.jpg)
+![SnapForAngleAndOther](image/snap_angle_and_grid.jpg)
 
-![SnapForAngleAndAxis](snap_angle_and_axis.jpg)
+![SnapForAngleAndAxis](image/snap_angle_and_axis.jpg)
 
 Grid,Item,Guide間の優先順位は同率とし、常に最も近い相手へSnapする。
 
@@ -55,7 +55,7 @@ Grid,Item,Guide間の優先順位は同率とし、常に最も近い相手へSn
 「ほとんど常にPixelが最も近いSnap対象」となり、縮尺100%付近でGrid,Item,GuideにSnapするには精密なマウス操作が必要となるため。
 この悪いユーザ体験を回避する仕様として、「SnapForAngle以外のSnapが掛かっていない状態であれば、SnapForPixelする」。
 
-![SnapForPixelAndOther](snap_pixel_and_grid.jpg)
+![SnapForPixelAndOther](image/snap_pixel_and_grid.jpg)
 
 
 

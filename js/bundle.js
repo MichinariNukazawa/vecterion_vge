@@ -42109,9 +42109,13 @@ module.exports={
 			{
 				"interval": 200,
 				"color": "#3070ffff",
-				"strokew": 0.3
+				"strokew": 0.5
 			}
 		],
+		"guide": {
+			"color": "#3070ffff",
+			"strokew": 0.4
+		},
 		"background": {
 			"color": "#ffffff00",
 			"checkerWidth": 12
@@ -43476,7 +43480,7 @@ function loadAfterRun(){
 						hist.now().focus.focusItemIndexes.forEach(itemIndex => {
 							Item_moveWithIndex(itemIndex, move);
 						});
-						renderingAll();
+						renderingAllReduct();
 					}
 						break;
 					case 'rectselect':
@@ -43527,7 +43531,7 @@ function loadAfterRun(){
 							hist.now().focus.focusItemIndexes.forEach(itemIndex => {
 								Item_rotateWithIndex(itemIndex, degree, editor.mouse.editCenter);
 							});
-							renderingAll();
+							renderingAllReduct();
 						}
 						break;
 					case 'nop':
@@ -43578,7 +43582,7 @@ function loadAfterRun(){
 							console.error('BUG', editor.mouse.touchedAPAHKind);
 						}
 
-							renderingAll();
+							renderingAllReduct();
 						}
 						break;
 					case 'rectselect':
@@ -43833,7 +43837,7 @@ function loadAfterRun(){
 			fieldFrame.scrollLeft += diff.x;
 			break;
 		}
-	}, true)
+	}, true);
 	document.getElementById('container-wrapper').addEventListener('mousemove', event => {
 		// マウスがelementの外に出てしまうと、mouseupが発生しない。
 		// そこで外周elementの外へ出た場合に、そこで離した扱いにする。
@@ -48007,10 +48011,9 @@ function renderingEditorUserInterface() {
 		case 'Guide':{
 			let line = renderingGuideLine(item);
 			line.attr({
-				'stroke': '#000',
-				'stroke-width': (0.8),
+				'stroke': hist.now().canvas.guide.color,
+				'stroke-width': hist.now().canvas.guide.strokew,
 				'fill': 'none',
-				'stroke-dasharray': GUIDE_DASH
 			});
 			const r = toCanvas(6);
 			forgroundCanG.circle(r).move(item.point.x - (r / 2), item.point.y - (r / 2)).attr({ fill: '#000' });
@@ -48293,6 +48296,7 @@ function renderingAll() {
 	backgroundG.clear();
 	canvasParentG.clear();
 	let canvasG = canvasParentG.group();
+	renderingHandle.canvasG = canvasG;
 
 	draw.size(fieldSquare.w, fieldSquare.h);
 
@@ -48316,7 +48320,26 @@ function renderingAll() {
 	renderingDocOnCanvas(canvasG, hist.now());
 }
 
+
+let renderingReductCount = 0;
+let renderingReductTimerId;
+function renderingAllReduct(){
+	if(0 === renderingReductCount){
+		renderingReductTimerId = setTimeout(() => {
+			//if(1 !== renderingReductCount){
+			//	console.log('cached', renderingReductCount);
+			//}
+			renderingReductCount = 0;
+			renderingReductTimerId = undefined;
+			renderingAll();
+			//renderingUpdateDiff(hist.now().focus.focusItemIndexes);
+		}, 10);
+	}
+	renderingReductCount++;
+}
+
 function renderingDocOnCanvas(canvasG, doc){
+	//console.log('CALL renderingDocOnCanvas');
 	// reindering document items
 	doc.items.forEach((item) => {
 		if(! isMetaVisible(item)){
@@ -48338,9 +48361,11 @@ function renderingDocOnCanvas(canvasG, doc){
 				'stroke-linejoin': item.border.linejoin,
 				'fill': item.colorPair.fillColor
 			});
+			item.cache.renderHandles = [path];
 		}
 			break;
 		case 'Figure':{
+			item.cache.renderHandles = [];
 			const beziers = PV.Item_beziersFromFigure(item);
 			beziers.forEach(bezier => {
 				const patharray = patharrayFromBezierItem(bezier);
@@ -48352,6 +48377,7 @@ function renderingDocOnCanvas(canvasG, doc){
 					'stroke-linejoin': bezier.border.linejoin,
 					'fill': bezier.colorPair.fillColor
 				});
+				item.cache.renderHandles.push(path);
 			});
 		}
 			break;

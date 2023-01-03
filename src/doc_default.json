@@ -122,9 +122,13 @@
 			{
 				"interval": 200,
 				"color": "#3070ffff",
-				"strokew": 0.3
+				"strokew": 0.5
 			}
 		],
+		"guide": {
+			"color": "#3070ffff",
+			"strokew": 0.4
+		},
 		"background": {
 			"color": "#ffffff00",
 			"checkerWidth": 12
