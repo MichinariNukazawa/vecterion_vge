@@ -41961,7 +41961,7 @@ exports.default = parseXml;
 },{}],208:[function(require,module,exports){
 module.exports={
   "name": "vecterion_vge",
-  "version": "2022.12.1-alpha",
+  "version": "2023.01.1-alpha",
   "description": "vecterion (wish) true vector graphics editor",
   "scripts": {
     "watch": "watchify src/index.js -o js/bundle.js -v",
