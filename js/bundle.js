@@ -47430,15 +47430,21 @@ function steppingCanvasScale(step) {
 
 	let diff = 0.1;
 
-	//let [_, digit] = field.canvas.scale.toExponential().split('e')
-	////digit -= 1;
-	//const dig = 10 ** digit;
-	//let scale = Math.round(field.canvas.scale / dig)*dig;
-	//console.log('dig', digit, dig, scale)
+	let [_, digitPer] = (field.canvas.scale * 100).toExponential().split('e')
+	if(2 <= digitPer){ // 100%以上では
+		digitPer -= 1;
+	}
+	let digPer = 10 ** digitPer;
 	let scale = field.canvas.scale;
-	scale = Math.round(scale * 10) / 10;
-	scale += (diff * step);
-	//scale = Math.round(field.canvas.scale * 10)/10;
+	let scaleSanPer = Math.round((field.canvas.scale * 100) / digPer)*digPer;
+	console.log('dig', digitPer, digPer, scaleSanPer)
+	if((0 > step) && (digPer >= scaleSanPer)){
+		digPer = digPer / 10;
+	}
+	scale = (scaleSanPer + (digPer * step)) / 100;
+
+	//scale = Math.round(scale * 10) / 10;
+	//scale += (diff * step);
 
 	rescalingCanvas(scale);
 }
