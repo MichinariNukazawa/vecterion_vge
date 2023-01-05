@@ -1,7 +1,5 @@
 'use strict';
 
-const StrCalc = require('../src/strcalc')
-const PV = require("../src/pv.js"); // assertモジュールのinclude
 let lodash = require('lodash');
 var  diff  = require('deep-diff') 
 const clonedeep = require('lodash/cloneDeep');
@@ -10,8 +8,13 @@ const xmlFormatter = require('xml-formatter');
 
 const PACKAGE = require('./../package.json')
 const DOC_DEFAULT = require('./doc_default.json');
-const { Runner } = require('mocha');
-const { apFromItems, mathRadianFromFieldDegree } = require('../src/pv.js');
+const StrCalc = require('../src/strcalc')
+const PV = require("../src/pv.js");
+const History = require("../src/history.js");
+const Strage = require("../src/strage.js");
+const Render = require("../src/render.js");
+const Tool = require("../src/tool.js");
+const TOOLS = Tool.TOOLS();
 
 // documentの最大サイズ（値は適当）
 const DOCUMENT_MAX_SIZE_AXIS_PX = 40000;
@@ -101,265 +104,8 @@ let field = {
 	},
 };
 
-class Strage{
-	constructor(callback) {
-		console.log('Strage.constructor')
-		this.callback = callback;
-		// このブラウザタブのcurrentDoc
-		// 最初は最後に編集されたDoc（docinfosの先頭）を開く。
-		this.currentDocId = -1;
-
-		console.log('Strage', `used:${(Strage.getUsedSpaceOfLocalStorageInBytes() / 1024).toFixed(2)} kib`);
-	}
-
-	check(){
-		let isOk = true;
-		try{
-			localStorage.setItem('vecterion-check-ls', 'doubiju');
-			isOk = ('doubiju' === localStorage.getItem('vecterion-check-ls'));
-			localStorage.removeItem('vecterion-check-ls');
-		}catch (error){
-			console.error(error);
-			isOk = false;
-		}
-		if(! isOk){
-			alert('!! Save not working !!\n try update your browser.');
-		}
-	}
-
-	getCurrentDocId(){
-		return this.currentDocId;
-	}
-
-	// べつにファイル名は重複して良い
-	newDocName(src){
-		if((undefined === src) || ('' === src)){
-			src = 'new document';
-		}
-		const docconf = this.loadDocConfig();
-		if(! docconf){
-			return src;
-		}
-		// 重複しないIDを探す
-		let head = src;
-		let count = -1;
-		const m = src.match(/^(.*)([0-9]+)$/);
-		if(!! m){
-			head = m[1];
-			count = parseInt(m[2], 10);
-		}
-		let name = src;
-
-		while(docconf.docinfos.some(docinfo => docinfo.name === name)){
-			count++;
-			name = `${head}${count}`;
-		}
-		return name;
-	}
-	newDocInfo(){
-		let id = 0;
-		const docconf = this.loadDocConfig();
-		if(!! docconf){ // 重複しないIDを探す
-			while(docconf.docinfos.some(docinfo => docinfo.id === id)){
-				id++;
-			}
-		}
-		console.log(`new document id: ${id}`);
-		return {
-			'id': id,
-			'name': '',
-			'latestUpdate': new Date().getTime(),
-		};
-	}
-
-	static newDocConf(){
-		return {
-			'appname': PACKAGE.name,
-			'appversion': PACKAGE.version,
-			'docinfos': [],
-		};
-	}
-
-	loadDocConfig(){
-		const sdocconf = localStorage.getItem('vecterion-doc-config');
-		if(! sdocconf){
-			console.log('docconf nothing');
-			return undefined;
-		}
-		let docconf;
-		docconf = JSON.parse(sdocconf);
-		// validation
-		// TODO more validation
-		if((! docconf.docinfos) || (0 === docconf.docinfos.length)){
-			console.warn('validate error: docconf.docinfos', docconf);
-			return undefined;
-		}
-
-		console.log('docconf loaded', docconf);
-		return docconf;
-	}
-	loadOrNewDocConfig(){
-		let docconf = this.loadDocConfig();
-		if(! docconf){
-			docconf = Strage.newDocConf();
-			docconf.docinfos.unshift(this.newDocInfo());
-			console.log('docconf initialized', docconf);
-			this.callback(docconf.docinfos.at(0));
-		}
-		return docconf;
-	}
-	setCurrentDocument(id){
-		let docconf = this.loadDocConfig();
-		if(! docconf){
-			console.error('BUG');
-			return;
-		}
-		const ix = docconf.docinfos.findIndex(e => e.id === id);
-		if(-1 === ix){
-			console.error('BUG', docconf);
-			return;
-		}
-
-		const [currentdocinfo] = docconf.docinfos.splice(ix, 1);
-		docconf.docinfos.splice(0, currentdocinfo);
-
-		if(this.currentDocId === id){
-			console.log('id is already currentDoc', id);
-			return;
-		}
-		this.currentDocId = id;
-		this.callback(currentdocinfo);
-	}
-	saveCurrentDoc(doc){
-		let docconf = this.loadOrNewDocConfig();
-		let currentdocinfo = docconf.docinfos.find(e => e.id == this.getCurrentDocId());
-		if(! currentdocinfo){
-			console.error('BUG', this.getCurrentDocId(), docconf);
-			return;
-		}
-		currentdocinfo.latestUpdate = new Date().getTime();
-
-		try{
-			this.setItemDoc_(currentdocinfo.id, doc);
-			localStorage.setItem('vecterion-doc-config', JSON.stringify(docconf, null, '\t'));
-		}catch(e){
-			alert('error: localStrage full. try delete document.')
-		}
-		this.callback(currentdocinfo);
-	}
-
-	saveCurrentDocumentName(name){
-		let docconf = this.loadOrNewDocConfig()
-		let currentdocinfo = docconf.docinfos.find(e => e.id == this.getCurrentDocId());
-		if(! currentdocinfo){
-			console.error('BUG', this.getCurrentDocId(), docconf);
-			return;
-		}
-		currentdocinfo.latestUpdate = new Date().getTime();
-
-		currentdocinfo.name = PV.sanitizeName(name);
-		try{
-				localStorage.setItem('vecterion-doc-config', JSON.stringify(docconf, null, '\t'));
-		}catch(e){
-			alert('error: localStrage full. try delete document.')
-		}
-		this.callback(currentdocinfo);
-		return true;
-	}
-
-	loadOrNewCurrentDocInfo(){
-		let docconf = this.loadDocConfig()
-		if(! docconf){
-			docconf = this.loadOrNewDocConfig()
-			this.currentDocId = 0;
-			const currentDocInfo = docconf.docinfos.at(0);
-			this.callback(currentDocInfo);
-			return currentDocInfo;
-		}
-
-		if(-1 === this.getCurrentDocId()){
-			this.currentDocId = docconf.docinfos.at(0).id;
-			console.log(`initialized doc select`, this.getCurrentDocId());
-		}
-		const currentdocinfo = docconf.docinfos.find(e => e.id == this.getCurrentDocId());
-		if(! currentdocinfo){
-			console.log('BUG', this.getCurrentDocId(), docconf);
-		}
-		this.callback(currentdocinfo);
-		return currentdocinfo;
-	}
-	loadOrNewCurrentDoc(){
-		const currentdocinfo = this.loadOrNewCurrentDocInfo();
-		const dockey = `vecterion-doc-${currentdocinfo.id}`;
-		const sdoc = localStorage.getItem(dockey)
-		if(! sdoc){
-			console.log('localStrage doc empty.', dockey);
-			return deepcopy(DOC_DEFAULT);
-		}
-		const doc = JSON.parse(sdoc);
-		console.log(`loaded doc ${dockey}`)
-		return doc;
-	}
-
-	addCurrentDocument(doc, name){
-		let docconf = this.loadDocConfig();
-		if(! docconf){
-			docconf = Strage.newDocConf();
-		}
-		let newdocinfo = this.newDocInfo();
-		newdocinfo.name = name;
-		docconf.docinfos.unshift(newdocinfo);
-		const dockey = `vecterion-doc-${newdocinfo.id}`;
-		const sdoc = localStorage.getItem(dockey)
-		if(!! sdoc){
-			console.error('BUG', `already exist '${dockey}'`);
-		}
-		this.currentDocId = newdocinfo.id;
-
-		try{
-			this.setItemDoc_(newdocinfo.id, doc)
-			localStorage.setItem('vecterion-doc-config', JSON.stringify(docconf, null, '\t'));
-		}catch(e){
-			alert('error: localStrage full. try delete document.')
-		}
-		this.callback(newdocinfo);
-	}
-
-	deleteDocId(id){
-		const dockey = `vecterion-doc-${id}`;
-		localStorage.removeItem(dockey)
-		const dockeyThumb = `vecterion-doc-thumb-${id}`;
-		localStorage.removeItem(dockeyThumb)
-		try{
-			localStorage.setItem('vecterion-doc-config', JSON.stringify(docconf, null, '\t'));
-		}catch(e){
-			alert('error: localStrage full. try delete document.')
-		}
-	}
-
-	setItemDoc_(id, doc_){
-		const dockey = `vecterion-doc-${id}`;
-		let doc = History.removeCache(deepcopy(doc_));
-		doc.application = {
-			"name": PACKAGE.name,
-			"subkind": "webapp",
-			"version": PACKAGE.version,
-		};
-		localStorage.setItem(dockey, JSON.stringify(doc));
-	}
-
-	static getUsedSpaceOfLocalStorageInBytes() {
-		// Returns the total number of used space (in Bytes) of the Local Storage
-		var b = 0;
-		for (var key in window.localStorage) {
-			if (window.localStorage.hasOwnProperty(key)) {
-				b += key.length + localStorage.getItem(key).length;
-			}
-		}
-		return b;
-	}
-}
 let strage;
+let hist;
 
 // 新しいドキュメントを作成し、canvasとhistoryにそれをセットする。
 function startNewDocumentOpen(){
@@ -394,6 +140,7 @@ function startDocoumentOpen(id){
 	try{
 		localStorage.setItem('vecterion-doc-config', JSON.stringify(docconf, null, '\t'));
 	}catch(e){
+		console.warn(e);
 		alert('error: localStrage full. try delete document.')
 	}
 
@@ -413,141 +160,6 @@ function startDocoumentOpen(id){
 	renderingAll();
 	fittingCanvasScale();
 }
-
-class History {
-	constructor(callback, doc) {
-		console.log('History.constructor')
-		this.callback = callback;
-		this.MAX_HIST = 10;
-		this.setDoc(doc);
-	}
-
-	setDoc(doc_){
-		const doc = (!! doc_) ? doc_ : DOC_DEFAULT;
-		this.currentDoc = deepcopy(doc);
-
-		this.currentDoc = History.conversionDoc_(this.currentDoc);
-
-		this.hist = [{ 'cause': (!! doc_) ? 'load doc':'new doc', 'doc': History.removeCache(deepcopy(this.currentDoc)), },];
-		this.histIndex = 0;
-		History.updatePrevItemCache(this.currentDoc);
-
-		setTimeout(() => { // コンストラクタ内で直接呼び出すと、メンバの初期化が完了しておらずエラーを起こすため
-			this.callback((!! doc_) ? 'init load':'init', this.histIndex + 1, this.hist.length);
-		}, 0);
-	}
-
-	now() {
-		return this.currentDoc;
-	}
-	prev() {
-		return deepcopy(this.hist[this.histIndex].doc);
-	}
-	stackNum(){
-		return this.histIndex;
-	}
-
-	static conversionDoc_(doc){
-		// 現行Document構造に新規追加されたキーを、docに付与する。
-		let def = deepcopy(DOC_DEFAULT);
-		delete def.items;
-		return lodash.merge({}, def, doc);
-	}
-
-	static updatePrevItemCache(doc){
-		doc.items.forEach(item => {
-			if(! item.hasOwnProperty('cache')){
-				item.cache = {};
-			}
-			item.cache.prevItems = [deepcopy(item)];
-		});
-	}
-	static removeCache(doc){
-		doc.items.forEach(item => {
-			PV.removeKeysRecursive(item, ['cache']);
-		});
-		return doc;
-	}
-
-	stacking(cause) {
-		// drop redo hists.
-		this.hist.length = (this.histIndex + 1);
-		// stacking	
-		this.histIndex++;
-		this.hist.push({ 'cause': cause, 'doc': History.removeCache(deepcopy(this.currentDoc)) });
-		History.updatePrevItemCache(this.currentDoc);
-		// TODO histが規定数を超えたら古い履歴を削除する
-		if (this.MAX_HIST < this.hist.length) {
-			this.hist.shift(); // this.hist.length = this.MAX_HIST;
-			this.histIndex = this.MAX_HIST - 1;
-			if ((this.hist.length - 1) !== this.histIndex) { console.error('BUG', this.histIndex, this.hist.length) }
-		}
-		console.log(`History.stacking: ${cause}`);
-		this.callback('stacking', this.histIndex + 1, this.hist.length);
-	}
-	// 直前のHistoryと同じ要因でのstackの場合、Historyに積まずにDocだけ更新する(ex. テンキー押下での移動)
-	stackingCheckDup(cause) {
-		if(this.hist.at(this.histIndex).cause !== cause){
-			this.stacking(cause)
-			return;
-		}
-		// drop redo hists.
-		this.hist.length = (this.histIndex + 1);
-		// stacking dup
-		this.hist[this.histIndex] = { 'cause': cause, 'doc': History.removeCache(deepcopy(this.currentDoc)) };
-		console.log(`History.stacking dup: ${cause}`);
-		this.callback('stacking', this.histIndex + 1, this.hist.length);
-	}
-	// Redoスタックの残らないUndo
-	// (中断において状態をクリンアップする処理を実装するために呼び出し側で一旦完了処理をするのが簡素で、
-	// その都合からHistory側からは巻き戻し有無の判断がつかないため、呼び出し側でStackingしたかをチェックしてこれを呼び出す。)
-	cancelRoolback() {
-		if (0 == this.histIndex) {
-			console.log('undo: history empty')
-			this.currentDoc = deepcopy(this.hist[this.histIndex].doc);
-			History.updatePrevItemCache(this.currentDoc);
-			return true;
-		}
-		this.histIndex--;
-		this.currentDoc = deepcopy(this.hist[this.histIndex].doc);
-		History.updatePrevItemCache(this.currentDoc);
-		this.hist.length = hist.histIndex + 1; // 上に乗っているRedo１回分を削除
-		console.log(`History.undo: ${this.histIndex + 1}/${this.hist.length}`)
-		this.callback('undo', this.histIndex + 1, this.hist.length);
-		return true;
-	}
-	cancelNow(){
-		this.currentDoc = deepcopy(this.hist[this.histIndex].doc);
-		History.updatePrevItemCache(this.currentDoc);
-	}
-	undo() {
-		if (0 == this.histIndex) {
-			console.log('undo: history empty')
-			this.currentDoc = deepcopy(this.hist[this.histIndex].doc);
-			History.updatePrevItemCache(this.currentDoc);
-			return true;
-		}
-		this.histIndex--;
-		this.currentDoc = deepcopy(this.hist[this.histIndex].doc);
-		History.updatePrevItemCache(this.currentDoc);
-		console.log(`History.undo: ${this.histIndex + 1}/${this.hist.length}`)
-		this.callback('undo', this.histIndex + 1, this.hist.length);
-		return true;
-	}
-	redo() {
-		if (!((this.hist.length - 1) > this.histIndex)) {
-			console.log(`redo: history empty ${this.histIndex}/${this.hist.length}`)
-			return false;
-		}
-		this.histIndex++;
-		this.currentDoc = deepcopy(this.hist[this.histIndex].doc);
-		History.updatePrevItemCache(this.currentDoc);
-		console.log(`History.redo: ${this.histIndex + 1}/${this.hist.length}`)
-		this.callback('redo', this.histIndex + 1, this.hist.length);
-		return true;
-	}
-};
-let hist;
 
 function strageCurrentDocChangedCallback(currentDocInfo){
 	console.log('call strage changed callback.', currentDocInfo);
@@ -591,6 +203,7 @@ function updateThumbnail(){
 		try{
 			localStorage.setItem(thumbkey, data);
 		}catch(e){
+			console.warn(e);
 			alert('error: localStrage full. try delete document.')
 		}
 		//var a = document.createElement("a");
@@ -609,27 +222,6 @@ const AHKIND = {
 	'Free': 'free',
 	'None': 'none',
 };
-
-const TOOLS = {
-	'ItemEditTool': 	{ 'Id': 0, 'isItem':  true, 'name': 'ItemEditTool' },
-	'APEditTool': 		{ 'Id': 1, 'isItem': false, 'name': 'APEditTool' },
-	'AHEditTool': 		{ 'Id': 2, 'isItem':  true, 'name': 'AHEditTool' },
-	'APAddTool': 		{ 'Id': 3, 'isItem':  true, 'name': 'APAddTool' },
-	'APInsertTool': 	{ 'Id': 4, 'isItem':  true, 'name': 'APInsertTool' },
-	'APKnifeTool':		{ 'Id': 5, 'isItem':  true, 'name': 'APKnifeTool' },
-	'FigureAddTool':	{ 'Id': 6, 'isItem':  true, 'name': 'FigureAddTool' },
-	'GuideAddTool':		{ 'Id': 7, 'isItem':  true, 'name': 'GuideAddTool' },
-};
-function Tool_getToolFromIndex(index) {
-	for (const [key, tool] of Object.entries(TOOLS)) {
-		if (tool.Id == index) {
-			return tool;
-		}
-	}
-
-	console.error('BUG Tool_getToolFromIndex', index);
-	return undefined;
-}
 
 // canvasに使うSVGを掴んでおく
 let renderingHandle;
@@ -904,7 +496,7 @@ function loadAfterRun(){
 						// AP自体は未Focusでも含めることとした。
 						const isAccepted = !PV.exforReverse(hist.now().focus.focusItemIndexes, (ix, itemIndex) => {
 							const itemt = hist.now().items[itemIndex];
-							if((! isMetaVisible(itemt)) || isMetaLock(itemt)){
+							if((! Render.isMetaVisible(itemt)) || Render.isMetaLock(itemt)){
 								return true;
 							}
 							const firstAP = itemt.aps.at(0);
@@ -1090,7 +682,7 @@ function loadAfterRun(){
 						console.error('BUG', editor.mouse.touchedAPAHKind);
 					}
 				}else{
-					const focusRect = getFocusingRectByNow();
+					const focusRect = Render.getFocusingRectByNow(editor, hist.now());
 					if(! focusRect){
 						console.error('BUG');
 						break;
@@ -1242,7 +834,7 @@ function loadAfterRun(){
 		renderingEditorUserInterface();
 
 		isDisableHistoryUpdate = false;
-		checkpointStacking(Tool_getToolFromIndex(editor.toolIndex).name);
+		checkpointStacking(Tool.getToolFromIndex(editor.toolIndex).name);
 	};
 	document.getElementById('edit-field').addEventListener('mousemove', event => {
 		// MEMO mousemoveではevent.buttonはゼロのままなので、中ボタン判定はできない
@@ -1342,7 +934,7 @@ function loadAfterRun(){
 						const mouseRect = getMousemoveRectInCanvas();
 						let touchedIndexes = [];
 						hist.now().items.forEach((item, index) => {
-							if((! isMetaVisible(item)) || isMetaLock(item)){
+							if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
 								return;
 							}
 							const itemRect = PV.rectFromRange2d(PV.Item_range2d(item));
@@ -1444,7 +1036,7 @@ function loadAfterRun(){
 						const mouseRect = getMousemoveRectInCanvas();
 						let touchedCplxes = [];
 						hist.now().items.forEach((item, itemIndex) => {
-							if((! isMetaVisible(item)) || isMetaLock(item)){
+							if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
 								return;
 							}
 							switch(item.kind){
@@ -1488,7 +1080,7 @@ function loadAfterRun(){
 						if(! editor.isAddAnchorPoindByAAPTool){
 							const isTouched = !PV.exfor(hist.now().focus.focusItemIndexes, (ix, itemIndex) => {
 								const itemt = hist.now().items[itemIndex];
-								if((! isMetaVisible(itemt)) || isMetaLock(itemt)){
+								if((! Render.isMetaVisible(itemt)) || Render.isMetaLock(itemt)){
 									return true;
 								}
 								if(itemt.isCloseAp){
@@ -1823,7 +1415,7 @@ function loadAfterRun(){
 		}
 
 		const moveNowForFocus = (moveVec) => {
-			if(Tool_getToolFromIndex(editor.toolIndex).isItem){
+			if(Tool.getToolFromIndex(editor.toolIndex).isItem){
 				hist.now().focus.focusItemIndexes.forEach(itemIndex => {
 					Item_moveNowWithIndex(itemIndex, moveVec);
 				});
@@ -2047,7 +1639,7 @@ function loadAfterRun(){
 			const doc = hist.now();
 			let draw = SVG();
 			draw.size(doc.size.w, doc.size.h);
-			renderingDocOnCanvas(draw.group(), doc);
+			Render.renderingDocOnCanvas(draw.group(), doc);
 			
 			// to download file.
 			const ssvg = xmlFormatter(draw.svg().replace('>', `><!-- generated by ${PACKAGE.name} ${PACKAGE.version} -->`));
@@ -2143,7 +1735,7 @@ function loadAfterRun(){
 				'w': parseInt(document.getElementById('axis-w').children[0].value, 10),
 				'h': parseInt(document.getElementById('axis-h').children[0].value, 10),
 			};
-			const tool = Tool_getToolFromIndex(editor.toolIndex);
+			const tool = Tool.getToolFromIndex(editor.toolIndex);
 			const targetKind = tool.isItem ? 'Item' : 'AP';
 
 			const kind = event.currentTarget.parentElement.id.slice(-1);
@@ -2916,7 +2508,7 @@ function loadAfterRun(){
 		let xunit = document.getElementById('input2d-dialog-x-input');
 		let yunit = document.getElementById('input2d-dialog-y-input');
 		let ratio = document.getElementById('input2d-dialog-is-keep-aspect-ratio');
-		const targetKind = (Tool_getToolFromIndex(editor.toolIndex).isItem) ? 'Item' : 'AP';
+		const targetKind = (Tool.getToolFromIndex(editor.toolIndex).isItem) ? 'Item' : 'AP';
 
 		const execute = () => {
 			switch(title.textContent){
@@ -3038,12 +2630,12 @@ function loadAfterRun(){
 	// ** align // SPEC 端揃え(上下前後寄せ・X中央・Y中央)
 	{
 		const align = (kind) => {
-			if(Tool_getToolFromIndex(editor.toolIndex).isItem){
+			if(Tool.getToolFromIndex(editor.toolIndex).isItem){
 				if(2 > hist.now().focus.focusItemIndexes.length){
 					setMessage('need 2 focus items.');
 					return;
 				}
-				const focusBox = getFocusingRectByNow();
+				const focusBox = Render.getFocusingRectByNow(editor, hist.now());
 				if(! focusBox){
 					console.error('BUG', hist.now().focus.focusItemIndexes);
 					return;
@@ -3124,7 +2716,7 @@ function loadAfterRun(){
 					setMessage('need 2 focus aps.');
 					return;
 				}
-				const focusBox = getFocusingRectByNow();
+				const focusBox = Render.getFocusingRectByNow(editor, hist.now());
 				if(! focusBox){
 					console.error('BUG', hist.now().focus.focusAPCplxes);
 					return;
@@ -3220,7 +2812,7 @@ function loadAfterRun(){
 	// ** interval // SPEC 等間隔(上下前後基準・X中央基準・Y中央基準)
 	{
 		const interval = (kind) => {
-			if(Tool_getToolFromIndex(editor.toolIndex).isItem){
+			if(Tool.getToolFromIndex(editor.toolIndex).isItem){
 				if(3 > hist.now().focus.focusItemIndexes.length){
 					setMessage('need 3 focus items.');
 					return;
@@ -3229,7 +2821,7 @@ function loadAfterRun(){
 				// SPEC Itemの等間隔
 				switch(kind){
 				case 'interval-x-left':{
-					const xAxisFocusItems = itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes).sort((aItem,bItem) => {
+					const xAxisFocusItems = PV.itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes).sort((aItem,bItem) => {
 						const aItemBox = PV.rectFromItems([aItem]);
 						const bItemBox = PV.rectFromItems([bItem]);
 						return aItemBox.x - bItemBox.x;
@@ -3246,7 +2838,7 @@ function loadAfterRun(){
 				}
 					break;
 				case 'interval-x-center':{
-					const xAxisFocusItems = itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes).sort((aItem,bItem) => {
+					const xAxisFocusItems = PV.itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes).sort((aItem,bItem) => {
 						const aItemBox = PV.rectFromItems([aItem]);
 						const bItemBox = PV.rectFromItems([bItem]);
 						return PV.centerFromRect(aItemBox).x - PV.centerFromRect(bItemBox).x;
@@ -3263,7 +2855,7 @@ function loadAfterRun(){
 				}
 						break;
 				case 'interval-x-right':{
-					const xAxisFocusItems = itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes).sort((aItem,bItem) => {
+					const xAxisFocusItems = PV.itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes).sort((aItem,bItem) => {
 						const aItemBox = PV.rectFromItems([aItem]);
 						const bItemBox = PV.rectFromItems([bItem]);
 						return PV.rightBottomFromRect(aItemBox).x - PV.rightBottomFromRect(bItemBox).x;
@@ -3280,7 +2872,7 @@ function loadAfterRun(){
 				}
 					break;
 				case 'interval-y-top':{
-					const yAxisFocusItems = itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes).sort((aItem,bItem) => {
+					const yAxisFocusItems = PV.itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes).sort((aItem,bItem) => {
 						const aItemBox = PV.rectFromItems([aItem]);
 						const bItemBox = PV.rectFromItems([bItem]);
 						return aItemBox.y - bItemBox.y;
@@ -3297,7 +2889,7 @@ function loadAfterRun(){
 				}
 					break;
 				case 'interval-y-center':{
-					const yAxisFocusItems = itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes).sort((aItem,bItem) => {
+					const yAxisFocusItems = PV.itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes).sort((aItem,bItem) => {
 						const aItemBox = PV.rectFromItems([aItem]);
 						const bItemBox = PV.rectFromItems([bItem]);
 						return PV.centerFromRect(aItemBox).y - PV.centerFromRect(bItemBox).y;
@@ -3314,7 +2906,7 @@ function loadAfterRun(){
 				}
 					break;
 				case 'interval-y-bottom':{
-					const yAxisFocusItems = itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes).sort((aItem,bItem) => {
+					const yAxisFocusItems = PV.itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes).sort((aItem,bItem) => {
 						const aItemBox = PV.rectFromItems([aItem]);
 						const bItemBox = PV.rectFromItems([bItem]);
 						return PV.rightBottomFromRect(aItemBox).y - PV.rightBottomFromRect(bItemBox).y;
@@ -3542,7 +3134,7 @@ function cutOrCopyToClipboard(kind){
 			return undefined;
 		}
 	};
-	if(Tool_getToolFromIndex(editor.toolIndex).isItem){
+	if(Tool.getToolFromIndex(editor.toolIndex).isItem){
 		fiis.forEach(itemIndex => {
 			const item = func_(kind, itemIndex);
 			if(! item){
@@ -3741,7 +3333,13 @@ function updateDocSelectDialog(){
 
 		let dbs = newDocItem.getElementsByClassName('doc-bytesize')[0];
 		const dockey = `vecterion-doc-${docinfo.id}`;
-		dbs.textContent = ('    ' + (localStorage.getItem(dockey).length / 1024).toFixed(0)).slice(-4);
+		if(! localStorage.getItem(dockey)){
+			console.error('BUG', dockey);
+			dbs.textContent = '   ?';
+		}else{
+			const v = localStorage.getItem(dockey).length / 1024;
+			dbs.textContent = ('    ' + (v).toFixed(0)).slice(-4);
+		}
 
 		newDocItem.getElementsByClassName('doc-item-tag')[0].addEventListener('click', (event) => {
 			startDocoumentOpen(docinfo.id);
@@ -3855,7 +3453,7 @@ function updateLayerView(){
 
 			let [item, itemIndex] = getItemAndIndexFromName(nameFromId(event.currentTarget.parentElement.id));
 			item.isVisible = (! item.isVisible);
-			if((! isMetaVisible(item))){
+			if((! Render.isMetaVisible(item))){
 				Focus_removeItemIndex(itemIndex);
 			}
 
@@ -3868,7 +3466,7 @@ function updateLayerView(){
 
 			let [item, itemIndex] = getItemAndIndexFromName(nameFromId(event.currentTarget.parentElement.id));
 			item.isLock = (! item.isLock);
-			if(isMetaLock(item)){
+			if(Render.isMetaLock(item)){
 				Focus_removeItemIndex(itemIndex);
 			}
 
@@ -3934,14 +3532,14 @@ function updateLayerView(){
 		isLockElem.children[0].style.display = (! layerItem.isLock) ? 'block' : 'none';
 		isLockElem.children[1].style.display = (layerItem.isLock) ? 'block' : 'none';
 
-		if(isMetaVisible(layerItem)){
+		if(Render.isMetaVisible(layerItem)){
 			isVisibleElem.children[0].classList.remove('layer_is-meta-disable');
 			isVisibleElem.children[1].classList.remove('layer_is-meta-disable');
 		}else{
 			isVisibleElem.children[0].classList.add('layer_is-meta-disable');
 			isVisibleElem.children[1].classList.add('layer_is-meta-disable');
 		}
-		if(isMetaLock(layerItem)){
+		if(Render.isMetaLock(layerItem)){
 			isLockElem.children[0].classList.add('layer_is-meta-disable');;
 			isLockElem.children[1].classList.add('layer_is-meta-disable');;
 		}else{
@@ -4028,7 +3626,7 @@ function nearPointPosi(items, itemIndexes, point){
 			console.error('BUG', itemIndex, items);
 			return;
 		}
-		if((! isMetaVisible(item)) || isMetaLock(item)){
+		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
 			return;
 		}
 		if('Bezier' !== item.kind){
@@ -4070,7 +3668,7 @@ function APCplx_sortToDesc(cplxes_){
 
 function deleteByFocus(){
 	// SPEC Delete キーを押下された場合、ItemまたはAPを削除する(TOOL選択状態による)。
-	if(Tool_getToolFromIndex(editor.toolIndex).isItem){
+	if(Tool.getToolFromIndex(editor.toolIndex).isItem){
 		hist.now().focus.focusItemIndexes.sort((a,b) => {return a-b;}).reverse().forEach(itemIndex => {
 			console.log('delete', itemIndex);
 			hist.now().items.splice(itemIndex, 1);
@@ -4208,7 +3806,7 @@ function joinItem(itemIndex0, apIndex0, itemIndex1, apIndex1){
 function getTouchedItem(items, point){
 	let touchedItemIndex = -1;
 	PV.exforReverse(items, (index, item) => {
-		if((! isMetaVisible(item)) || isMetaLock(item)){
+		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
 			return true;
 		}
 
@@ -4232,7 +3830,7 @@ function getTouchedItem(items, point){
 function getTouchedAp(items, mousePoint){
 	let res = [-1, -1];
 	const isTouched = !PV.exforReverse(items, (itemIndex, item) => {
-		if((! isMetaVisible(item)) || isMetaLock(item)){
+		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
 			return true;
 		}
 
@@ -4272,7 +3870,7 @@ function getTouchedAp(items, mousePoint){
 function getTouchedApAh(items, enableItemIndexes, mousePoint){
 	let res = [-1, -1, undefined];
 	PV.exforReverse(items, (itemIndex, item) => {
-		if((! isMetaVisible(item)) || isMetaLock(item)){
+		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
 			return true;
 		}
 
@@ -4555,7 +4153,7 @@ function resizeFocusItems(targetKind, scale2d, editCenter){
 
 function updateAxisInputState(){
 	const isFocusItemEmpty = (0 === hist.now().focus.focusItemIndexes.length);
-	const tool = Tool_getToolFromIndex(editor.toolIndex);
+	const tool = Tool.getToolFromIndex(editor.toolIndex);
 
 	const axises = [
 		document.getElementById('axis-x'),
@@ -4576,7 +4174,7 @@ function updateAxisInputState(){
 }
 function updateAxisInput(){
 	updateAxisInputState();
-	const focusRect = getFocusingRectByNow();
+	const focusRect = Render.getFocusingRectByNow(editor, hist.now());
 	if(! focusRect){
 		document.getElementById('axis-x').children[0].value = '';
 		document.getElementById('axis-y').children[0].value = '';
@@ -4595,7 +4193,7 @@ function updateAxisInput(){
 }
 
 function getFocusingRectByPrev(){
-	if(Tool_getToolFromIndex(editor.toolIndex).isItem){
+	if(Tool.getToolFromIndex(editor.toolIndex).isItem){
 		let cacheItems = [];
 		getNowFocusItems().forEach(item => {cacheItems.push(...item.cache.prevItems)});
 		return PV.rectFromItems(cacheItems);
@@ -4604,14 +4202,6 @@ function getFocusingRectByPrev(){
 	let cacheItems = [];
 	hist.now().items.forEach(item => {cacheItems.push(item.cache.prevItems[0])});
 	const aps = PV.apsFromItems(cacheItems, hist.now().focus.focusAPCplxes);
-	return PV.rectFromAps(aps);
-}
-function getFocusingRectByNow(){
-	if(Tool_getToolFromIndex(editor.toolIndex).isItem){
-		return PV.rectFromItems(itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes));
-	}
-
-	const aps = PV.apsFromItems(hist.now().items, hist.now().focus.focusAPCplxes);
 	return PV.rectFromAps(aps);
 }
 
@@ -4934,7 +4524,7 @@ function Focus_addItemIndex(itemIndex) {
 		// 新規追加かつAPがすべて未Focusの場合、すべてのAPをFocusする。
 		// 順番は末尾APがcurrentAPになるよう正順。
 		const item = hist.now().items[itemIndex];
-		if((! isMetaVisible(item)) || isMetaLock(item)){
+		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
 			console.log('BUG', itemIndex, item);
 		}
 		if('Bezier' === item.kind){
@@ -5184,23 +4774,6 @@ function Focus_prevCurrerntAP() {
 	return beziers[0].aps.at(cplx[1]);
 }
 
-function isMetaLock(item){
-	if('Guide' === item.kind){
-		if(hist.now().editor.guide.isLockGuide){
-			return true;
-		}
-	}
-	return item.isLock;
-}
-function isMetaVisible(item){
-	if('Guide' === item.kind){
-		if(! hist.now().editor.guide.isVisibleGuide){
-			return false;
-		}
-	}
-	return item.isVisible;
-}
-
 function setPaletteUIForMem() {
 	// ** update UI palette
 	// strokeColor, fillColorを入れ替える
@@ -5237,7 +4810,7 @@ function setBorderUIFromMem() {
 
 function setToolIndex(toolIndex) {
 	console.log('setToolIndex', toolIndex);
-	const tool = Tool_getToolFromIndex(toolIndex);
+	const tool = Tool.getToolFromIndex(toolIndex);
 	setMessage(`tool change ${tool.name}`)
 
 	const fieldFrame = document.getElementById('edit-field-frame');
@@ -5319,40 +4892,6 @@ function rescalingCanvas(scale) {
 	document.getElementById('canvas-scale').value = (field.canvas.scale * 100).toFixed(1);
 	renderingAll();
 	return true;
-}
-
-function patharrayFromBezierItem(bezier) {
-	if('Bezier' !== bezier.kind){
-		console.error('BUG', bezier);
-		return [];
-	}
-	let patharray = [];
-	bezier.aps.forEach((ap, index) => {
-		//patharray.push([(0 === index) ? 'M':'L', ap.point.x, ap.point.y]);
-		if (0 === index) {
-			patharray.push(['M', ap.point.x, ap.point.y]);
-		} else {
-			const prevAP = bezier.aps[index - 1];
-			const prevFrontAH = PV.AP_frontAHPoint(prevAP);
-			const currentBackAH = PV.AP_backAHPoint(ap);
-			patharray.push([
-				'C',
-				prevFrontAH.x, prevFrontAH.y,
-				currentBackAH.x, currentBackAH.y,
-				ap.point.x, ap.point.y
-			]);
-		}
-	});
-	if (2 <= bezier.aps.length && bezier.isCloseAp) {
-		// 曲線の閉パスは、開始点と同座標のC点を作ってから閉じ指定。
-		const firstAP = bezier.aps.at(0);
-		const lastAP = bezier.aps.at(-1);
-		const lastFrontAH = PV.AP_frontAHPoint(lastAP);
-		const firstBackAH = PV.AP_backAHPoint(firstAP);
-		patharray.push(['C', lastFrontAH.x, lastFrontAH.y, firstBackAH.x, firstBackAH.y, firstAP.point.x, firstAP.point.y]);
-		patharray.push(['Z']);
-	}
-	return patharray;
 }
 
 function fittingCanvasScale() {
@@ -5522,7 +5061,7 @@ function snapMousemoveVectorInCanvas(isSnapForAngle){
 
 	if(hist.now().editor.snap.isSnapForGuide || hist.now().editor.snap.isSnapForItem){
 		hist.now().items.forEach((targetItem, targetItemIndex) =>{
-			if(! isMetaVisible(targetItem)){
+			if(! Render.isMetaVisible(targetItem)){
 				return;
 			}
 
@@ -5680,507 +5219,9 @@ function angleSnapAndMousemoveVectorInCanvas(isSnapForAngle){
 	return [degree, move];
 }
 
-function getMousemoveDiffInCanvas() {
-	//if(!mousemoveInCanvas || !mousedownInCanvas){
-	//	console.log('getMousemoveDiffInCanvas undef mems');
-	//	return {'x':0, 'y':0};
-	//}
-	const diff = {
-		'x': mousemoveInCanvas.x - mousedownInCanvas.x,
-		'y': mousemoveInCanvas.y - mousedownInCanvas.y,
-	};
-	return diff;
-}
-
-// ** editor user display
-function renderingEditorUserInterface() {
-	if (!renderingHandle) {
-		return;
-	}
-
-	//console.log(renderingHandle.draw.width())
-	const fieldSquare = {
-		'w': renderingHandle.draw.width(),
-		'h': renderingHandle.draw.height(),
-	};
-
-	let forgroundG = renderingHandle.forgroundG;
-	forgroundG.clear();
-
-	let forgroundCanG = forgroundG.group();
-	let forgroundInG = forgroundG.group();
-
-	forgroundCanG.translate(hist.now().canvas.padding.w, hist.now().canvas.padding.h)
-	forgroundCanG.scale(field.canvas.scale)
-
-	hist.now().canvas.grids.forEach((grid) => {
-		const wrange = {
-			'min': hist.now().canvas.padding.w,
-			'max': hist.now().canvas.padding.w + toField(hist.now().size.w),
-		};
-		for (let i = 0; true; i++) {
-			const x = (toField(grid.interval * i) + wrange.min);
-			if (wrange.max < x) { break; }
-			// 上下に少し足りなくしているのはデバッグのため
-			let line = forgroundInG.line(x, 5, x, fieldSquare.h - 5);
-			line.stroke({ width: grid.strokew }).attr({ 'stroke': grid.color });
-		}
-		const hrange = {
-			'min': hist.now().canvas.padding.h,
-			'max': hist.now().canvas.padding.h + toField(hist.now().size.h),
-		};
-		for (let i = 0; true; i++) {
-			const y = (toField(grid.interval * i) + hrange.min);
-			if (hrange.max < y) { break; }
-			// 上下に少し足りなくしているのはデバッグのため
-			let line = forgroundInG.line(5, y, fieldSquare.w - 5, y);
-			line.stroke({ width: grid.strokew }).attr({ 'stroke': grid.color });
-		}
-	});
-
-	const DASH = `${toCanvas(12)} ${toCanvas(6)}`;
-	const GUIDE_DASH = `${(8)} ${(4)}`;
-
-	{
-		// 選択item領域の四角形を描画
-		const focusRect = getFocusingRectByNow();
-		if (focusRect) {
-			if ((!fuzzyZero(focusRect.w)) && (!fuzzyZero(focusRect.h))) {
-				let se = forgroundCanG.rect(focusRect.w, focusRect.h);
-				se.move(focusRect.x, focusRect.y);
-				se.attr({
-					'stroke': '#3070ffff',
-					'stroke-width': (1 / field.canvas.scale),
-					'fill': 'none',
-					'stroke-dasharray': DASH
-				});
-			}
-		}
-
-		const isRotetableTool = (editor.toolIndex === TOOLS.ItemEditTool.Id);
-		const isRotatableFocusItems = ! PV.exfor(hist.now().focus.focusItemIndexes, (ix, itemIndex) => {
-			const item = hist.now().items.at(itemIndex);
-			return ('Guide' === item.kind);
-		});
-		if(focusRect && isRotetableTool && isRotatableFocusItems){
-			// rotateハンドルを描画
-			const rhPoint = getRotateHandlePoint(focusRect);
-			const r = toCanvas(5);
-			const rootPoint = {'x': focusRect.x + (focusRect.w/2), 'y': focusRect.y};
-			let se = forgroundCanG.line(rhPoint.x, rhPoint.y, rootPoint.x, rootPoint.y);
-			se.attr({
-				'stroke': '#3070ffff',
-				'stroke-width': (1 / field.canvas.scale),
-			});
-			forgroundCanG.circle(r).move(rhPoint.x - (r / 2), rhPoint.y - (r / 2)).attr({ fill: '#333' });
-		}
-	}
-
-	// ** 編集中心
-	const center = editor.mouse.editCenter;
-	if(!! center){
-		{
-			const r = toCanvas(3);
-			let se = forgroundCanG.circle(r).move(center.x - (r / 2), center.y - (r / 2))
-			se.attr({
-				'fill': '#3070ff80',
-				'stroke': 'none',
-			});
-		}
-		{
-			const r = toCanvas(12);
-			let se = forgroundCanG.circle(r).move(center.x - (r / 2), center.y - (r / 2))
-			se.attr({
-				'fill': 'none',
-				'stroke': '#3070ff80',
-				'stroke-width': toCanvas(1.5),
-			});
-		}
-	}
-
-	// ** 角度にスナップ
-	if(editor.mouse.isRegulationalPositionByCenter){
-		const dl = PV.diagonalLengthFromRect(fieldSquare);
-		const center = editor.mouse.editCenter;
-		if(! center){
-			console.error('BUG', editor);
-			return;
-		}
-		for(let degree = 0; degree < 360; degree += 45){
-			const isUsedDegree = (degree === editor.mouse.regulationalPositionByCenterDegree);
-			const startPoint = PV.pointFromDegreeAndDiagonalLength(center, degree, toCanvas(12));
-			const endPoint = PV.pointFromDegreeAndDiagonalLength(center, degree, dl);
-			let se = forgroundCanG.line(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
-			se.attr({
-				'stroke': '#3070ffff',
-				'stroke-width': isUsedDegree ? toCanvas(2) : toCanvas(1),
-			});
-		}
-	}
-
-	// ** Axisにスナップ
-	if(!! editor.mouse.snapAxisXKind){
-		const stp = editor.mouse.snapAxisXTargetPoint;
-		const ip = PV.apFromItems(hist.now().items, editor.mouse.snapItemApCplxX).point;
-		let se = forgroundCanG.line(stp.x, stp.y, ip.x, ip.y);
-		se.attr({
-			'stroke': '#a0f0a0ff',
-			'stroke-width': toCanvas(1.2),
-		});
-	}
-	if(!! editor.mouse.snapAxisYKind){
-		const stp = editor.mouse.snapAxisYTargetPoint;
-		const ip = PV.apFromItems(hist.now().items, editor.mouse.snapItemApCplxY).point;
-		let se = forgroundCanG.line(stp.x, stp.y, ip.x, ip.y);
-		se.attr({
-			'stroke': '#a0f0a0ff',
-			'stroke-width': toCanvas(1.2),
-		});
-	}	
-
-	const renderingGuideLine = (item) => {
-		let line;
-		if('Vertical' === item.axis){
-//			const vrange = {
-//				'min': - toCanvas(hist.now().canvas.padding.h),
-//				'max': toCanvas(hist.now().canvas.padding.h * 2) + (hist.now().size.h) + hist.now().size.h,
-//				// 足りないよりははみ出てくれたほうが都合が良いので適当に延伸
-//			};
-//			line = forgroundCanG.line(item.point.x, vrange.min, item.point.x, vrange.max);
-//
-			const x = hist.now().canvas.padding.w + toField(item.point.x);
-			line = forgroundInG.line(x, 5, x, fieldSquare.h - 5);
-		}else{
-//			const hrange = {
-//				'min': - toCanvas(hist.now().canvas.padding.w),
-//				'max': toCanvas(hist.now().canvas.padding.w * 2) + (hist.now().size.w) + hist.now().size.w,
-//				// 足りないよりははみ出てくれたほうが都合が良いので適当に延伸
-//			};
-//			line = forgroundCanG.line(hrange.min, item.point.y, hrange.max, item.point.y);
-			const y = hist.now().canvas.padding.h + toField(item.point.y);
-			line = forgroundInG.line(5, y, fieldSquare.w - 5, y);
-		}
-		return line;
-	};
-
-	// Guideを描画
-	hist.now().items.forEach((item) => {
-		if(! isMetaVisible(item)){
-			return;
-		}
-		switch(item.kind){
-		case 'Guide':{
-			let line = renderingGuideLine(item);
-			line.attr({
-				'stroke': hist.now().canvas.guide.color,
-				'stroke-width': hist.now().canvas.guide.strokew,
-				'fill': 'none',
-			});
-			const r = toCanvas(6);
-			forgroundCanG.circle(r).move(item.point.x - (r / 2), item.point.y - (r / 2)).attr({ fill: '#000' });
-		}
-			break;
-		default:
-			return;
-		}
-	});
-
-	// FocusItemsを描画
-	let range2ds = [];
-	hist.now().focus.focusItemIndexes.forEach((itemIndex, ix, arr) => {
-		const item = hist.now().items.at(itemIndex);
-		if (! item){
-			console.error('BUG', item);
-			return;
-		}
-
-		const renderingPatharray = (patharray) => {
-			let guide = forgroundCanG.path(patharray);
-			if(ix === arr.length - 1){ // 最後の要素がcurrent
-				guide.attr({
-					'stroke': '#3070ffff',
-					'stroke-width': (2 / field.canvas.scale),
-					'fill': 'none',
-					'stroke-dasharray': DASH
-				});
-			}else{
-				guide.attr({
-					'stroke': '#5090ffff',
-					'stroke-width': (1.2 / field.canvas.scale),
-					'fill': 'none',
-					'stroke-dasharray': DASH
-				});
-			}
-		};
-		const renderingApByBezier = (bezier) => {
-			// APを描画
-			bezier.aps.forEach((ap, index) => {
-				// AHを描画
-				// SPEC AIではFocusされているAPのAHだけ描画されているようだが、VEではとりあえず全部描画したままにしておく。
-				// (だが矩形選択時によくわからない基準で選んだAHを描画している。まあ無視。)
-				{
-					const hps = [PV.AP_frontAHPoint(ap), PV.AP_backAHPoint(ap)];
-					hps.forEach(hp => {
-						// 線を引く(noneは引かない)
-						switch (ap.handle.kind) {
-						case AHKIND.Symmetry:
-						case AHKIND.Free:
-							let se = forgroundCanG.line(ap.point.x, ap.point.y, hp.x, hp.y);
-							se.attr({
-								'stroke': '#3070ffff',
-								'stroke-width': (1 / field.canvas.scale),
-							});
-							break;
-						case AHKIND.None:
-							return;
-						default:
-							console.error('BUG', ap, index, item);
-							return;
-						}
-	
-						// ハンドル先端を描く
-						const r = toCanvas(5);
-						switch(ap.handle.kind){
-						case AHKIND.Free:
-							forgroundCanG.rect(r,r).move(hp.x - (r / 2), hp.y - (r / 2)).attr({ fill: '#33f' });
-							break;
-						case AHKIND.Symmetry:
-							forgroundCanG.circle(r).move(hp.x - (r / 2), hp.y - (r / 2)).attr({ fill: '#33f' });
-							break;
-						}
-					});
-				}
-				// APを描画
-				{
-					if(0 === index){ // 先頭APのみ装飾
-						const r = 12 / field.canvas.scale;
-						let se = forgroundCanG.circle(r).move(ap.point.x - (r / 2), ap.point.y - (r / 2))
-						se.attr({
-							'fill': 'none',
-							'stroke': '#3070ff80',
-							'stroke-width': (1 / field.canvas.scale),
-						});
-					}
-					const r = 6 / field.canvas.scale;
-					forgroundCanG.circle(r).move(ap.point.x - (r / 2), ap.point.y - (r / 2)).attr({ fill: '#33f' });
-				}
-			});
-		};
-
-		switch(item.kind){
-		case 'Bezier':{
-			if (0 === item.aps.length) {
-				console.error('BUG', item);
-				return;
-			}
-	
-			// pathを描画
-			const patharray = patharrayFromBezierItem(item);
-			renderingPatharray(patharray);
-			renderingApByBezier(item);
-		}
-			break;
-		case 'Figure':{
-			const beziers = PV.Item_beziersFromFigure(item);
-			beziers.forEach(bezier => {
-				// pathを描画
-				const patharray = patharrayFromBezierItem(bezier);
-				renderingPatharray(patharray);
-				renderingApByBezier(bezier);
-			});
-		}
-			break;
-		case 'Guide':{
-			let line = renderingGuideLine(item);
-			line.attr({
-				'stroke': '#5090ffff',
-				'stroke-width': (1.2),
-				'fill': 'none',
-				'stroke-dasharray': GUIDE_DASH
-			});
-			const r = toCanvas(6);
-			forgroundCanG.circle(r).move(item.point.x - (r / 2), item.point.y - (r / 2)).attr({ fill: '#33f' });
-		}
-			break;
-		default:
-			console.error('BUG', item);
-			return;
-		}
-	});
-
-	hist.now().focus.focusAPCplxes.forEach((cplx, ix, arr) => {
-		const ap = PV.apFromItems(hist.now().items, cplx);
-		if(! ap){
-			console.log('BUG', cplx);
-			return;
-		}
-		// FocusedAPを描画
-		const r = 4 / field.canvas.scale;
-		let se = forgroundCanG.circle(r).move(ap.point.x - (r / 2), ap.point.y - (r / 2))
-		if(ix === arr.length - 1){ // 最後の要素がcurrent
-			se.attr({ fill: '#4c8' });
-		}else{
-			se.attr({ fill: '#ff2' });
-		}
-	});
-
-	// ** hover
-	const HOVER_COLOR = '#6030ffff';
-	if(-1 !== editor.hover.touchedItemIndex){
-		const item = hist.now().items[editor.hover.touchedItemIndex]
-		if(! item){
-			console.log('BUG',editor.hover.touchedItemIndex);
-			return;
-		}
-		let focusRect = PV.rectFromItems([item]);
-		if ((fuzzyZero(focusRect.w)) || (fuzzyZero(focusRect.h))) {
-			// ユーザ補助のための表示なので正確さは不要のため、潰れていたら適当に拡張する
-			focusRect = PV.expandRect(focusRect, toCanvas(6));
-		}
-		let se = forgroundCanG.rect(focusRect.w, focusRect.h);
-		se.move(focusRect.x, focusRect.y);
-		se.attr({
-			'stroke': HOVER_COLOR,
-			'stroke-width': (1 / field.canvas.scale),
-			'fill': '#6030ff10',
-			'stroke-dasharray': DASH
-		});
-		{
-			const beziers = PV.Item_beziersFromItem(item);
-			beziers.forEach(bezier => {
-				// pathを描画
-				const patharray = patharrayFromBezierItem(bezier);
-				let guide = forgroundCanG.path(patharray);
-				guide.attr({
-					'stroke': HOVER_COLOR,
-					'stroke-width': (0.8 / field.canvas.scale),
-					'fill': 'none',
-					'stroke-dasharray': DASH
-				});
-			});
-		}
-	}
-	if(-1 !== editor.hover.touchedApAhCplx[1]){
-		const ap = PV.apFromItems(hist.now().items, editor.hover.touchedApAhCplx);
-		if(! ap){
-			console.log('BUG', cplx);
-			return;
-		}
-
-		let point;
-		switch(editor.hover.touchedApAhCplx[2]){
-		case 'ap':
-			point = ap.point;
-			break;
-		case 'front':
-			point = PV.AP_frontAHPoint(ap);
-			console.log('f', ap);
-			break;
-		case 'back':
-			point = PV.AP_backAHPoint(ap);
-			console.log(ap);
-			break;
-		default:
-			console.log('BUG',editor.hover.touchedApAhCplx);
-			return;
-		}
-
-		const r = toCanvas(field.touch.pointR);
-		let se = forgroundCanG.circle(r).move(point.x - (r / 2), point.y - (r / 2))
-		se.attr({
-			'stroke': HOVER_COLOR,
-			'stroke-width': (1 / field.canvas.scale),
-			'fill': 'none',
-		});
-	}
-	if(editor.hover.nearTouchPointOnBetween){
-		const p = editor.hover.nearTouchPointOnBetween;
-		const r = toCanvas(6);
-		let se = forgroundCanG.circle(r).move(p.x - (r / 2), p.y - (r / 2))
-		se.attr({ fill: '#d84' });
-	}
-
-	if (mousedownInCanvas && mousemoveInCanvas) {
-		// mousedown,mousemove中
-		switch (editor.mouse.mode) {
-			case 'rectselect':
-				const rect = getMousemoveRectInCanvas();
-				let se = forgroundCanG.rect(rect.w, rect.h).move(rect.x, rect.y)
-				se.attr({
-					'stroke': '#3070ffff',
-					'stroke-width': toCanvas(0.5),
-					'fill': '#3070ff55',
-				});
-				break;
-		}
-	}
-}
-
 function getNowFocusItems(){
-	return itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes);
+	return PV.itemsFromIndexes(hist.now().items, hist.now().focus.focusItemIndexes);
 }
-
-function renderingAll() {
-	if (!renderingHandle) {
-		return;
-	}
-
-	const getCanvasRect = function (doc, field) {
-		return {
-			'x': hist.now().canvas.padding.w,
-			'y': hist.now().canvas.padding.h,
-			'w': doc.size.w * field.canvas.scale,
-			'h': doc.size.h * field.canvas.scale,
-		};
-	}
-	const canvasRect = getCanvasRect(hist.now(), field)
-
-	let fieldSquare = {
-		'w': canvasRect.w + (hist.now().canvas.padding.w * 2),
-		'h': canvasRect.h + (hist.now().canvas.padding.h * 2),
-	};
-	// 縮小表示でタッチおよび描画する領域が見切れる場合があるため、下限をフレームサイズまで拡張
-	let editFieldFrame = document.getElementById('edit-field-frame')
-	fieldSquare.w = Math.max(fieldSquare.w, editFieldFrame.clientWidth)
-	fieldSquare.h = Math.max(fieldSquare.h, editFieldFrame.clientHeight)
-
-	// 外見上スクロール等は問題ないのだが、中のSVGに連動してサイズ情報が変わってはくれないようなので、ここから直接書き込む。
-	let editField = document.getElementById('edit-field')
-	editField.style.width = Math.ceil(fieldSquare.w) + 'px';
-	editField.style.height = Math.ceil(fieldSquare.h) + 'px';
-
-	// setup canvas & field
-	let draw = renderingHandle.draw;
-	let backgroundG = renderingHandle.backgroundG;
-	let canvasParentG = renderingHandle.canvasParentG;
-	//draw.clear();
-	backgroundG.clear();
-	canvasParentG.clear();
-	let canvasG = canvasParentG.group();
-	renderingHandle.canvasG = canvasG;
-
-	draw.size(fieldSquare.w, fieldSquare.h);
-
-	const checkerWidth = hist.now().canvas.background.checkerWidth;
-	let pattern = draw.pattern((checkerWidth * 2), (checkerWidth * 2), function (add) {
-		add.rect((checkerWidth * 2), (checkerWidth * 2)).fill('#fff')
-		add.rect(checkerWidth, checkerWidth).fill('#bbb')
-		add.rect(checkerWidth, checkerWidth).fill('#bbb').move(checkerWidth, checkerWidth)
-	})
-
-	backgroundG.rect(canvasRect.w, canvasRect.h)
-		.attr({ fill: pattern }).move(canvasRect.x, canvasRect.y);
-	backgroundG.rect(canvasRect.w, canvasRect.h)
-		.attr({ fill: hist.now().canvas.background.color }).move(canvasRect.x, canvasRect.y);
-
-
-	canvasG.translate(hist.now().canvas.padding.w, hist.now().canvas.padding.h)
-	canvasG.scale(field.canvas.scale)
-
-	renderingEditorUserInterface();
-	renderingDocOnCanvas(canvasG, hist.now());
-}
-
 
 let renderingReductCount = 0;
 let renderingReductTimerId;
@@ -6199,71 +5240,20 @@ function renderingAllReduct(){
 	renderingReductCount++;
 }
 
-function renderingDocOnCanvas(canvasG, doc){
-	//console.log('CALL renderingDocOnCanvas');
-	// reindering document items
-	doc.items.forEach((item) => {
-		if(! isMetaVisible(item)){
-			return;
-		}
-
-		switch(item.kind){
-		case 'Bezier':{
-			if (0 === item.aps.length) {
-				console.error('BUG', item);
-				return;
-			}
-			const patharray = patharrayFromBezierItem(item);
-			let path = canvasG.path(patharray)
-			path.attr({
-				'stroke': item.colorPair.strokeColor,
-				'stroke-width': item.border.width,
-				'stroke-linecap': item.border.linecap,
-				'stroke-linejoin': item.border.linejoin,
-				'fill': item.colorPair.fillColor
-			});
-			item.cache.renderHandles = [path];
-		}
-			break;
-		case 'Figure':{
-			item.cache.renderHandles = [];
-			const beziers = PV.Item_beziersFromFigure(item);
-			beziers.forEach(bezier => {
-				const patharray = patharrayFromBezierItem(bezier);
-				let path = canvasG.path(patharray)
-				path.attr({
-					'stroke': bezier.colorPair.strokeColor,
-					'stroke-width': bezier.border.width,
-					'stroke-linecap': bezier.border.linecap,
-					'stroke-linejoin': bezier.border.linejoin,
-					'fill': bezier.colorPair.fillColor
-				});
-				item.cache.renderHandles.push(path);
-			});
-		}
-			break;
-		case 'Guide':{
-			// NOP
-		}
-			break;
-		default:
-			console.error('BUG', item);
-			return;
-		}
-	});
+function renderingAll(){
+	const mouse = {
+		'mousedownInCanvas': mousedownInCanvas,
+		'mousemoveInCanvas': mousemoveInCanvas
+	};
+	Render.renderingAll(renderingHandle, hist.now(), field, editor, mouse);
 }
 
-function itemsFromIndexes(srcItems, indexes){
-	let dstItems = []
-	indexes.forEach(index => {
-		const item = srcItems.at(index);
-		if(! item){
-			console.error('BUG', index);
-			return dstItems;
-		}
-		dstItems.push(item);
-	});
-	return dstItems;
+function renderingEditorUserInterface(){
+	const mouse = {
+		'mousedownInCanvas': mousedownInCanvas,
+		'mousemoveInCanvas': mousemoveInCanvas
+	};
+	Render.renderingEditorUserInterface(renderingHandle, hist.now(), field, editor, mouse);
 }
 
 function regulationalPositionByCenter(move){

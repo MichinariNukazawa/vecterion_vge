@@ -753,6 +753,19 @@ module.exports = class PV{
 		str = str.replace(/\t/g, '');
 		return str.replace(/[&<>"']/gi, '');
 	}
+	// ** Items
+	static itemsFromIndexes(srcItems, indexes){
+		let dstItems = []
+		indexes.forEach(index => {
+			const item = srcItems.at(index);
+			if(! item){
+				console.error('BUG', index);
+				return dstItems;
+			}
+			dstItems.push(item);
+		});
+		return dstItems;
+	}
 	// ** array
 	/** arrayをindex付きで逆方向にforループ。ラムダでfalseを返すと中断。
 	 * 最後まで中断されなかった場合にtrueを返す
@@ -776,23 +789,5 @@ module.exports = class PV{
 			}
 		}
 		return true;
-	}
-	// ** obj
-	static removeKeysRecursive(obj, keys)
-	{
-		if(null === obj){
-			console.debug("");
-		}else if(typeof obj === 'undefined'){
-			console.debug("");
-		}else if(obj instanceof Array){
-			obj.forEach(function(item){
-				PV.removeKeysRecursive(item, keys)
-			});
-		}else if(typeof obj === 'object'){
-			Object.getOwnPropertyNames(obj).forEach(function(key){
-				if(keys.indexOf(key) !== -1)delete obj[key];
-				else PV.removeKeysRecursive(obj[key], keys);
-			});
-		}
 	}
 }
