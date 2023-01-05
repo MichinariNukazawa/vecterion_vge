@@ -4,6 +4,13 @@ const PV = require("../src/pv.js");
 const Tool = require("../src/tool.js");
 const TOOLS = Tool.TOOLS();
 
+const ROTATE_HEIGHT = 20;
+const AHKIND = {
+	'Symmetry': 'symmetry',
+	'Free': 'free',
+	'None': 'none',
+};
+
 module.exports = class Render{
 	static renderingAll(renderingHandle, doc, field, editor, mouse) {
 		if (!renderingHandle) {
@@ -127,7 +134,7 @@ module.exports = class Render{
 			// 選択item領域の四角形を描画
 			const focusRect = this.getFocusingRectByNow(editor, doc);
 			if (focusRect) {
-				if ((!fuzzyZero(focusRect.w)) && (!fuzzyZero(focusRect.h))) {
+				if ((!PV.fuzzyZero(focusRect.w)) && (!PV.fuzzyZero(focusRect.h))) {
 					let se = forgroundCanG.rect(focusRect.w, focusRect.h);
 					se.move(focusRect.x, focusRect.y);
 					se.attr({
@@ -146,7 +153,7 @@ module.exports = class Render{
 			});
 			if(focusRect && isRotetableTool && isRotatableFocusItems){
 				// rotateハンドルを描画
-				const rhPoint = getRotateHandlePoint(focusRect);
+				const rhPoint = Render.getRotateHandlePoint(focusRect, field);
 				const r = toCanvas(5);
 				const rootPoint = {'x': focusRect.x + (focusRect.w/2), 'y': focusRect.y};
 				let se = forgroundCanG.line(rhPoint.x, rhPoint.y, rootPoint.x, rootPoint.y);
@@ -247,7 +254,7 @@ module.exports = class Render{
 
 		// Guideを描画
 		doc.items.forEach((item) => {
-			if(! Render.isMetaVisible(item)){
+			if(! Render.isMetaVisible(item, doc)){
 				return;
 			}
 			switch(item.kind){
@@ -415,7 +422,7 @@ module.exports = class Render{
 				return;
 			}
 			let focusRect = PV.rectFromItems([item]);
-			if ((fuzzyZero(focusRect.w)) || (fuzzyZero(focusRect.h))) {
+			if ((PV.fuzzyZero(focusRect.w)) || (PV.fuzzyZero(focusRect.h))) {
 				// ユーザ補助のための表示なので正確さは不要のため、潰れていたら適当に拡張する
 				focusRect = PV.expandRect(focusRect, toCanvas(6));
 			}
@@ -502,7 +509,7 @@ module.exports = class Render{
 		//console.log('CALL renderingDocOnCanvas');
 		// reindering document items
 		doc.items.forEach((item) => {
-			if(! Render.isMetaVisible(item)){
+			if(! Render.isMetaVisible(item, doc)){
 				return;
 			}
 	
@@ -521,11 +528,13 @@ module.exports = class Render{
 					'stroke-linejoin': item.border.linejoin,
 					'fill': item.colorPair.fillColor
 				});
-				item.cache.renderHandles = [path];
+				if(! item.hasOwnProperty('cache')){ item.cache = {}; }
+				item['cache']['renderHandles'] = [path];
 			}
 				break;
 			case 'Figure':{
-				item.cache.renderHandles = [];
+				if(! item.hasOwnProperty('cache')){ item.cache = {}; }
+				item['cache']['renderHandles'] = [];
 				const beziers = PV.Item_beziersFromFigure(item);
 				beziers.forEach(bezier => {
 					const patharray = Render.patharrayFromBezierItem(bezier);
@@ -537,7 +546,8 @@ module.exports = class Render{
 						'stroke-linejoin': bezier.border.linejoin,
 						'fill': bezier.colorPair.fillColor
 					});
-					item.cache.renderHandles.push(path);
+					if(! item.hasOwnProperty('cache')){ item.cache = {}; }
+					item['cache']['renderHandles'].push(path);
 				});
 			}
 				break;
@@ -595,17 +605,27 @@ module.exports = class Render{
 		return PV.rectFromAps(aps);
 	}
 
-	static isMetaLock(item){
+	static getRotateHandlePoint(focusRect, field){
+		const toCanvas = (v) => { return v / field.canvas.scale; }
+
+		const rotatePoint = {
+			'x': focusRect.x + (focusRect.w/2),
+			'y': focusRect.y - (toCanvas(ROTATE_HEIGHT + (field.touch.cornerWidth/2))),
+		};	
+		return rotatePoint;
+	}
+
+	static isMetaLock(item, doc){
 		if('Guide' === item.kind){
-			if(hist.now().editor.guide.isLockGuide){
+			if(doc.editor.guide.isLockGuide){
 				return true;
 			}
 		}
 		return item.isLock;
 	}
-	static isMetaVisible(item){
+	static isMetaVisible(item, doc){
 		if('Guide' === item.kind){
-			if(! hist.now().editor.guide.isVisibleGuide){
+			if(! doc.editor.guide.isVisibleGuide){
 				return false;
 			}
 		}

@@ -4,7 +4,6 @@ const { indexOf } = require("lodash");
 const clonedeep = require('lodash/cloneDeep');
 
 function deepcopy(obj) { return clonedeep(obj); }
-function fuzzyZero(v) { return 0.0001 > Math.abs(v); }
 function fuzzyEqual(a, b) { return 0.0001 > Math.abs(a - b); }
 
 const AHKIND = {
@@ -25,8 +24,8 @@ module.exports = class PV{
 		return {'x': a.x * b.x, 'y': a.y * b.y};
 	}
 	static pointDiv(a, b){
-		const x = (fuzzyZero(b.x)) ? 0 : (a.x / b.x);
-		const y = (fuzzyZero(b.y)) ? 0 : (a.y / b.y);
+		const x = (PV.fuzzyZero(b.x)) ? 0 : (a.x / b.x);
+		const y = (PV.fuzzyZero(b.y)) ? 0 : (a.y / b.y);
 		return {'x': x, 'y': y};
 	}
 	static MinusPoint(){
@@ -39,7 +38,7 @@ module.exports = class PV{
 		return {'x': value, 'y': value};
 	}
 	static fuzzyZeroPoint(point){
-		return fuzzyZero(point.x) && fuzzyZero(point.y);
+		return PV.fuzzyZero(point.x) && PV.fuzzyZero(point.y);
 	}
 	// ** rect
 	// rect２つを含むrectを返す
@@ -163,7 +162,8 @@ module.exports = class PV{
 			return PV.AP_newFromPoint(item.point);
 		}
 		default:
-			return undefined;
+			const beziers = PV.Item_beziersFromItem(item);
+			return beziers[0].aps.at(cplx[1]);
 		}
 	}
 	static apsFromItems(items, cplxes){
@@ -429,7 +429,7 @@ module.exports = class PV{
 		return Math.abs(d);
 	}
 	static fieldDegreeFromVector(vector){
-		if(fuzzyZero(vector.y) && fuzzyZero(vector.x)){ // そのままの場合-270
+		if(PV.fuzzyZero(vector.y) && PV.fuzzyZero(vector.x)){ // そのままの場合-270
 			return 0;
 		}
 		return PV.fieldDegreeFromMathRadian(Math.atan2(-vector.y, vector.x))
@@ -790,4 +790,6 @@ module.exports = class PV{
 		}
 		return true;
 	}
+	// ** other
+	static fuzzyZero(v) { return 0.0001 > Math.abs(v); }
 }

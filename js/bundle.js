@@ -23675,7 +23675,7 @@ const TOOLS = Tool.TOOLS();
 
 // documentの最大サイズ（値は適当）
 const DOCUMENT_MAX_SIZE_AXIS_PX = 40000;
-const ROTATE_HEIGHT = 20;
+
 const EDITOR_MOUSE_OF_MOUSEUP_DEFAULT = {
 	'button': 0,
 	// select: 選択領域
@@ -23899,7 +23899,6 @@ let confirmOkFunc;
 let confirmCancelFunc;
 
 function deepcopy(obj) { return clonedeep(obj); }
-function fuzzyZero(v) { return 0.0001 > Math.abs(v); }
 // canvas to field scale convert
 function toField(v) { return v * field.canvas.scale; }
 function toCanvas(v) { return v / field.canvas.scale; }
@@ -24153,7 +24152,7 @@ function loadAfterRun(){
 						// AP自体は未Focusでも含めることとした。
 						const isAccepted = !PV.exforReverse(hist.now().focus.focusItemIndexes, (ix, itemIndex) => {
 							const itemt = hist.now().items[itemIndex];
-							if((! Render.isMetaVisible(itemt)) || Render.isMetaLock(itemt)){
+							if((! Render.isMetaVisible(itemt)) || Render.isMetaLock(itemt, hist.now())){
 								return true;
 							}
 							const firstAP = itemt.aps.at(0);
@@ -24591,7 +24590,7 @@ function loadAfterRun(){
 						const mouseRect = getMousemoveRectInCanvas();
 						let touchedIndexes = [];
 						hist.now().items.forEach((item, index) => {
-							if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
+							if((! Render.isMetaVisible(item, hist.now())) || Render.isMetaLock(item, hist.now())){
 								return;
 							}
 							const itemRect = PV.rectFromRange2d(PV.Item_range2d(item));
@@ -24693,7 +24692,7 @@ function loadAfterRun(){
 						const mouseRect = getMousemoveRectInCanvas();
 						let touchedCplxes = [];
 						hist.now().items.forEach((item, itemIndex) => {
-							if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
+							if((! Render.isMetaVisible(item, hist.now())) || Render.isMetaLock(item, hist.now())){
 								return;
 							}
 							switch(item.kind){
@@ -24737,7 +24736,7 @@ function loadAfterRun(){
 						if(! editor.isAddAnchorPoindByAAPTool){
 							const isTouched = !PV.exfor(hist.now().focus.focusItemIndexes, (ix, itemIndex) => {
 								const itemt = hist.now().items[itemIndex];
-								if((! Render.isMetaVisible(itemt)) || Render.isMetaLock(itemt)){
+								if((! Render.isMetaVisible(itemt)) || Render.isMetaLock(itemt, hist.now())){
 									return true;
 								}
 								if(itemt.isCloseAp){
@@ -27110,7 +27109,7 @@ function updateLayerView(){
 
 			let [item, itemIndex] = getItemAndIndexFromName(nameFromId(event.currentTarget.parentElement.id));
 			item.isVisible = (! item.isVisible);
-			if((! Render.isMetaVisible(item))){
+			if((! Render.isMetaVisible(item, hist.now()))){
 				Focus_removeItemIndex(itemIndex);
 			}
 
@@ -27123,7 +27122,7 @@ function updateLayerView(){
 
 			let [item, itemIndex] = getItemAndIndexFromName(nameFromId(event.currentTarget.parentElement.id));
 			item.isLock = (! item.isLock);
-			if(Render.isMetaLock(item)){
+			if(Render.isMetaLock(item, hist.now())){
 				Focus_removeItemIndex(itemIndex);
 			}
 
@@ -27189,14 +27188,14 @@ function updateLayerView(){
 		isLockElem.children[0].style.display = (! layerItem.isLock) ? 'block' : 'none';
 		isLockElem.children[1].style.display = (layerItem.isLock) ? 'block' : 'none';
 
-		if(Render.isMetaVisible(layerItem)){
+		if(Render.isMetaVisible(layerItem, hist.now())){
 			isVisibleElem.children[0].classList.remove('layer_is-meta-disable');
 			isVisibleElem.children[1].classList.remove('layer_is-meta-disable');
 		}else{
 			isVisibleElem.children[0].classList.add('layer_is-meta-disable');
 			isVisibleElem.children[1].classList.add('layer_is-meta-disable');
 		}
-		if(Render.isMetaLock(layerItem)){
+		if(Render.isMetaLock(layerItem, hist.now())){
 			isLockElem.children[0].classList.add('layer_is-meta-disable');;
 			isLockElem.children[1].classList.add('layer_is-meta-disable');;
 		}else{
@@ -27283,7 +27282,7 @@ function nearPointPosi(items, itemIndexes, point){
 			console.error('BUG', itemIndex, items);
 			return;
 		}
-		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
+		if((! Render.isMetaVisible(item, hist.now())) || Render.isMetaLock(item, hist.now())){
 			return;
 		}
 		if('Bezier' !== item.kind){
@@ -27463,7 +27462,7 @@ function joinItem(itemIndex0, apIndex0, itemIndex1, apIndex1){
 function getTouchedItem(items, point){
 	let touchedItemIndex = -1;
 	PV.exforReverse(items, (index, item) => {
-		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
+		if((! Render.isMetaVisible(item, hist.now())) || Render.isMetaLock(item, hist.now())){
 			return true;
 		}
 
@@ -27487,7 +27486,7 @@ function getTouchedItem(items, point){
 function getTouchedAp(items, mousePoint){
 	let res = [-1, -1];
 	const isTouched = !PV.exforReverse(items, (itemIndex, item) => {
-		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
+		if((! Render.isMetaVisible(item, hist.now())) || Render.isMetaLock(item, hist.now())){
 			return true;
 		}
 
@@ -27527,7 +27526,7 @@ function getTouchedAp(items, mousePoint){
 function getTouchedApAh(items, enableItemIndexes, mousePoint){
 	let res = [-1, -1, undefined];
 	PV.exforReverse(items, (itemIndex, item) => {
-		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
+		if((! Render.isMetaVisible(item, hist.now())) || Render.isMetaLock(item, hist.now())){
 			return true;
 		}
 
@@ -27941,6 +27940,7 @@ function Item_splitByAp(itemIndex, apIndex){
 		const tops = item.aps.splice(0, apIndex);
 		item.aps.push(...tops);
 		item.aps.push(newAp);
+		item.isCloseAp = false;
 		// ** indexが崩れたのでFocusを書き換え（リセットして誤魔化す）
 		hist.now().focus.focusAPCplxes = [];
 		Focus_addItemIndex(itemIndex);
@@ -28181,7 +28181,7 @@ function Focus_addItemIndex(itemIndex) {
 		// 新規追加かつAPがすべて未Focusの場合、すべてのAPをFocusする。
 		// 順番は末尾APがcurrentAPになるよう正順。
 		const item = hist.now().items[itemIndex];
-		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
+		if((! Render.isMetaVisible(item, hist.now())) || Render.isMetaLock(item, hist.now())){
 			console.log('BUG', itemIndex, item);
 		}
 		if('Bezier' === item.kind){
@@ -28623,20 +28623,12 @@ function getMouseModeByMousePoint(mousePoint){
 	if(PV.isTouchPointAndPoint(sideCenters[3], mousePoint, toCanvas(field.touch.cornerWidth))){
 		return 'resize_left';
 	}
-	const rotatePoint = getRotateHandlePoint(focusRect)
+	const rotatePoint = Render.getRotateHandlePoint(focusRect, field)
 	if(PV.isTouchPointAndPoint(rotatePoint, mousePoint, toCanvas(field.touch.cornerWidth))){
 		return 'rotate';
 	}
 	
 	return ''; // none
-}
-
-function getRotateHandlePoint(focusRect){
-	const rotatePoint = {
-		'x': focusRect.x + (focusRect.w/2),
-		'y': focusRect.y - (toCanvas(ROTATE_HEIGHT + (field.touch.cornerWidth/2))),
-	};	
-	return rotatePoint;
 }
 
 function getMousemoveRectInCanvas() {
@@ -28948,7 +28940,6 @@ const { indexOf } = require("lodash");
 const clonedeep = require('lodash/cloneDeep');
 
 function deepcopy(obj) { return clonedeep(obj); }
-function fuzzyZero(v) { return 0.0001 > Math.abs(v); }
 function fuzzyEqual(a, b) { return 0.0001 > Math.abs(a - b); }
 
 const AHKIND = {
@@ -28969,8 +28960,8 @@ module.exports = class PV{
 		return {'x': a.x * b.x, 'y': a.y * b.y};
 	}
 	static pointDiv(a, b){
-		const x = (fuzzyZero(b.x)) ? 0 : (a.x / b.x);
-		const y = (fuzzyZero(b.y)) ? 0 : (a.y / b.y);
+		const x = (PV.fuzzyZero(b.x)) ? 0 : (a.x / b.x);
+		const y = (PV.fuzzyZero(b.y)) ? 0 : (a.y / b.y);
 		return {'x': x, 'y': y};
 	}
 	static MinusPoint(){
@@ -28983,7 +28974,7 @@ module.exports = class PV{
 		return {'x': value, 'y': value};
 	}
 	static fuzzyZeroPoint(point){
-		return fuzzyZero(point.x) && fuzzyZero(point.y);
+		return PV.fuzzyZero(point.x) && PV.fuzzyZero(point.y);
 	}
 	// ** rect
 	// rect２つを含むrectを返す
@@ -29107,7 +29098,8 @@ module.exports = class PV{
 			return PV.AP_newFromPoint(item.point);
 		}
 		default:
-			return undefined;
+			const beziers = PV.Item_beziersFromItem(item);
+			return beziers[0].aps.at(cplx[1]);
 		}
 	}
 	static apsFromItems(items, cplxes){
@@ -29373,7 +29365,7 @@ module.exports = class PV{
 		return Math.abs(d);
 	}
 	static fieldDegreeFromVector(vector){
-		if(fuzzyZero(vector.y) && fuzzyZero(vector.x)){ // そのままの場合-270
+		if(PV.fuzzyZero(vector.y) && PV.fuzzyZero(vector.x)){ // そのままの場合-270
 			return 0;
 		}
 		return PV.fieldDegreeFromMathRadian(Math.atan2(-vector.y, vector.x))
@@ -29734,6 +29726,8 @@ module.exports = class PV{
 		}
 		return true;
 	}
+	// ** other
+	static fuzzyZero(v) { return 0.0001 > Math.abs(v); }
 }
 },{"lodash":112,"lodash/cloneDeep":97}],122:[function(require,module,exports){
 "use strict";
@@ -29741,6 +29735,13 @@ module.exports = class PV{
 const PV = require("../src/pv.js");
 const Tool = require("../src/tool.js");
 const TOOLS = Tool.TOOLS();
+
+const ROTATE_HEIGHT = 20;
+const AHKIND = {
+	'Symmetry': 'symmetry',
+	'Free': 'free',
+	'None': 'none',
+};
 
 module.exports = class Render{
 	static renderingAll(renderingHandle, doc, field, editor, mouse) {
@@ -29865,7 +29866,7 @@ module.exports = class Render{
 			// 選択item領域の四角形を描画
 			const focusRect = this.getFocusingRectByNow(editor, doc);
 			if (focusRect) {
-				if ((!fuzzyZero(focusRect.w)) && (!fuzzyZero(focusRect.h))) {
+				if ((!PV.fuzzyZero(focusRect.w)) && (!PV.fuzzyZero(focusRect.h))) {
 					let se = forgroundCanG.rect(focusRect.w, focusRect.h);
 					se.move(focusRect.x, focusRect.y);
 					se.attr({
@@ -29884,7 +29885,7 @@ module.exports = class Render{
 			});
 			if(focusRect && isRotetableTool && isRotatableFocusItems){
 				// rotateハンドルを描画
-				const rhPoint = getRotateHandlePoint(focusRect);
+				const rhPoint = Render.getRotateHandlePoint(focusRect, field);
 				const r = toCanvas(5);
 				const rootPoint = {'x': focusRect.x + (focusRect.w/2), 'y': focusRect.y};
 				let se = forgroundCanG.line(rhPoint.x, rhPoint.y, rootPoint.x, rootPoint.y);
@@ -29985,7 +29986,7 @@ module.exports = class Render{
 
 		// Guideを描画
 		doc.items.forEach((item) => {
-			if(! Render.isMetaVisible(item)){
+			if(! Render.isMetaVisible(item, doc)){
 				return;
 			}
 			switch(item.kind){
@@ -30153,7 +30154,7 @@ module.exports = class Render{
 				return;
 			}
 			let focusRect = PV.rectFromItems([item]);
-			if ((fuzzyZero(focusRect.w)) || (fuzzyZero(focusRect.h))) {
+			if ((PV.fuzzyZero(focusRect.w)) || (PV.fuzzyZero(focusRect.h))) {
 				// ユーザ補助のための表示なので正確さは不要のため、潰れていたら適当に拡張する
 				focusRect = PV.expandRect(focusRect, toCanvas(6));
 			}
@@ -30240,7 +30241,7 @@ module.exports = class Render{
 		//console.log('CALL renderingDocOnCanvas');
 		// reindering document items
 		doc.items.forEach((item) => {
-			if(! Render.isMetaVisible(item)){
+			if(! Render.isMetaVisible(item, doc)){
 				return;
 			}
 	
@@ -30259,11 +30260,13 @@ module.exports = class Render{
 					'stroke-linejoin': item.border.linejoin,
 					'fill': item.colorPair.fillColor
 				});
-				item.cache.renderHandles = [path];
+				if(! item.hasOwnProperty('cache')){ item.cache = {}; }
+				item['cache']['renderHandles'] = [path];
 			}
 				break;
 			case 'Figure':{
-				item.cache.renderHandles = [];
+				if(! item.hasOwnProperty('cache')){ item.cache = {}; }
+				item['cache']['renderHandles'] = [];
 				const beziers = PV.Item_beziersFromFigure(item);
 				beziers.forEach(bezier => {
 					const patharray = Render.patharrayFromBezierItem(bezier);
@@ -30275,7 +30278,8 @@ module.exports = class Render{
 						'stroke-linejoin': bezier.border.linejoin,
 						'fill': bezier.colorPair.fillColor
 					});
-					item.cache.renderHandles.push(path);
+					if(! item.hasOwnProperty('cache')){ item.cache = {}; }
+					item['cache']['renderHandles'].push(path);
 				});
 			}
 				break;
@@ -30333,17 +30337,27 @@ module.exports = class Render{
 		return PV.rectFromAps(aps);
 	}
 
-	static isMetaLock(item){
+	static getRotateHandlePoint(focusRect, field){
+		const toCanvas = (v) => { return v / field.canvas.scale; }
+
+		const rotatePoint = {
+			'x': focusRect.x + (focusRect.w/2),
+			'y': focusRect.y - (toCanvas(ROTATE_HEIGHT + (field.touch.cornerWidth/2))),
+		};	
+		return rotatePoint;
+	}
+
+	static isMetaLock(item, doc){
 		if('Guide' === item.kind){
-			if(hist.now().editor.guide.isLockGuide){
+			if(doc.editor.guide.isLockGuide){
 				return true;
 			}
 		}
 		return item.isLock;
 	}
-	static isMetaVisible(item){
+	static isMetaVisible(item, doc){
 		if('Guide' === item.kind){
-			if(! hist.now().editor.guide.isVisibleGuide){
+			if(! doc.editor.guide.isVisibleGuide){
 				return false;
 			}
 		}

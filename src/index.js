@@ -18,7 +18,7 @@ const TOOLS = Tool.TOOLS();
 
 // documentの最大サイズ（値は適当）
 const DOCUMENT_MAX_SIZE_AXIS_PX = 40000;
-const ROTATE_HEIGHT = 20;
+
 const EDITOR_MOUSE_OF_MOUSEUP_DEFAULT = {
 	'button': 0,
 	// select: 選択領域
@@ -242,7 +242,6 @@ let confirmOkFunc;
 let confirmCancelFunc;
 
 function deepcopy(obj) { return clonedeep(obj); }
-function fuzzyZero(v) { return 0.0001 > Math.abs(v); }
 // canvas to field scale convert
 function toField(v) { return v * field.canvas.scale; }
 function toCanvas(v) { return v / field.canvas.scale; }
@@ -496,7 +495,7 @@ function loadAfterRun(){
 						// AP自体は未Focusでも含めることとした。
 						const isAccepted = !PV.exforReverse(hist.now().focus.focusItemIndexes, (ix, itemIndex) => {
 							const itemt = hist.now().items[itemIndex];
-							if((! Render.isMetaVisible(itemt)) || Render.isMetaLock(itemt)){
+							if((! Render.isMetaVisible(itemt)) || Render.isMetaLock(itemt, hist.now())){
 								return true;
 							}
 							const firstAP = itemt.aps.at(0);
@@ -934,7 +933,7 @@ function loadAfterRun(){
 						const mouseRect = getMousemoveRectInCanvas();
 						let touchedIndexes = [];
 						hist.now().items.forEach((item, index) => {
-							if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
+							if((! Render.isMetaVisible(item, hist.now())) || Render.isMetaLock(item, hist.now())){
 								return;
 							}
 							const itemRect = PV.rectFromRange2d(PV.Item_range2d(item));
@@ -1036,7 +1035,7 @@ function loadAfterRun(){
 						const mouseRect = getMousemoveRectInCanvas();
 						let touchedCplxes = [];
 						hist.now().items.forEach((item, itemIndex) => {
-							if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
+							if((! Render.isMetaVisible(item, hist.now())) || Render.isMetaLock(item, hist.now())){
 								return;
 							}
 							switch(item.kind){
@@ -1080,7 +1079,7 @@ function loadAfterRun(){
 						if(! editor.isAddAnchorPoindByAAPTool){
 							const isTouched = !PV.exfor(hist.now().focus.focusItemIndexes, (ix, itemIndex) => {
 								const itemt = hist.now().items[itemIndex];
-								if((! Render.isMetaVisible(itemt)) || Render.isMetaLock(itemt)){
+								if((! Render.isMetaVisible(itemt)) || Render.isMetaLock(itemt, hist.now())){
 									return true;
 								}
 								if(itemt.isCloseAp){
@@ -3453,7 +3452,7 @@ function updateLayerView(){
 
 			let [item, itemIndex] = getItemAndIndexFromName(nameFromId(event.currentTarget.parentElement.id));
 			item.isVisible = (! item.isVisible);
-			if((! Render.isMetaVisible(item))){
+			if((! Render.isMetaVisible(item, hist.now()))){
 				Focus_removeItemIndex(itemIndex);
 			}
 
@@ -3466,7 +3465,7 @@ function updateLayerView(){
 
 			let [item, itemIndex] = getItemAndIndexFromName(nameFromId(event.currentTarget.parentElement.id));
 			item.isLock = (! item.isLock);
-			if(Render.isMetaLock(item)){
+			if(Render.isMetaLock(item, hist.now())){
 				Focus_removeItemIndex(itemIndex);
 			}
 
@@ -3532,14 +3531,14 @@ function updateLayerView(){
 		isLockElem.children[0].style.display = (! layerItem.isLock) ? 'block' : 'none';
 		isLockElem.children[1].style.display = (layerItem.isLock) ? 'block' : 'none';
 
-		if(Render.isMetaVisible(layerItem)){
+		if(Render.isMetaVisible(layerItem, hist.now())){
 			isVisibleElem.children[0].classList.remove('layer_is-meta-disable');
 			isVisibleElem.children[1].classList.remove('layer_is-meta-disable');
 		}else{
 			isVisibleElem.children[0].classList.add('layer_is-meta-disable');
 			isVisibleElem.children[1].classList.add('layer_is-meta-disable');
 		}
-		if(Render.isMetaLock(layerItem)){
+		if(Render.isMetaLock(layerItem, hist.now())){
 			isLockElem.children[0].classList.add('layer_is-meta-disable');;
 			isLockElem.children[1].classList.add('layer_is-meta-disable');;
 		}else{
@@ -3626,7 +3625,7 @@ function nearPointPosi(items, itemIndexes, point){
 			console.error('BUG', itemIndex, items);
 			return;
 		}
-		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
+		if((! Render.isMetaVisible(item, hist.now())) || Render.isMetaLock(item, hist.now())){
 			return;
 		}
 		if('Bezier' !== item.kind){
@@ -3806,7 +3805,7 @@ function joinItem(itemIndex0, apIndex0, itemIndex1, apIndex1){
 function getTouchedItem(items, point){
 	let touchedItemIndex = -1;
 	PV.exforReverse(items, (index, item) => {
-		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
+		if((! Render.isMetaVisible(item, hist.now())) || Render.isMetaLock(item, hist.now())){
 			return true;
 		}
 
@@ -3830,7 +3829,7 @@ function getTouchedItem(items, point){
 function getTouchedAp(items, mousePoint){
 	let res = [-1, -1];
 	const isTouched = !PV.exforReverse(items, (itemIndex, item) => {
-		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
+		if((! Render.isMetaVisible(item, hist.now())) || Render.isMetaLock(item, hist.now())){
 			return true;
 		}
 
@@ -3870,7 +3869,7 @@ function getTouchedAp(items, mousePoint){
 function getTouchedApAh(items, enableItemIndexes, mousePoint){
 	let res = [-1, -1, undefined];
 	PV.exforReverse(items, (itemIndex, item) => {
-		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
+		if((! Render.isMetaVisible(item, hist.now())) || Render.isMetaLock(item, hist.now())){
 			return true;
 		}
 
@@ -4284,6 +4283,7 @@ function Item_splitByAp(itemIndex, apIndex){
 		const tops = item.aps.splice(0, apIndex);
 		item.aps.push(...tops);
 		item.aps.push(newAp);
+		item.isCloseAp = false;
 		// ** indexが崩れたのでFocusを書き換え（リセットして誤魔化す）
 		hist.now().focus.focusAPCplxes = [];
 		Focus_addItemIndex(itemIndex);
@@ -4524,7 +4524,7 @@ function Focus_addItemIndex(itemIndex) {
 		// 新規追加かつAPがすべて未Focusの場合、すべてのAPをFocusする。
 		// 順番は末尾APがcurrentAPになるよう正順。
 		const item = hist.now().items[itemIndex];
-		if((! Render.isMetaVisible(item)) || Render.isMetaLock(item)){
+		if((! Render.isMetaVisible(item, hist.now())) || Render.isMetaLock(item, hist.now())){
 			console.log('BUG', itemIndex, item);
 		}
 		if('Bezier' === item.kind){
@@ -4966,20 +4966,12 @@ function getMouseModeByMousePoint(mousePoint){
 	if(PV.isTouchPointAndPoint(sideCenters[3], mousePoint, toCanvas(field.touch.cornerWidth))){
 		return 'resize_left';
 	}
-	const rotatePoint = getRotateHandlePoint(focusRect)
+	const rotatePoint = Render.getRotateHandlePoint(focusRect, field)
 	if(PV.isTouchPointAndPoint(rotatePoint, mousePoint, toCanvas(field.touch.cornerWidth))){
 		return 'rotate';
 	}
 	
 	return ''; // none
-}
-
-function getRotateHandlePoint(focusRect){
-	const rotatePoint = {
-		'x': focusRect.x + (focusRect.w/2),
-		'y': focusRect.y - (toCanvas(ROTATE_HEIGHT + (field.touch.cornerWidth/2))),
-	};	
-	return rotatePoint;
 }
 
 function getMousemoveRectInCanvas() {
